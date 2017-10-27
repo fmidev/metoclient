@@ -1,0 +1,53 @@
+.layer-switcher {
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+    text-align: left;
+}
+
+.layer-switcher .panel {
+    padding-right: 50px;
+    border: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    display: none;
+}
+
+.layer-switcher.shown .panel {
+    display: block;
+}
+
+.layer-switcher button {
+    float: right;
+    width: 40px;
+    height: 40px;
+    background-image: url("../img/layer-switcher.png");
+    background-repeat: no-repeat;
+    background-position: 0;
+    background-color: #585858;
+    border: none;
+}
+
+.layer-switcher button:focus, .layer-switcher button:hover {
+    background-color: #686868;
+}
+
+.layer-switcher ul {
+    padding-left: 1em;
+    list-style: none;
+}
+
+.layer-switcher li.group {
+    padding-top: 5px;
+}
+
+.layer-switcher li.group > label {
+    float: none;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.layer-switcher input {
+    margin: 4px;
+}
+

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: controller/TimeController.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: controller/TimeController.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileoverview Time controller for animator.
+ * @author FMI
+ */
+
+import Time from '../model/Time'
+import TimeSlider from '../view/time/raphael/TimeSlider'
+import EventEmitter from 'wolfy87-eventemitter'
+import jQuery from 'jquery'
+
+export default class TimeController {
+    /**
+     * Constructs a new time controller.
+     * @param {Object} config User
+     * @constructor
+     */
+  constructor (config) {
+        /**
+         * @type {Object}
+         * @private
+         */
+    this.config_ = config
+    this.variableEvents = new EventEmitter()
+    this.actionEvents = new EventEmitter()
+        /**
+         * @function
+         * @param {number} animationTime Animation time.
+         * @private
+         */
+    this.animationTimeTimerListener_ = animationTime => {
+    }
+        /**
+         * @function
+         * @private
+         */
+    this.playListener_ = () => {
+    }
+        /**
+         * @function
+         * @private
+         */
+    this.refreshListener_ = () => {
+    }
+        /**
+         * @function
+         * @private
+         */
+    this.previousListener_ = () => {
+    }
+        /**
+         * @function
+         * @private
+         */
+    this.nextListener_ = () => {
+    }
+        /**
+         * @function
+         * @param {number} animationTime Animation time.
+         * @private
+         */
+    this.animationTimeUserListener_ = animationTime => {
+    }
+        /**
+         * @function
+         * @param {boolean} animationPlay Animation playback state.
+         * @private
+         */
+    this.animationPlayListener_ = animationPlay => {
+    }
+        /**
+         * @private
+         */
+    this.model_ = new Time(config['model'])
+        /**
+         * @private
+         */
+    this.views_ = []
+  };
+
+    /**
+     * Produces a time model and views.
+     */
+  createTime () {
+    const self = this
+    let containers
+    let numViews
+    let i
+    this.previousListener_ = () => {
+      self.previous()
+    }
+    this.nextListener_ = () => {
+      self.next()
+    }
+    this.animationTimeUserListener_ = animationTime => {
+      self.model_.setAnimationTime(animationTime)
+    }
+    this.animationPlayListener_ = animationPlay => {
+      if (animationPlay) {
+        self.play()
+      } else {
+        self.pause()
+      }
+    }
+    containers = jQuery(`.${this.config_['view']['timeSliderContainer']}`)
+    numViews = containers.length
+    for (i = 0; i &lt; numViews; i++) {
+      this.views_.push(new TimeSlider(this.config_['view'], containers[i]))
+      this.views_[i].actionEvents.addListener('previous', self.previousListener_)
+      this.views_[i].actionEvents.addListener('next', self.nextListener_)
+      this.views_[i].variableEvents.addListener('animationTime', self.animationTimeUserListener_)
+      this.views_[i].variableEvents.addListener('animationPlay', self.animationPlayListener_)
+    }
+
+        /**
+         * @private
+         */
+    this.playListener_ = () => {
+      self.actionEvents.emitEvent('play')
+    }
+    this.model_.actionEvents.addListener('play', this.playListener_)
+        /**
+         * @private
+         */
+    this.refreshListener_ = () => {
+      self.actionEvents.emitEvent('refresh')
+    }
+    this.model_.actionEvents.addListener('refresh', this.refreshListener_)
+        /**
+         * @private
+         */
+    this.animationTimeTimerListener_ = animationTime => {
+      if (self.config_['view']['showTimeSlider']) {
+        self.updateTimeSlider()
+      }
+      self.variableEvents.emitEvent('animationTime', [animationTime])
+    }
+    this.model_.variableEvents.addListener('animationTime', this.animationTimeTimerListener_)
+
+    this.createTimer()
+    this.createTimeSlider()
+  };
+
+    /**
+     * Creates a time slider for each view.
+     */
+  createTimeSlider () {
+    const numViews = this.views_.length
+    let i
+    if (!this.config_['view']['showTimeSlider']) {
+      return
+    }
+    for (i = 0; i &lt; numViews; i++) {
+      this.views_[i].createTimeSlider(
+                this.model_.getCurrentTime(),
+                this.model_.getAnimationTime(),
+                this.model_.getAnimationBeginTime(),
+                this.model_.getAnimationEndTime(),
+                this.model_.getAnimationResolutionTime(),
+                this.model_.getAnimationNumIntervals()
+            )
+    }
+  };
+
+    /**
+     * Updates time slider in each view.
+     */
+  updateTimeSlider () {
+    const animationTime = this.model_.getAnimationTime()
+    const numViews = this.views_.length
+    let i
+    for (i = 0; i &lt; numViews; i++) {
+      this.views_[i].setAnimationTime(animationTime)
+    }
+  };
+
+    /**
+     * Updates loader state visualizations.
+     * @param {Array&lt;Object>} numIntervalItems Loader counter information for intervals.
+     */
+  updateTimeLoaderVis (numIntervalItems) {
+    const numViews = this.views_.length
+    const numIntervals = numIntervalItems.length
+    let i
+    for (i = 0; i &lt; numViews; i++) {
+      this.views_[i].updateTimeLoaderVis(numIntervalItems)
+    }
+    if (this.model_.isWaitingAutoStart()) {
+      for (i = 0; i &lt; numIntervals; i++) {
+        if (![fi.fmi.metoclient.ui.animator.Constants.LOADING_STATUS['ready'], fi.fmi.metoclient.ui.animator.Constants.LOADING_STATUS['error']].includes(numIntervalItems[i]['status'])) {
+          return
+        }
+      }
+      this.play()
+    }
+  };
+
+    /**
+     * Gets the real-world creation time.
+     * @returns {number} Real-world creation time.
+     */
+  getCreationTime () {
+    return this.model_.getCreationTime()
+  };
+
+    /**
+     * Gets current real-world time.
+     * @returns {number} Current real-world time.
+     */
+  getCurrentTime () {
+    return this.model_.getCurrentTime()
+  };
+
+    /**
+     * Gets animation time.
+     * @returns {number} Animation time.
+     */
+  getAnimationTime () {
+    return this.model_.getAnimationTime()
+  };
+
+    /**
+     * Gets animation begin time.
+     * @returns {number} Animation begin time.
+     */
+  getAnimationBeginTime () {
+    return this.model_.getAnimationBeginTime()
+  };
+
+    /**
+     * Gets animation end time.
+     * @returns {number} Gets animation end time.
+     */
+  getAnimationEndTime () {
+    return this.model_.getAnimationEndTime()
+  };
+
+    /**
+     * Gets animation resolution time.
+     * @returns {number} Animation resolution time.
+     */
+  getAnimationResolutionTime () {
+    return this.model_.getAnimationResolutionTime()
+  };
+
+    /**
+     * Gets number of animation time intervals.
+     * @returns {number} Number of animation time intervals.
+     */
+  getAnimationNumIntervals () {
+    return this.model_.getAnimationNumIntervals()
+  };
+
+    /**
+     * Refreshes current real-world time.
+     */
+  refreshTime () {
+    const currentTime = Date.now(), resolutionTime = this.model_.getAnimationResolutionTime()
+    this.model_.setAnimationLastRefreshed(currentTime)
+    this.model_.setCurrentTime(currentTime)
+    this.model_.moveAnimationTimeFrame(Math.floor(currentTime / resolutionTime) * resolutionTime - Math.floor(this.model_.getCreationTime() / resolutionTime) * resolutionTime)
+  };
+
+    /**
+     * Starts to play animation.
+     */
+  play () {
+    this.model_.play()
+    this.views_.forEach(view => {
+      view.setAnimationPlay(true)
+    })
+  };
+
+    /**
+     * Pauses animation.
+     */
+  pause () {
+    this.model_.pause()
+    this.views_.forEach(view => {
+      view.setAnimationPlay(false)
+    })
+  };
+
+    /**
+     * Stops (pauses and rewinds) animation.
+     */
+  stop () {
+    this.model_.stop()
+    this.views_.forEach(view => {
+      view.setAnimationPlay(false)
+    })
+  };
+
+    /**
+     * Moves to previous time frame.
+     */
+  previous () {
+    this.model_.previous()
+  };
+
+    /**
+     * Moves to next time frame.
+     */
+  next () {
+    this.model_.next()
+  };
+
+    /**
+     * Moves to given time frame.
+     * @param time {number} Timestamp of new animation time.
+     */
+  setAnimationTime (time) {
+    this.model_.setAnimationTime(time)
+  };
+
+    /**
+     * Sets animations frame rate.
+     * @param {number} frameRate Frame rate.
+     */
+  setFrameRate (frameRate) {
+    this.model_.setFrameRate(frameRate)
+  };
+
+    /**
+     * Sets animation begin time.
+     * @param {number} beginTime Animation begin time.
+     */
+  setBeginTime (beginTime) {
+    this.model_.setBeginTime(beginTime)
+  };
+
+    /**
+     * Sets animation end time.
+     * @param {number} endTime Animation end time.
+     */
+  setEndTime (endTime) {
+    this.model_.setEndTime(endTime)
+  };
+
+    /**
+     * Sets animation time step.
+     * @param timeStep Animation time step.
+     */
+  setTimeStep (timeStep) {
+    this.model_.setResolutionTime(timeStep)
+  };
+
+    /**
+     * Sets time zone.
+     * @param {string} timeZone Time zone.
+     */
+  setTimeZone (timeZone) {
+    this.views_.forEach(view => {
+      view.setTimeZone(timeZone)
+    })
+  };
+
+    /**
+     * Sets time zone.
+     * @param {string} timeZoneLabel Time zone.
+     */
+  setTimeZoneLabel (timeZoneLabel) {
+    this.views_.forEach(view => {
+      view.setTimeZoneLabel(timeZoneLabel)
+    })
+  };
+
+    /**
+     * Sets time grid offset from midnight.
+     * @param gridTimeOffset {Number} Time grid offset.
+     */
+  setDayStartOffset (gridTimeOffset) {
+    this.model_.setDayStartOffset(gridTimeOffset)
+  };
+
+    /**
+     * Produces a new timer definition.
+     */
+  createTimer () {
+    this.model_.createTimer()
+  };
+
+    /**
+     * Destroys current time model and views.
+     */
+  destroyTime () {
+    const numViews = this.views_.length
+    let i
+    this.actionEvents.removeAllListeners()
+    this.variableEvents.removeAllListeners()
+    for (i = 0; i &lt; numViews; i++) {
+      this.views_[i].destroyTimeSlider()
+    }
+    this.model_.destroyTimer()
+  };
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MetOClient.html">MetOClient</a></li><li><a href="module.exports.html">exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addFeatures">addFeatures</a></li><li><a href="global.html#clearFeatures">clearFeatures</a></li><li><a href="global.html#createAnimation">createAnimation</a></li><li><a href="global.html#createMap">createMap</a></li><li><a href="global.html#createTime">createTime</a></li><li><a href="global.html#createTimer">createTimer</a></li><li><a href="global.html#createTimeSlider">createTimeSlider</a></li><li><a href="global.html#destroyAnimation">destroyAnimation</a></li><li><a href="global.html#destroyTime">destroyTime</a></li><li><a href="global.html#destroyTimer">destroyTimer</a></li><li><a href="global.html#destroyTimeSlider">destroyTimeSlider</a></li><li><a href="global.html#floorTime">floorTime</a></li><li><a href="global.html#getAnimationBeginTime">getAnimationBeginTime</a></li><li><a href="global.html#getAnimationEndTime">getAnimationEndTime</a></li><li><a href="global.html#getAnimationNumIntervals">getAnimationNumIntervals</a></li><li><a href="global.html#getAnimationResolutionTime">getAnimationResolutionTime</a></li><li><a href="global.html#getAnimationTime">getAnimationTime</a></li><li><a href="global.html#getCapabilities">getCapabilities</a></li><li><a href="global.html#getCreationTime">getCreationTime</a></li><li><a href="global.html#getCurrentTime">getCurrentTime</a></li><li><a href="global.html#getFeatures">getFeatures</a></li><li><a href="global.html#getFeaturesAt">getFeaturesAt</a></li><li><a href="global.html#getLayer">getLayer</a></li><li><a href="global.html#getLayers">getLayers</a></li><li><a href="global.html#getMap">getMap</a></li><li><a href="global.html#getRefreshInterval">getRefreshInterval</a></li><li><a href="global.html#getStaticControls">getStaticControls</a></li><li><a href="global.html#getTickText">getTickText</a></li><li><a href="global.html#hidePopup">hidePopup</a></li><li><a href="global.html#initAnimationPlayListener">initAnimationPlayListener</a></li><li><a href="global.html#isWaitingAutoStart">isWaitingAutoStart</a></li><li><a href="global.html#LEGEND_FIGURE_CLASS_PREFIX">LEGEND_FIGURE_CLASS_PREFIX</a></li><li><a href="global.html#loadCapabilities">loadCapabilities</a></li><li><a href="global.html#LOADING_STATUS">LOADING_STATUS</a></li><li><a href="global.html#MAP_LAYER_SWITCHER_ID">MAP_LAYER_SWITCHER_ID</a></li><li><a href="global.html#MAX_TIMESTAMP">MAX_TIMESTAMP</a></li><li><a href="global.html#moveAnimationTimeFrame">moveAnimationTimeFrame</a></li><li><a href="global.html#movePointer">movePointer</a></li><li><a href="global.html#next">next</a></li><li><a href="global.html#pause">pause</a></li><li><a href="global.html#play">play</a></li><li><a href="global.html#previous">previous</a></li><li><a href="global.html#refreshLayers">refreshLayers</a></li><li><a href="global.html#refreshMap">refreshMap</a></li><li><a href="global.html#refreshTime">refreshTime</a></li><li><a href="global.html#requestViewUpdate">requestViewUpdate</a></li><li><a href="global.html#setAnimationLastRefreshed">setAnimationLastRefreshed</a></li><li><a href="global.html#setAnimationPlay">setAnimationPlay</a></li><li><a href="global.html#setAnimationTime">setAnimationTime</a></li><li><a href="global.html#setBeginTime">setBeginTime</a></li><li><a href="global.html#setCallbacks">setCallbacks</a></li><li><a href="global.html#setCapabilities">setCapabilities</a></li><li><a href="global.html#setCenter">setCenter</a></li><li><a href="global.html#setCurrentTime">setCurrentTime</a></li><li><a href="global.html#setDayStartOffset">setDayStartOffset</a></li><li><a href="global.html#setEndTime">setEndTime</a></li><li><a href="global.html#setFrameRate">setFrameRate</a></li><li><a href="global.html#setInteractions">setInteractions</a></li><li><a href="global.html#setLayers">setLayers</a></li><li><a href="global.html#setLayerVisible">setLayerVisible</a></li><li><a href="global.html#setPointerText">setPointerText</a></li><li><a href="global.html#setPointerTime">setPointerTime</a></li><li><a href="global.html#setResolutionTime">setResolutionTime</a></li><li><a href="global.html#setRotation">setRotation</a></li><li><a href="global.html#setStaticControls">setStaticControls</a></li><li><a href="global.html#setTimeStep">setTimeStep</a></li><li><a href="global.html#setTimeZone">setTimeZone</a></li><li><a href="global.html#setTimeZoneLabel">setTimeZoneLabel</a></li><li><a href="global.html#setZoom">setZoom</a></li><li><a href="global.html#showPopup">showPopup</a></li><li><a href="global.html#startTimer">startTimer</a></li><li><a href="global.html#stop">stop</a></li><li><a href="global.html#supportOldBrowsers">supportOldBrowsers</a></li><li><a href="global.html#updatePointer">updatePointer</a></li><li><a href="global.html#updateTimeLoaderVis">updateTimeLoaderVis</a></li><li><a href="global.html#updateTimeSlider">updateTimeSlider</a></li><li><a href="global.html#zIndex">zIndex</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Oct 20 2017 12:32:49 GMT+0300 (EEST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

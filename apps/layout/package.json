@@ -1,0 +1,64 @@
+{
+  "name": "metoclient-layout",
+  "version": "1.0.0",
+  "description": "MetOClient Layout",
+  "main": "dist/monitor.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "NODE_ENV=production webpack",
+    "dev": "webpack-dev-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "react",
+    "redux",
+    "react-redux",
+    "golden-layout"
+  ],
+  "author": "FMI",
+  "license": "",
+  "bugs": {
+    "url": "https://github.com/fmidev/issues"
+  },
+  "homepage": "https://github.com/fmidev/#readme",
+  "dependencies": {
+    "d3-timer": "^1.0.7",
+    "element-resize-detector": "^1.1.12",
+    "golden-layout": "masapu/golden-layout",
+    "immutable": "^3.8.1",
+    "jquery": "^3.2.1",
+    "metoclient": "file:../../",
+    "moment-timezone": "0.5.11",
+    "openlayers": "3.20.0",
+    "proj4": "^2.4.4",
+    "prop-types": "^15.5.10",
+    "react": "^15.5.4",
+    "react-dom": "^15.5.4",
+    "react-redux": "^5.0.5",
+    "redux": "^3.6.0",
+    "wolfy-eventemitter": "^0.1.0"
+  },
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.24.1",
+    "babel-loader": "^7.0.0",
+    "babel-preset-env": "^1.5.1",
+    "babel-preset-react": "^6.24.1",
+    "css-loader": "^0.28.7",
+    "extract-text-webpack-plugin": "^3.0.1",
+    "file-loader": "^0.11.2",
+    "html-webpack-plugin": "^2.28.0",
+    "node-sass": "^4.5.3",
+    "sass-loader": "^6.0.6",
+    "style-loader": "^0.18.2",
+    "typeface-roboto": "0.0.41",
+    "url-loader": "^0.6.2",
+    "webpack": "^3.5.6",
+    "webpack-bundle-analyzer": "^2.9.0",
+    "webpack-dev-server": "^2.4.5"
+  }
+}

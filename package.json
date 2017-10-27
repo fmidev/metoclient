@@ -1,0 +1,65 @@
+{
+  "name": "metoclient",
+  "version": "4.0.6",
+  "private": false,
+  "description": "Map animation library",
+  "main": "src/MetOClient.js",
+  "directories": {
+    "doc": "doc",
+    "example": "examples"
+  },
+  "executables": {
+    "nodejs": "node"
+  },
+  "scripts": {
+    "build": "cross-env NODE_ENV=production webpack --progress --config config/webpack/config.js",
+    "build-global": "cross-env NODE_ENV=production GLOBAL_EXPORT=true webpack --progress --config config/webpack/config.js",
+    "build-debug": "cross-env GLOBAL_EXPORT=true webpack --progress --config config/webpack/config.js",
+    "build-all": "npm run build; npm run build-global",
+    "test": "cross-env PHANTOMJS_EXECUTABLE=node_modules/.bin/phantomjs; $npm_package_executables_nodejs node_modules/casperjs/bin/casperjs.js test test/wms.js",
+    "doc": "node_modules/.bin/del-cli ./build/jsdoc; node_modules/.bin/jsdoc -c config/jsdoc/config.json -d ./build/jsdoc",
+    "examples": "$npm_package_executables_nodejs ./example-builder/build-examples.js"
+  },
+  "author": "Finnish Meteorological Institute",
+  "license": "MIT",
+  "homepage": "https://github.com/fmidev/metoclient",
+  "dependencies": {
+    "d3-timer": "^1.0.7",
+    "jquery": "^3.2.1",
+    "jquery-mousewheel": "^3.1.13",
+    "moment": "^2.19.1",
+    "moment-timezone": "^0.5.13",
+    "ol": "^4.3.3",
+    "proj4": "^2.4.4",
+    "raphael": "^2.2.7",
+    "wolfy87-eventemitter": "^5.2.3"
+  },
+  "devDependencies": {
+    "async": "2.0.1",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-array-includes": "^2.0.3",
+    "babel-plugin-webpack-named-dynamic-imports": "^1.1.0",
+    "babel-preset-env": "^1.6.0",
+    "casperjs": "^1.1.4",
+    "copy-webpack-plugin": "^4.2.0",
+    "cross-env": "^5.0.5",
+    "del-cli": "^1.1.0",
+    "extract-text-webpack-plugin": "^3.0.0",
+    "fs-extra": "0.30.0",
+    "handlebars": "^4.0.11",
+    "jsdoc": "^3.4.3",
+    "marked": "0.3.5",
+    "metalsmith": "2.1.0",
+    "metalsmith-layouts": "1.6.4",
+    "nomnom": "1.8.1",
+    "phantomjs-prebuilt": "2.1.13",
+    "style-loader": "^0.18.2",
+    "temp": "0.8.3",
+    "walk": "2.3.9",
+    "webpack": "^3.6.0",
+    "webpack-bundle-analyzer": "^2.9.0",
+    "webpack-closure-compiler": "^2.1.5",
+    "webpack-conditional-loader": "^1.0.7"
+  }
+}

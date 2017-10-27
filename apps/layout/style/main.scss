@@ -1,0 +1,138 @@
+#fmi-metweb-windows {
+
+  div.map-container {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    bottom: 0;
+    background: #f7f7f7;
+  }
+
+  div.metoclient-map {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+
+  div.fmi-animator-legend {
+    position: absolute;
+    left: 10px;
+    max-height: 520px;
+    top: 80px;
+    background-color: #ffffff;
+    z-index: 100;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  div.fmi-animator-spinner {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    position: absolute;
+    height: 40px;
+    width: 40px;
+    background-color: rgba(0, 0, 0, 0.0);
+    z-index: 200;
+  }
+
+  div.legend figure {
+    margin-left: 20px;
+    float: left;
+  }
+
+  div.legendchooser {
+    margin-left: 20px;
+  }
+
+  div.fmi-animator-timeslider {
+    position: absolute;
+    bottom: 5px;
+    width: 100%;
+    min-width: 100px;
+    height: 85px;
+    z-index: 150;
+  }
+
+  img.logo {
+    position: absolute;
+    bottom: 50px;
+    right: 20px;
+    z-index: 50;
+  }
+
+  button.ol-zoom-in, button.ol-zoom-out {
+    color: #D7B13E;
+    background-color: #585858;
+  }
+
+  button.ol-zoom-in:focus, button.ol-zoom-in:hover, button.ol-zoom-out:focus, button.ol-zoom-out:hover {
+    color: #D7B13E;
+    background-color: #686868;
+  }
+
+  .custom-control {
+    position: absolute;
+    top: 60px;
+    right: 0.5em;
+    text-align: left;
+  }
+
+  .custom-control .panel {
+    padding-right: 50px;
+    border: 1px solid #cccccc;
+    background-color: white;
+    margin: 0;
+    display: none;
+  }
+
+  .custom-control.shown .panel {
+    display: block;
+  }
+
+  .custom-control button {
+    display: block;
+    float: right;
+    width: 40px;
+    height: 40px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-color: #585858;
+    border: none;
+  }
+
+  .custom-control button:focus, .custom-control button:hover {
+    background-color: #686868;
+  }
+
+  .button {
+    z-index: 1000000;
+  }
+
+  .window-menu-dots.light-theme {
+    background-image: url("../img/light-window-menu-gray.png");
+  }
+
+  .window-menu-dots.light-theme:not(selected):hover {
+    background-image: url("../img/light-window-menu-blue.png");
+  }
+
+  .lm_selected .window-menu-dots.light-theme:not(selected):hover {
+    background-image: url("../img/light-window-menu-white.png");
+  }
+
+  .window-menu-dots {
+    width: 50px;
+    height: 40px;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-position: center
+  }
+
+  .goldenLayout {
+    background: #ebecec;
+  }
+
+}

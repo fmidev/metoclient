@@ -1,0 +1,9 @@
+.fmi-animator-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: transparent url("../img/loading.gif") no-repeat center center;
+    background-size: 16px 16px;
+    width: 16px;
+    height: 16px;
+}

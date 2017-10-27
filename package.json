@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "4.0.6",
+  "version": "4.0.7",
   "private": false,
   "description": "Map animation library",
   "main": "src/MetOClient.js",
@@ -59,7 +59,6 @@
     "walk": "2.3.9",
     "webpack": "^3.6.0",
     "webpack-bundle-analyzer": "^2.9.0",
-    "webpack-closure-compiler": "^2.1.5",
     "webpack-conditional-loader": "^1.0.7"
   }
 }

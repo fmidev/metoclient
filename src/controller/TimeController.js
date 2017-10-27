@@ -10,77 +10,77 @@ import EventEmitter from 'wolfy87-eventemitter'
 import jQuery from 'jquery'
 
 export default class TimeController {
-    /**
-     * Constructs a new time controller.
-     * @param {Object} config User
-     * @constructor
-     */
+  /**
+   * Constructs a new time controller.
+   * @param {Object} config User
+   * @constructor
+   */
   constructor (config) {
-        /**
-         * @type {Object}
-         * @private
-         */
+    /**
+     * @type {Object}
+     * @private
+     */
     this.config_ = config
     this.variableEvents = new EventEmitter()
     this.actionEvents = new EventEmitter()
-        /**
-         * @function
-         * @param {number} animationTime Animation time.
-         * @private
-         */
+    /**
+     * @function
+     * @param {number} animationTime Animation time.
+     * @private
+     */
     this.animationTimeTimerListener_ = animationTime => {
     }
-        /**
-         * @function
-         * @private
-         */
+    /**
+     * @function
+     * @private
+     */
     this.playListener_ = () => {
     }
-        /**
-         * @function
-         * @private
-         */
+    /**
+     * @function
+     * @private
+     */
     this.refreshListener_ = () => {
     }
-        /**
-         * @function
-         * @private
-         */
+    /**
+     * @function
+     * @private
+     */
     this.previousListener_ = () => {
     }
-        /**
-         * @function
-         * @private
-         */
+    /**
+     * @function
+     * @private
+     */
     this.nextListener_ = () => {
     }
-        /**
-         * @function
-         * @param {number} animationTime Animation time.
-         * @private
-         */
+    /**
+     * @function
+     * @param {number} animationTime Animation time.
+     * @private
+     */
     this.animationTimeUserListener_ = animationTime => {
     }
-        /**
-         * @function
-         * @param {boolean} animationPlay Animation playback state.
-         * @private
-         */
+    /**
+     * @function
+     * @param {boolean} animationPlay Animation playback state.
+     * @private
+     */
     this.animationPlayListener_ = animationPlay => {
     }
-        /**
-         * @private
-         */
+    /**
+     * @private
+     */
     this.model_ = new Time(config['model'])
-        /**
-         * @private
-         */
+    /**
+     * @private
+     */
     this.views_ = []
   };
 
-    /**
-     * Produces a time model and views.
-     */
+  /**
+   * Produces a time model and views.
+   */
   createTime () {
     const self = this
     let containers
@@ -112,23 +112,23 @@ export default class TimeController {
       this.views_[i].variableEvents.addListener('animationPlay', self.animationPlayListener_)
     }
 
-        /**
-         * @private
-         */
+    /**
+     * @private
+     */
     this.playListener_ = () => {
       self.actionEvents.emitEvent('play')
     }
     this.model_.actionEvents.addListener('play', this.playListener_)
-        /**
-         * @private
-         */
+    /**
+     * @private
+     */
     this.refreshListener_ = () => {
       self.actionEvents.emitEvent('refresh')
     }
     this.model_.actionEvents.addListener('refresh', this.refreshListener_)
-        /**
-         * @private
-         */
+    /**
+     * @private
+     */
     this.animationTimeTimerListener_ = animationTime => {
       if (self.config_['view']['showTimeSlider']) {
         self.updateTimeSlider()
@@ -141,9 +141,9 @@ export default class TimeController {
     this.createTimeSlider()
   };
 
-    /**
-     * Creates a time slider for each view.
-     */
+  /**
+   * Creates a time slider for each view.
+   */
   createTimeSlider () {
     const numViews = this.views_.length
     let i
@@ -152,19 +152,19 @@ export default class TimeController {
     }
     for (i = 0; i < numViews; i++) {
       this.views_[i].createTimeSlider(
-                this.model_.getCurrentTime(),
-                this.model_.getAnimationTime(),
-                this.model_.getAnimationBeginTime(),
-                this.model_.getAnimationEndTime(),
-                this.model_.getAnimationResolutionTime(),
-                this.model_.getAnimationNumIntervals()
-            )
+        this.model_.getCurrentTime(),
+        this.model_.getAnimationTime(),
+        this.model_.getAnimationBeginTime(),
+        this.model_.getAnimationEndTime(),
+        this.model_.getAnimationResolutionTime(),
+        this.model_.getAnimationNumIntervals()
+      )
     }
   };
 
-    /**
-     * Updates time slider in each view.
-     */
+  /**
+   * Updates time slider in each view.
+   */
   updateTimeSlider () {
     const animationTime = this.model_.getAnimationTime()
     const numViews = this.views_.length
@@ -174,10 +174,10 @@ export default class TimeController {
     }
   };
 
-    /**
-     * Updates loader state visualizations.
-     * @param {Array<Object>} numIntervalItems Loader counter information for intervals.
-     */
+  /**
+   * Updates loader state visualizations.
+   * @param {Array<Object>} numIntervalItems Loader counter information for intervals.
+   */
   updateTimeLoaderVis (numIntervalItems) {
     const numViews = this.views_.length
     const numIntervals = numIntervalItems.length
@@ -195,65 +195,65 @@ export default class TimeController {
     }
   };
 
-    /**
-     * Gets the real-world creation time.
-     * @returns {number} Real-world creation time.
-     */
+  /**
+   * Gets the real-world creation time.
+   * @returns {number} Real-world creation time.
+   */
   getCreationTime () {
     return this.model_.getCreationTime()
   };
 
-    /**
-     * Gets current real-world time.
-     * @returns {number} Current real-world time.
-     */
+  /**
+   * Gets current real-world time.
+   * @returns {number} Current real-world time.
+   */
   getCurrentTime () {
     return this.model_.getCurrentTime()
   };
 
-    /**
-     * Gets animation time.
-     * @returns {number} Animation time.
-     */
+  /**
+   * Gets animation time.
+   * @returns {number} Animation time.
+   */
   getAnimationTime () {
     return this.model_.getAnimationTime()
   };
 
-    /**
-     * Gets animation begin time.
-     * @returns {number} Animation begin time.
-     */
+  /**
+   * Gets animation begin time.
+   * @returns {number} Animation begin time.
+   */
   getAnimationBeginTime () {
     return this.model_.getAnimationBeginTime()
   };
 
-    /**
-     * Gets animation end time.
-     * @returns {number} Gets animation end time.
-     */
+  /**
+   * Gets animation end time.
+   * @returns {number} Gets animation end time.
+   */
   getAnimationEndTime () {
     return this.model_.getAnimationEndTime()
   };
 
-    /**
-     * Gets animation resolution time.
-     * @returns {number} Animation resolution time.
-     */
+  /**
+   * Gets animation resolution time.
+   * @returns {number} Animation resolution time.
+   */
   getAnimationResolutionTime () {
     return this.model_.getAnimationResolutionTime()
   };
 
-    /**
-     * Gets number of animation time intervals.
-     * @returns {number} Number of animation time intervals.
-     */
+  /**
+   * Gets number of animation time intervals.
+   * @returns {number} Number of animation time intervals.
+   */
   getAnimationNumIntervals () {
     return this.model_.getAnimationNumIntervals()
   };
 
-    /**
-     * Refreshes current real-world time.
-     */
+  /**
+   * Refreshes current real-world time.
+   */
   refreshTime () {
     const currentTime = Date.now(), resolutionTime = this.model_.getAnimationResolutionTime()
     this.model_.setAnimationLastRefreshed(currentTime)
@@ -261,9 +261,9 @@ export default class TimeController {
     this.model_.moveAnimationTimeFrame(Math.floor(currentTime / resolutionTime) * resolutionTime - Math.floor(this.model_.getCreationTime() / resolutionTime) * resolutionTime)
   };
 
-    /**
-     * Starts to play animation.
-     */
+  /**
+   * Starts to play animation.
+   */
   play () {
     this.model_.play()
     this.views_.forEach(view => {
@@ -271,9 +271,9 @@ export default class TimeController {
     })
   };
 
-    /**
-     * Pauses animation.
-     */
+  /**
+   * Pauses animation.
+   */
   pause () {
     this.model_.pause()
     this.views_.forEach(view => {
@@ -281,9 +281,9 @@ export default class TimeController {
     })
   };
 
-    /**
-     * Stops (pauses and rewinds) animation.
-     */
+  /**
+   * Stops (pauses and rewinds) animation.
+   */
   stop () {
     this.model_.stop()
     this.views_.forEach(view => {
@@ -291,98 +291,98 @@ export default class TimeController {
     })
   };
 
-    /**
-     * Moves to previous time frame.
-     */
+  /**
+   * Moves to previous time frame.
+   */
   previous () {
     this.model_.previous()
   };
 
-    /**
-     * Moves to next time frame.
-     */
+  /**
+   * Moves to next time frame.
+   */
   next () {
     this.model_.next()
   };
 
-    /**
-     * Moves to given time frame.
-     * @param time {number} Timestamp of new animation time.
-     */
+  /**
+   * Moves to given time frame.
+   * @param time {number} Timestamp of new animation time.
+   */
   setAnimationTime (time) {
     this.model_.setAnimationTime(time)
   };
 
-    /**
-     * Sets animations frame rate.
-     * @param {number} frameRate Frame rate.
-     */
+  /**
+   * Sets animations frame rate.
+   * @param {number} frameRate Frame rate.
+   */
   setFrameRate (frameRate) {
     this.model_.setFrameRate(frameRate)
   };
 
-    /**
-     * Sets animation begin time.
-     * @param {number} beginTime Animation begin time.
-     */
+  /**
+   * Sets animation begin time.
+   * @param {number} beginTime Animation begin time.
+   */
   setBeginTime (beginTime) {
     this.model_.setBeginTime(beginTime)
   };
 
-    /**
-     * Sets animation end time.
-     * @param {number} endTime Animation end time.
-     */
+  /**
+   * Sets animation end time.
+   * @param {number} endTime Animation end time.
+   */
   setEndTime (endTime) {
     this.model_.setEndTime(endTime)
   };
 
-    /**
-     * Sets animation time step.
-     * @param timeStep Animation time step.
-     */
+  /**
+   * Sets animation time step.
+   * @param timeStep Animation time step.
+   */
   setTimeStep (timeStep) {
     this.model_.setResolutionTime(timeStep)
   };
 
-    /**
-     * Sets time zone.
-     * @param {string} timeZone Time zone.
-     */
+  /**
+   * Sets time zone.
+   * @param {string} timeZone Time zone.
+   */
   setTimeZone (timeZone) {
     this.views_.forEach(view => {
       view.setTimeZone(timeZone)
     })
   };
 
-    /**
-     * Sets time zone.
-     * @param {string} timeZoneLabel Time zone.
-     */
+  /**
+   * Sets time zone.
+   * @param {string} timeZoneLabel Time zone.
+   */
   setTimeZoneLabel (timeZoneLabel) {
     this.views_.forEach(view => {
       view.setTimeZoneLabel(timeZoneLabel)
     })
   };
 
-    /**
-     * Sets time grid offset from midnight.
-     * @param gridTimeOffset {Number} Time grid offset.
-     */
+  /**
+   * Sets time grid offset from midnight.
+   * @param gridTimeOffset {Number} Time grid offset.
+   */
   setDayStartOffset (gridTimeOffset) {
     this.model_.setDayStartOffset(gridTimeOffset)
   };
 
-    /**
-     * Produces a new timer definition.
-     */
+  /**
+   * Produces a new timer definition.
+   */
   createTimer () {
     this.model_.createTimer()
   };
 
-    /**
-     * Destroys current time model and views.
-     */
+  /**
+   * Destroys current time model and views.
+   */
   destroyTime () {
     const numViews = this.views_.length
     let i

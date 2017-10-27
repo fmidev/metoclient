@@ -123,7 +123,7 @@ In static build, OpenLayers 4 functionality is also available to the extent that
 
 ### Generating Documentation and Examples
 
-* npm run docs
+* npm run doc
 * npm run examples
 
 ### Class documentation

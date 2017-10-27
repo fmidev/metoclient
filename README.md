@@ -128,4 +128,4 @@ In static build, OpenLayers 4 functionality is also available to the extent that
 
 ### Class documentation
 
-Full documentation: [jsdoc/index.html](https://rawgit.com/fmidev/metoclient/master/jsdoc/index.html)
+Full documentation: [build/jsdoc/index.html](build/jsdoc/index.html)

@@ -121,7 +121,7 @@ In static build, OpenLayers 4 functionality is also available to the extent that
 
 * npm run test
 
-### Generating Documentation and Examples
+### Generating documentation and examples
 
 * npm run doc
 * npm run examples

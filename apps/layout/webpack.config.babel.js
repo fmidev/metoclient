@@ -94,7 +94,6 @@ export default () => ({
       {
         test: /\.jsx?$/,
         loader: 'babel-loader',
-        exclude: /node_modules/,
         options: {
           babelrc: false, // Tells webpack not to use the .babelrc file
           presets: [

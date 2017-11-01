@@ -32,7 +32,6 @@
     "jquery": "^3.2.1",
     "metoclient": "file:../../",
     "moment-timezone": "0.5.11",
-    "openlayers": "3.20.0",
     "proj4": "^2.4.4",
     "prop-types": "^15.5.10",
     "react": "^15.5.4",

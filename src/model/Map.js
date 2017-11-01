@@ -109,10 +109,10 @@ export default class Map {
     // Collect urls
     for (i = 0; i < numLayers; i++) {
       layer = this.layers_[i]
-      if  ((layer['timeCapabilitiesInit'] != null) && (layer['timeCapabilities'] !== undefined) && (!urls.includes(layer['timeCapabilities']))) {
+      if  ((layer['timeCapabilitiesInit'] == null) && (layer['timeCapabilities'] !== undefined) && (!urls.includes(layer['timeCapabilities']))) {
         urls.push(layer['timeCapabilities'])
       }
-      if ((layer['tileCapabilitiesInit'] != null) &&(layer['tileCapabilities'] !== undefined) && (!urls.includes(layer['tileCapabilities']))) {
+      if ((layer['tileCapabilities'] !== undefined) && (!urls.includes(layer['tileCapabilities']))) {
         urls.push(layer['tileCapabilities'])
       }
     }

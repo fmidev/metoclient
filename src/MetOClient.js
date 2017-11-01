@@ -89,6 +89,7 @@ export class MetOClient {
     if ((project) && (window['fi']) && (window['fi']['fmi']) && (window['fi']['fmi']['metoclient']) && (window['fi']['fmi']['metoclient'][project])) {
       jQuery.extend(true, newConfig, window['fi']['fmi']['metoclient'][project]['Config'])
     }
+    this.config_['map']['view']['project'] = project
 
     // Configuration from parameter values
     this.config_ = jQuery.extend(true, newConfig, this.config_)
@@ -124,15 +125,6 @@ export class MetOClient {
      * @private
      */
     this.mapController_ = new MapController(this.config_['map'], this.timeController_.getCreationTime())
-  };
-
-  /**
-   * Static getter for an utility function floorDate.
-   * @return {function} Function to floor a date based on given resolution.
-   * @export
-   */
-  static get floorDate () {
-    return utils['floorDate']
   };
 
   /**

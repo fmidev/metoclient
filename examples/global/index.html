@@ -22,26 +22,14 @@
     alert('Check HTML source: proper API-KEY should be set.')
   } else {
     // Initialize options objects for animation.
-    var resolutionTime = 30 * 60 * 1000
+    var resolutionTime = 60 * 60 * 1000
     var currentDate = new Date()
-    var currentTime = fi.fmi.metoclient.MetOClient.floorTime(currentDate.getTime(), 60 * 60 * 1000)
-    var beginTime = currentTime - 5.5 * 60 * 60 * 1000
-    var endTime = currentTime + 3.5 * 60 * 60 * 1000
+    var currentTime = fi.fmi.metoclient.MetOClient.floorTime(currentDate.getTime(), resolutionTime)
+    var beginTime = currentTime - 5 * resolutionTime
+    var endTime = currentTime + 5 * resolutionTime
     var resolutions = [2048, 1024, 512, 256, 128, 64]
     var baseUrl = 'http://wms.fmi.fi/fmi-apikey/' + API_KEY + '/geoserver/'
     var wmsBaseUrl = baseUrl + 'wms'
-    /* var wmtsBaseUrl = baseUrl + 'gwc/service/wmts'
-    var matrixIds = [
-      'ETRS-TM35FIN:2',
-      'ETRS-TM35FIN:3',
-      'ETRS-TM35FIN:4',
-      'ETRS-TM35FIN:5',
-      'ETRS-TM35FIN:6',
-      'ETRS-TM35FIN:7'
-    ]
-    var origin = [-4537345.568, 8254755.58]
-    var origins256 = [[-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352]]
-    var origins512 = [[-118331.36640836, 8432773.1670142], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352]] */
     var origins1024 = [[-118331.36640836, 8432773.1670142], [-118331.36640836, 8432773.1670142], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352]]
     var extent = [-118331.366408356, 6335621.16701424, 875567.731906565, 7907751.53726352]
     var imgPath = '../../img/'
@@ -61,14 +49,18 @@
               className: 'OSM',
               title: 'OpenStreetMap',
               visible: true,
-              editOpacity: true
+              useSavedVisible: true,
+              editOpacity: true,
+              useSavedOpacity: true,
             },
             // ---------------------------------------------------------------
             {
               className: 'Stamen',
               title: 'Water Color',
               visible: false,
+              useSavedVisible: true,
               editOpacity: true,
+              useSavedOpacity: true,
               sourceOptions: {
                 layer: 'watercolor'
               }
@@ -76,9 +68,11 @@
             // ---------------------------------------------------------------
             {
               className: 'TileWMS',
-              title: 'Rain',
+              title: 'Rain radar and humidity forecast',
               visible: true,
+              useSavedVisible: true,
               editOpacity: true,
+              useSavedOpacity: true,
               type: 'obs',
               sourceOptions: {
                 url: wmsBaseUrl,
@@ -98,21 +92,22 @@
               animation: {
                 beginTime: beginTime,
                 resolutionTime: resolutionTime,
-                hasLegend: true,
-                legendVisible: true
+                hasLegend: false,
               }
             },
             // ---------------------------------------------------------------
             {
               className: 'TileWMS',
-              title: 'Rain',
+              title: 'Rain radar and humidity forecast',
               visible: true,
+              useSavedVisible: true,
               editOpacity: true,
+              useSavedOpacity: true,
               type: 'for',
               sourceOptions: {
                 url: wmsBaseUrl,
                 params: {
-                  'LAYERS': 'Radar:suomi_tuliset_rr_eureffin',
+                  'LAYERS': 'Weather:precipitation-forecast',
                   'TRANSPARENT': 'TRUE',
                   'FORMAT': 'image/png'
                 },
@@ -127,37 +122,17 @@
               animation: {
                 endTime: endTime,
                 resolutionTime: resolutionTime,
-                hasLegend: true
+                hasLegend: false
               }
             },
-              /* {
-               className: 'WMTS',
-               title: 'Sadealueet',
-               visible: true,
-               editOpacity: true,
-               type: 'for',
-               sourceOptions: {
-               layer: 'Radar:suomi_tuliset_rr_eureffin',
-               url: wmtsBaseUrl,
-               format: 'image/png',
-               style: '',
-               matrixSet: 'ETRS-TM35FIN',
-               projection: 'EPSG:3067',
-               tileGridOptions: {
-               matrixIds: matrixIds,
-               resolutions: resolutions,
-               origin: origin,
-               tileSize: 256,
-               extent: extent
-               }
-               }
-               },*/
             // ---------------------------------------------------------------
             {
               className: 'TileWMS',
-              title: 'Cloudiness (forecast)',
+              title: 'Cloudiness forecast',
               visible: false,
+              useSavedVisible: true,
               editOpacity: true,
+              useSavedOpacity: true,
               type: 'for',
               sourceOptions: {
                 url: wmsBaseUrl,
@@ -177,8 +152,39 @@
               animation: {
                 beginTime: currentTime,
                 endTime: endTime,
-                resolutionTime: 2 * resolutionTime,
+                resolutionTime: resolutionTime,
                 hasLegend: true
+              }
+            },
+            // ---------------------------------------------------------------
+            {
+              className: 'TileWMS',
+              title: 'Temperature forecast',
+              visible: true,
+              useSavedVisible: true,
+              editOpacity: true,
+              useSavedOpacity: true,
+              type: 'for',
+              sourceOptions: {
+                url: wmsBaseUrl,
+                params: {
+                  'LAYERS': 'Weather:temperature-forecast-contour',
+                  'TRANSPARENT': 'TRUE',
+                  'FORMAT': 'image/png'
+                },
+                projection: 'EPSG:3067',
+                tileGridOptions: {
+                  origins: origins1024,
+                  extent: extent,
+                  resolutions: resolutions,
+                  tileSize: 1024
+                }
+              },
+              animation: {
+                beginTime: currentTime,
+                endTime: endTime,
+                resolutionTime: resolutionTime,
+                hasLegend: false
               }
             },
             // ---------------------------------------------------------------
@@ -187,7 +193,9 @@
               type: 'features',
               title: 'Markers',
               visible: true,
+              useSavedVisible: true,
               editOpacity: true,
+              useSavedOpacity: true,
               popup: true,
               source: {
                 projection: 'EPSG:4326',
@@ -237,7 +245,7 @@
                   }
                 }
               ]
-            },
+            }
           ]
         },
         view: {

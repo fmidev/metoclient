@@ -9,6 +9,7 @@
 import jQuery from 'jquery'
 import EventEmitter from 'wolfy87-eventemitter'
 import { default as proj4 } from 'proj4'
+import moment from 'moment-timezone'
 import * as constants from '../../../constants'
 import LayerSwitcher from './LayerSwitcher'
 import _ol_ from 'ol/index'
@@ -285,10 +286,72 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   this.set('viewProjection', this.get('config')['projection'])
   // console.log("Start to handle capabilities");
   // console.log(goog.now());
+  this.updateStorage()
   this.parameterizeLayers(capabilities)
   // console.log("End capabilities handling");
   // console.log(goog.now());
   this.initMap()
+}
+
+/**
+ * Performs bidirectional data exchange with local storage.
+ */
+MapAnimation.prototype.updateStorage = function () {
+  const layers = this.get('layers')
+  let localStorageOpacity, localStorageVisible
+  let project = this.get('config')['project'];
+  let i, layer
+  let numLayers = layers.length
+
+  for (i = 0; i < numLayers; i++) {
+    layer = layers[i]
+    if (layer['useSavedOpacity']) {
+      localStorageOpacity = this.loadLayerPropertyFromLocalStorage(layer['title'], 'opacity')
+      if (localStorageOpacity != null) {
+        layer['opacity'] = localStorageOpacity;
+      }
+    }
+    if (layer['opacity'] != null) {
+      localStorage.setItem(project+'-'+layer['title']+'-opacity', layer['opacity'])
+    }
+    if (layer['useSavedVisible']) {
+      localStorageVisible = this.loadLayerPropertyFromLocalStorage(layer['title'], 'visible')
+      if (localStorageVisible != null) {
+        layer['visible'] = localStorageVisible;
+      }
+    }
+    if (layer['visible'] != null) {
+      localStorage.setItem(project+'-'+layer['title']+'-visible', layer['visible'])
+    }
+  }
+}
+
+/**
+ * Parses time values from capabilities string.
+ * @param {Object} layer Layer configuration.
+ * @param {string} values Capabilities time definitions.
+ */
+MapAnimation.prototype.parseCapabTimes = function (layerAnimation, values) {
+  let parameters = values.split('/')
+  let i, dates, datesLen,capabTime
+  if (parameters.length >= 3) {
+    layerAnimation['capabBeginTime'] = moment(parameters[0]).valueOf()
+    layerAnimation['capabEndTime'] = moment(parameters[1]).valueOf()
+    layerAnimation['capabResolutionTime'] = moment.duration(parameters[2]).asMilliseconds()
+  } else {
+    dates = values.split(',')
+    layerAnimation['capabTimes'] = []
+    for (i = 0, datesLen = dates.length; i < datesLen; i++) {
+      capabTime = moment(dates[i]).valueOf()
+      if (jQuery.isNumeric(capabTime)) {
+        layerAnimation['capabTimes'].push(capabTime)
+      }
+    }
+    if (layerAnimation['capabTimes'].length > 0) {
+      layerAnimation['capabBeginTime'] = layerAnimation['capabTimes'][0]
+      layerAnimation['capabEndTime'] = layerAnimation['capabTimes'][layerAnimation['capabTimes'].length - 1]
+    }
+  }
 }
 
 /**
@@ -297,32 +360,13 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
  */
 MapAnimation.prototype.parameterizeLayers = function (capabilities) {
   const currentTime = /** @type {number} */ (this.get('currentTime'))
-  let result
   const results = {}
-  let numLayers
-  let template
-  let found
-  let i
-  let j
-  let l
-  let id
-  let len
-  let layersCapab
-  let dimension
-  let values
-  let capabTime
-  let dates
-  let datesLen
-  let parameters
-  let wmsParser
-  let wmtsParser
-  let options
   const layers = this.get('layers')
-
+  let result, numLayers, template, found, i, l, id, len,
+    layersCapab, dimension, values, wmsParser, wmtsParser, options
   numLayers = layers.length
   loopLayers: for (i = 0; i < numLayers; i++) {
     template = layers[i]
-
     // WMTS/tiles
     if (capabilities != null) {
       wmtsParser = new _ol_format_WMTSCapabilities_()
@@ -361,13 +405,17 @@ MapAnimation.prototype.parameterizeLayers = function (capabilities) {
     if (template['animation']['endTime'] == null) {
       template['animation']['endTime'] = /** @type {number} */ (this.get('animationEndTime'))
     }
+    if (template['timeCapabilitiesInit'] != null) {
+      this.parseCapabTimes(template['animation'], template['timeCapabilitiesInit'])
+      template['timeCapabilitiesInit'] = null;
+      continue;
+    }
     if (template['timeCapabilities'] == null) {
       continue
     }
     if (capabilities == null) {
       continue
     }
-
     wmsParser = new _ol_format_WMSCapabilities_()
     if (results[template['timeCapabilities']] === undefined) {
       results[template['timeCapabilities']] = wmsParser.read(capabilities[template['timeCapabilities']])
@@ -411,25 +459,7 @@ MapAnimation.prototype.parameterizeLayers = function (capabilities) {
         continue loopLayers
       }
       values = dimension['values']
-      parameters = values.split('/')
-      if (parameters.length >= 3) {
-        template['animation']['capabBeginTime'] = moment(parameters[0]).valueOf()
-        template['animation']['capabEndTime'] = moment(parameters[1]).valueOf()
-        template['animation']['capabResolutionTime'] = moment.duration(parameters[2]).asMilliseconds()
-      } else {
-        dates = values.split(',')
-        template['animation']['capabTimes'] = []
-        for (j = 0, datesLen = dates.length; j < datesLen; j++) {
-          capabTime = moment(dates[j]).valueOf()
-          if (jQuery.isNumeric(capabTime)) {
-            template['animation']['capabTimes'].push(capabTime)
-          }
-        }
-        if (template['animation']['capabTimes'].length > 0) {
-          template['animation']['capabBeginTime'] = template['animation']['capabTimes'][0]
-          template['animation']['capabEndTime'] = template['animation']['capabTimes'][template['animation']['capabTimes'].length - 1]
-        }
-      }
+      this.parseCapabTimes(template['animation'], values)
       break
     }
   }
@@ -628,6 +658,7 @@ MapAnimation.prototype.initMap = function () {
   }
   if (config['showLayerSwitcher']) {
     layerSwitcher = new LayerSwitcher({
+      'project': config['project'],
       'tipLabel': config['layersTooltip'],
       'showLegend': config['showLegend'],
       'legendContainer': config['legendContainer'],
@@ -836,6 +867,7 @@ MapAnimation.prototype.initListeners = function () {
       self.asyncLoadCount = asyncLoadCount
       self.numIntervalItems = []
       extent = self.calculateExtent(true)
+      self.updateStorage()
       if (self.reloadNeeded(extent)) {
         // Todo: toteuta tämä LayerSwitcherissä funktiona
         jQuery('.layer-switcher input').prop('disabled', true)
@@ -1366,6 +1398,19 @@ MapAnimation.prototype.createFeatureStyle = (options, z) => {
 }
 
 /**
+ * Loads a layer parameter from the local storage.
+ * @param {string} layer Layer title.
+ * @param {string} property Property name.
+ */
+MapAnimation.prototype.loadLayerPropertyFromLocalStorage = function(layer, property) {
+  let item = localStorage.getItem(this.get('config')['project']+'-'+layer+'-'+property)
+  if (item != null) {
+    item = JSON.parse(item)
+  }
+  return item
+}
+
+/**
  * Loads new static layers.
  * @param {boolean} layerVisibility True if layer is visible.
  * @param {string} layerType Layer type for filtering.
@@ -1415,26 +1460,10 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, numIntervalItem
   const animation = layer['animation']
   const absBeginTime = /** @type {number} */ (this.get('animationBeginTime'))
   const newOverlay = false
-  let layerTime
+  let layerTime, layerOptions, layerVisibility, currentVisibility
   let prevLayerTime = Number.NEGATIVE_INFINITY
-  let layerOptions
-  let layerVisibility
-  let currentVisibility
-  let i
-  let len
-  let iMin
-  let iMax
-  let n
-  let mapLayer
-  let largest
-  let t
-  let tEnd
-  let k
-  let tAnimation
-  let tk
-  let tkEnd
-  let currentTime
-  let intervalIndex
+  let i, len, iMin, iMax, n, mapLayer, largest, t, tEnd, k, tAnimation
+  let tk, tkEnd, currentTime, intervalIndex
   const numIntervals = /** @type {number} */ (this.get('animationNumIntervals'))
   const epsilon = this.layerResolution
   const resolutionTime = /** @type {number} */ (self.get('animationResolutionTime'))
@@ -2435,6 +2464,7 @@ MapAnimation.prototype.requestViewUpdate = function () {
 /** @inheritDoc */
 MapAnimation.prototype.setLayerVisible = function (layerTitle, visibility) {
   const map = this.get('map')
+  const localStorageId = this.get('config')['project']+'-'+layerTitle+'-visible'
   const layerVisibility = map.get('layerVisibility')
   const layer = this.getLayer(layerTitle)
   let updateVisibility
@@ -2446,11 +2476,13 @@ MapAnimation.prototype.setLayerVisible = function (layerTitle, visibility) {
     } else {
       layer.setVisible(visibility)
       layerVisibility[layerTitle] = visibility
+      localStorage.setItem(localStorageId, visibility)
       this.requestViewUpdate()
     }
   } else {
     layer.setVisible(visibility)
     layerVisibility[layerTitle] = visibility
+    localStorage.setItem(localStorageId, visibility)
     this.requestViewUpdate()
   }
 }

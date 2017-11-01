@@ -20,19 +20,13 @@ export default class _ol_control_LayerSwitcher_ {
     const options = opt_options || {}
 
     const tipLabel = options['tipLabel']
-            ? options['tipLabel'] : 'Layers'
+      ? options['tipLabel'] : 'Layers'
 
-    this.showLegend = options['showLegend']
-            ? options['showLegend'] : false
-    this.legendContainer = options['legendContainer']
-            ? options['legendContainer'] : 'legend'
-
-    this.legendTitle = options['legendTitle']
-            ? options['legendTitle'] : 'Legend'
-
-    this.noLegendText = options['noLegendText']
-            ? options['noLegendText'] : 'None'
-
+    this.project = options['project'] ? options['project'] : ''
+    this.showLegend = options['showLegend']? options['showLegend'] : false
+    this.legendContainer = options['legendContainer'] ? options['legendContainer'] : 'legend'
+    this.legendTitle = options['legendTitle'] ? options['legendTitle'] : 'Legend'
+    this.noLegendText = options['noLegendText'] ? options['noLegendText'] : 'None'
     this.baseGroupName = options['baseGroupName']
     this.opacityTitle = options['opacityTitle']
 
@@ -150,7 +144,7 @@ _ol_control_LayerSwitcher_.prototype.renderLegends_ = function (legendInfo, elm)
   emptyOption['value'] = -1
   emptyOption['text'] = this.noLegendText
   selectList.appendChild(emptyOption)
-    // Visible legend
+  // Visible legend
   if (legendInfo.length > 0) {
     const visibleLegend = jQuery(`div.${this.legendContainer} > figure`).filter(':visible').attr('class')
 
@@ -182,12 +176,12 @@ _ol_control_LayerSwitcher_.prototype.renderLegends_ = function (legendInfo, elm)
  * @param {ol.Map} map The map instance.
  */
 _ol_control_LayerSwitcher_.prototype.setMap = function (map) {
-    // Clean up listeners associated with the previous map
+  // Clean up listeners associated with the previous map
   for (let i = 0; i < this.mapListeners.length; i++) {
     this.getMap().un('pointerdown', this.mapListeners[i])
   }
   this.mapListeners.length = 0
-    // Wire up listeners etc. and store reference to new map
+  // Wire up listeners etc. and store reference to new map
   _ol_control_Control_.prototype.setMap.call(this, map)
   if (map) {
     const this_ = this
@@ -221,17 +215,20 @@ _ol_control_LayerSwitcher_.prototype.ensureTopVisibleBaseLayerShown_ = function 
  * @param visible
  */
 _ol_control_LayerSwitcher_.prototype.setVisible_ = function (lyr, visible) {
+  const this_ = this
   const map = this.getMap()
   const layerVisibility = map.get('layerVisibility')
   layerVisibility[lyr.get('title')] = visible
+  localStorage.setItem(this_.project+'-'+lyr.get('title')+'-visible', visible)
   if (lyr.get('type') === 'map') {
     lyr.setVisible(visible)
     if (visible) {
-            // Hide all other base layers regardless of grouping
+      // Hide all other base layers regardless of grouping
       _ol_control_LayerSwitcher_.forEachRecursive(map, (l, idx, a) => {
         if (l != lyr && l.get('type') === 'map') {
           l.setVisible(false)
           layerVisibility[l.get('title')] = false
+          localStorage.setItem(this_.project+'-'+l.get('title')+'-visible', false)
         }
       })
     }
@@ -257,7 +254,7 @@ _ol_control_LayerSwitcher_.prototype.renderLayer_ = function (lyr, idx) {
   const label = document.createElement('label')
 
   if ((lyr.getLayers) && (lyr.get('nested'))) {
-        // Todo: käytä config['baseGroupName']
+    // Todo: käytä config['baseGroupName']
     if ((lyr.get('title') === this_.baseGroupName) && (lyr.getLayers().getLength() < 2)) {
       return null
     }
@@ -325,7 +322,10 @@ _ol_control_LayerSwitcher_.prototype.renderLayer_ = function (lyr, idx) {
         value = Math.max(value, 0)
         value = Math.min(value, 100)
         this['value'] = parseFloat(value).toFixed(0)
-        lyr.set('opacity', value / 100)
+        value /= 100
+        lyr.set('opacity', value)
+        lyr.set('defaultOpacity', value)
+        localStorage.setItem(this_.project+'-'+lyr.get('title')+'-opacity', value);
       }
       opacityEditor.appendChild(opacityValue)
       const percentText = document.createElement('span')
@@ -351,7 +351,7 @@ _ol_control_LayerSwitcher_.prototype.renderLayer_ = function (lyr, idx) {
 _ol_control_LayerSwitcher_.prototype.renderLayers_ = function (lyr, elm, reverse) {
   let legendInfo = []
   const lyrs = lyr.getLayers().getArray().slice()
-    /** @type {number} */
+  /** @type {number} */
   let i
   let l
   if ((typeof reverse !== 'undefined') && (reverse)) {

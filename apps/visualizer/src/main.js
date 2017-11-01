@@ -15,6 +15,21 @@ const store = new Vuex.Store({
   mutations: {
     reset (state, config) {
       state.metoclient = new MetOClient(config)
+    },
+    create (state) {
+      if (state.metoclient != null) {
+        state.metoclient.createAnimation()
+      }
+    },
+    refresh (state) {
+      if (state.metoclient != null) {
+        state.metoclient.refresh()
+      }
+    },
+    destruct (state) {
+      if (state.metoclient != null) {
+        state.metoclient.destruct()
+      }
     }
   }
 })
@@ -49,11 +64,14 @@ const update = (values) => {
 }
 
 const locate = (id) => {
-
 }
 
-const destroy = () => {
-  vm.$set(vm.config, 'animator', null)
+const refresh = () => {
+  store.commit('refresh')
 }
 
-export { init, locate, update, destroy }
+const destruct = () => {
+  store.commit('destruct')
+}
+
+export { init, locate, update, refresh, destruct }

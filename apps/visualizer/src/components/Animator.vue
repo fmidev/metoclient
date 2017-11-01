@@ -20,7 +20,7 @@
               return
             }
             this.$store.commit('reset', newConfig)
-            this.$store.state.metoclient.createAnimation()
+            this.$store.commit('create')
           }
         }
       },

@@ -249,6 +249,7 @@ export class MetOClient {
           'pointerHeight': 30,
           'pointerWidth': 50,
           'pointerTextOffset': 15,
+          'pointerTextYOffset': 30,
           'pointerColor': '#585858',
           'pointerStrokeColor': '#FFFFFF',
           'pointerTextColor': '#D7B13E',

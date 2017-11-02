@@ -5,6 +5,10 @@
  */
 
 import { tz } from 'moment-timezone'
+import moment from 'moment-timezone'
+import fi from 'moment/locale/fi'
+import sv from 'moment/locale/sv'
+import uk from 'moment/locale/uk'
 
 /**
  * Floors time based on the given resolution.
@@ -138,3 +142,44 @@ export const supportOldBrowsers = () => {
     })
   }
 }
+
+/**
+ * Generate text presentation of the given time.
+ * @param {number} tickTime Time value.
+ * @param {number} beginTime First available time value.
+ * @param {number} resolutionTime Time resolution.
+ * @parame {string} timeZone Current timezone.
+ * @parame {string} locale Locale for output text.
+ * @param {number|null=} prevTime Previous time value.
+ * @returns {string} Generated text presentation.
+ */
+export const getTickText = (tickTime, beginTime, resolutionTime, timeZone, locale, prevTime) => {
+  let zTime
+  let zPrevTime
+  let day
+  let year
+  let currentMoment
+  let format = 'HH:mm'
+  const dateFormat = 'dd D.M.'
+  if (beginTime == null) {
+    return ''
+  }
+  if (tickTime < beginTime) {
+    tickTime = beginTime
+  }
+  moment.locale(locale)
+  zTime = moment(beginTime + Math.ceil((tickTime - beginTime) / resolutionTime) * resolutionTime).tz(timeZone)
+  day = zTime.dayOfYear()
+  year = zTime.year()
+  currentMoment = moment()
+  if (prevTime != null) {
+    zPrevTime = moment(prevTime).tz(timeZone)
+    if ((day !== zPrevTime.dayOfYear()) || (year !== zPrevTime.year())) {
+      format = dateFormat
+    }
+  } else if ((typeof prevTime !== 'undefined') && ((day !== currentMoment.dayOfYear()) || (year !== currentMoment.year()))) {
+    format = dateFormat
+  }
+  return zTime.format(format)
+}
+

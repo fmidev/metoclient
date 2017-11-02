@@ -5,7 +5,12 @@
  */
 
 import Time from '../model/Time'
+// #if process.env.TIME_SLIDER !== 'raphael'
+import TimeSlider from '../view/time/svg/TimeSlider'
+// #endif
+// #if process.env.TIME_SLIDER === 'raphael'
 import TimeSlider from '../view/time/raphael/TimeSlider'
+// #endif
 import EventEmitter from 'wolfy87-eventemitter'
 import jQuery from 'jquery'
 

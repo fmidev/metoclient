@@ -5,7 +5,7 @@
  */
 
 import EventEmitter from 'wolfy87-eventemitter'
-import Raphael from 'raphael'
+import SVG from 'svg.js'
 import * as utils from '../../../utils'
 import moment from 'moment-timezone'
 import fi from 'moment/locale/fi'
@@ -56,7 +56,7 @@ export default class TimeSlider {
       frameHeight,
       paperWidth,
       paperHeight,
-      paper,
+      draw,
       sliderWidth,
       sliderOffset,
       labelPhase,
@@ -101,6 +101,9 @@ export default class TimeSlider {
       startPointerDrag,
       startPointerTouch,
       logo
+    if (!SVG.supported) {
+      return;
+    }
     if (!this.config_['showTimeSlider']) {
       return
     }
@@ -130,35 +133,54 @@ export default class TimeSlider {
     paperWidth = containerWidth
     paperHeight = this.config_['imageHeight'] + this.config_['pointerHeight']
     labelPhase = Math.max(Math.round(5 * this.config_['tickTextSize'] / frameWidth), 1)
-    paper = Raphael(this.container_, containerWidth, paperHeight)
-    paper.canvas.style.strokeWidth = '0'
-    paper.canvas.style.position = 'absolute'
-    paper.canvas.style.top = ''
-    paper.canvas.style.left = '0'
-    paper.canvas.style.bottom = '0'
-    paper.canvas.style.width = '100%'
-    playButtonBackground = paper.path(`M${sliderOffset} 0 l0 ${this.config_['imageHeight']}l${this.config_['imageWidth']} 0l0 -${this.config_['imageHeight']}Z`).attr({
-      'fill': this.config_['imageBackgroundColor']
-    }).mouseover(function (e) {
-      this.attr({'fill': self.config_['imageHoverColor']})
-    })
-    background = paper.path(`M${sliderOffset + this.config_['imageWidth']} 0 l0 ${this.config_['imageHeight']}l${sliderWidth} 0l0 -${this.config_['imageHeight']}Z`).attr({
-      'fill': '#FFFFFF'
-    })
+    draw = SVG(this.container_)
+      .size(containerWidth, paperHeight)
+      .style({
+        strokeWidth: '0',
+        position: 'absolute',
+        top: '',
+        left: '0',
+        bottom: '0',
+        width: '100%',
+      })
+    playButtonBackground = draw
+      .path(`M${sliderOffset} 0 l0 ${this.config_['imageHeight']}l${this.config_['imageWidth']} 0l0 -${this.config_['imageHeight']}Z`)
+      .attr({
+        'fill': this.config_['imageBackgroundColor']
+      })
+      .on('mouseover', function (e) {
+        this.attr({
+          'fill': self.config_['imageHoverColor']
+        })
+      })
+      .on('mouseout', function (e) {
+        this.attr({
+          'fill': self.config_['imageBackgroundColor']
+        })
+      })
+
+    background = draw
+      .path(`M${sliderOffset + this.config_['imageWidth']} 0 l0 ${this.config_['imageHeight']}l${sliderWidth} 0l0 -${this.config_['imageHeight']}Z`)
+      .attr({
+        'fill': '#FFFFFF'
+      })
     background.node.id = 'fmi-animator-timeslider-background'
     imagePath = this.animationPlay_ ? this.config_['pauseImagePath'] : this.config_['playImagePath']
-    playPauseButton = paper.image(imagePath, sliderOffset, 0, this.config_['imageWidth'], this.config_['imageHeight']).attr({
-      'cursor': 'pointer'
-    }).click(e => {
-      self.animationPlay_ = !self.animationPlay_
-      self.variableEvents.emitEvent('animationPlay', [self.animationPlay_])
-    }).hover(e => {
-      playButtonBackground.attr({
-        'fill': self.config_['imageHoverColor']
+    playPauseButton = draw
+      .image(imagePath, this.config_['imageWidth'], this.config_['imageHeight'])
+      .move(sliderOffset, 0)
+      .attr({
+        'cursor': 'pointer'
+      }).click(e => {
+        self.animationPlay_ = !self.animationPlay_
+        self.variableEvents.emitEvent('animationPlay', [self.animationPlay_])
+      }).on('mouseover', e => {
+        playButtonBackground.attr({
+          'fill': self.config_['imageHoverColor']
+        })
+      }).on('mouseout', e => {
+        playButtonBackground.attr({'fill': self.config_['imageBackgroundColor']})
       })
-    }, e => {
-      playButtonBackground.attr({'fill': self.config_['imageBackgroundColor']})
-    })
     this.playPauseButton_ = playPauseButton
     labelStart = 0
     for (i = 1; i < numIntervals; i++) {
@@ -194,9 +216,10 @@ export default class TimeSlider {
       }
       x = sliderOffset + this.config_['imageWidth'] + (i + 1) * frameWidth
       // Status color bars
-      frameStatusRects.push(paper.rect(x, frameHeight, frameWidth, this.config_['statusHeight']).attr({
-        'fill': this.config_['loadedColor']
-      }))
+      frameStatusRects.push(draw
+        .rect(frameWidth, this.config_['statusHeight'])
+        .move(x, frameHeight)
+        .fill(this.config_['loadedColor']))
       // Skip the first tick and label
       if (i === -1) {
         continue
@@ -206,10 +229,14 @@ export default class TimeSlider {
         tickText = utils.getTickText(time, this.beginTime_, this.resolutionTime_, this.timeZone_, this.config_['locale'], previousTime)
         y = this.config_['tickHeight']
         tickHeight = this.config_['tickHeight']
-        timeLabel = paper.text(x, this.config_['tickTextYOffset'], tickText).attr({
-          'fill': this.config_['tickTextColor'],
-          'font-size': Math.max(this.config_['tickTextSize'], this.config_['tickTextSize'])
-        })
+        timeLabel = draw
+          .text(tickText)
+          .move(x, this.config_['tickTextYOffset'])
+          .attr({
+            'text-anchor': 'middle',
+            'fill': this.config_['tickTextColor'],
+            'font-size': Math.max(this.config_['tickTextSize'], this.config_['tickTextSize'])
+          })
         previousTime = time
       } else {
         tickText = ''
@@ -217,10 +244,12 @@ export default class TimeSlider {
       }
       tickTexts.push(tickText)
       y = frameHeight + this.config_['statusHeight'] - y
-      tick = paper.path(`M${x} ${y}l0 ${tickHeight}`).attr({
-        'stroke': this.config_['tickColor'],
-        'stroke-width': '1'
-      })
+      tick = draw
+        .path(`M${x} ${y}l0 ${tickHeight}`)
+        .attr({
+          'stroke': this.config_['tickColor'],
+          'stroke-width': '1'
+        })
     }
     this.frameStatusRects_ = frameStatusRects
     pastWidth = past * frameWidth
@@ -228,19 +257,26 @@ export default class TimeSlider {
     if (futureWidth < 1.0e-5) {
       futureWidth = 0
     }
-    paper.rect(sliderOffset + this.config_['imageWidth'], 0, pastWidth, frameHeight).attr({
-      'fill': this.config_['pastColor']
-    }).toBack()
-    paper.rect(sliderOffset + this.config_['imageWidth'] + pastWidth, 0, futureWidth, frameHeight).attr({
-      'fill': this.config_['futureColor']
-    }).toBack()
+    draw
+      .rect(pastWidth, frameHeight)
+      .move(sliderOffset + this.config_['imageWidth'], 0)
+      .fill(this.config_['pastColor'])
+      .back()
+    draw
+      .rect(futureWidth, frameHeight)
+      .move(sliderOffset + this.config_['imageWidth'] + pastWidth, 0)
+      .fill(this.config_['futureColor'])
+      .back()
 
     // Time zone label
-    paper.text(paperWidth - this.config_['sliderOffset'] - 1, frameHeight - 0.5 * this.config_['tickTextSize'] - 1, this.timeZoneLabel_).attr({
-      'text-anchor': 'end',
-      'color': this.config_['tickTextColor'],
-      'font-size': this.config_['tickTextSize']
-    })
+    draw
+      .text(this.timeZoneLabel_)
+      .move(paperWidth - this.config_['sliderOffset'] - 1, frameHeight - 0.5 * this.config_['tickTextSize'] - 1)
+      .attr({
+        'text-anchor': 'end',
+        'color': this.config_['tickTextColor'],
+        'font-size': this.config_['tickTextSize']
+      })
 
     // Create pointer
     x0 = sliderOffset + this.config_['imageWidth']
@@ -251,21 +287,27 @@ export default class TimeSlider {
     y0 = frameHeight
     y1 = y0 + this.config_['statusHeight']
     y2 = y1 + this.config_['pointerHeight']
-    pointer = paper.path(`M${x0} ${y0}L${x1} ${y1}L${x2} ${y1}L${x2} ${y2}L${x3} ${y2}L${x3} ${y1}L${x4} ${y1}Z`)
-    pointer['attr']({
-      'fill': this.config_['pointerColor'],
-      'stroke': this.config_['pointerStrokeColor'],
-      'stroke-width': '1',
-      'cursor': 'pointer'
-    })
-    pointerLabel = paper.text(x0, y2 - this.config_['pointerTextOffset'], '').attr({
-      'fill': this.config_['pointerTextColor'],
-      'font-size': this.config_['pointerTextSize'],
-      'font-weight': 'bold',
-      'cursor': 'pointer'
-    })
-    pointerSet = paper.set()
-    pointerSet.push(
+    pointer = draw
+      .path(`M${x0} ${y0}L${x1} ${y1}L${x2} ${y1}L${x2} ${y2}L${x3} ${y2}L${x3} ${y1}L${x4} ${y1}Z`)
+      .attr({
+        'fill': this.config_['pointerColor'],
+        'stroke': this.config_['pointerStrokeColor'],
+        'stroke-width': '1',
+        'cursor': 'pointer'
+      })
+    pointerLabel = draw
+      .text('')
+      .move(x0, y2 - this.config_['pointerTextYOffset'])
+      .attr({
+        'text-anchor': 'middle',
+        'dominant-baseline': 'middle',
+        'fill': this.config_['pointerTextColor'],
+        'font-size': this.config_['pointerTextSize'],
+        'font-weight': 'bold',
+        'cursor': 'pointer'
+      })
+    pointerSet = draw.set()
+    pointerSet.add(
       pointer,
       pointerLabel
     )
@@ -316,36 +358,38 @@ export default class TimeSlider {
       }
       self.variableEvents.emitEvent('animationTime', [animationTime])
     }
-    pointer['mousedown'](startPointerDrag)
-    pointerLabel['mousedown'](startPointerDrag)
-    pointer['touchstart'](startPointerTouch)
-    pointerLabel['touchstart'](startPointerDrag)
+    pointer.on('mousedown', startPointerDrag)
+    pointerLabel.on('mousedown', startPointerDrag)
+    pointer.on('touchstart', startPointerTouch)
+    pointerLabel.on('touchstart', startPointerDrag)
     jQuery(document).off('mousemove', movePointerDrag).on('mousemove', movePointerDrag)
     jQuery(document).off('touchmove', movePointerTouch).on('touchmove', movePointerTouch)
     jQuery(document).off('mouseup', upPointerDrag).on('mouseup', upPointerDrag)
     jQuery(document).off('touchend', upPointerDrag).on('touchend', upPointerDrag)
-    clickableArea = paper.rect(0, 0, paperWidth, this.config_['imageHeight']).attr({
-      'fill': this.config_['imageBackgroundColor'],
-      'fill-opacity': '0',
-      'cursor': 'pointer'
-    }).mousedown(({offsetX, layerX}) => {
-      let x, xt
-      if (pixelTime === 0) {
-        return
-      }
-      if (paperWidth === 0) {
-        return
-      }
-      self.animationPlay_ = false
-      self.variableEvents.emitEvent('animationPlay', [self.animationPlay_])
-      x = offsetX || layerX
-      xt = sliderOffset + frameWidth + self.config_['imageWidth'] + (self.animationTime_ - beginTime) / pixelTime
-      if (x < xt) {
-        self.actionEvents.emitEvent('previous')
-      } else if (xt < x) {
-        self.actionEvents.emitEvent('next')
-      }
-    })
+    clickableArea = draw
+      .rect(paperWidth, this.config_['imageHeight'])
+      .attr({
+        'fill': this.config_['imageBackgroundColor'],
+        'fill-opacity': '0',
+        'cursor': 'pointer'
+      }).on('mousedown', ({offsetX, layerX}) => {
+        let x, xt
+        if (pixelTime === 0) {
+          return
+        }
+        if (paperWidth === 0) {
+          return
+        }
+        self.animationPlay_ = false
+        self.variableEvents.emitEvent('animationPlay', [self.animationPlay_])
+        x = offsetX || layerX
+        xt = sliderOffset + frameWidth + self.config_['imageWidth'] + (self.animationTime_ - beginTime) / pixelTime
+        if (x < xt) {
+          self.actionEvents.emitEvent('previous')
+        } else if (xt < x) {
+          self.actionEvents.emitEvent('next')
+        }
+      })
     // Mouse wheel
     jQuery(clickableArea.node).bind('mousewheel', (event, delta) => {
       if (delta > 0) {
@@ -366,12 +410,12 @@ export default class TimeSlider {
       })
       jQuery(this.container_).append(logo)
     }
-    this.paper_ = paper
+    this.draw_ = draw
     this.visualPointer_ = pointerSet
     this.updatePointer(animationTime)
-    playPauseButton.toFront()
-    pointerSet.toFront()
-    background.toBack()
+    playPauseButton.front()
+    pointerSet.front()
+    background.back()
   };
 
   /**
@@ -387,7 +431,7 @@ export default class TimeSlider {
    * @param {number} time Time value.
    */
   setPointerText (time) {
-    this.visualPointer_.attr('text', utils.getTickText(time, this.beginTime_, this.resolutionTime_, this.timeZone_, this.config_['locale']))
+    this.visualPointer_.last().text(utils.getTickText(time, this.beginTime_, this.resolutionTime_, this.timeZone_, this.config_['locale']))
   };
 
   /**
@@ -395,7 +439,9 @@ export default class TimeSlider {
    * @param dx Horizontal displacement.
    */
   movePointer (dx) {
-    this.visualPointer_.transform(`T${dx},0`)
+    this.visualPointer_.transform({
+      x: dx
+    })
   };
 
   /** @inheritDoc */
@@ -490,9 +536,9 @@ export default class TimeSlider {
   destroyTimeSlider () {
     this.actionEvents.removeAllListeners()
     this.variableEvents.removeAllListeners()
-    if (this.paper_ != null) {
-      this.paper_.clear()
-      this.paper_ = null
+    if (this.draw_ != null) {
+      this.draw_.clear()
+      this.draw_ = null
     }
     jQuery(this.container_).empty()
   };

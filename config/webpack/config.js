@@ -11,7 +11,7 @@ module.exports = {
   output: {
     library: ['fi', 'fmi', 'metoclient'],
     libraryTarget: 'umd',
-    filename: './dist/metoclient' + (process.env.GLOBAL_EXPORT ? '-global' : '') + '.min.js',
+    filename: './dist/metoclient' + process.env.OUTPUT_POSTFIX + '.min.js',
   },
   externals: {
     'jquery': 'jQuery',
@@ -70,7 +70,7 @@ module.exports = {
       analyzerPort: 8888,
       // Path to bundle report file that will be generated in `static` mode.
       // Relative to bundles output directory.
-      reportFilename: '../build/webpack/report.html',
+      reportFilename: './build/webpack/report.html',
       // Module sizes to show in report by default.
       // Should be one of `stat`, `parsed` or `gzip`.
       // See "Definitions" section for more information.

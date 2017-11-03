@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "4.0.9",
+  "version": "4.0.10",
   "private": false,
   "description": "Map animation library",
   "main": "src/MetOClient.js",
@@ -15,7 +15,7 @@
     "build": "env-cmd ./config/webpack/env.prod webpack --progress --config config/webpack/config.js",
     "build-global": "env-cmd ./config/webpack/env.global webpack --progress --config config/webpack/config.js",
     "build-all": "npm run build; npm run build-global",
-    "build-debug": "cross-env GLOBAL_EXPORT=true webpack --progress --config config/webpack/config.js",
+    "build-debug": "env-cmd ./config/webpack/env.debug webpack --progress --config config/webpack/config.js",
     "build-custom": "env-cmd ./config/webpack/env.custom webpack --progress --config config/webpack/config.js",
     "test": "cross-env PHANTOMJS_EXECUTABLE=node_modules/.bin/phantomjs; $npm_package_executables_nodejs node_modules/casperjs/bin/casperjs.js test test/wms.js",
     "doc": "node_modules/.bin/del-cli ./build/jsdoc; node_modules/.bin/jsdoc -c config/jsdoc/config.json -d ./build/jsdoc",

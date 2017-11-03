@@ -162,4 +162,132 @@ webpackConfig.plugins.push(new webpack.BannerPlugin({
   entryOnly: true
 }));
 
+// Optimize the bundle size
+if (env.METOCLIENT_SKIP_OL_COLLECTION) {
+  webpackConfig.externals['ol/collection'] = '_ol_Collection_';
+}
+if (env.METOCLIENT_SKIP_OL_CONTROL_ZOOM) {
+  webpackConfig.externals['ol/control/zoom'] = '_ol_control_Zoom_';
+}
+if (env.METOCLIENT_SKIP_OL_FEATURE) {
+  webpackConfig.externals['ol/feature'] = '_ol_Feature_';
+}
+if (env.METOCLIENT_SKIP_OL_FORMAT_GEOJSON) {
+  webpackConfig.externals['ol/format/geojson'] = '_ol_format_GeoJSON_';
+}
+if (env.METOCLIENT_SKIP_OL_FORMAT_GML) {
+  webpackConfig.externals['ol/format/gml'] = '_ol_format_GML_';
+}
+if (env.METOCLIENT_SKIP_OL_FORMAT_WFS) {
+  webpackConfig.externals['ol/format/wfs'] = '_ol_format_WFS_';
+}
+if (env.METOCLIENT_SKIP_OL_FORMAT_WMSCAPABILITIES) {
+  webpackConfig.externals['ol/format/wmscapabilities'] = '_ol_format_WMSCapabilities_';
+}
+if (env.METOCLIENT_SKIP_OL_FORMAT_WMTSCAPABILITIES) {
+  webpackConfig.externals['ol/format/wmtscapabilities'] = '_ol_format_WMTSCapabilities_';
+}
+if (env.METOCLIENT_SKIP_OL_GEOM_POINT) {
+  webpackConfig.externals['ol/geom/point'] = '_ol_geom_Point_';
+}
+if (env.METOCLIENT_SKIP_OL_INTERACTION) {
+  webpackConfig.externals['ol/interaction'] = '_ol_Interaction_';
+}
+if (env.METOCLIENT_SKIP_OL_INTERACTION_DOUBLECLICKZOOM) {
+  webpackConfig.externals['ol/interaction/doubleclickzoom'] = '_ol_interaction_DoubleClickZoom_';
+}
+if (env.METOCLIENT_SKIP_OL_INTERACTION_DRAGPAN) {
+  webpackConfig.externals['ol/interaction/dragpan'] = '_ol_interaction_DragPan_';
+}
+if (env.METOCLIENT_SKIP_OL_INTERACTION_DRAGROTATE) {
+  webpackConfig.externals['ol/interaction/dragrotate'] = '_ol_interaction_DragRotate_';
+}
+if (env.METOCLIENT_SKIP_OL_INTERACTION_DRAGROTATEANDZOOM) {
+  webpackConfig.externals['ol/interaction/dragrotateandzoom'] = '_ol_interaction_DragRotateAndZoom_';
+}
+if (env.METOCLIENT_SKIP_OL_INTERACTION_DRAGZOOM) {
+  webpackConfig.externals['ol/interaction/dragzoom'] = '_ol_interaction_DragZoom_';
+}
+if (env.METOCLIENT_SKIP_OL_INTERACTION_KEYBOARDPAN) {
+  webpackConfig.externals['ol/interaction/keyboardpan'] = '_ol_interaction_KeyboardPan_';
+}
+if (env.METOCLIENT_SKIP_OL_INTERACTION_KEYBOARDZOOM) {
+  webpackConfig.externals['ol/interaction/keyboardzoom'] = '_ol_interaction_KeyboardZoom_';
+}
+if (env.METOCLIENT_SKIP_OL_INTERACTION_MOUSEWHEELZOOM) {
+  webpackConfig.externals['ol/interaction/mousewheelzoom'] = '_ol_interaction_MouseWheelZoom_';
+}
+if (env.METOCLIENT_SKIP_OL_INTERACTION_PINCHROTATE) {
+  webpackConfig.externals['ol/interaction/pinchrotate'] = '_ol_interaction_PinchRotate_';
+}
+if (env.METOCLIENT_SKIP_OL_INTERACTION_PINCHZOOM) {
+  webpackConfig.externals['ol/interaction/pinchzoom'] = '_ol_interaction_PinchZoom_';
+}
+if (env.METOCLIENT_SKIP_OL_LAYER_GROUP) {
+  webpackConfig.externals['ol/layer/group'] = '_ol_layer_Group_';
+}
+if (env.METOCLIENT_SKIP_OL_LAYER_IMAGE) {
+  webpackConfig.externals['ol/layer/image'] = '_ol_layer_Image_';
+}
+if (env.METOCLIENT_SKIP_OL_LAYER_TILE) {
+  webpackConfig.externals['ol/layer/tile'] = '_ol_layer_Tile_';
+}
+if (env.METOCLIENT_SKIP_OL_LAYER_VECTOR) {
+  webpackConfig.externals['ol/layer/vector'] = '_ol_layer_Vector_';
+}
+if (env.METOCLIENT_SKIP_OL_MAP) {
+  webpackConfig.externals['ol/map'] = '_ol_Map_';
+}
+if (env.METOCLIENT_SKIP_OL_OBJECT) {
+  webpackConfig.externals['ol/object'] = '_ol_Object_';
+}
+if (env.METOCLIENT_SKIP_OL_OVERLAY) {
+  webpackConfig.externals['ol/overlay'] = '_ol_Overlay_';
+}
+if (env.METOCLIENT_SKIP_OL_PROJ) {
+  webpackConfig.externals['ol/proj'] = '_ol_Proj_';
+}
+if (env.METOCLIENT_SKIP_OL_SOURCE_IMAGEWMS) {
+  webpackConfig.externals['ol/source/imagewms'] = '_ol_source_ImageWMS_';
+}
+if (env.METOCLIENT_SKIP_OL_SOURCE_OSM) {
+  webpackConfig.externals['ol/source/osm'] = '_ol_source_OSM_';
+}
+if (env.METOCLIENT_SKIP_OL_SOURCE_STAMEN) {
+  webpackConfig.externals['ol/source/stamen'] = '_ol_source_Stamen_';
+}
+if (env.METOCLIENT_SKIP_OL_SOURCE_TILEWMS) {
+  webpackConfig.externals['ol/source/tilewms'] = '_ol_source_TileWMS_';
+}
+if (env.METOCLIENT_SKIP_OL_SOURCE_VECTOR) {
+  webpackConfig.externals['ol/source/vector'] = '_ol_source_Vector_';
+}
+if (env.METOCLIENT_SKIP_OL_SOURCE_WMTS) {
+  webpackConfig.externals['ol/source/wmts'] = '_ol_source_WMTS_';
+}
+if (env.METOCLIENT_SKIP_OL_STYLE_FILL) {
+  webpackConfig.externals['ol/style/fill'] = '_ol_style_Fill_';
+}
+if (env.METOCLIENT_SKIP_OL_STYLE_ICON) {
+  webpackConfig.externals['ol/style/icon'] = '_ol_style_Icon_';
+}
+if (env.METOCLIENT_SKIP_OL_STYLE_STROKE) {
+  webpackConfig.externals['ol/style/stroke'] = '_ol_style_Stroke_';
+}
+if (env.METOCLIENT_SKIP_OL_STYLE_STYLE) {
+  webpackConfig.externals['ol/style/style'] = '_ol_style_Style_';
+}
+if (env.METOCLIENT_SKIP_OL_STYLE_TEXT) {
+  webpackConfig.externals['ol/style/text'] = '_ol_style_Text_';
+}
+if (env.METOCLIENT_SKIP_OL_TILEGRID_TILEGRID) {
+  webpackConfig.externals['ol/tilegrid/tilegrid'] = '_ol_tilegrid_TileGrid_';
+}
+if (env.METOCLIENT_SKIP_OL_TILEGRID_WMTS) {
+  webpackConfig.externals['ol/tilegrid/wmts'] = '_ol_tilegrid_WMTS_';
+}
+if (env.METOCLIENT_SKIP_OL_VIEW) {
+  webpackConfig.externals['ol/view'] = '_ol_View_';
+}
+
 module.exports = webpackConfig

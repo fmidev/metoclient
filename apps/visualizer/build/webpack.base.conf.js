@@ -24,6 +24,7 @@ module.exports = {
   externals: {
     'jquery': 'jQuery',
     'raphael': 'Raphael',
+    'svg.js': 'SVG',
     'proj4': 'proj4'
   },
   resolve: {

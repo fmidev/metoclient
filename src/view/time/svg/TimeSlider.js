@@ -5,7 +5,7 @@
  */
 
 import EventEmitter from 'wolfy87-eventemitter'
-import SVG from 'svg.js'
+import SVG from 'svg.js/dist/svg.js'
 import * as utils from '../../../utils'
 import moment from 'moment-timezone'
 import fi from 'moment/locale/fi'

@@ -13,132 +13,48 @@ import moment from 'moment-timezone'
 import * as constants from '../../../constants'
 import LayerSwitcher from './LayerSwitcher'
 import _ol_ from 'ol/index'
-// #if !process.env.SKIP_OL_COLLECTION
 import _ol_Collection_ from 'ol/collection'
-// #endif
-// #if !process.env.SKIP_OL_CONTROL_ZOOM
 import _ol_control_Zoom_ from 'ol/control/zoom'
-// #endif
-// #if !process.env.SKIP_OL_FEATURE
 import _ol_Feature_ from 'ol/feature'
-// #endif
-// #if !process.env.SKIP_OL_FORMAT_GEOJSON
 import _ol_format_GeoJSON_ from 'ol/format/geojson'
-// #endif
-// #if !process.env.SKIP_OL_FORMAT_GML
 import _ol_format_GML_ from 'ol/format/gml'
-// #endif
-// #if !process.env.SKIP_OL_FORMAT_WFS
 import _ol_format_WFS_ from 'ol/format/wfs'
-// #endif
-// #if !process.env.SKIP_OL_FORMAT_WMSCAPABILITIES
 import _ol_format_WMSCapabilities_ from 'ol/format/wmscapabilities'
-// #endif
-// #if !process.env.SKIP_OL_FORMAT_WMTSCAPABILITIES
 import _ol_format_WMTSCapabilities_ from 'ol/format/wmtscapabilities'
-// #endif
-// #if !process.env.SKIP_OL_GEOM_POINT
 import _ol_geom_Point_ from 'ol/geom/point'
-// #endif
-// #if !process.env.SKIP_OL_INTERACTION
 import _ol_Interaction_ from 'ol/interaction'
-// #endif
-// #if !process.env.SKIP_OL_INTERACTION_DOUBLECLICKZOOM
 import _ol_interaction_DoubleClickZoom_ from 'ol/interaction/doubleclickzoom'
-// #endif
-// #if !process.env.SKIP_OL_INTERACTION_DRAGPAN
 import _ol_interaction_DragPan_ from 'ol/interaction/dragpan'
-// #endif
-// #if !process.env.SKIP_OL_INTERACTION_DRAGROTATE
 import _ol_interaction_DragRotate_ from 'ol/interaction/dragrotate'
-// #endif
-// #if !process.env.SKIP_OL_INTERACTION_DRAGROTATEANDZOOM
 import _ol_interaction_DragRotateAndZoom_ from 'ol/interaction/dragrotateandzoom'
-// #endif
-// #if !process.env.SKIP_OL_INTERACTION_DRAGZOOM
 import _ol_interaction_DragZoom_ from 'ol/interaction/dragzoom'
-// #endif
-// #if !process.env.SKIP_OL_INTERACTION_KEYBOARDPAN
 import _ol_interaction_KeyboardPan_ from 'ol/interaction/keyboardpan'
-// #endif
-// #if !process.env.SKIP_OL_INTERACTION_KEYBOARDZOOM
 import _ol_interaction_KeyboardZoom_ from 'ol/interaction/keyboardzoom'
-// #endif
-// #if !process.env.SKIP_OL_INTERACTION_MOUSEWHEELZOOM
 import _ol_interaction_MouseWheelZoom_ from 'ol/interaction/mousewheelzoom'
-// #endif
-// #if !process.env.SKIP_OL_INTERACTION_PINCHROTATE
 import _ol_interaction_PinchRotate_ from 'ol/interaction/pinchrotate'
-// #endif
-// #if !process.env.SKIP_OL_INTERACTION_PINCHZOOM
 import _ol_interaction_PinchZoom_ from 'ol/interaction/pinchzoom'
-// #endif
-// #if !process.env.SKIP_OL_LAYER_GROUP
 import _ol_layer_Group_ from 'ol/layer/group'
-// #endif
-// #if !process.env.SKIP_OL_LAYER_IMAGE
 import _ol_layer_Image_ from 'ol/layer/image'
-// #endif
-// #if !process.env.SKIP_OL_LAYER_TILE
 import _ol_layer_Tile_ from 'ol/layer/tile'
-// #endif
-// #if !process.env.SKIP_OL_LAYER_VECTOR
 import _ol_layer_Vector_ from 'ol/layer/vector'
-// #endif
-// #if !process.env.SKIP_OL_MAP
 import _ol_Map_ from 'ol/map'
-// #endif
-// #if !process.env.SKIP_OL_OBJECT
 import _ol_Object_ from 'ol/object'
-// #endif
-// #if !process.env.SKIP_OL_OVERLAY
 import _ol_Overlay_ from 'ol/overlay'
-// #endif
-// #if !process.env.SKIP_OL_PROJ
 import _ol_Proj_ from 'ol/proj'
-// #endif
-// #if !process.env.SKIP_OL_SOURCE_IMAGEWMS
 import _ol_source_ImageWMS_ from 'ol/source/imagewms'
-// #endif
-// #if !process.env.SKIP_OL_SOURCE_OSM
 import _ol_source_OSM_ from 'ol/source/osm'
-// #endif
-// #if !process.env.SKIP_OL_SOURCE_STAMEN
 import _ol_source_Stamen_ from 'ol/source/stamen'
-// #endif
-// #if !process.env.SKIP_OL_SOURCE_TILEWMS
 import _ol_source_TileWMS_ from 'ol/source/tilewms'
-// #endif
-// #if !process.env.SKIP_OL_SOURCE_VECTOR
 import _ol_source_Vector_ from 'ol/source/vector'
-// #endif
-// #if !process.env.SKIP_OL_SOURCE_WMTS
 import _ol_source_WMTS_ from 'ol/source/wmts'
-// #endif
-// #if !process.env.SKIP_OL_STYLE_FILL
 import _ol_style_Fill_ from 'ol/style/fill'
-// #endif
-// #if !process.env.SKIP_OL_STYLE_ICON
 import _ol_style_Icon_ from 'ol/style/icon'
-// #endif
-// #if !process.env.SKIP_OL_STYLE_STROKE
 import _ol_style_Stroke_ from 'ol/style/stroke'
-// #endif
-// #if !process.env.SKIP_OL_STYLE_STYLE
 import _ol_style_Style_ from 'ol/style/style'
-// #endif
-// #if !process.env.SKIP_OL_STYLE_TEXT
 import _ol_style_Text_ from 'ol/style/text'
-// #endif
-// #if !process.env.SKIP_OL_TILEGRID_TILEGRID
 import _ol_tilegrid_TileGrid_ from 'ol/tilegrid/tilegrid'
-// #endif
-// #if !process.env.SKIP_OL_TILEGRID_WMTS
 import _ol_tilegrid_WMTS_ from 'ol/tilegrid/wmts'
-// #endif
-// #if !process.env.SKIP_OL_VIEW
 import _ol_View_ from 'ol/view'
-// #endif
 
 // export default class MapAnimation extends Interface.StrictInterface(Animation) {
 export default class MapAnimation {
@@ -2212,7 +2128,10 @@ MapAnimation.prototype.destroyAnimation = function () {
 
 /** @inheritDoc */
 MapAnimation.prototype.setZoom = function (level) {
-  this.get('map').getView().setZoom(level)
+  let map = this.get('map')
+  if (map != null) {
+    map.getView().setZoom(level)
+  }
 }
 
 /** @inheritDoc */

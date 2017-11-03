@@ -1,5 +1,3 @@
-// #if process.env.GLOBAL_EXPORT
-
 import _ol_ from 'ol/index'
 global['ol'] = _ol_
 
@@ -137,5 +135,3 @@ global['ol_events_condition'] = _ol_events_condition_
 
 import _ol_extent_ from 'ol/extent'
 global['ol_extent'] = _ol_extent_
-
-// #endif

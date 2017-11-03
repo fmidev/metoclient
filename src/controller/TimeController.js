@@ -5,11 +5,11 @@
  */
 
 import Time from '../model/Time'
-// #if process.env.TIME_SLIDER !== 'raphael'
+// #if process.env.METOCLIENT_TIME_SLIDER !== 'raphael'
 import TimeSlider from '../view/time/svg/TimeSlider'
 // #endif
-// #if process.env.TIME_SLIDER === 'raphael'
-import TimeSlider from '../view/time/raphael/TimeSlider'
+// #if process.env.METOCLIENT_TIME_SLIDER === 'raphael'
+import RaphaelTimeSlider from '../view/time/raphael/TimeSlider'
 // #endif
 import EventEmitter from 'wolfy87-eventemitter'
 import jQuery from 'jquery'
@@ -110,7 +110,11 @@ export default class TimeController {
     containers = jQuery(`.${this.config_['view']['timeSliderContainer']}`)
     numViews = containers.length
     for (i = 0; i < numViews; i++) {
-      this.views_.push(new TimeSlider(this.config_['view'], containers[i]))
+      if (typeof RaphaelTimeSlider !== 'undefined') {
+        this.views_.push(new RaphaelTimeSlider(this.config_['view'], containers[i]))
+      } else {
+        this.views_.push(new TimeSlider(this.config_['view'], containers[i]))
+      }
       this.views_[i].actionEvents.addListener('previous', self.previousListener_)
       this.views_[i].actionEvents.addListener('next', self.nextListener_)
       this.views_[i].variableEvents.addListener('animationTime', self.animationTimeUserListener_)

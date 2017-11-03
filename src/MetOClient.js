@@ -86,8 +86,8 @@ export class MetOClient {
     jQuery.extend(true, newConfig, this.getDefaultConfig())
     // Configuration from newConfiguration files
     project = this.config_['project'] == null ? newConfig['project'] : this.config_['project']
-    if ((project) && (window['fi']) && (window['fi']['fmi']) && (window['fi']['fmi']['metoclient']) && (window['fi']['fmi']['metoclient'][project])) {
-      jQuery.extend(true, newConfig, window['fi']['fmi']['metoclient'][project]['Config'])
+    if ((project) && (window['fi']) && (window['fi']['fmi']) && (window['fi']['fmi']['config']) && (window['fi']['fmi']['config']['metoclient'])) {
+      jQuery.extend(true, newConfig, window['fi']['fmi']['config']['metoclient'][project])
     }
     this.config_['map']['view']['project'] = project
 
@@ -691,8 +691,8 @@ export class MetOClient {
    */
   destruct () {
     this.destroyAnimation()
-    this.mapController_.dispose()
-    this.timeController_.dispose()
+    this.mapController_ = null
+    this.timeController_ = null
   };
 
   /**

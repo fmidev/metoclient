@@ -21,7 +21,12 @@ export default () => ({
     path: path.join(__dirname + '/dist'),
     filename: 'layout.js',
   },
+  externals: {
+    'raphael': 'Raphael',
+  },
   plugins: [
+    // Ignore all locale files of moment.js
+    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new webpack.DefinePlugin({
       IS_PROD: IS_PROD
     }),
@@ -92,13 +97,14 @@ export default () => ({
   module: {
     rules: [
       {
-        test: /\.jsx?$/,
+        test: /\.js[tx]?$/,
         loader: 'babel-loader',
         options: {
           babelrc: false, // Tells webpack not to use the .babelrc file
           presets: [
             dirName+'babel-preset-env',
-            dirName+'babel-preset-react' // Transform JSX into React.createElement calls
+            dirName+'babel-preset-react'
+            //dirName+'babel-preset-typescript'
           ]
         }
       },
@@ -147,7 +153,7 @@ export default () => ({
       },]
   },
   resolve: {
-    extensions: ['.js', '.jsx']
+    extensions: ['.js', '.jst', '.jsx']
   },
   devtool: 'source-map'
 });

@@ -1,0 +1,76 @@
+$white-color: #fff;
+$blue-color: #60b3e1;
+
+ul.metoclient-menu {
+  white-space: nowrap;
+  list-style: none;
+  margin: 0 0 0 -90px;
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  top: 35px;
+  left: -45px;
+  padding: 0;
+  background-color: var(--white);
+  text-align: left;
+  width: 140px;
+  -webkit-transition: all .3s;
+  -moz-transition: all .3s;
+  -o-transition: all .3s;
+  transition: all .3s;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  box-shadow: 0 0 15px 0 rgba(0, 0, 0, 0.2);
+}
+
+ul.metoclient-menu a {
+  margin: 0;
+  text-align: center;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  color: #4a4a4a;
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  background-color: $white-color;
+  padding: 7px 8px 5px 16px;
+  display: block;
+  -webkit-transition: background-color .1s;
+  -moz-transition: background-color .1s;
+  -o-transition: background-color .1s;
+  transition: background-color .1s
+}
+
+ul.metoclient-menu li {
+  margin: 0;
+  padding: 0
+}
+
+ul.metoclient-menu.visible-menu {
+  top: 40px;
+  opacity: 1;
+  padding: 5px 0;
+  background: $white-color;
+  visibility: visible
+}
+
+ul.metoclient-menu:before {
+  content: '';
+  display: block;
+  border: 10px solid transparent;
+  border-bottom-color: $white-color;
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  margin-left: -10px
+}
+
+ul.metoclient-menu > li {
+  position: relative
+}
+
+ul.metoclient-menu a:hover {
+  color: $blue-color
+}

@@ -4,25 +4,22 @@ import webpack from 'webpack'
 
 const PACKAGE = require('./package.json')
 const banner = PACKAGE.name + ' - ' + PACKAGE.version + ' | ' + PACKAGE.author + ' ' + new Date().getFullYear() + ' | ' + PACKAGE.license + ' | ' + PACKAGE.homepage
-
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
-const ExtractTextPlugin = require("extract-text-webpack-plugin")
-const dirName = (__dirname.includes(process.cwd()) ? process.cwd() : __dirname) + '/node_modules/';
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const dirName = (__dirname.includes(process.cwd()) ? process.cwd() : __dirname) + '/node_modules/'
 const IS_PROD = (process.env.NODE_ENV === 'production')
 
 export default () => ({
   entry: [
     'webpack-dev-server/client?http://localhost:8080', // webpack dev server host and port
-    path.join(__dirname, 'src/index.jsx'), // entry point of app
+    path.join(__dirname, 'src/index.jsx') // entry point of app
   ],
   output: {
-    library: ['fi', 'fmi', 'metoclient', 'layout'],
+    library: ['fi', 'fmi', 'metoclient'],
     libraryTarget: 'umd',
     path: path.join(__dirname + '/dist'),
-    filename: 'layout.js',
-  },
-  externals: {
-    'raphael': 'Raphael',
+    filename: 'layout.js'
   },
   plugins: [
     // Ignore all locale files of moment.js
@@ -34,6 +31,7 @@ export default () => ({
       filename: 'index.html',
       template: './src/index.html'
     }),
+    new ExtractTextPlugin('layout.css'),
     new BundleAnalyzerPlugin({
       // Can be `server`, `static` or `disabled`.
       // In `server` mode analyzer will start HTTP server to show bundle report.
@@ -92,7 +90,10 @@ export default () => ({
         drop_debugger: false
       }
     }),
-    new ExtractTextPlugin("out.txt")
+    new CopyWebpackPlugin([{
+      from: 'img',
+      to: 'img'
+    }])
   ],
   module: {
     rules: [
@@ -102,30 +103,26 @@ export default () => ({
         options: {
           babelrc: false, // Tells webpack not to use the .babelrc file
           presets: [
-            dirName+'babel-preset-env',
-            dirName+'babel-preset-react'
+            dirName + 'babel-preset-env',
+            dirName + 'babel-preset-react'
             //dirName+'babel-preset-typescript'
           ]
         }
       },
       {
         test: /\.css$/,
-        use: [{
-          loader: 'style-loader' // creates style nodes from JS strings
-        }, {
-          loader: 'css-loader' // translates CSS into CommonJS
-        }]
+        use: ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: 'css-loader'
+        })
       },
       {
         test: /\.scss$/,
         include: path.join(__dirname, 'style'),
-        use: [{
-          loader: 'style-loader' // creates style nodes from JS strings
-        }, {
-          loader: 'css-loader' // translates CSS into CommonJS
-        }, {
-          loader: 'sass-loader' // compiles Sass to CSS
-        }]
+        use: ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: ['css-loader', 'sass-loader']
+        })
       },
       {
         test: /\.(?:png|jpg|svg)$/,
@@ -148,12 +145,12 @@ export default () => ({
           mimetype: 'application/font-woff',
 
           // Output below fonts directory
-          name: './fonts/[name].[ext]',
-        },
-      },]
+          name: './fonts/[name].[ext]'
+        }
+      }]
   },
   resolve: {
     extensions: ['.js', '.jst', '.jsx']
   },
   devtool: 'source-map'
-});
+})

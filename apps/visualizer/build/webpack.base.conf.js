@@ -58,7 +58,7 @@ module.exports = {
         options: {
           babelrc: false, // Tells webpack not to use the .babelrc file
           presets: [
-            dirName+'babel-preset-env'
+            dirName + 'babel-preset-env'
           ]
         }
       },
@@ -88,4 +88,4 @@ module.exports = {
       }
     ]
   }
-};
+}

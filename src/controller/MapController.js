@@ -5,9 +5,8 @@
  */
 
 import Map from '../model/Map'
-import MapAnimation from '../view/map/ol/MapAnimation'
+import MapAnimation from '../view/map/MapAnimation'
 import EventEmitter from 'wolfy87-eventemitter'
-import jQuery from 'jquery'
 
 export default class MapController {
   /**
@@ -70,11 +69,13 @@ export default class MapController {
     }
     // The listener will not be added if it is a duplicate.
     this.view_.variableEvents.addListener('numIntervalItems', this.numIntervalItemsListener_)
-    jQuery.when.apply(null, promises).done(() => {
-      // console.log("Capabilities loaded.");
-      // console.log(goog.now());
-      self.view_.createAnimation(layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks)
-    })
+    // Capabilities loaded
+    Promise
+      .all(promises.map(p => p.catch(e => e)))
+      .then(values => {
+        self.view_.createAnimation(layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks)
+      })
+      .catch(e => console.log(e))
   };
 
   /**

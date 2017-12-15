@@ -307,6 +307,11 @@
     border: none;
 }
 
+.layer-switcher button.disabled {
+    cursor: auto;
+    pointer-events: none;
+}
+
 .layer-switcher button:focus, .layer-switcher button:hover {
     background-color: #686868;
 }
@@ -419,7 +424,7 @@
   background-color : #dedede;
 }
 
-.fmi-animator-spinner {
+.fmi-metoclient-spinner {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -429,11 +434,11 @@
     height: 16px;
 }
 
-div.fmi-animator-legend {
+div.fmi-metoclient-legend {
     position: absolute;
     left: 10px;
     max-height: 520px;
-    top: 80px;
+    top: 100px;
     background-color: #ffffff;
     z-index: 100;
     padding-top: 10px;
@@ -447,22 +452,6 @@ div.legend figure {
 
 div.legendchooser {
     margin-left: 20px;
-}
-
-div.fmi-animator-timeslider {
-    position: absolute;
-    bottom: 5px;
-    width: 100%;
-    min-width: 100px;
-    height: 120px;
-    z-index: 150;
-}
-
-img.logo {
-    position: absolute;
-    bottom: 50px;
-    right: 20px;
-    z-index: 50;
 }
 
 button.ol-zoom-in, button.ol-zoom-out {

@@ -6,7 +6,7 @@
 
 import * as utils from '../utils'
 import EventEmitter from 'wolfy87-eventemitter'
-import * as d3 from 'd3-timer'
+import isNumeric from 'fast-isnumeric'
 
 export default class Time {
   /**
@@ -27,18 +27,17 @@ export default class Time {
     this.refreshInterval_ = this.config_['refreshInterval']
     this.currentTime_ = Date.now()
     this.timeCreatedAt_ = this.currentTime_
-    this.animationTime_ = 0
-    this.animationBeginTime_ = 0
-    this.animationEndTime_ = 0
-    this.animationDelayedEndTime_ = 0
+    this.animationTime_ = null
+    this.animationBeginTime_ = this.config_['beginTime']
+    this.animationEndTime_ = this.config_['endTime']
     this.animationInitBeginTime_ = 0
     this.animationInitEndTime_ = 0
-    this.animationInitDelayedEndTime_ = 0
     this.animationNumIntervals_ = 0
     this.animationResolutionTime_ = this.config_['resolutionTime']
-    this.animationGridTime_ = 0
-    this.animationGridTimeOffset_ = (this.config_['gridTimeOffset'] != null) ? this.config_['gridTimeOffset'] : 0
-    this.timer_ = null
+    this.animationTimes_ = []
+    this.animationTimeIndex_ = 0
+    this.animationGridTime_ = this.config_['gridTime']
+    this.animationGridTimeOffset_ = this.config_['gridTimeOffset']
     this.play_ = false
     this.waitUntilLoaded_ = (this.config_['waitUntilLoaded'] != null) ? this.config_['waitUntilLoaded'] : false
   };
@@ -48,35 +47,43 @@ export default class Time {
    */
   createTimer () {
     let offsetTime
-    this.animationGridTime_ = (this.config_['gridTime'] != null) ? this.config_['gridTime'] : this.animationResolutionTime_
-    // Round initial animation time to previous tick
-    this.animationBeginTime_ = utils.floorTime(this.beginTime_, this.animationGridTime_)
-    // Time grid offset from midnight
-    if (this.animationGridTimeOffset_ > 0) {
-      offsetTime = this.animationBeginTime_ + this.animationGridTimeOffset_
-      if (offsetTime - this.animationGridTime_ > this.defaultTime_) {
-        offsetTime -= this.animationGridTime_
+    let animationTimeIndex = 0
+    let i
+
+    if (this.config_['gridTime'] != null) {
+      // Round initial animation time to previous tick
+      this.animationBeginTime_ = utils.floorTime(this.beginTime_, this.animationGridTime_)
+      // Time grid offset
+      if (this.animationGridTimeOffset_ > 0) {
+        offsetTime = this.animationBeginTime_ + this.animationGridTimeOffset_
+        if (offsetTime - this.animationGridTime_ > this.defaultTime_) {
+          offsetTime -= this.animationGridTime_
+        }
+        this.animationBeginTime_ = offsetTime
       }
-      this.animationBeginTime_ = offsetTime
     }
 
-    this.animationNumIntervals_ = Math.floor((this.endTime_ - this.animationBeginTime_) / this.animationResolutionTime_) + 1
-    this.animationEndTime_ = this.animationBeginTime_ + (this.animationNumIntervals_ - 1) * this.animationResolutionTime_
-    this.animationDelayedEndTime_ = this.animationEndTime_ + this.endTimeDelay_ * this.animationResolutionTime_ / this.frameRate_
-    this.defaultTime_ = Math.max(this.animationBeginTime_, this.defaultTime_)
-    this.defaultTime_ = Math.min(this.animationEndTime_, this.defaultTime_)
-    this.animationTime_ = this.animationBeginTime_ + Math.floor((this.defaultTime_ - this.animationBeginTime_) / this.animationResolutionTime_) * this.animationResolutionTime_
+    if (this.animationResolutionTime_ != null) {
+      this.animationNumIntervals_ = Math.floor((this.endTime_ - this.animationBeginTime_) / this.animationResolutionTime_) + 1
+      this.animationEndTime_ = this.animationBeginTime_ + (this.animationNumIntervals_ - 1) * this.animationResolutionTime_
+      this.defaultTime_ = Math.max(this.animationBeginTime_, this.defaultTime_)
+      this.defaultTime_ = Math.min(this.animationEndTime_, this.defaultTime_)
+      this.animationTimeIndex_ = 0
+      for (i = 0; i < this.animationNumIntervals_; i++) {
+        this.animationTimes_.push(this.animationBeginTime_ + i * this.animationResolutionTime_)
+        if (this.animationTimes_[i] <= this.defaultTime_) {
+          animationTimeIndex = i
+        }
+      }
+      this.setAnimationTime(this.animationTimes_[animationTimeIndex])
+    }
     if (this.animationInitBeginTime_ === 0) {
       this.animationInitBeginTime_ = this.animationBeginTime_
     }
     if (this.animationInitEndTime_ === 0) {
       this.animationInitEndTime_ = this.animationEndTime_
     }
-    if (this.animationInitDelayedEndTime_ === 0) {
-      this.animationInitDelayedEndTime_ = this.animationDelayedEndTime_
-    }
     this.setAnimationLastRefreshed(Date.now())
-    this.startTimer()
     if ((this.config_['autoStart']) && (!this.config_['waitUntilLoaded'])) {
       this.actionEvents.emitEvent('play')
     }
@@ -87,16 +94,26 @@ export default class Time {
    */
   startTimer () {
     const self = this
-    this.timer_ = d3.interval(() => {
+    setTimeout(function run () {
       const currentTime = Date.now()
+      let timeDelay
+      let animationTimeIndex = 1
       if ((currentTime - self.animationLastRefreshed_ > self.refreshInterval_) && (currentTime - self.timeCreatedAt_ > 0.5 * self.refreshInterval_)) {
         self.actionEvents.emitEvent('refresh')
       } else if (self.play_) {
-        self.setAnimationTime(self.animationTime_ + self.animationResolutionTime_)
+        timeDelay = self.frameRate_
+        if (self.animationTimeIndex_ === self.animationTimes_.length - 2) {
+          timeDelay += self.endTimeDelay_
+        }
+        if (self.animationTimeIndex_ < self.animationTimes_.length - 1) {
+          animationTimeIndex = self.animationTimeIndex_ + 1
+        }
+        self.setAnimationTime(self.animationTimes_[animationTimeIndex])
+        setTimeout(run, timeDelay)
       } else if (self.animationTime_ < self.animationBeginTime_) {
         self.setAnimationTime(self.animationBeginTime_)
       }
-    }, this.frameRate_)
+    }, 0)
   };
 
   /**
@@ -104,21 +121,24 @@ export default class Time {
    * @param {number=} animationTime Animation time.
    */
   setAnimationTime (animationTime) {
+    let i
+    let animationTimeIndex = 0
     let newTime = (animationTime != null) ? animationTime : this.animationTime_
-    const minTime = this.animationBeginTime_ - this.animationResolutionTime_
     // Check if animation is initialized correctly
     if (this.animationBeginTime_ > this.animationEndTime_) {
       return
     }
-    if (newTime < minTime) {
-      newTime = minTime
-    } else if (newTime > this.animationDelayedEndTime_) {
-      newTime = this.config_['autoReplay'] ? this.animationBeginTime_ : this.animationDelayedEndTime_
-    } else {
-      // Time quantization
-      newTime = this.animationBeginTime_ + Math.floor((newTime - this.animationBeginTime_) / this.animationResolutionTime_) * this.animationResolutionTime_
+    for (i = 1; i < this.animationTimes_.length; i++) {
+      if (newTime === this.animationTimes_[i]) {
+        animationTimeIndex = i
+        break
+      } else if (newTime < this.animationTimes_[i]) {
+        animationTimeIndex = i - 1
+        break
+      }
     }
-    this.animationTime_ = newTime
+    this.animationTime_ = this.animationTimes_[animationTimeIndex]
+    this.animationTimeIndex_ = animationTimeIndex
     this.variableEvents.emitEvent('animationTime', [this.getAnimationTime()])
   };
 
@@ -221,6 +241,7 @@ export default class Time {
   play () {
     this.play_ = true
     this.waitUntilLoaded_ = false
+    this.startTimer()
   };
 
   /**
@@ -242,9 +263,12 @@ export default class Time {
    * Moves to previous time frame.
    */
   previous () {
-    let newTime = this.getAnimationTime() - this.animationResolutionTime_
-    if (newTime < this.animationBeginTime_) {
-      newTime = this.animationEndTime_
+    let newTime
+    let animationTimeIndex = this.animationTimeIndex_
+    if (animationTimeIndex > 1) {
+      newTime = this.animationTimes_[animationTimeIndex - 1]
+    } else {
+      newTime = this.animationTimes_[this.animationTimes_.length - 1]
     }
     this.setAnimationTime(newTime)
   };
@@ -253,9 +277,12 @@ export default class Time {
    * Moves to next time frame.
    */
   next () {
-    let newTime = this.getAnimationTime() + this.animationResolutionTime_
-    if (newTime > this.animationEndTime_) {
-      newTime = this.animationBeginTime_
+    let newTime
+    let animationTimeIndex = this.animationTimeIndex_
+    if (animationTimeIndex < this.animationTimes_.length - 1) {
+      newTime = this.animationTimes_[animationTimeIndex + 1]
+    } else {
+      newTime = this.animationTimes_[0]
     }
     this.setAnimationTime(newTime)
   };
@@ -267,7 +294,6 @@ export default class Time {
   moveAnimationTimeFrame (delta) {
     this.animationBeginTime_ = this.animationInitBeginTime_ + delta
     this.animationEndTime_ = this.animationInitEndTime_ + delta
-    this.animationDelayedEndTime_ = this.animationInitDelayedEndTime_ + delta
     if (this.animationTime_ < this.animationBeginTime_) {
       this.setAnimationTime(this.animationBeginTime_)
     }
@@ -279,11 +305,7 @@ export default class Time {
    */
   setFrameRate (frameRate) {
     this.frameRate_ = frameRate
-    if (this.timer_ !== null) {
-      this.timer_.stop()
-      this.timer_ = null
-    }
-    this.startTimer()
+    this.play_ = false
   };
 
   /**
@@ -303,8 +325,6 @@ export default class Time {
   setEndTime (endTime) {
     this.endTime_ = endTime
     this.animationInitEndTime_ = 0
-    this.animationDelayedEndTime_ = this.animationEndTime_ + this.endTimeDelay_ * this.animationResolutionTime_ / this.frameRate_
-    this.animationInitDelayedEndTime_ = 0
     this.createTimer()
   };
 
@@ -327,14 +347,33 @@ export default class Time {
   };
 
   /**
+   * Sets animation time moments.
+   * @param animationTimes {array} Animation time moments.
+   */
+  setAnimationTimes (animationTimes) {
+    let i
+    let numAnimationTimes = animationTimes.length
+    let updateNeeded = (numAnimationTimes !== this.animationTimes_.length)
+    if (!updateNeeded) {
+      for (i = 0; i < numAnimationTimes; i++) {
+        if (this.animationTimes_[i] !== animationTimes[i]) {
+          updateNeeded = true
+          break
+        }
+      }
+    }
+    if (updateNeeded) {
+      this.animationTimes_ = animationTimes
+      this.setAnimationTime(isNumeric(this.animationTime_) ? this.animationTime_ : this.defaultTime_)
+    }
+  }
+
+  /**
    * Destroys current timer.
    */
   destroyTimer () {
+    this.play_ = false
     this.variableEvents.removeAllListeners()
     this.actionEvents.removeAllListeners()
-    if (this.timer_ !== null) {
-      this.timer_.stop()
-      this.timer_ = null
-    }
   };
 }

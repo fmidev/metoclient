@@ -5,12 +5,16 @@ import { DecrementButtonContainer } from './DecrementButton'
 import { WeatherMapContainer } from './WeatherMap'
 import { setState } from '../ActionCreators'
 import elementResizeDetectorMaker from 'element-resize-detector'
-import 'metoclient';
+import { createMenu } from 'metoclient/src/utils'
 import '../../style/map.scss'
+import '../../style/menu.scss'
 
 class GoldenLayoutWrapper extends React.Component {
   componentDidMount () {
-    let self = this;
+    let self = this
+    self.context.store.dispatch(setState({
+      [self.props.containerId + '-numWindowsCreated']: 0
+    }))
     // Build basic golden-layout config
     const config = {
       settings: {
@@ -41,46 +45,18 @@ class GoldenLayoutWrapper extends React.Component {
       },
       content: [{
         type: 'column',
+        isClosable: false,
         content: [{
           type: 'row',
           content: [{
             type: 'react-component',
             component: 'WeatherMapContainer',
-            title: 'Map 1',
+            title: 'Window 1',
             isClosable: false,
+            index: 0,
             props: {
-              id: '0',
-              container: 'map-container1'
-            }
-          }, {
-            type: 'react-component',
-            component: 'WeatherMapContainer',
-            title: 'Map 2',
-            isClosable: false,
-            props: {
-              id: '1',
-              container: 'map-container2'
-            }
-          }]
-        }, {
-          type: 'row',
-          content: [{
-            type: 'react-component',
-            component: 'WeatherMapContainer',
-            title: 'Map 3',
-            isClosable: false,
-            props: {
-              id: '2',
-              container: 'map-container3'
-            }
-          }, {
-            type: 'react-component',
-            component: 'WeatherMapContainer',
-            title: 'Map 4',
-            isClosable: false,
-            props: {
-              id: '3',
-              container: 'map-container4'
+              id: this.props.containerId + '-0',
+              container: this.props.containerId + '-map-container-0'
             }
           }]
         }]
@@ -92,7 +68,7 @@ class GoldenLayoutWrapper extends React.Component {
         render () {
           return (
             <Provider store={store}>
-              <Component {...this.props}/>
+              <Component {...this.props} />
             </Provider>
           )
         }
@@ -101,84 +77,188 @@ class GoldenLayoutWrapper extends React.Component {
       return Wrapped
     }
 
-    let layout = new GoldenLayout(config, this.layout)
+    this.layout = new GoldenLayout(config, this.container)
 
-    let openWindowMenu = (e) => {
-      console.log("LAYOUT");
-      console.log(e.target);
-      console.log(e);
-      console.log(layout);
-      console.log(layout.root.contentItems[0].contentItems[0].contentItems[0]);
+    this.layout.fmi = {
+      selectionChanged: () => {},
+      windowCreated: () => {},
+      bookmarkAdded: () => {},
+      destroyed: () => {}
     }
 
-    layout.on('stackCreated', function (stack) {
-      let dots = document.createElement('div')
-      let id = stack.contentItems[0].config.props.id
-      dots.classList.add('window-menu-dots')
-      dots.classList.add('light-theme')
-      dots.setAttribute('id', 'window-menu-dots-'+id)
-      dots.addEventListener('mousedown', function() {
-        layout.selectItem(stack);
-      });
+    this.layout.on('itemCreated', function (item) {
+      if (item.config.type === 'component') {
+        let id = item.config.props.id
+        item.addId(id)
+        item.parent.select()
+        if (id === self.context.store.getState().get(self.props.containerId + '-selected')) {
+          self.layout.selectItem(item.parent)
+        }
+        // Todo: increment function
+        let stateKey = self.props.containerId + '-numWindowsCreated'
+        let numWindowsCreated = self.context.store.getState().get(stateKey)
+        self.context.store.dispatch(setState({
+          [stateKey]: numWindowsCreated + 1
+        }))
+      }
+    })
 
-      // Accessing the DOM element that contains the popout, maximise and * close icon
-      stack.header.controlsContainer.prepend(dots)
+    this.layout.on('tabCreated', (tab) => {
+      let id = tab.contentItem.config.props.id
+      if ((id != null) && (id === self.context.store.getState().get(self.props.containerId + '-selected'))) {
+        self.layout.selectItem(tab.contentItem.parent)
+      }
 
-      // Listening for activeContentItemChanged. This happens initially
-      // when the stack is created and every time the user clicks a tab
-      stack.on('activeContentItemChanged', function (contentItem) {
-        // interact with the contentItem
+      tab.element[0].addEventListener('mousedown', (e) => {
+        self.layout.selectItem(tab.contentItem.parent)
       })
 
-      stack.childElementContainer[0].addEventListener("mousedown", function(){
-        layout.selectItem(stack);
-      });
+      let dots = document.createElement('div')
+      dots.classList.add('menu-dots')
+      dots.classList.add('light-theme')
 
-      self.context.store.dispatch(setState({
-         ['window-'+id]: stack
-      }));
+      const closeMenu = () => {
+        windowMenu.classList.remove('visible-menu')
+        dots.classList.remove('hover')
+      }
+
+      const windowMenu = createMenu({
+        id: 'menu-dots-' + id,
+        items: [{
+          title: 'Näytä koko ruudulla', // Todo: localization
+          callback: () => {
+            closeMenu()
+          }
+        }, {
+          title: 'Aikajana: käännä', // Todo: localization
+          callback: () => {
+            let rotatedClass = 'rotated'
+            let marginClass = 'margin-added'
+            let subWindow = document.getElementById(tab.contentItem.config.props.container)
+            Array.from(document.getElementsByClassName('fmi-metoclient-timeslider-' + tab.contentItem.config.props.container)).forEach(timeSlider => {
+              if (timeSlider.classList.contains(rotatedClass)) {
+                timeSlider.classList.remove(rotatedClass)
+                subWindow.classList.remove(marginClass)
+              } else {
+                timeSlider.classList.add(rotatedClass)
+                subWindow.classList.add(marginClass)
+              }
+            })
+            closeMenu()
+          }
+        }, {
+          title: 'Lisää suosikkeihin', // Todo: localization
+          callback: () => {
+            closeMenu()
+          }
+        }, {
+          title: 'Jaa ikkuna', // Todo: localization
+          callback: () => {
+            closeMenu()
+          }
+        }, {
+          title: 'Poista ikkuna', // Todo: localization
+          callback: () => {
+            closeMenu()
+            tab.contentItem.remove()
+          }
+        }]
+      })
+
+      dots.appendChild(windowMenu)
+
+      dots.addEventListener('mouseenter', (e) => {
+        dots.classList.add('hover')
+      })
+
+      dots.addEventListener('mouseleave', (e) => {
+        dots.classList.remove('hover')
+        windowMenu.classList.remove('visible-menu')
+      })
+
+      dots.addEventListener('mousedown', (e) => {
+        self.layout.selectItem(tab.contentItem.parent)
+      })
+
+      dots.addEventListener('mouseup', (e) => {
+        self.layout.selectItem(tab.contentItem.parent)
+        windowMenu.classList.add('visible-menu')
+      })
+
+      // Accessing the DOM element that contains the popout, maximise and * close icon
+      tab.header.controlsContainer.prepend(dots)
+      self.layout.fmi.windowCreated(id)
     })
 
-    layout.on('selectionChanged', function(selectedItem) {
-      let selectedId = Number(selectedItem.contentItems[0].config.props.id);
-      if (self.context.store.getState().get('selected') === selectedId) {
-        return;
+    this.layout.on('stackCreated', function (stack) {
+      // Override to not drop tabs
+      stack._$highlightDropZone = function (x, y) {
+        let segment
+        let area
+        for (segment in this._contentAreaDimensions) {
+          area = this._contentAreaDimensions[segment].hoverArea
+          if ((area.x1 < x) && (area.x2 > x) && (area.y1 < y) && (area.y2 > y)) {
+            if (segment !== 'header') {
+              this._resetHeaderDropZone()
+              this._highlightBodyDropZone(segment)
+            }
+            return
+          }
+        }
+      }
+
+      stack.childElementContainer[0].addEventListener('mousedown', function () {
+        self.layout.selectItem(stack)
+      })
+    })
+
+    this.layout.on('selectionChanged', function (selectedItem) {
+      let selectedId = selectedItem.contentItems[0].config.id
+      if (self.context.store.getState().get(self.props.containerId + '-selected') === selectedId) {
+        return
       }
       self.context.store.dispatch(setState({
-         'selected': selectedId
-      }));
-      self.context.store.getState().get('onSelectionChanged')(selectedId)
+        [self.props.containerId + '-selected']: selectedId
+      }))
+      self.layout.fmi.selectionChanged(selectedId)
     })
 
-    layout.registerComponent('WeatherMapContainer',
+    this.layout.registerComponent('WeatherMapContainer',
       wrapComponent(WeatherMapContainer, this.context.store)
     )
-    layout.init()
+    this.layout.init()
 
-    layout.on('stateChanged', function () {
-      console.log('State changed')
+    this.layout.on('itemDropped', (e) => {
+      let column = self.layout.root.contentItems[0]
+      let rows = column.contentItems
+      let i = 0
+      while (i < rows.length) {
+        if (rows[i].contentItems.length === 0) {
+          rows[i].remove()
+        }
+        i++
+      }
     })
 
-    layout.selectItem(layout.root.contentItems[0].contentItems[0].contentItems[0]);
-
-    this.context.store.dispatch(setState({
-        layout
-    }));
-
+/*
     window.addEventListener('resize', () => {
       layout.updateSize()
     })
+*/
 
     const erd = elementResizeDetectorMaker()
-    erd.listenTo(document.getElementById('fmi-metweb-windows'), function (element) {
-      console.log('Change')
-      layout.updateSize()
+    erd.listenTo(document.getElementById(self.props.containerId), (element) => {
+      self.layout.updateSize()
     })
+  }
+
+  destroy () {
+    this.layout.destroy()
   }
 
   render () {
     return (
-      <div className='goldenLayout' ref={input => this.layout = input}/>
+      <div className='goldenLayout' ref={input => this.container = input} />
     )
   }
 }

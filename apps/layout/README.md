@@ -1,4 +1,4 @@
-# MetOClient Monitor
+# MetOClient Layout
 
 [comment]: # (Minimal example showing how to link redux state to react components embedded within golden-layout.)
 

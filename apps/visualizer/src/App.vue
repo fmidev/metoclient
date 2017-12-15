@@ -1,4 +1,4 @@
-<script src="../../../src/view/map/ol/MapAnimation.js"></script>
+<script src="../../../src/view/map/MapAnimation.js"></script>
 <template>
   <div id="fmi-metoclient-ui">
     <animator :anim-config="animConfig" :anim-model="animModel"></animator>

@@ -1,87 +1,69 @@
-import PropTypes from 'prop-types';
-import {connect} from 'react-redux';
-import elementResizeDetectorMaker from 'element-resize-detector';
-import {MetOClient} from 'metoclient';
+import PropTypes from 'prop-types'
+import { connect } from 'react-redux'
+import { MetOClient } from 'metoclient'
 
 // Pure react component. Should not be connected to redux store; its container
 // should be connected to the store.
 export class WeatherMap extends React.Component {
-    constructor() {
-        super();
-        this.update = 0;
-        this.state = {
-            metoclient: null
-        }
-    }
 
-    componentDidMount() {
-        var self = this;
-        var erd = elementResizeDetectorMaker();
-        erd.listenTo(document.getElementById(this.props.container), function (element) {
-            if (self.update === 0) {
-                self.update = 1;
-                return;
-            }
-            var width = element.offsetWidth;
-            var height = element.offsetHeight;
-            var measures = width+'x'+height;
-            var prevMeasures = element.getAttribute('data-measures');
-            if (!prevMeasures) {
-                element.setAttribute('data-measures', measures);
-                return;
-            }
-            if (measures === prevMeasures) {
-                return;
-            }
-            console.log('Resize:');
-            console.log(measures);
-            console.log(prevMeasures);
-            if (self.state.metoclient != null) {
-                self.state.metoclient.updateAnimation({});
-            }
-        });
-    }
+  componentDidMount () {
+  }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.config !== 0) {
-            var config;
-            try {
-                config = JSON.parse(nextProps.config);
-                if ((config != null) && (config.time !== undefined)) {
-                    config.project = 'project-' + nextProps.container;
-                    config.map.view.container = nextProps.container;
-                    config.map.view.legendContainer = 'fmi-animator-legend-' + nextProps.container;
-                    config.map.view.spinnerContainer = 'fmi-animator-spinner-' + nextProps.container;
-                    var metoclient = new MetOClient(config);
-                    this.setState({
-                        metoclient: metoclient
-                    });
-                }
-            } catch (e) {
-            }
-        }
-    }
+  componentDidUpdate () {
+  }
 
-    render() {
-        if (this.state.metoclient != null) {
-            this.state.metoclient.createAnimation();
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.config != null) {
+      let config
+      let timeslider
+      let rotated = false
+      try {
+        config = JSON.parse(nextProps.config)
+        config.project = 'project-' + nextProps.container
+        config.container = nextProps.container
+        config.layerSwitcherContainer = 'fmi-metoclient-layer-switcher-' + nextProps.container
+        config.legendContainer = 'fmi-metoclient-legend-' + nextProps.container
+        config.spinnerContainer = 'fmi-metoclient-spinner-' + nextProps.container
+        config.timeSliderContainer = 'fmi-metoclient-timeslider fmi-metoclient-timeslider-' + nextProps.container
+
+        timeslider = Array.from(document.getElementsByClassName('fmi-metoclient-timeslider-' + nextProps.container))
+        if (timeslider.length > 0) {
+          if (timeslider[0].classList.contains('rotated')) {
+            rotated = true
+          }
         }
-        return (
-            <div>
-                <div id={this.props.container} className="map-container"></div>
-            </div>
-        );
+        this.metoclient = new MetOClient(config)
+        this.metoclient.createAnimation({
+          init: function () {
+            if (rotated) {
+              Array.from(document.getElementsByClassName('fmi-metoclient-timeslider-' + nextProps.container)).forEach(timeslider => {
+                timeslider.classList.add('rotated')
+              })
+            }
+          }
+        })
+      } catch (e) {
+      }
     }
+  }
+
+  render () {
+    return (
+      <div>
+        <div id={this.props.container} className='map-container'/>
+      </div>
+    )
+  }
 }
 
 WeatherMap.PropTypes = {
-    config: PropTypes.object.isRequired
-};
-
-function mapStateToProps(state, ownProps) {
-    return {
-        config: state.get(ownProps.id)
-    }
+  config: PropTypes.object.isRequired
 }
 
-export const WeatherMapContainer = connect(mapStateToProps)(WeatherMap);
+function mapStateToProps (state, ownProps) {
+  return {
+    config: state.get(ownProps.id + '-mapConfig')
+  }
+}
+
+export const WeatherMapContainer = connect(mapStateToProps)(WeatherMap)

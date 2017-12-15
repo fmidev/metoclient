@@ -5,14 +5,9 @@
  */
 
 import Time from '../model/Time'
-// #if process.env.METOCLIENT_TIME_SLIDER !== 'raphael'
-import TimeSlider from '../view/time/svg/TimeSlider'
-// #endif
-// #if process.env.METOCLIENT_TIME_SLIDER === 'raphael'
-import RaphaelTimeSlider from '../view/time/raphael/TimeSlider'
-// #endif
+import TimeSlider from '../view/time/TimeSlider'
+import * as constants from '../constants'
 import EventEmitter from 'wolfy87-eventemitter'
-import jQuery from 'jquery'
 
 export default class TimeController {
   /**
@@ -97,24 +92,20 @@ export default class TimeController {
     this.nextListener_ = () => {
       self.next()
     }
-    this.animationTimeUserListener_ = animationTime => {
+    this.animationTimeUserListener_ = (animationTime) => {
       self.model_.setAnimationTime(animationTime)
     }
-    this.animationPlayListener_ = animationPlay => {
+    this.animationPlayListener_ = (animationPlay) => {
       if (animationPlay) {
         self.play()
       } else {
         self.pause()
       }
     }
-    containers = jQuery(`.${this.config_['view']['timeSliderContainer']}`)
+    containers = document.getElementsByClassName(this.config_['view']['timeSliderContainer'])
     numViews = containers.length
     for (i = 0; i < numViews; i++) {
-      if (typeof RaphaelTimeSlider !== 'undefined') {
-        this.views_.push(new RaphaelTimeSlider(this.config_['view'], containers[i]))
-      } else {
-        this.views_.push(new TimeSlider(this.config_['view'], containers[i]))
-      }
+      this.views_.push(new TimeSlider(this.config_['view'], containers[i]))
       this.views_[i].actionEvents.addListener('previous', self.previousListener_)
       this.views_[i].actionEvents.addListener('next', self.nextListener_)
       this.views_[i].variableEvents.addListener('animationTime', self.animationTimeUserListener_)
@@ -147,7 +138,6 @@ export default class TimeController {
     this.model_.variableEvents.addListener('animationTime', this.animationTimeTimerListener_)
 
     this.createTimer()
-    this.createTimeSlider()
   };
 
   /**
@@ -184,25 +174,33 @@ export default class TimeController {
   };
 
   /**
-   * Updates loader state visualizations.
+   * Updates time steps.
    * @param {Array<Object>} numIntervalItems Loader counter information for intervals.
    */
-  updateTimeLoaderVis (numIntervalItems) {
+  updateTimeSteps (numIntervalItems) {
     const numViews = this.views_.length
     const numIntervals = numIntervalItems.length
     let i
+    if (numIntervalItems.length === 0) {
+      return
+    }
+    this.model_.setAnimationTimes(numIntervalItems.reduce((animationTimes, intervalItem) => {
+      animationTimes.push(intervalItem['endTime'])
+      return animationTimes
+    }, [numIntervalItems[0]['beginTime']]))
     for (i = 0; i < numViews; i++) {
       this.views_[i].updateTimeLoaderVis(numIntervalItems)
     }
+    this.updateTimeSlider()
     if (this.model_.isWaitingAutoStart()) {
       for (i = 0; i < numIntervals; i++) {
-        if (![fi.fmi.metoclient.ui.animator.Constants.LOADING_STATUS['ready'], fi.fmi.metoclient.ui.animator.Constants.LOADING_STATUS['error']].includes(numIntervalItems[i]['status'])) {
+        if (![constants.LOADING_STATUS['ready'], constants.LOADING_STATUS['error']].includes(numIntervalItems[i]['status'])) {
           return
         }
       }
       this.play()
     }
-  };
+  }
 
   /**
    * Gets the real-world creation time.
@@ -264,7 +262,8 @@ export default class TimeController {
    * Refreshes current real-world time.
    */
   refreshTime () {
-    const currentTime = Date.now(), resolutionTime = this.model_.getAnimationResolutionTime()
+    const currentTime = Date.now()
+    const resolutionTime = this.model_.getAnimationResolutionTime()
     this.model_.setAnimationLastRefreshed(currentTime)
     this.model_.setCurrentTime(currentTime)
     this.model_.moveAnimationTimeFrame(Math.floor(currentTime / resolutionTime) * resolutionTime - Math.floor(this.model_.getCreationTime() / resolutionTime) * resolutionTime)

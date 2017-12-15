@@ -28,6 +28,7 @@ body {
     height: 100%;
     margin: 0;
     padding: 0;
+    overflow: hidden;
 }
 
 article, aside, details, figcaption, figure, footer, header, main, menu, nav, section, summary {
@@ -215,7 +216,7 @@ td, th {
     padding: 0
 }
 
-div#fmi-animator {
+div#fmi-metoclient {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -256,4 +257,11 @@ div#fmi-animator {
 
 .custom-control button:focus, .custom-control button:hover {
     background-color: #686868;
+}
+
+img#metoclient-logo {
+    position: absolute;
+    bottom: 100px;
+    right: 0;
+    z-index: 50;
 }

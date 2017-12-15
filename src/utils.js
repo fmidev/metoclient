@@ -76,9 +76,8 @@ export const supportOldBrowsers = () => {
         const currTime = new Date().getTime()
         const timeToCall = Math.max(0, 16 - (currTime - lastTime))
         const id = window.setTimeout(() => {
-            callback(currTime + timeToCall)
-          },
-          timeToCall)
+          callback(currTime + timeToCall)
+        }, timeToCall)
         lastTime = currTime + timeToCall
         return id
       }
@@ -90,96 +89,33 @@ export const supportOldBrowsers = () => {
       }
     }
   })())
-
-  // https://tc39.github.io/ecma262/#sec-array.prototype.includes
-  if (!Array.prototype.includes) {
-    Object.defineProperty(Array.prototype, 'includes', {
-      value: function (searchElement, fromIndex) {
-        // 1. Let O be ? ToObject(this value).
-        if (this == null) {
-          throw new TypeError('"this" is null or not defined')
-        }
-
-        var o = Object(this)
-
-        // 2. Let len be ? ToLength(? Get(O, "length")).
-        var len = o.length >>> 0
-
-        // 3. If len is 0, return false.
-        if (len === 0) {
-          return false
-        }
-
-        // 4. Let n be ? ToInteger(fromIndex).
-        //    (If fromIndex is undefined, this step produces the value 0.)
-        var n = fromIndex | 0
-
-        // 5. If n ≥ 0, then
-        //  a. Let k be n.
-        // 6. Else n < 0,
-        //  a. Let k be len + n.
-        //  b. If k < 0, let k be 0.
-        var k = Math.max(n >= 0 ? n : len - Math.abs(n), 0)
-
-        function sameValueZero (x, y) {
-          return x === y || (typeof x === 'number' && typeof y === 'number' && isNaN(x) && isNaN(y))
-        }
-
-        // 7. Repeat, while k < len
-        while (k < len) {
-          // a. Let elementK be the result of ? Get(O, ! ToString(k)).
-          // b. If SameValueZero(searchElement, elementK) is true, return true.
-          // c. Increase k by 1.
-          if (sameValueZero(o[k], searchElement)) {
-            return true
-          }
-          k++
-        }
-
-        // 8. Return false
-        return false
-      }
-    })
-  }
 }
 
 /**
- * Generate text presentation of the given time.
- * @param {number} tickTime Time value.
- * @param {number} beginTime First available time value.
- * @param {number} resolutionTime Time resolution.
- * @parame {string} timeZone Current timezone.
- * @parame {string} locale Locale for output text.
- * @param {number|null=} prevTime Previous time value.
- * @returns {string} Generated text presentation.
+ * Generate an HTML list representing a dropdown menu.
+ * @param {Object} options Menu data.
+ * @return {HTMLElement} Unordered list of menu items.
  */
-export const getTickText = (tickTime, beginTime, resolutionTime, timeZone, locale, prevTime) => {
-  let zTime
-  let zPrevTime
-  let day
-  let year
-  let currentMoment
-  let format = 'HH:mm'
-  const dateFormat = 'dd D.M.'
-  if (beginTime == null) {
-    return ''
+export const createMenu = (options) => {
+  let ul = document.createElement('ul')
+  let li
+  let a
+  ul.classList.add('metoclient-menu')
+  if (options.id != null) {
+    ul.setAttribute('id', 'window-menu-dots-' + options.id)
   }
-  if (tickTime < beginTime) {
-    tickTime = beginTime
+  if (options.items != null) {
+    options.items.forEach((item) => {
+      li = document.createElement('li')
+      a = document.createElement('a')
+      a.href = '#'
+      a.innerHTML = item.title
+      li.appendChild(a)
+      if (typeof item.callback === 'function') {
+        li.addEventListener('click', item.callback)
+      }
+      ul.appendChild(li)
+    })
   }
-  moment.locale(locale)
-  zTime = moment(beginTime + Math.ceil((tickTime - beginTime) / resolutionTime) * resolutionTime).tz(timeZone)
-  day = zTime.dayOfYear()
-  year = zTime.year()
-  currentMoment = moment()
-  if (prevTime != null) {
-    zPrevTime = moment(prevTime).tz(timeZone)
-    if ((day !== zPrevTime.dayOfYear()) || (year !== zPrevTime.year())) {
-      format = dateFormat
-    }
-  } else if ((typeof prevTime !== 'undefined') && ((day !== currentMoment.dayOfYear()) || (year !== currentMoment.year()))) {
-    format = dateFormat
-  }
-  return zTime.format(format)
+  return ul
 }
-

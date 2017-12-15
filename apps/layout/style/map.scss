@@ -1,12 +1,9 @@
 .ol-control, .ol-scale-line {
     position: absolute;
-    padding: 2px
 }
 
 .ol-box {
     box-sizing: border-box;
-    border-radius: 2px;
-    border: 2px solid #00f
 }
 
 .ol-mouse-position {
@@ -16,7 +13,6 @@
 }
 
 .ol-scale-line {
-    background: #95b9e6;
     background: rgba(0, 60, 136, .3);
     border-radius: 4px;
     bottom: 8px;
@@ -51,21 +47,6 @@
     -webkit-tap-highlight-color: transparent
 }
 
-.ol-control {
-    background-color: #eee;
-    background-color: rgba(255, 255, 255, .4);
-    border-radius: 4px
-}
-
-.ol-control:hover {
-    background-color: rgba(255, 255, 255, .6)
-}
-
-.ol-zoom {
-    top: .5em;
-    left: .5em
-}
-
 .ol-rotate {
     top: .5em;
     right: .5em;
@@ -96,20 +77,13 @@
 
 .ol-control button {
     display: block;
-    margin: 1px;
     padding: 0;
-    color: #fff;
     font-size: 1.14em;
     font-weight: 700;
     text-decoration: none;
     text-align: center;
-    height: 1.375em;
-    width: 1.375em;
     line-height: .4em;
-    background-color: #7b98bc;
-    background-color: rgba(0, 60, 136, .5);
     border: none;
-    border-radius: 2px
 }
 
 .ol-control button::-moz-focus-inner {
@@ -138,16 +112,6 @@
 
 .ol-control button:focus, .ol-control button:hover {
     text-decoration: none;
-    background-color: #4c6079;
-    background-color: rgba(0, 60, 136, .7)
-}
-
-.ol-zoom .ol-zoom-in {
-    border-radius: 2px 2px 0 0
-}
-
-.ol-zoom .ol-zoom-out {
-    border-radius: 0 0 2px 2px
 }
 
 .ol-attribution {
@@ -253,7 +217,6 @@
 }
 
 .ol-overviewmap .ol-overviewmap-map {
-    border: 1px solid #7b98bc;
     height: 150px;
     margin: 2px;
     width: 150px
@@ -273,15 +236,13 @@
     background: rgba(255, 255, 255, .8)
 }
 
-.ol-overviewmap-box {
-    border: 2px dotted rgba(0, 60, 136, .7)
-}
-
 .layer-switcher {
     position: absolute;
-    top: 0.5em;
-    right: 0.5em;
     text-align: left;
+}
+
+.layer-switcher.margin-added {
+    margin-right: 60px;
 }
 
 .layer-switcher .panel {
@@ -300,15 +261,12 @@
     float: right;
     width: 40px;
     height: 40px;
-    background-image: url("../img/layer-switcher.png");
     background-repeat: no-repeat;
     background-position: 0;
-    background-color: #585858;
     border: none;
 }
 
 .layer-switcher button:focus, .layer-switcher button:hover {
-    background-color: #686868;
 }
 
 .layer-switcher ul {

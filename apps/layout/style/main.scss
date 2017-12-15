@@ -1,3 +1,5 @@
+$header-height: 50px;
+
 #fmi-metweb-windows {
 
   div.map-container {
@@ -14,18 +16,18 @@
     height: 100%;
   }
 
-  div.fmi-animator-legend {
+  div.fmi-metoclient-legend {
     position: absolute;
     left: 10px;
     max-height: 520px;
     top: 80px;
     background-color: #ffffff;
-    z-index: 100;
+    z-index: 8;
     padding-top: 10px;
     padding-bottom: 10px;
   }
 
-  div.fmi-animator-spinner {
+  div.fmi-metoclient-spinner {
     left: 0;
     right: 0;
     top: 0;
@@ -47,15 +49,6 @@
     margin-left: 20px;
   }
 
-  div.fmi-animator-timeslider {
-    position: absolute;
-    bottom: 5px;
-    width: 100%;
-    min-width: 100px;
-    height: 85px;
-    z-index: 150;
-  }
-
   img.logo {
     position: absolute;
     bottom: 50px;
@@ -64,13 +57,15 @@
   }
 
   button.ol-zoom-in, button.ol-zoom-out {
-    color: #D7B13E;
-    background-color: #585858;
+    color: #FFF;
+    background-color: #000;
+    opacity: 0.5;
+    cursor: pointer;
   }
 
   button.ol-zoom-in:focus, button.ol-zoom-in:hover, button.ol-zoom-out:focus, button.ol-zoom-out:hover {
-    color: #D7B13E;
-    background-color: #686868;
+    color: #FFF;
+    background-color: #60b3e1;
   }
 
   .custom-control {
@@ -111,28 +106,56 @@
     z-index: 1000000;
   }
 
-  .window-menu-dots.light-theme {
+  .menu-dots.light-theme {
     background-image: url("../img/light-window-menu-gray.png");
   }
 
-  .window-menu-dots.light-theme:not(selected):hover {
+  .menu-dots.light-theme:not(selected).hover {
     background-image: url("../img/light-window-menu-blue.png");
   }
 
-  .lm_selected .window-menu-dots.light-theme:not(selected):hover {
+  .lm_selected .menu-dots.light-theme:not(selected).hover {
     background-image: url("../img/light-window-menu-white.png");
   }
 
-  .window-menu-dots {
+  .menu-dots {
+    z-index: 50;
+    position: relative;
     width: 50px;
-    height: 40px;
+    min-height: 40px;
+    height: 100%;
     cursor: pointer;
-    background-repeat: no-repeat;
-    background-position: center
+    background: no-repeat center;
   }
 
   .goldenLayout {
     background: #ebecec;
+  }
+
+  header {
+    height: $header-height;
+    display: flex;
+    justify-content: space-between;
+    z-index: 40;
+    background: #eceded;
+    span {
+      line-height: $header-height;
+      letter-spacing: 0.2px;
+      font-family: Roboto, Arial, Helvetica, sans-serif;
+      font-size: 15px;
+      font-weight: bold;
+      text-align: left;
+      color: #4a4a4a;
+    }
+    ul.metoclient-menu {
+      width: 200px;
+      margin: 0 0 0 -150px;
+      left: 75px;
+      top: 40px;
+      &.visible-menu {
+        top: 45px;
+      }
+    }
   }
 
 }

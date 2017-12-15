@@ -20,9 +20,9 @@
   },
   "homepage": "https://github.com/fmidev/metoclient",
   "dependencies": {
-    "d3-timer": "^1.0.7",
     "element-resize-detector": "^1.1.12",
-    "golden-layout": "masapu/golden-layout",
+    "extend": "^3.0.1",
+    "golden-layout": "^1.5.9",
     "immutable": "^3.8.1",
     "jquery": "^3.2.1",
     "metoclient": "file:../../",
@@ -32,6 +32,8 @@
     "react": "^15.5.4",
     "react-dom": "^15.5.4",
     "react-redux": "^5.0.5",
+    "react-resize-detector": "^1.1.0",
+    "react-sizeme": "^2.3.6",
     "redux": "^3.6.0",
     "wolfy-eventemitter": "^0.1.0"
   },
@@ -43,6 +45,7 @@
     "babel-preset-env": "^1.5.1",
     "babel-preset-react": "^6.24.1",
     "babel-preset-typescript": "^7.0.0-alpha.19",
+    "copy-webpack-plugin": "^4.2.0",
     "css-loader": "^0.28.7",
     "extract-text-webpack-plugin": "^3.0.1",
     "file-loader": "^0.11.2",

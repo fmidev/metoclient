@@ -26,6 +26,11 @@ const store = new Vuex.Store({
         state.metoclient.refresh()
       }
     },
+    updateSize (state) {
+      if (state.metoclient != null) {
+        state.metoclient.getMap().updateSize()
+      }
+    },
     destruct (state) {
       if (state.metoclient != null) {
         state.metoclient.destruct()
@@ -63,6 +68,10 @@ const update = (values) => {
   vm.$set(vm.model, 'animator', values)
 }
 
+const updateSize = () => {
+  store.commit('updateSize')
+}
+
 const locate = (id) => {
 }
 
@@ -74,4 +83,4 @@ const destruct = () => {
   store.commit('destruct')
 }
 
-export { init, locate, update, refresh, destruct }
+export { init, locate, update, updateSize, refresh, destruct }

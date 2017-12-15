@@ -5,7 +5,6 @@ import {connect} from 'react-redux';
 class IncrementButton extends React.Component {
 
     componentDidMount() {
-        console.log(this.props.container);
     }
 
     render() {

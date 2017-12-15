@@ -1,6 +1,6 @@
 # MetOClient
 
-WMS animator library and UI
+Map animator library
 
 ## User's Guide
 
@@ -12,34 +12,27 @@ It is also possible to link with `script` tag to a build with or without global 
 
 ### Global example usage
 
+Pseudo configuration and usage:
+
     var config = {
         project: 'weather',                
-        map: {
-            model: {
-                layers: [
-                   ...
-                ]
-            },
-            view: {
-                container: "animator-div-id"
-            }
-        },
-        time: {
-            model: {},
-            view: {}
-        },
+        layers: [], // Your layers here
+        container: 'animator-div-id',
+        // Other options here
         localization: {
             locale: 'fi'
         }
     }
     var weatherMap = new fi.fmi.metoclient.MetOClient(config);
-    weatherMap.createAnimation({zoom: function(level) {}});
+    weatherMap.createAnimation({loaded: function() {}});
 
 ### More examples
 
 Example directory: [examples/](examples/)
 
 ### API
+
+List of API functions:
 
 * createAnimation(callbacks)
     * possible event functions as callbacks
@@ -99,11 +92,15 @@ Example directory: [examples/](examples/)
 * showPopup(content,x,y)
 * stop()
 
+More information: [build/jsdoc/MetOClient.html](build/jsdoc/MetOClient.html)
+
+
 In static build, OpenLayers 4 functionality is also available to the extent that is included in the build. This can be optimized depending on project needs. However, it is more convenient to use both MetOClient and OpenLayers (if needed) as ES6 modules with Webpack.
 
 ### Static functions
 
 * fi.fmi.metoclient.MetOClient.floorTime(time_ms,resolution_ms,timeZone)
+* fi.fmi.metoclient.MetOClient.createMenu(options)
 
 ## Development
 

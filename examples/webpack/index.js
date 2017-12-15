@@ -1,11 +1,12 @@
 import { MetOClient } from 'metoclient'
-import jQuery from 'jquery'
 import OlStyleStyle from 'ol/style/style'
 import OlStyleIcon from 'ol/style/icon'
 
 // API-KEY is required as part of the base URL that is used for the layers
 // when FMI services are used.
-let API_KEY = '' // Insert-your-apikey-here
+// API-KEY is required as part of the base URL that is used for the layers
+// when FMI services are used.
+let API_KEY = 'insert-your-apikey-here'
 if (!API_KEY) {
   alert('Check HTML source: proper API-KEY should be set.')
 } else {
@@ -19,7 +20,7 @@ if (!API_KEY) {
   let baseUrl = 'http://wms.fmi.fi/fmi-apikey/' + API_KEY + '/geoserver/'
   let wmsBaseUrl = baseUrl + 'wms'
   let origins1024 = [[-118331.36640836, 8432773.1670142], [-118331.36640836, 8432773.1670142], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352]]
-  let extent = [-118331.366408356, 6335621.16701424, 875567.731906565, 7907751.53726352]
+  let extent = [-1000000, 5000000, 5000000, 20000000]
   let imgPath = '../../dist/img/'
   // Create animation layers.
   // Animation specific configurations are located inside animation property.
@@ -28,279 +29,240 @@ if (!API_KEY) {
   let config = {
     project: 'mymap',
     // Map view configurations
-    map: {
-      model: {
-        // Layer configuration
-        layers: [
-          // ---------------------------------------------------------------
-          {
-            className: 'OSM',
-            title: 'OpenStreetMap',
-            visible: true,
-            useSavedVisible: true,
-            editOpacity: true,
-            useSavedOpacity: true
+    // Layer configuration
+    layers: {
+      // ---------------------------------------------------------------
+      'OpenStreetMap': {
+        className: 'OSM',
+        title: 'OpenStreetMap',
+        visible: true,
+        useSavedVisible: true,
+        editOpacity: true,
+        useSavedOpacity: true
+      },
+      // ---------------------------------------------------------------
+      'Stamen': {
+        className: 'Stamen',
+        title: 'Water Color',
+        visible: false,
+        useSavedVisible: true,
+        editOpacity: true,
+        useSavedOpacity: true,
+        source: {
+          layer: 'watercolor'
+        }
+      },
+      // ---------------------------------------------------------------
+      'Rain radar': {
+        className: 'TileWMS',
+        title: 'Rain radar and humidity forecast',
+        visible: true,
+        useSavedVisible: true,
+        editOpacity: true,
+        useSavedOpacity: true,
+        type: 'obs',
+        source: {
+          url: wmsBaseUrl,
+          params: {
+            'LAYERS': 'Radar:suomi_rr_eureffin',
+            'TRANSPARENT': 'TRUE',
+            'FORMAT': 'image/png'
           },
-          // ---------------------------------------------------------------
-          {
-            className: 'Stamen',
-            title: 'Water Color',
-            visible: false,
-            useSavedVisible: true,
-            editOpacity: true,
-            useSavedOpacity: true,
-            sourceOptions: {
-              layer: 'watercolor'
+          projection: 'EPSG:3857',
+          tileGridOptions: {
+            origins: origins1024,
+            extent: extent,
+            resolutions: resolutions,
+            tileSize: 1024
+          }
+        },
+        animation: {
+          beginTime: beginTime,
+          resolutionTime: resolutionTime,
+          hasLegend: false
+        }
+      },
+      // ---------------------------------------------------------------
+      'Humidity forecast': {
+        className: 'TileWMS',
+        title: 'Rain radar and humidity forecast',
+        visible: true,
+        useSavedVisible: true,
+        editOpacity: true,
+        useSavedOpacity: true,
+        type: 'for',
+        source: {
+          url: wmsBaseUrl,
+          params: {
+            'LAYERS': 'Weather:precipitation-forecast',
+            'TRANSPARENT': 'TRUE',
+            'FORMAT': 'image/png'
+          },
+          projection: 'EPSG:3857',
+          tileGridOptions: {
+            origins: origins1024,
+            extent: extent,
+            resolutions: resolutions,
+            tileSize: 1024
+          }
+        },
+        animation: {
+          endTime: endTime,
+          resolutionTime: resolutionTime,
+          hasLegend: false
+        }
+      },
+      // ---------------------------------------------------------------
+      'Cloudiness forecast': {
+        className: 'TileWMS',
+        title: 'Cloudiness forecast',
+        visible: false,
+        useSavedVisible: true,
+        editOpacity: true,
+        useSavedOpacity: true,
+        type: 'for',
+        source: {
+          url: wmsBaseUrl,
+          params: {
+            'LAYERS': 'Weather:cloudiness-forecast',
+            'TRANSPARENT': 'TRUE',
+            'FORMAT': 'image/png'
+          },
+          projection: 'EPSG:3857',
+          tileGridOptions: {
+            origins: origins1024,
+            extent: extent,
+            resolutions: resolutions,
+            tileSize: 1024
+          }
+        },
+        animation: {
+          beginTime: currentTime,
+          endTime: endTime,
+          resolutionTime: resolutionTime,
+          hasLegend: true
+        }
+      },
+      // ---------------------------------------------------------------
+      'Temperature forecast': {
+        className: 'TileWMS',
+        title: 'Temperature forecast',
+        visible: true,
+        useSavedVisible: true,
+        editOpacity: true,
+        useSavedOpacity: true,
+        type: 'for',
+        source: {
+          url: wmsBaseUrl,
+          params: {
+            'LAYERS': 'Weather:temperature-forecast-contour',
+            'TRANSPARENT': 'TRUE',
+            'FORMAT': 'image/png'
+          },
+          projection: 'EPSG:3857',
+          tileGridOptions: {
+            origins: origins1024,
+            extent: extent,
+            resolutions: resolutions,
+            tileSize: 1024
+          }
+        },
+        animation: {
+          beginTime: currentTime,
+          endTime: endTime,
+          resolutionTime: resolutionTime,
+          hasLegend: false
+        }
+      },
+      // ---------------------------------------------------------------
+      'Markers': {
+        className: 'Vector',
+        type: 'features',
+        title: 'Markers',
+        visible: false,
+        useSavedVisible: true,
+        editOpacity: true,
+        useSavedOpacity: true,
+        popup: true,
+        source: {
+          projection: 'EPSG:4326',
+          features: [
+            {
+              type: 'Point',
+              geometry: [25, 61],
+              name: 'Point 1',
+              population: 1000,
+              text: 'Description A'
+            },
+            {
+              type: 'Point',
+              geometry: [26, 63],
+              name: 'Point 2',
+              population: 2000,
+              text: 'Description B'
             }
-          },
-          // ---------------------------------------------------------------
+          ]
+        },
+        style: [
           {
-            className: 'TileWMS',
-            title: 'Rain radar and humidity forecast',
-            visible: true,
-            useSavedVisible: true,
-            editOpacity: true,
-            useSavedOpacity: true,
-            type: 'obs',
-            sourceOptions: {
-              url: wmsBaseUrl,
-              params: {
-                'LAYERS': 'Radar:suomi_rr_eureffin',
-                'TRANSPARENT': 'TRUE',
-                'FORMAT': 'image/png'
+            image: {
+              type: 'icon',
+              anchor: [0.5, 0.5],
+              anchorXUnits: 'fraction',
+              anchorYUnits: 'fraction',
+              opacity: 0.75,
+              rotation: 45,
+              src: '../../img/icon.png'
+            },
+            text: {
+              font: '12px helvetica,sans-serif',
+              text: 'Kohde',
+              rotation: 45,
+              fill: {
+                color: 'rgba(0, 255, 0, 1.0)'
               },
-              projection: 'EPSG:3067',
-              tileGridOptions: {
-                origins: origins1024,
-                extent: extent,
-                resolutions: resolutions,
-                tileSize: 1024
+              stroke: {
+                color: 'rgba(0, 0, 255, 1.0)',
+                width: 2,
+                lineCap: 'round',
+                lineJoin: 'miter',
+                lineDash: [1, 2],
+                miterLimit: 7
               }
-            },
-            animation: {
-              beginTime: beginTime,
-              resolutionTime: resolutionTime,
-              hasLegend: false
             }
-          },
-          // ---------------------------------------------------------------
-          {
-            className: 'TileWMS',
-            title: 'Rain radar and humidity forecast',
-            visible: true,
-            useSavedVisible: true,
-            editOpacity: true,
-            useSavedOpacity: true,
-            type: 'for',
-            sourceOptions: {
-              url: wmsBaseUrl,
-              params: {
-                'LAYERS': 'Weather:precipitation-forecast',
-                'TRANSPARENT': 'TRUE',
-                'FORMAT': 'image/png'
-              },
-              projection: 'EPSG:3067',
-              tileGridOptions: {
-                origins: origins1024,
-                extent: extent,
-                resolutions: resolutions,
-                tileSize: 1024
-              }
-            },
-            animation: {
-              endTime: endTime,
-              resolutionTime: resolutionTime,
-              hasLegend: false
-            }
-          },
-          // ---------------------------------------------------------------
-          {
-            className: 'TileWMS',
-            title: 'Cloudiness forecast',
-            visible: false,
-            useSavedVisible: true,
-            editOpacity: true,
-            useSavedOpacity: true,
-            type: 'for',
-            sourceOptions: {
-              url: wmsBaseUrl,
-              params: {
-                'LAYERS': 'Weather:cloudiness-forecast',
-                'TRANSPARENT': 'TRUE',
-                'FORMAT': 'image/png'
-              },
-              projection: 'EPSG:3067',
-              tileGridOptions: {
-                origins: origins1024,
-                extent: extent,
-                resolutions: resolutions,
-                tileSize: 1024
-              }
-            },
-            animation: {
-              beginTime: currentTime,
-              endTime: endTime,
-              resolutionTime: resolutionTime,
-              hasLegend: true
-            }
-          },
-          // ---------------------------------------------------------------
-          {
-            className: 'TileWMS',
-            title: 'Temperature forecast',
-            visible: true,
-            useSavedVisible: true,
-            editOpacity: true,
-            useSavedOpacity: true,
-            type: 'for',
-            sourceOptions: {
-              url: wmsBaseUrl,
-              params: {
-                'LAYERS': 'Weather:temperature-forecast-contour',
-                'TRANSPARENT': 'TRUE',
-                'FORMAT': 'image/png'
-              },
-              projection: 'EPSG:3067',
-              tileGridOptions: {
-                origins: origins1024,
-                extent: extent,
-                resolutions: resolutions,
-                tileSize: 1024
-              }
-            },
-            animation: {
-              beginTime: currentTime,
-              endTime: endTime,
-              resolutionTime: resolutionTime,
-              hasLegend: false
-            }
-          },
-          // ---------------------------------------------------------------
-          {
-            className: 'Vector',
-            type: 'features',
-            title: 'Markers',
-            visible: true,
-            useSavedVisible: true,
-            editOpacity: true,
-            useSavedOpacity: true,
-            popup: true,
-            source: {
-              projection: 'EPSG:4326',
-              features: [
-                {
-                  type: 'Point',
-                  geometry: [25, 61],
-                  name: 'Point 1',
-                  population: 1000,
-                  text: 'Description A'
-                },
-                {
-                  type: 'Point',
-                  geometry: [26, 63],
-                  name: 'Point 2',
-                  population: 2000,
-                  text: 'Description B'
-                }
-              ]
-            },
-            style: [
-              {
-                image: {
-                  type: 'icon',
-                  anchor: [0.5, 0.5],
-                  anchorXUnits: 'fraction',
-                  anchorYUnits: 'fraction',
-                  opacity: 0.75,
-                  rotation: 45,
-                  src: '../../img/icon.png'
-                },
-                text: {
-                  font: '12px helvetica,sans-serif',
-                  text: 'Kohde',
-                  rotation: 45,
-                  fill: {
-                    color: 'rgba(0, 255, 0, 1.0)'
-                  },
-                  stroke: {
-                    color: 'rgba(0, 0, 255, 1.0)',
-                    width: 2,
-                    lineCap: 'round',
-                    lineJoin: 'miter',
-                    lineDash: [1, 2],
-                    miterLimit: 7
-                  }
-                }
-              }
-            ]
           }
         ]
-      },
-      view: {
-        container: 'fmi-animator',
-        projection: 'EPSG:3857',
-        extent: [-500000, 5000000, 5000000, 20000000],
-        resolutions: resolutions,
-        defaultCenterLocation: [2750000, 9000000],
-        defaultCenterProjection: 'EPSG:3857',
-        defaultZoomLevel: 0,
-        showLegend: true,
-        legendTitle: 'Legend',
-        noLegendText: 'None',
-        showLayerSwitcher: true,
-        showLoadProgress: true,
-        markerImagePath: '../../img/marker.png',
-        ignoreObsOffset: 5 * 60 * 1000,
-        maxAsyncLoadCount: 5,
-        // Disable panning and zooming
-        staticControls: false
       }
     },
+    container: 'fmi-metoclient',
+    projection: 'EPSG:3857',
+    extent: [-1000000, 5000000, 10000000, 20000000],
+    resolutions: resolutions,
+    defaultCenterLocation: [2750000, 8500000],
+    defaultCenterProjection: 'EPSG:3857',
+    defaultZoomLevel: 1,
+    showLegend: true,
+    showLayerSwitcher: true,
+    showLoadProgress: true,
+    markerImagePath: '../../img/marker.png',
+    maxAsyncLoadCount: 5,
+    // Disable panning and zooming
+    staticControls: false,
     // Time configuration
-    time: {
-      model: {
-        autoStart: false,
-        waitUntilLoaded: false,
-        autoReplay: true,
-        refreshInterval: 15 * 60 * 1000,
-        frameRate: 500,
-        resolutionTime: resolutionTime,
-        defaultAnimationTime: (new Date()).getTime(),
-        beginTime: beginTime,
-        endTime: endTime,
-        endTimeDelay: 1000
-      },
-      view: {
-        showTimeSlider: true,
-        timeZone: 'Europe/Helsinki',
-        height: 90,
-        imageWidth: 55,
-        imageHeight: 55,
-        imageBackgroundColor: '#585858',
-        sliderYOffset: 0,
-        sliderHeight: 55,
-        statusHeight: 12,
-        tickTextColor: '#000000',
-        pastColor: '#B2D8EA',
-        futureColor: '#D7B13E',
-        tickColor: '#FFFFFF',
-        notLoadedColor: '#585858',
-        loadingColor: '#B2D8EA',
-        loadedColor: '#94BF77',
-        loadingErrorColor: '#9A2500',
-        tickHeight: 24,
-        tickTextYOffset: 18,
-        tickTextSize: 12,
-        pointerHeight: 30,
-        pointerTextYOffset: 30,
-        pointerColor: '#585858',
-        pointerTextColor: '#D7B13E',
-        pointerTextSize: 12,
-        playImagePath: imgPath + 'play.png',
-        pauseImagePath: imgPath + 'pause.png',
-        logoPath: imgPath + 'fmi-logo.png'
-      }
-    },
+    autoStart: false,
+    waitUntilLoaded: false,
+    autoReplay: true,
+    refreshInterval: 15 * 60 * 1000,
+    frameRate: 500,
+    resolutionTime: resolutionTime,
+    defaultAnimationTime: Date.now(),
+    beginTime: beginTime,
+    endTime: endTime,
+    endTimeDelay: 1000,
+    showTimeSlider: true,
+    timeZone: 'Europe/Helsinki',
+
+    // Localization
     localization: {
       locale: 'en',
       fi: {
@@ -353,19 +315,24 @@ if (!API_KEY) {
       map.on('pointermove', function (evt) {
         let features = weatherVisualization.getFeaturesAt('Markers', evt.coordinate[0], evt.coordinate[1], 30)
         if (features.length > 0) {
-          jQuery(map.getTarget()).css('cursor', 'pointer')
+          map.getTarget().style.cursor = 'pointer'
         } else {
-          jQuery(map.getTarget()).css('cursor', '')
+          map.getTarget().style.cursor = ''
         }
       })
 
       // Custom control
-      jQuery('.custom-control').remove()
-      jQuery('<div><button></button></div>').addClass('ol-unselectable ol-control custom-control').click(function () {
-        let coord = weatherVisualization.getMap().getView().getCenter()
-        weatherVisualization.showPopup('<p>Map center:</p><code>' + coord.join(', ') + '</code>', coord[0], coord[1])
-      }).appendTo('.fmi-animator')
-
+      if (document.getElementsByClassName('custom-control').length === 0) {
+        let customControl = document.createElement('div')
+        customControl.appendChild(document.createElement('button'))
+        customControl.classList.add('ol-unselectable', 'ol-control', 'custom-control')
+        customControl.addEventListener('click', event => {
+          let coord = weatherVisualization.getMap().getView().getCenter()
+          weatherVisualization.showPopup('<p>Map center:</p><code>' + coord.join(', ') + '</code>', coord[0], coord[1])
+        })
+        let animator = document.getElementById('fmi-metoclient')
+        animator.appendChild(customControl)
+      }
       let features = weatherVisualization.getFeatures('Markers')
       let firstFeature = features[0]
       if (typeof firstFeature === 'undefined') {

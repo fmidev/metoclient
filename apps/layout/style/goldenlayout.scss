@@ -35,7 +35,7 @@
   }
 
   .lm_splitter:hover, .lm_splitter.lm_dragging {
-    background: orange
+    background: #60b3e1
   }
 
   .lm_splitter.lm_vertical .lm_drag_handle {
@@ -62,7 +62,7 @@
   .lm_header {
     overflow: visible;
     position: relative;
-    z-index: 1;
+    z-index: 30;
     @extend .noselect
   }
 
@@ -72,7 +72,7 @@
 
   .lm_header .lm_controls {
     position: absolute;
-    right: 3px
+    right: 0
   }
 
   .lm_header .lm_controls > li {
@@ -83,44 +83,42 @@
     text-align: center
   }
 
-  .lm_header ul {
-    margin: 0;
-    padding: 0;
-    list-style-type: none
-  }
-
   .lm_header .lm_tabs {
     position: absolute;
     height: 40px;
-    pointer-events: none;
+    width: 100%;
+//    pointer-events: none;
   }
 
   .lm_header .lm_tab {
     cursor: pointer;
     float: left;
     height: 40px;
-    padding: 0 20px;
+    width: 100%;
+    padding: 0 0;
     position: relative
   }
 
   .lm_header .lm_tab i {
-    width: 2px;
+    width: 0;
     height: 40px;
     position: absolute
   }
 
   .lm_header .lm_tab i.lm_left {
     top: 0;
-    left: -2px
+    left: 0
   }
 
   .lm_header .lm_tab i.lm_right {
     top: 0;
-    right: -2px
+    width: 50px;
+    right: 0
   }
 
   .lm_header .lm_tab .lm_title {
     display: inline-block;
+    margin-left: 20px;
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 40px;
@@ -208,6 +206,9 @@
     top: initial;
     bottom: 20px
   }
+
+}
+
 
   .lm_drop_tab_placeholder {
     float: left;
@@ -362,8 +363,6 @@
     font-size: 12px;
     color: #000000;
     background: rgba(0, 0, 0, 0.0);
-    margin-right: 2px;
-    pointer-events: none;
   }
 
   .lm_header .lm_tab .lm_title {
@@ -480,4 +479,8 @@
     user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
   }
 
-}
+  .lm_header ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none
+  }

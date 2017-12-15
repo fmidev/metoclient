@@ -4,8 +4,6 @@
  * @license MIT
  */
 
-import jQuery from 'jquery'
-
 export default class Map {
   /**
    * Constructs a new map model.
@@ -14,11 +12,12 @@ export default class Map {
    * @constructor
    */
   constructor (config, referenceTime) {
-    let numLayers = 0, i
+    let numLayers = 0
+    let i
     this.config_ = config
     this.referenceTime_ = referenceTime
-    this.layers_ = config['layers']
     this.capabilities_ = {}
+    this.setLayers(config['layers'])
     if (this.layers_ != null) {
       numLayers = this.layers_.length
     }
@@ -51,19 +50,16 @@ export default class Map {
    * @param layers Map layers.
    */
   setLayers (layers) {
-    // Validate input layers
-    if (!Array.isArray(layers)) {
-      this.layers_ = []
-      return
-    }
-    layers.forEach(layer => {
-      if (((layer['type'] === 'obs') || (layer['type'] === 'for')) && (layer['animation'] == null)) {
-        layer['animation'] = {}
-      } else if (layer['className'].toLowerCase() === 'vector') {
-        layer['type'] = 'features'
+    this.layers_ = []
+    let layerKeys = Object.keys(layers)
+    layerKeys.forEach(layerKey => {
+      if (((layers[layerKey]['type'] === 'obs') || (layers[layerKey]['type'] === 'for')) && (layers[layerKey]['animation'] == null)) {
+        layers[layerKey]['animation'] = {}
+      } else if (layers[layerKey]['className'].toLowerCase() === 'vector') {
+        layers[layerKey]['type'] = 'features'
       }
+      this.layers_.push(layers[layerKey])
     })
-    this.layers_ = layers
   };
 
   /**
@@ -94,7 +90,6 @@ export default class Map {
    */
   loadCapabilities (capabilities) {
     let numLayers
-    let request
     const promises = []
     let i
     let j
@@ -109,7 +104,7 @@ export default class Map {
     // Collect urls
     for (i = 0; i < numLayers; i++) {
       layer = this.layers_[i]
-      if  ((layer['timeCapabilitiesInit'] == null) && (layer['timeCapabilities'] !== undefined) && (!urls.includes(layer['timeCapabilities']))) {
+      if ((layer['timeCapabilitiesInit'] == null) && (layer['timeCapabilities'] !== undefined) && (!urls.includes(layer['timeCapabilities']))) {
         urls.push(layer['timeCapabilities'])
       }
       if ((layer['tileCapabilities'] !== undefined) && (!urls.includes(layer['tileCapabilities']))) {
@@ -124,17 +119,24 @@ export default class Map {
           capabilities[url] = self.capabilities_[url]
           self.capabilities_[url] = null
         } else {
-          request = jQuery.ajax({
-            url,
-            timeout: 20000
-          }).then(response => {
-            capabilities[url] = response
-          }, response => {
-            // console.log('error while loading capabilities');
-            // console.log(response);
-          })
+          promises.push(new Promise(function (resolve, reject) {
+            let req = new XMLHttpRequest()
+            req.timeout = 20000
+            req.open('GET', url)
+            req.onload = function () {
+              if (req.status === 200) {
+                capabilities[url] = req.response
+                resolve(req.response)
+              } else {
+                reject(new Error(req.statusText))
+              }
+            }
+            req.onerror = function () {
+              reject(new Error('Network error'))
+            }
+            req.send()
+          }))
         }
-        promises.push(request)
       }))(urls[j])
     }
     return promises

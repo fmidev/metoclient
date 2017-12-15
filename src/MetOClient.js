@@ -9,7 +9,7 @@ import * as utils from './utils'
 import TimeController from './controller/TimeController'
 import MapController from './controller/MapController'
 import { tz } from 'moment-timezone'
-import jQuery from 'jquery'
+import extend from 'extend'
 
 export class MetOClient {
   /**
@@ -18,37 +18,28 @@ export class MetOClient {
    * @constructor
    */
   constructor (config) {
-    let locale,
-      project,
-      mapPostId,
-      newConfig = {
-        'project': '',
-        'map': {
-          'model': {},
-          'view': {}
-        },
-        'time': {
-          'model': {},
-          'view': {}
-        },
-        'localization': {}
-      }
+    let locale
+    let project
+    let mapPostId
+    let newConfig = {
+      'project': '',
+      'map': {
+        'model': {},
+        'view': {}
+      },
+      'time': {
+        'model': {},
+        'view': {}
+      },
+      'localization': {}
+    }
 
     /**
      * @type {Object}
      * @private
      */
-    this.config_ = (config == null) ? jQuery.extend(true, {}, newConfig) : {
-      'project': config['project'],
-      'map': {
-        'view': config['map']['view']
-      },
-      'time': {
-        'model': config['time']['model'],
-        'view': config['time']['view']
-      },
-      'localization': config['localization']
-    }
+    this.config_ = (config == null) ? extend(true, {}, newConfig) : this.rearrangeConfig(config)
+
     /**
      * @function
      * @private
@@ -72,7 +63,7 @@ export class MetOClient {
      * @param {number} numIntervalItems Number of interval items.
      * @private
      */
-    this.numIntervalItemsListener_ = numIntervalItems => {
+    this.numIntervalItemsListener_ = (numIntervalItems) => {
     }
     /**
      * @function
@@ -83,21 +74,21 @@ export class MetOClient {
     }
 
     // Configuration from default values
-    jQuery.extend(true, newConfig, this.getDefaultConfig())
+    extend(true, newConfig, this.getDefaultConfig())
     // Configuration from newConfiguration files
-    project = this.config_['project'] == null ? newConfig['project'] : this.config_['project']
+    project = (this.config_['project'] == null) ? newConfig['project'] : this.config_['project']
     if ((project) && (window['fi']) && (window['fi']['fmi']) && (window['fi']['fmi']['config']) && (window['fi']['fmi']['config']['metoclient'])) {
-      jQuery.extend(true, newConfig, window['fi']['fmi']['config']['metoclient'][project])
+      extend(true, newConfig, window['fi']['fmi']['config']['metoclient'][project])
     }
     this.config_['map']['view']['project'] = project
 
     // Configuration from parameter values
-    this.config_ = jQuery.extend(true, newConfig, this.config_)
+    this.config_ = extend(true, newConfig, this.config_)
     // The map model might be too slow to extend because of large vector data sets
-    this.config_['map']['model'] = config['map']['model']
+    this.config_['map']['model']['layers'] = config['layers']
 
     mapPostId = 0
-    while (jQuery(`#${this.config_['map']['view']['mapContainer']}-${mapPostId}`).length > 0) {
+    while (document.getElementById(`${this.config_['map']['view']['mapContainer']}-${mapPostId}`) != null) {
       mapPostId++
     }
     this.config_['map']['view']['mapContainer'] += `-${mapPostId}`
@@ -128,12 +119,112 @@ export class MetOClient {
   };
 
   /**
+   * Restructure configuration for class implementation.
+   * @param userConfig User configuration.
+   * @returns {Object} Nested configuration.
+   */
+  rearrangeConfig (userConfig) {
+    let config = {
+      'project': userConfig['project'],
+      'map': {
+        'model': {},
+        'view': {}
+      },
+      'time': {
+        'model': {},
+        'view': {}
+      },
+      'localization': userConfig['localization']
+    }
+    let mapView = [
+      'asyncLoadDelay',
+      'baseGroupName',
+      'container',
+      'defaultCenterLocation',
+      'defaultCenterProjection',
+      'defaultMaxZoom',
+      'defaultMinZoom',
+      'defaultZoomLevel',
+      'extent',
+      'featureGroupName',
+      'ignoreObsOffset',
+      'interactions',
+      'layerSwitcherContainer',
+      'legendContainer',
+      'legendLabel',
+      'mapContainer',
+      'markerImagePath',
+      'maxAsyncLoadCount',
+      'noLegendText',
+      'overlayGroupName',
+      'projection',
+      'resolutions',
+      'showLayerSwitcher',
+      'showLegend',
+      'showLoadProgress',
+      'showMarker',
+      'spinnerContainer',
+      'staticControls',
+      'staticOverlayGroupName'
+    ]
+    let timeModel = [
+      'autoReplay',
+      'autoStart',
+      'beginTime',
+      'defaultAnimationTime',
+      'endTime',
+      'endTimeDelay',
+      'frameRate',
+      'gridTime',
+      'gridTimeOffset',
+      'refreshInterval',
+      'resolutionTime',
+      'waitUntilLoaded'
+    ]
+    let timeView = [
+      'locale',
+      'showTimeSlider',
+      'timeSliderContainer',
+      'timeZone',
+      'timeZoneLabel',
+      'vertical'
+    ]
+
+    mapView.forEach(propertyName => {
+      if (userConfig[propertyName] != null) {
+        config['map']['view'][propertyName] = userConfig[propertyName]
+      }
+    })
+
+    timeModel.forEach(propertyName => {
+      if (userConfig[propertyName] != null) {
+        config['time']['model'][propertyName] = userConfig[propertyName]
+      }
+    })
+    timeView.forEach(propertyName => {
+      if (userConfig[propertyName] != null) {
+        config['time']['view'][propertyName] = userConfig[propertyName]
+      }
+    })
+    return config
+  };
+
+  /**
    * Static getter for an utility function floorTime.
    * @return {function} Function to floor a time based on given resolution.
    * @export
    */
   static get floorTime () {
     return utils['floorTime']
+  };
+
+  /**
+   * Static getter for an utility function createMenu.
+   * @return {function} Function to generate dropdown menu used in MetOClient.
+   * @export
+   */
+  static get createMenu () {
+    return utils['createMenu']
   };
 
   /**
@@ -172,10 +263,10 @@ export class MetOClient {
       'project': 'default',
       'map': {
         'model': {
-          'layers': []
+          'layers': {}
         },
         'view': {
-          'container': 'fmi-animator',
+          'container': 'fmi-metoclient',
           'projection': 'EPSG:3067',
           'defaultMinZoom': 0,
           'defaultMaxZoom': 15,
@@ -183,9 +274,10 @@ export class MetOClient {
           'defaultCenterProjection': 'EPSG:3067',
           'defaultZoomLevel': 5,
           'extent': [50199.4814, 6582464.0358, 761274.6247, 7799839.8902],
-          'mapContainer': 'fmi-animator-map',
-          'legendContainer': 'fmi-animator-legend',
-          'spinnerContainer': 'fmi-animator-spinner',
+          'mapContainer': 'fmi-metoclient-map',
+          'layerSwitcherContainer': 'fmi-metoclient-layer-switcher',
+          'legendContainer': 'fmi-metoclient-legend',
+          'spinnerContainer': 'fmi-metoclient-spinner',
           'showLoadProgress': false,
           'staticControls': false,
           'overlayGroupName': 'Overlays',
@@ -214,46 +306,21 @@ export class MetOClient {
           'autoReplay': true,
           'refreshInterval': 15 * 60 * 1000,
           'frameRate': 500,
-          'resolutionTime': 60 * 60 * 1000,
+//          'resolutionTime': 60 * 60 * 1000,
           'beginTime': new Date(),
           'endTime': new Date(),
           'endTimeDelay': 0,
-          'defaultAnimationTime': (new Date()).getTime()
+          'defaultAnimationTime': (new Date()).getTime(),
+          'gridTime': 60 * 60 * 1000,
+          'gridTimeOffset': 0
         },
         'view': {
-          'timeSliderContainer': 'fmi-animator-timeslider',
+          'vertical': false,
+          'timeSliderContainer': 'fmi-metoclient-timeslider',
           'showTimeSlider': true,
           'locale': 'en',
           'timeZone': tz.guess(),
-          'timeZoneLabel': '',
-          'playImagePath': '../img/play.png',
-          'pauseImagePath': '../img/pause.png',
-          'imageWidth': 55,
-          'imageHeight': 55,
-          'imageBackgroundColor': '#585858',
-          'imageHoverColor': '#686868',
-          'sliderOffset': 55,
-          'sliderHeight': 55,
-          'statusHeight': 12,
-          'tickTextColor': '#000000',
-          'pastColor': '#B2D8EA',
-          'futureColor': '#D7B13E',
-          'tickColor': '#FFFFFF',
-          'notLoadedColor': '#585858',
-          'loadingColor': '#94BFBF',
-          'loadedColor': '#94BF77',
-          'loadingErrorColor': '#9A2500',
-          'tickHeight': 24,
-          'tickTextYOffset': 18,
-          'tickTextSize': 12,
-          'pointerHeight': 30,
-          'pointerWidth': 50,
-          'pointerTextOffset': 15,
-          'pointerTextYOffset': 30,
-          'pointerColor': '#585858',
-          'pointerStrokeColor': '#FFFFFF',
-          'pointerTextColor': '#D7B13E',
-          'pointerTextSize': 12
+          'timeZoneLabel': ''
         }
       },
       'localization': {
@@ -310,34 +377,72 @@ export class MetOClient {
     const legendContainerClass = this.config_['map']['view']['legendContainer']
     const spinnerContainerClass = this.config_['map']['view']['spinnerContainer']
     const timeSliderContainerClass = this.config_['time']['view']['timeSliderContainer']
+    let animatorContainers
     let animatorContainer
     let mapContainer
     let popupContainer
-    const divElement = '<div></div>'
-    const aElement = '<a></a>'
+    let popupCloser
+    let popupContent
+    let legendContainer
+    let spinnerContainer
+    let timeSliderContainer
 
     if (!animatorContainerIdOrClass) {
       return
     }
 
-    animatorContainer = jQuery(`#${animatorContainerIdOrClass}`).first()
-    if (animatorContainer.length === 0) {
-      animatorContainer = jQuery(`.${animatorContainerIdOrClass}`).first()
-      animatorContainer.attr('id', animatorContainerIdOrClass)
+    let parseClassList = classList => {
+      return classList
+        .split(' ')
+        .map(classItem => classItem.trim())
+        .filter(classItem => classItem.length > 0)
     }
-    if (animatorContainer.length === 0) {
-      return
-    }
-    mapContainer = jQuery(divElement).addClass(mapContainerIdOrClass).addClass('metoclient-map').attr('id', mapContainerIdOrClass)
-    mapContainer.append(jQuery(divElement).addClass(legendContainerClass))
-    mapContainer.append(jQuery(divElement).addClass(spinnerContainerClass).hide())
-    mapContainer.append(jQuery(divElement).addClass(timeSliderContainerClass))
-    animatorContainer.empty().append(mapContainer)
 
-    popupContainer = jQuery(divElement).addClass('ol-popup').attr('id', `${mapContainerIdOrClass}-popup`).hide()
-    popupContainer.append(jQuery(aElement).addClass('ol-popup-closer').attr('id', `${mapContainerIdOrClass}-popup-closer`).attr('href', '#'))
-    popupContainer.append(jQuery(divElement).attr('id', `${mapContainerIdOrClass}-popup-content`))
-    animatorContainer.append(popupContainer)
+    let addClassListToContainer = (classList, container) => {
+      parseClassList(classList).forEach(classItem => {
+        container.classList.add(classItem)
+      })
+    }
+
+    animatorContainer = document.getElementById(animatorContainerIdOrClass)
+    if (animatorContainer == null) {
+      animatorContainers = document.getElementsByClassName(animatorContainerIdOrClass)
+      if (animatorContainers.length === 0) {
+        return
+      }
+      animatorContainer = animatorContainers.item(0)
+      animatorContainer.setAttribute('id', animatorContainerIdOrClass)
+    }
+    mapContainer = document.createElement('div')
+    addClassListToContainer(mapContainerIdOrClass, mapContainer)
+    mapContainer.classList.add('metoclient-map')
+    mapContainer.setAttribute('id', mapContainerIdOrClass)
+    legendContainer = document.createElement('div')
+    addClassListToContainer(legendContainerClass, legendContainer)
+    mapContainer.appendChild(legendContainer)
+    spinnerContainer = document.createElement('div')
+    addClassListToContainer(spinnerContainerClass, spinnerContainer)
+    spinnerContainer.style.display = 'none'
+    mapContainer.appendChild(spinnerContainer)
+    timeSliderContainer = document.createElement('div')
+    addClassListToContainer(timeSliderContainerClass, timeSliderContainer)
+    mapContainer.appendChild(timeSliderContainer)
+    animatorContainer.innerHTML = ''
+    animatorContainer.appendChild(mapContainer)
+
+    popupContainer = document.createElement('div')
+    popupContainer.classList.add('ol-popup')
+    popupContainer.setAttribute('id', `${mapContainerIdOrClass}-popup`)
+    popupContainer.style.display = 'none'
+    popupCloser = document.createElement('a')
+    popupCloser.classList.add('ol-popup-closer')
+    popupCloser.setAttribute('id', `${mapContainerIdOrClass}-popup-closer`)
+    popupCloser.setAttribute('href', '#')
+    popupContainer.appendChild(popupCloser)
+    popupContent = document.createElement('div')
+    popupContent.setAttribute('id', `${mapContainerIdOrClass}-popup-content`)
+    popupContainer.appendChild(popupContent)
+    animatorContainer.appendChild(popupContainer)
 
     // Debug div for mobile devices
     // jQuery(divElement).attr('id','fmi-debug-div').width('320px').height('200px').css({'background-color':'#EEEEEE', 'position':'absolute', 'right': '0px'}).appendTo(animatorContainer);
@@ -450,7 +555,6 @@ export class MetOClient {
    */
   refresh (callbacks) {
     this.timeController_.refreshTime()
-    this.createTimeSlider()
     this.createMap(callbacks)
   };
 
@@ -706,7 +810,6 @@ export class MetOClient {
     utils.supportOldBrowsers()
     this.initContainers()
     this.reloadListener_ = () => {
-      self.timeController_.createTimeSlider()
     }
     this.mapController_.actionEvents.addListener('reload', this.reloadListener_)
     this.playListener_ = () => {
@@ -722,7 +825,7 @@ export class MetOClient {
     }
     this.timeController_.variableEvents.addListener('animationTime', this.animationTimeListener_)
     this.numIntervalItemsListener_ = numIntervalItems => {
-      self.timeController_.updateTimeLoaderVis(numIntervalItems)
+      self.timeController_.updateTimeSteps(numIntervalItems)
     }
     this.mapController_.variableEvents.addListener('numIntervalItems', this.numIntervalItemsListener_)
 

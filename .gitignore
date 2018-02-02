@@ -86,3 +86,6 @@ Staticfile
 
 # KDE
 .directory
+
+# History
+.history

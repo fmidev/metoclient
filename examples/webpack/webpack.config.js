@@ -1,20 +1,25 @@
 const webpack = require('webpack')
+const path = require('path');
 
 let config = {
-  entry: './index.js',
+  entry: './src/index.js',
   output: {
-    filename: 'example.js'
+    filename: 'example.min.js',
+    path: __dirname + '/build'
   },
   module: {
     rules: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        include: [
+          path.resolve(__dirname, 'src'),
+          path.resolve(__dirname, 'node_modules/metoclient')
+        ],
         use: {
           loader: 'babel-loader',
           options: {
             babelrc: false,
-            presets: ['env']
+            presets: ['@babel/preset-env']
           }
         }
       }

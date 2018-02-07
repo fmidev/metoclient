@@ -1,18 +1,11 @@
 # MetOClient
 
-Map animator library
-
-## User's Guide
-
-Recommended method is to use npm and Webpack.
-
-    import {MetOClient} from 'metoclient';
-
-It is also possible to link with `script` tag to a build with or without global OpenLayers objects.
-
-### Global example usage
+Weather map animator library utilizing open WMS and WFS data of the Finnish Meteorological Institute.
 
 Pseudo configuration and usage:
+
+```
+    import {MetOClient} from '@fmidev/metoclient';
 
     var config = {
         project: 'weather',                
@@ -23,16 +16,13 @@ Pseudo configuration and usage:
             locale: 'fi'
         }
     }
-    var weatherMap = new fi.fmi.metoclient.MetOClient(config);
+    var weatherMap = new MetOClient(config);
     weatherMap.createAnimation({loaded: function() {}});
-
-### More examples
-
-Example directory: [examples/](examples/)
+```
 
 ### API
 
-List of API functions:
+List of API methods:
 
 * createAnimation(callbacks)
     * possible event functions as callbacks
@@ -92,38 +82,4 @@ List of API functions:
 * showPopup(content,x,y)
 * stop()
 
-More information: [build/jsdoc/MetOClient.html](build/jsdoc/MetOClient.html)
 
-
-In static build, OpenLayers 4 functionality is also available to the extent that is included in the build. This can be optimized depending on project needs. However, it is more convenient to use both MetOClient and OpenLayers (if needed) as ES6 modules with Webpack.
-
-### Static functions
-
-* fi.fmi.metoclient.MetOClient.createMenu(options)
-* fi.fmi.metoclient.MetOClient.floorTime(time_ms,resolution_ms,timeZone)
-* fi.fmi.metoclient.MetOClient.transformCoordinates(fromProjection, toProjection, coordinates)
-
-## Development
-
-### Prerequisites
-
-* Node.js 6 or greater (default executable `node` defined in package.js)
-* Npm package manager
-
-### Building
-
-* npm install
-* npm run build-all
-
-### Running tests
-
-* npm run test
-
-### Generating documentation and examples
-
-* npm run doc
-* npm run examples
-
-### Class documentation
-
-Full documentation: [build/jsdoc/index.html](build/jsdoc/index.html)

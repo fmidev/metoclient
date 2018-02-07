@@ -1,4 +1,11 @@
 export default class TimeFrame {
+  
+  /**
+   * Creates an instance of TimeFrame.
+   * @param {any} options 
+   * 
+   * @memberOf TimeFrame
+   */
   constructor (options) {
     this['beginTime'] = options['beginTime']
     this['endTime'] = options['endTime']

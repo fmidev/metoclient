@@ -16,6 +16,14 @@ import sv from 'moment/locale/sv'
 import uk from 'moment/locale/uk'
 
 export default class TimeSlider {
+
+  /**
+   * Creates an instance of TimeSlider.
+   * @param {any} config 
+   * @param {any} container 
+   * 
+   * @memberOf TimeSlider
+   */
   constructor (config, container) {
     this.container_ = container
     this.config_ = config
@@ -58,6 +66,13 @@ export default class TimeSlider {
     this.createPointer()
   }
 
+  /**
+   * 
+   * 
+   * @param {any} direction 
+   * 
+   * @memberOf TimeSlider
+   */
   step (direction) {
     if (direction > 0) {
       this.actionEvents.emitEvent('next')
@@ -66,6 +81,12 @@ export default class TimeSlider {
     }
   }
 
+  /**
+   * 
+   * 
+   * 
+   * @memberOf TimeSlider
+   */
   createContainers () {
     let self = this
     let clickableContainer = document.createElement('div')
@@ -108,6 +129,13 @@ export default class TimeSlider {
     })
   }
 
+  /**
+   * 
+   * 
+   * @returns 
+   * 
+   * @memberOf TimeSlider
+   */
   createPreMargin () {
     let self = this
     let preMargin = document.createElement('div')
@@ -118,6 +146,13 @@ export default class TimeSlider {
     return preMargin
   }
 
+  /**
+   * 
+   * 
+   * @returns 
+   * 
+   * @memberOf TimeSlider
+   */
   createPreTools () {
     let self = this
     let preTools = document.createElement('div')
@@ -135,6 +170,13 @@ export default class TimeSlider {
     return preTools
   }
 
+  /**
+   * 
+   * 
+   * @returns 
+   * 
+   * @memberOf TimeSlider
+   */
   createPostTools () {
     let postTools = document.createElement('div')
     postTools.classList.add(TimeSlider.POST_TOOLS_CLASS)
@@ -145,6 +187,13 @@ export default class TimeSlider {
     return postTools
   }
 
+  /**
+   * 
+   * 
+   * @returns 
+   * 
+   * @memberOf TimeSlider
+   */
   createTimezoneLabel () {
     let timezoneLabel = document.createElement('span')
     timezoneLabel.innerHTML = this.timeZoneLabel_
@@ -152,6 +201,13 @@ export default class TimeSlider {
     return timezoneLabel
   }
 
+  /**
+   * 
+   * 
+   * @param {any} moments 
+   * 
+   * @memberOf TimeSlider
+   */
   createFrames (moments) {
     let i
     let timePeriod
@@ -180,6 +236,17 @@ export default class TimeSlider {
     }
   }
 
+  /**
+   * 
+   * 
+   * @param {any} beginTime 
+   * @param {any} endTime 
+   * @param {any} type 
+   * @param {any} weight 
+   * @returns 
+   * 
+   * @memberOf TimeSlider
+   */
   createFrame (beginTime, endTime, type, weight) {
     let self = this
     let timeFrame = new TimeFrame({
@@ -201,6 +268,12 @@ export default class TimeSlider {
     return timeFrame
   }
 
+  /**
+   * 
+   * 
+   * 
+   * @memberOf TimeSlider
+   */
   createIndicators () {
     this.frames_.forEach((frame, index, array) => {
       let indicator = document.createElement('div')
@@ -214,6 +287,12 @@ export default class TimeSlider {
     })
   }
 
+  /**
+   * 
+   * 
+   * 
+   * @memberOf TimeSlider
+   */
   createTicks () {
     let self = this
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY
@@ -262,6 +341,12 @@ export default class TimeSlider {
     })
   }
 
+  /**
+   * 
+   * 
+   * 
+   * @memberOf TimeSlider
+   */
   createPointer () {
     let self = this
     let pointer = document.createElement('div')
@@ -287,30 +372,6 @@ export default class TimeSlider {
       self.dragging_ = true
     }))
     this.visualPointer_ = pointer
-  }
-
-  /**
-   * Sets pointer time.
-   * @param {number} time Time value.
-   */
-  setPointerTime (time) {
-
-  }
-
-  /**
-   * Set pointer text.
-   * @param {number} time Time value.
-   */
-  setPointerText (time) {
-
-  }
-
-  /**
-   * Move pointer element on the time slider.
-   * @param dx Horizontal displacement.
-   */
-  movePointer (dx) {
-
   }
 
   /**
@@ -471,6 +532,12 @@ export default class TimeSlider {
     return zTime.format(format)
   }
 
+  /**
+   * 
+   * 
+   * 
+   * @memberOf TimeSlider
+   */
   clear () {
     this.mouseListeners_.forEach(mouseListener => {
       mouseListener.destroy()

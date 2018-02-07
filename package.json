@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "4.1.1",
+  "version": "4.1.2",
   "private": false,
   "description": "Map animation library",
   "main": "src/MetOClient.js",
@@ -16,7 +16,7 @@
     "build-global": "env-cmd ./config/webpack/env.global webpack --progress --config config/webpack/config.js",
     "build-all": "npm run build; npm run build-global",
     "build-debug": "env-cmd ./config/webpack/env.debug webpack --progress --config config/webpack/config.js",
-    "build-custom": "env-cmd ./config/webpack/env.custom webpack --progress --config config/webpack/config.js",
+    "build-custom": "webpack --progress --config config/webpack/config.js",
     "test": "cross-env PHANTOMJS_EXECUTABLE=node_modules/.bin/phantomjs; $npm_package_executables_nodejs node_modules/casperjs/bin/casperjs.js test test/wms.js",
     "doc": "node_modules/.bin/del-cli ./build/jsdoc; node_modules/.bin/jsdoc -c config/jsdoc/config.json -d ./build/jsdoc",
     "examples": "$npm_package_executables_nodejs ./example-builder/build-examples.js"
@@ -37,7 +37,6 @@
     "ol": "^4.3.3",
     "proj4": "^2.4.4",
     "rename-keys": "^2.0.1",
-    "slimerjs": "^0.10.3",
     "wolfy87-eventemitter": "^5.2.3"
   },
   "devDependencies": {
@@ -62,6 +61,7 @@
     "metalsmith-layouts": "1.6.4",
     "nomnom": "1.8.1",
     "phantomjs-prebuilt": "^2.1.16",
+    "slimerjs": "^0.10.3",
     "standard": "^10.0.3",
     "style-loader": "^0.18.2",
     "temp": "0.8.3",

@@ -99,8 +99,9 @@ In static build, OpenLayers 4 functionality is also available to the extent that
 
 ### Static functions
 
-* fi.fmi.metoclient.MetOClient.floorTime(time_ms,resolution_ms,timeZone)
 * fi.fmi.metoclient.MetOClient.createMenu(options)
+* fi.fmi.metoclient.MetOClient.floorTime(time_ms,resolution_ms,timeZone)
+* fi.fmi.metoclient.MetOClient.transformCoordinates(fromProjection, toProjection, coordinates)
 
 ## Development
 

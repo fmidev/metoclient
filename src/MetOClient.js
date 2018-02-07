@@ -9,6 +9,7 @@ import * as utils from './utils'
 import TimeController from './controller/TimeController'
 import MapController from './controller/MapController'
 import { tz } from 'moment-timezone'
+import { default as proj4 } from 'proj4'
 import extend from 'extend'
 
 export class MetOClient {
@@ -78,7 +79,7 @@ export class MetOClient {
     // Configuration from newConfiguration files
     project = (this.config_['project'] == null) ? newConfig['project'] : this.config_['project']
     if ((project) && (window['fi']) && (window['fi']['fmi']) && (window['fi']['fmi']['config']) && (window['fi']['fmi']['config']['metoclient'])) {
-      extend(true, newConfig, window['fi']['fmi']['config']['metoclient'][project])
+      extend(true, newConfig, this.rearrangeConfig(window['fi']['fmi']['config']['metoclient'][project]))
     }
     this.config_['map']['view']['project'] = project
 
@@ -228,6 +229,18 @@ export class MetOClient {
   };
 
   /**
+   * Transforms coordinates between projections.
+   * @param fromProjection {string} Source projection.
+   * @param toProjection {string} Target projection.
+   * @param coordinates {number[]} Coordinates to be transformed.
+   * @return {number[]} Transformed coordinates.
+   * @export
+   */
+  static transformCoordinates (fromProjection, toProjection, coordinates) {
+    return proj4(fromProjection, toProjection, coordinates)
+  };
+  
+  /**
    * Produces a new time model and views.
    */
   createTime () {
@@ -306,7 +319,6 @@ export class MetOClient {
           'autoReplay': true,
           'refreshInterval': 15 * 60 * 1000,
           'frameRate': 500,
-//          'resolutionTime': 60 * 60 * 1000,
           'beginTime': new Date(),
           'endTime': new Date(),
           'endTimeDelay': 0,
@@ -379,6 +391,8 @@ export class MetOClient {
     const timeSliderContainerClass = this.config_['time']['view']['timeSliderContainer']
     let animatorContainers
     let animatorContainer
+    let animatorContainerId
+    let animatorContainerClass
     let mapContainer
     let popupContainer
     let popupCloser
@@ -403,10 +417,14 @@ export class MetOClient {
         container.classList.add(classItem)
       })
     }
-
-    animatorContainer = document.getElementById(animatorContainerIdOrClass)
+    animatorContainerId = animatorContainerIdOrClass
+    if (animatorContainerId.charAt(0) === '#') {
+      animatorContainerId = animatorContainerIdOrClass.substr(1)
+    }
+    animatorContainer = document.getElementById(animatorContainerId)
     if (animatorContainer == null) {
-      animatorContainers = document.getElementsByClassName(animatorContainerIdOrClass)
+      animatorContainerClass = animatorContainerIdOrClass.replace(/\./g, ' ');
+      animatorContainers = document.getElementsByClassName(animatorContainerClass)
       if (animatorContainers.length === 0) {
         return
       }
@@ -523,6 +541,16 @@ export class MetOClient {
    * Sets animation speed.
    * @param frameRate Animation speed.
    * @export
+   */
+  setFrameRate (frameRate) {
+    this.timeController_.setFrameRate(frameRate)
+  };
+
+  /**
+   * Sets animation speed.
+   * @param frameRate Animation speed.
+   * @export
+   * @deprecated
    */
   setTimeRate (frameRate) {
     this.timeController_.setFrameRate(frameRate)

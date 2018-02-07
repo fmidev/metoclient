@@ -89,3 +89,6 @@ Staticfile
 
 # History
 .history
+
+# VS Code
+.vscode

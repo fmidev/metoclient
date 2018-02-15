@@ -49,8 +49,7 @@ export default class Time {
     let offsetTime
     let animationTimeIndex = 0
     let i
-
-    if (this.config_['gridTime'] != null) {
+    if ((this.animationResolutionTime_) && (this.config_['gridTime'] != null)) {
       // Round initial animation time to previous tick
       this.animationBeginTime_ = utils.floorTime(this.beginTime_, this.animationGridTime_)
       // Time grid offset
@@ -87,12 +86,24 @@ export default class Time {
     if ((this.config_['autoStart']) && (!this.config_['waitUntilLoaded'])) {
       this.actionEvents.emitEvent('play')
     }
+    this.handleRefresh_()
   };
 
   /**
-   * Starts animation timer.
+   * Performs periodic refreshing.
    */
-  startTimer () {
+  handleRefresh_ () {
+    let self = this
+    this.handleTimer_()
+    setTimeout(() => {
+      self.handleRefresh_()
+    }, this.refreshInterval_)
+  }
+
+  /**
+   * Handles animation timer.
+   */
+  handleTimer_ () {
     const self = this
     setTimeout(function run () {
       const currentTime = Date.now()
@@ -129,11 +140,8 @@ export default class Time {
       return
     }
     for (i = 1; i < this.animationTimes_.length; i++) {
-      if (newTime === this.animationTimes_[i]) {
+      if (newTime <= this.animationTimes_[i]) {
         animationTimeIndex = i
-        break
-      } else if (newTime < this.animationTimes_[i]) {
-        animationTimeIndex = i - 1
         break
       }
     }
@@ -241,7 +249,7 @@ export default class Time {
   play () {
     this.play_ = true
     this.waitUntilLoaded_ = false
-    this.startTimer()
+    this.handleTimer_()
   };
 
   /**
@@ -265,6 +273,9 @@ export default class Time {
   previous () {
     let newTime
     let animationTimeIndex = this.animationTimeIndex_
+    if (this.animationTimes_.length < 2) {
+      return
+    }
     if (animationTimeIndex > 1) {
       newTime = this.animationTimes_[animationTimeIndex - 1]
     } else {
@@ -279,10 +290,13 @@ export default class Time {
   next () {
     let newTime
     let animationTimeIndex = this.animationTimeIndex_
+    if (this.animationTimes_.length < 2) {
+      return
+    }
     if (animationTimeIndex < this.animationTimes_.length - 1) {
       newTime = this.animationTimes_[animationTimeIndex + 1]
     } else {
-      newTime = this.animationTimes_[0]
+      newTime = this.animationTimes_[1]
     }
     this.setAnimationTime(newTime)
   };
@@ -354,6 +368,7 @@ export default class Time {
     let i
     let numAnimationTimes = animationTimes.length
     let updateNeeded = (numAnimationTimes !== this.animationTimes_.length)
+    let maxAnimationTime
     if (!updateNeeded) {
       for (i = 0; i < numAnimationTimes; i++) {
         if (this.animationTimes_[i] !== animationTimes[i]) {
@@ -361,6 +376,20 @@ export default class Time {
           break
         }
       }
+    }
+    if (this.defaultTime_ < this.animationTimes_[0]) {
+      this.defaultTime_ = this.animationTimes_[0]
+    }
+    maxAnimationTime = this.animationTimes_[numAnimationTimes - 1]
+    if (this.defaultTime_ > maxAnimationTime) {
+      this.defaultTime_ = maxAnimationTime
+    }
+    if (this.defaultTime_ < this.animationTimes_[0]) {
+      this.defaultTime_ = this.animationTimes_[0]
+    }
+    maxAnimationTime = this.animationTimes_[numAnimationTimes - 1]
+    if (this.defaultTime_ > maxAnimationTime) {
+      this.defaultTime_ = maxAnimationTime
     }
     if (updateNeeded) {
       this.animationTimes_ = animationTimes

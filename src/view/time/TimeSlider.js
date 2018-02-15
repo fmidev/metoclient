@@ -19,9 +19,9 @@ export default class TimeSlider {
 
   /**
    * Creates an instance of TimeSlider.
-   * @param {any} config 
-   * @param {any} container 
-   * 
+   * @param {any} config
+   * @param {any} container
+   *
    * @memberOf TimeSlider
    */
   constructor (config, container) {
@@ -67,10 +67,10 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * @param {any} direction 
-   * 
+   *
+   *
+   * @param {any} direction
+   *
    * @memberOf TimeSlider
    */
   step (direction) {
@@ -82,9 +82,9 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * 
+   *
+   *
+   *
    * @memberOf TimeSlider
    */
   createContainers () {
@@ -195,7 +195,7 @@ export default class TimeSlider {
    * @memberOf TimeSlider
    */
   createTimezoneLabel () {
-    let timezoneLabel = document.createElement('span')
+    let timezoneLabel = document.createElement('div')
     timezoneLabel.innerHTML = this.timeZoneLabel_
     timezoneLabel.classList.add(TimeSlider.TIMEZONE_LABEL_CLASS)
     return timezoneLabel
@@ -342,9 +342,9 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * 
+   *
+   *
+   *
    * @memberOf TimeSlider
    */
   createPointer () {

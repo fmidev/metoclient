@@ -300,7 +300,7 @@ delegate@3.2.0
 MIT
 MIT
 
-core-js@2.5.1
+core-js@2.5.3
 MIT
 Copyright (c) 2014-2017 Denis Pushkarev
 

@@ -1161,6 +1161,7 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   const config = self.get('config')
   const animation = layer['animation']
   const absBeginTime = /** @type {number} */ (this.get('animationBeginTime'))
+  const absEndTime = /** @type {number} */ (this.get('animationEndTime'))
   const newOverlay = false
   let layerTime
   let layerOptions
@@ -1218,34 +1219,35 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
     iMax = Math.ceil((animation['endTime'] - animation['beginTime']) / animation['resolutionTime'])
     animation['endTime'] = animation['beginTime'] + iMax * animation['resolutionTime']
   } else if (filteredCapabTimes.length > 0) {
-    if (typeof animation['resolutionTime'] !== 'number') {
+    if ((typeof animation['resolutionTime'] !== 'number') && (typeof resolutionTime === 'number')) {
       animation['resolutionTime'] = resolutionTime
     }
-    if (animation['resolutionTime'] != null) {
-      filteredCapabTimes = animation['capabTimes'].reduce((capabTimes, capabTime) => {
-        const numCapabTimes = capabTimes.length
-        if ((numCapabTimes >= 2) && (capabTimes[numCapabTimes - 1] - capabTimes[numCapabTimes - 2] < animation['resolutionTime']) && (capabTime - capabTimes[numCapabTimes - 2] < animation['resolutionTime'])) {
-          capabTimes[numCapabTimes - 1] = capabTime
-        } else {
-          capabTimes.push(capabTime)
-        }
-        return capabTimes
-      }, [])
-      animation['capabTimes'] = filteredCapabTimes
+    if ((typeof absBeginTime === 'number') && ((typeof animation['beginTime'] !== 'number') || (animation['beginTime'] < absBeginTime))) {
+      animation['beginTime'] = absBeginTime
     }
-    for (i = 1, len = animation['capabTimes'].length; i < len; i++) {
-      if (animation['capabTimes'][i] >= animation['beginTime']) {
-        iMin = i - 1
-        animation['beginTime'] = animation['capabTimes'][iMin]
-        break
+    if (typeof animation['beginTime'] !== 'number') {
+      animation['beginTime'] = Number.NEGATIVE_INFINITY
+    }
+    if ((typeof absEndTime === 'number') && ((typeof animation['endTime'] !== 'number') || (animation['endTime'] > absEndTime))) {
+      animation['endTime'] = absEndTime
+    }
+    if (typeof animation['endTime'] !== 'number') {
+      animation['endTime'] = Number.POSITIVE_INFINITY
+    }
+    filteredCapabTimes = animation['capabTimes'].reduce((capabTimes, capabTime) => {
+      const numCapabTimes = capabTimes.length
+    if (((animation['resolutionTime'] != null)) && ((numCapabTimes >= 2) && (capabTimes[numCapabTimes - 1] - capabTimes[numCapabTimes - 2] < animation['resolutionTime']) && (capabTime - capabTimes[numCapabTimes - 2] < animation['resolutionTime']))) {
+        capabTimes[numCapabTimes - 1] = capabTime
+    } else if ((capabTime >= animation['beginTime']) && (capabTime <= animation['endTime'])) {
+        capabTimes.push(capabTime)
       }
-    }
-    for (i = len - 1; i >= 0; i--) {
-      if (animation['capabTimes'][i] <= animation['endTime']) {
-        iMax = i
-        break
-      }
-    }
+      return capabTimes
+    }, [])
+    animation['capabTimes'] = filteredCapabTimes
+    iMin = 0
+    iMax = animation['capabTimes'].length - 1
+    animation['beginTime'] = animation['capabTimes'][0]
+    animation['endTime'] = animation['capabTimes'][animation['capabTimes'].length - 1]
   } else {
     if (typeof animation['resolutionTime'] !== 'number') {
       animation['resolutionTime'] = resolutionTime
@@ -1571,7 +1573,7 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
   }
 
   this.numIntervalItems[loadId] = []
-  if (isNumeric(numIntervals)) {
+  if ((isNumeric(numIntervals)) && (numIntervals > 0)) {
     for (i = 0; i < numIntervals; i++) {
       this.numIntervalItems[loadId].push({
         'beginTime': animationBeginTime + (i - 1) * animationResolutionTime,
@@ -1678,7 +1680,7 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
       }
       if (newOverlay) {
         animationGroups.push(mapLayers.getArray())
-        pGrp.push(-1)
+        pGrp.push(0)
         opacity = (layer['opacity'] != null) ? layer['opacity'] : 1
         overlay = new OlLayerGroup({
           'title': title,
@@ -1928,6 +1930,7 @@ MapAnimation.prototype.updateAnimation = function () {
   let i
   let mapLayers
   let nextPGrp
+  let lastIndex
   const newPGrp = []
   const animationGroups = this.get('animationGroups')
   const numGroups = animationGroups.length
@@ -1943,35 +1946,43 @@ MapAnimation.prototype.updateAnimation = function () {
   // Collect updating information
   for (i = 0; i < numGroups; i++) {
     mapLayers = animationGroups[i]
-    // Restart from beginning
-    if ((pGrp[i] > -1) && (mapLayers[pGrp[i]].get('animation')['animationTime'] > time)) {
-      nextPGrp = 0
-    } else {
-      nextPGrp = pGrp[i] + 1
+    if (mapLayers.length <= pGrp[i]) {
+      newPGrp.push(pGrp[i])
+      continue
     }
-    while ((nextPGrp < mapLayers.length) && (mapLayers[nextPGrp].get('animation')['animationTime'] < nextAnimationTime)) {
+    // Restart from beginning
+    lastIndex = mapLayers.length - 1
+    if (mapLayers[pGrp[i]].get('animation')['animationTime'] > time) {
+      nextPGrp = 0
+    } else if (mapLayers[lastIndex].get('animation')['animationTime'] <= time) {
+      nextPGrp = lastIndex
+    } else {
+      nextPGrp = pGrp[i]
+    }
+    while ((nextPGrp < mapLayers.length - 1) && (mapLayers[nextPGrp + 1].get('animation')['animationTime'] < nextAnimationTime)) {
       nextPGrp = nextPGrp + 1
     }
-    newPGrp.push(nextPGrp - 1)
+    newPGrp.push(nextPGrp)
   }
   // Update
   animationTime = /** @type {number} */ (this.get('animationTime'))
   for (i = 0; i < numGroups; i++) {
     mapLayers = animationGroups[i]
-    if (pGrp[i] >= 0) {
-      animation = mapLayers[pGrp[i]].get('animation')
-      if (((pGrp[i] === mapLayers.length - 1) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['observation']) && (animationTime >= this.getNextAnimationTime(animation['animationTime']))) || ((pGrp[i] === 0) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
-        // Hide previous frame
-        mapLayers[pGrp[i]].setOpacity(0)
-        continue
-      }
+    if (mapLayers.length <= pGrp[i]) {
+      continue
+    }    
+    animation = mapLayers[pGrp[i]].get('animation')
+    if (((pGrp[i] === mapLayers.length - 1) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['observation']) && (animationTime > animation['animationTime'])) || ((pGrp[i] === 0) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
+      // Hide previous frame
+      mapLayers[pGrp[i]].setOpacity(0)
+      continue
     }
-    if ((pGrp[i] !== newPGrp[i]) && (pGrp[i] >= 0)) {
+    if (pGrp[i] !== newPGrp[i]) {
       // Hide previous frame
       mapLayers[pGrp[i]].setOpacity(0)
     }
     pGrp[i] = newPGrp[i]
-    if ((pGrp[i] >= 0) && (!((pGrp[i] === 0) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['forecast']) && (animationTime < currentTime)))) {
+    if (!((pGrp[i] === 0) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
       // Show current frame
       mapLayers[pGrp[i]].setOpacity(1)
     }
@@ -1985,7 +1996,7 @@ MapAnimation.prototype.destroyAnimation = function () {
   this.actionEvents.removeAllListeners()
   this.variableEvents.removeAllListeners()
   const config = this.get('config')
-  let elementNames = [config['container'], config['mapContainer'], config['legendContainer'], config['spinnerContainer']]
+  let elementNames = [config['spinnerContainer'], config['legendContainer'], config['mapContainer'], config['container']]
   let map = this.get('map')
   if (map !== null) {
     map.setTarget(null)
@@ -2002,7 +2013,10 @@ MapAnimation.prototype.destroyAnimation = function () {
   this.set('pGrp', null)
   this.set('layerSwitcher', null)
   elementNames.forEach((elementName) => {
+    let element = document.getElementById(elementName)
+    if (element != null) {
     document.getElementById(elementName).innerHTML = ''
+    }    
     Array.from(document.getElementsByClassName(elementName)).forEach((element) => {
       element.innerHTML = ''
     })

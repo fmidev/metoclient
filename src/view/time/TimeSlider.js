@@ -314,7 +314,8 @@ export default class TimeSlider {
       textWrapperElement.classList.add(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)
 
       textElement = document.createElement('span')
-      textElement.classList.add(TimeSlider.FRAME_TEXT_CLASS, constants.NO_SELECT_CLASS)
+      textElement.classList.add(TimeSlider.FRAME_TEXT_CLASS)
+      textElement.classList.add(constants.NO_SELECT_CLASS)
       textElement.textContent = this.getTickText(frame['endTime'])
 
       textWrapperElement.appendChild(textElement)
@@ -356,7 +357,8 @@ export default class TimeSlider {
     textContainer.classList.add(TimeSlider.POINTER_WRAPPER_CLASS)
 
     let textItem = document.createElement('span')
-    textItem.classList.add(TimeSlider.POINTER_TEXT_CLASS, 'noselect')
+    textItem.classList.add(TimeSlider.POINTER_TEXT_CLASS)
+    textItem.classList.add('noselect')
     textItem.innerHTML = ''
 
     textContainer.appendChild(textItem)
@@ -445,7 +447,7 @@ export default class TimeSlider {
     }
     this.frames_.forEach((frame, index) => {
       Array.from(frame.element.getElementsByClassName(TimeSlider.INDICATOR_CLASS)).forEach(indicatorElement => {
-        indicatorElement.dataset.status = numIntervalItems[index].status
+        indicatorElement.setAttribute('data-status', numIntervalItems[index].status)
       })
     })
   }

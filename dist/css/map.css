@@ -16,7 +16,6 @@
 }
 
 .ol-scale-line {
-    background: #95b9e6;
     background: rgba(0, 60, 136, .3);
     border-radius: 4px;
     bottom: 8px;
@@ -339,6 +338,14 @@
     margin: 4px;
 }
 
+.layer-switcher input[type="radio"] {
+    background: #585858;
+}
+
+.layer-switcher input[type="checkbox"] {
+    background: #585858;
+}
+
 .layer-switcher span.opacity-editor {
     float: right;
     margin-right: 5px;
@@ -405,7 +412,7 @@
 }
 
 .layer-switcher.shown {
-    z-index: 1;
+    z-index: 150;
 }
 
 .layer-switcher.shown .panel {

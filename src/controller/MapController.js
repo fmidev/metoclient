@@ -7,6 +7,7 @@
 import Map from '../model/Map'
 import MapAnimation from '../view/map/MapAnimation'
 import EventEmitter from 'wolfy87-eventemitter'
+import 'core-js/fn/promise'
 
 export default class MapController {
   /**
@@ -70,13 +71,14 @@ export default class MapController {
     // The listener will not be added if it is a duplicate.
     this.view_.variableEvents.addListener('numIntervalItems', this.numIntervalItemsListener_)
     // Capabilities loaded
-    Promise
+
+     Promise
       .all(promises.map(p => p.catch(e => e)))
       .then(values => {
         self.view_.createAnimation(layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks)
       })
       .catch(e => console.log(e))
-  };
+    };
 
   /**
    * Refreshes the animation map.

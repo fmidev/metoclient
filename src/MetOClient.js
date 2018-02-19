@@ -507,26 +507,26 @@ export class MetOClient {
    * @export
    */
   updateAnimation (options, callbacks) {
-    if (options['beginTime'] != null) {
+    if (typeof options['beginTime'] !== 'undefined') {
       this.timeController_.setBeginTime(options['beginTime'])
     }
-    if (options['endTime'] != null) {
+    if (typeof options['endTime'] !== 'undefined') {
       this.timeController_.setEndTime(options['endTime'])
     }
-    if (options['timeStep'] != null) {
+    if (typeof options['timeStep'] !== 'undefined') {
       this.timeController_.setTimeStep(options['timeStep'])
     }
-    if (options['timeZone'] != null) {
+    if (typeof options['timeZone'] !== 'undefined') {
       this.timeController_.setTimeZone(options['timeZone'])
     }
-    if (options['timeZoneLabel'] != null) {
+    if (typeof options['timeZoneLabel'] !== 'undefined') {
       this.timeController_.setTimeZoneLabel(options['timeZoneLabel'])
     }
-    if (options['layers'] != null) {
+    if (typeof options['layers'] !== 'undefined') {
       this.mapController_.setLayers(options['layers'])
     }
     this.timeController_.createTimer()
-    if (options['animationTime'] != null) {
+    if (typeof options['animationTime'] !== 'undefined') {
       this.timeController_.setAnimationTime(options['animationTime'])
     }
     this.refresh(callbacks)

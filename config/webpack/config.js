@@ -14,6 +14,7 @@ module.exports = {
     libraryTarget: 'umd',
     filename: './dist/metoclient' + process.env.METOCLIENT_OUTPUT_POSTFIX + '.min.js'
   },
+  externals: {},
   module: {
     rules: [{
       test: /.js$/,
@@ -25,6 +26,7 @@ module.exports = {
             'env'
           ],
           plugins: [
+            'webpack-named-dynamic-imports',
             'array-includes'
           ]
         }

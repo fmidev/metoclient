@@ -40,6 +40,7 @@ export default class Time {
     this.animationGridTimeOffset_ = this.config_['gridTimeOffset']
     this.play_ = false
     this.waitUntilLoaded_ = (this.config_['waitUntilLoaded'] != null) ? this.config_['waitUntilLoaded'] : false
+    this.refreshStarted_ = false
   };
 
   /**
@@ -49,6 +50,8 @@ export default class Time {
     let offsetTime
     let animationTimeIndex = 0
     let i
+    this.animationTimes_ = []
+    this.animationNumIntervals_ = 0
     if ((this.animationResolutionTime_) && (this.config_['gridTime'] != null)) {
       // Round initial animation time to previous tick
       this.animationBeginTime_ = utils.floorTime(this.beginTime_, this.animationGridTime_)
@@ -86,7 +89,10 @@ export default class Time {
     if ((this.config_['autoStart']) && (!this.config_['waitUntilLoaded'])) {
       this.actionEvents.emitEvent('play')
     }
-    this.handleRefresh_()
+    if (!this.refreshStarted_) {
+      this.refreshStarted_ = true
+      this.handleRefresh_()
+    }
   };
 
   /**
@@ -94,10 +100,12 @@ export default class Time {
    */
   handleRefresh_ () {
     let self = this
+    // Todo: default from configuration
+    let refreshInterval = (typeof this.refreshInterval_ === 'number') ? this.refreshInterval_ : 15 * 60 * 1000
     this.handleTimer_()
     setTimeout(() => {
       self.handleRefresh_()
-    }, this.refreshInterval_)
+    }, refreshInterval)
   }
 
   /**

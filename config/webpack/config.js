@@ -8,14 +8,11 @@ const PACKAGE = require('../../package.json')
 const banner = PACKAGE.name + ' - ' + PACKAGE.version + ' | ' + PACKAGE.author + ' ' + new Date().getFullYear() + ' | ' + PACKAGE.license + ' | ' + PACKAGE.homepage
 
 module.exports = {
-  entry: ['babel-polyfill', path.resolve(__dirname, '../../src/MetOClient.js')],
+  entry: path.resolve(__dirname, '../../src/MetOClient.js'),
   output: {
     library: ['fi', 'fmi', 'metoclient'],
     libraryTarget: 'umd',
     filename: './dist/metoclient' + process.env.METOCLIENT_OUTPUT_POSTFIX + '.min.js'
-  },
-  externals: {
-    'jquery': 'jQuery'
   },
   module: {
     rules: [{
@@ -28,7 +25,6 @@ module.exports = {
             'env'
           ],
           plugins: [
-            'webpack-named-dynamic-imports',
             'array-includes'
           ]
         }

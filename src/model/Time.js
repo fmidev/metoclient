@@ -103,6 +103,11 @@ export default class Time {
     // Todo: default from configuration
     let refreshInterval = (typeof this.refreshInterval_ === 'number') ? this.refreshInterval_ : 15 * 60 * 1000
     this.handleTimer_()
+    // Todo: default from configuration
+    // Some browsers need this limitation to prevent overflow
+    if (refreshInterval > 24 * 60 * 60 * 1000) {
+      return
+    }
     setTimeout(() => {
       self.handleRefresh_()
     }, refreshInterval)

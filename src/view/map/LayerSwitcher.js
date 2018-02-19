@@ -5,6 +5,8 @@
 import _ol_ from 'ol/index'
 import olControlControl from 'ol/control/control'
 import * as constants from '../../constants'
+import 'core-js/fn/array/from'
+import 'core-js/fn/number/parse-int'
 
 /**
  * OpenLayers 4 Layer Switcher Control.

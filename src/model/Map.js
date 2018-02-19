@@ -4,6 +4,8 @@
  * @license MIT
  */
 
+import 'core-js/fn/promise'
+
 export default class Map {
   /**
    * Constructs a new map model.

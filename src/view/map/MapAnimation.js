@@ -9,6 +9,7 @@ import elementResizeDetectorMaker from 'element-resize-detector'
 import extend from 'extend'
 import isNumeric from 'fast-isnumeric'
 import { default as proj4 } from 'proj4'
+import 'core-js/fn/array/from'
 import moment from 'moment-timezone'
 import * as constants from '../../constants'
 import renameKeys from 'rename-keys'
@@ -447,7 +448,7 @@ MapAnimation.prototype.initMap = function () {
   let visible
   if (target == null) {
     return
-  }
+  }  
   mapContainerElement = document.getElementById(mapContainer)
   if (map != null) {
     layerVisibility = map.get('layerVisibility')

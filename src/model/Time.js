@@ -49,6 +49,7 @@ export default class Time {
   createTimer () {
     let offsetTime
     let animationTimeIndex = 0
+    let defaultTime = this.defaultTime_
     let i
     this.animationTimes_ = []
     this.animationNumIntervals_ = 0
@@ -73,13 +74,13 @@ export default class Time {
     } else {
       this.animationEndTime_ = this.endTime_
     }  
-    this.defaultTime_ = Math.max(this.animationBeginTime_, this.defaultTime_)
-    this.defaultTime_ = Math.min(this.animationEndTime_, this.defaultTime_)
+    defaultTime = Math.max(this.animationBeginTime_, defaultTime)
+    defaultTime = Math.min(this.animationEndTime_, defaultTime)
     this.animationTimeIndex_ = 0
     if (this.animationResolutionTime_ != null) {      
       for (i = 0; i < this.animationNumIntervals_; i++) {
         this.animationTimes_.push(this.animationBeginTime_ + i * this.animationResolutionTime_)
-        if (this.animationTimes_[i] <= this.defaultTime_) {
+        if (this.animationTimes_[i] <= defaultTime) {
           animationTimeIndex = i
         }
       }
@@ -158,7 +159,7 @@ export default class Time {
     if (this.animationBeginTime_ > this.animationEndTime_) {
       return
     }
-    for (i = 1; i < this.animationTimes_.length; i++) {
+    for (i = 0; i < this.animationTimes_.length; i++) {
       if (newTime <= this.animationTimes_[i]) {
         animationTimeIndex = i
         break

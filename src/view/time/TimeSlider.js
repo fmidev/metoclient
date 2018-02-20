@@ -489,7 +489,7 @@ export default class TimeSlider {
    * @param {boolean} showDate Show date information.
    * @return {string} Generated text presentation.
    */
-  getTickText (tickTime, showDate) {
+  getTickText (tickTime, showDate = true) {
     let zTime
     let numFrames
     let i
@@ -512,10 +512,10 @@ export default class TimeSlider {
     zTime = moment(tickTime).tz(this.timeZone_)
     day = zTime.dayOfYear()
     year = zTime.year()
-    if ((showDate == null) || (showDate)) {
+    if (showDate) {
       numFrames = this.frames_.length
       for (i = 0; i < numFrames; i++) {
-        frameTime = this.frames_[i].element['endTime']
+        frameTime = this.frames_[i]['endTime']
         if (frameTime >= tickTime) {
           break
         }

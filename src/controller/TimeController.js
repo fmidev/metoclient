@@ -187,7 +187,7 @@ export default class TimeController {
     this.model_.setAnimationTimes(numIntervalItems.reduce((animationTimes, intervalItem) => {
       animationTimes.push(intervalItem['endTime'])
       return animationTimes
-    }, [numIntervalItems[0]['beginTime']]))
+    }, []))
     for (i = 0; i < numViews; i++) {
       this.views_[i].updateTimeLoaderVis(numIntervalItems)
     }

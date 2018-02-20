@@ -122,6 +122,8 @@ div.fmi-metoclient-timeslider-frame-text-wrapper {
 
 span.fmi-metoclient-timeslider-frame-text {
     white-space: nowrap;
+    padding-left: 4px;
+    padding-right: 4px;
 }
 
 div.fmi-metoclient-timeslider-post-tools {

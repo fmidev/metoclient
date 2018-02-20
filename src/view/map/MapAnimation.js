@@ -2040,7 +2040,7 @@ MapAnimation.prototype.getLayersByGroup = function (groupTitle) {
       return layerGroup.getLayers()
     }
   }
-  return null
+  return []
 }
 
 /**

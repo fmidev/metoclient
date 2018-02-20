@@ -120,6 +120,10 @@ div.fmi-metoclient-timeslider-frame-text-wrapper {
     background-color: transparent;
 }
 
+span.fmi-metoclient-timeslider-frame-text {
+    white-space: nowrap;
+}
+
 div.fmi-metoclient-timeslider-post-tools {
     height: 0;
     width: 0;

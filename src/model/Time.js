@@ -63,14 +63,20 @@ export default class Time {
         }
         this.animationBeginTime_ = offsetTime
       }
+    } else {
+      this.animationBeginTime_ = this.beginTime_
     }
 
     if (this.animationResolutionTime_ != null) {
       this.animationNumIntervals_ = Math.floor((this.endTime_ - this.animationBeginTime_) / this.animationResolutionTime_) + 1
       this.animationEndTime_ = this.animationBeginTime_ + (this.animationNumIntervals_ - 1) * this.animationResolutionTime_
-      this.defaultTime_ = Math.max(this.animationBeginTime_, this.defaultTime_)
-      this.defaultTime_ = Math.min(this.animationEndTime_, this.defaultTime_)
-      this.animationTimeIndex_ = 0
+    } else {
+      this.animationEndTime_ = this.endTime_
+    }  
+    this.defaultTime_ = Math.max(this.animationBeginTime_, this.defaultTime_)
+    this.defaultTime_ = Math.min(this.animationEndTime_, this.defaultTime_)
+    this.animationTimeIndex_ = 0
+    if (this.animationResolutionTime_ != null) {      
       for (i = 0; i < this.animationNumIntervals_; i++) {
         this.animationTimes_.push(this.animationBeginTime_ + i * this.animationResolutionTime_)
         if (this.animationTimes_[i] <= this.defaultTime_) {

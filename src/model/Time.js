@@ -128,7 +128,7 @@ export default class Time {
     setTimeout(function run () {
       const currentTime = Date.now()
       let timeDelay
-      let animationTimeIndex = 1
+      let animationTimeIndex = 0
       if ((currentTime - self.animationLastRefreshed_ > self.refreshInterval_) && (currentTime - self.timeCreatedAt_ > 0.5 * self.refreshInterval_)) {
         self.actionEvents.emitEvent('refresh')
       } else if (self.play_) {
@@ -151,7 +151,7 @@ export default class Time {
    * Sets animation time.
    * @param {number=} animationTime Animation time.
    */
-  setAnimationTime (animationTime) {
+  setAnimationTime (animationTime) {  
     let i
     let animationTimeIndex = 0
     let newTime = (animationTime != null) ? animationTime : this.animationTime_
@@ -296,7 +296,7 @@ export default class Time {
     if (this.animationTimes_.length < 2) {
       return
     }
-    if (animationTimeIndex > 1) {
+    if (animationTimeIndex > 0) {
       newTime = this.animationTimes_[animationTimeIndex - 1]
     } else {
       newTime = this.animationTimes_[this.animationTimes_.length - 1]
@@ -316,7 +316,7 @@ export default class Time {
     if (animationTimeIndex < this.animationTimes_.length - 1) {
       newTime = this.animationTimes_[animationTimeIndex + 1]
     } else {
-      newTime = this.animationTimes_[1]
+      newTime = this.animationTimes_[0]
     }
     this.setAnimationTime(newTime)
   };

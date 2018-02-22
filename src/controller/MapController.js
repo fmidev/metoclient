@@ -71,8 +71,7 @@ export default class MapController {
     // The listener will not be added if it is a duplicate.
     this.view_.variableEvents.addListener('numIntervalItems', this.numIntervalItemsListener_)
     // Capabilities loaded
-
-     Promise
+    Promise
       .all(promises.map(p => p.catch(e => e)))
       .then(values => {
         self.view_.createAnimation(layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks)

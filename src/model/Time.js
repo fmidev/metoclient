@@ -73,11 +73,11 @@ export default class Time {
       this.animationEndTime_ = this.animationBeginTime_ + (this.animationNumIntervals_ - 1) * this.animationResolutionTime_
     } else {
       this.animationEndTime_ = this.endTime_
-    }  
+    }
     defaultTime = Math.max(this.animationBeginTime_, defaultTime)
     defaultTime = Math.min(this.animationEndTime_, defaultTime)
     this.animationTimeIndex_ = 0
-    if (this.animationResolutionTime_ != null) {      
+    if (this.animationResolutionTime_ != null) {
       for (i = 0; i < this.animationNumIntervals_; i++) {
         this.animationTimes_.push(this.animationBeginTime_ + i * this.animationResolutionTime_)
         if (this.animationTimes_[i] <= defaultTime) {
@@ -151,7 +151,7 @@ export default class Time {
    * Sets animation time.
    * @param {number=} animationTime Animation time.
    */
-  setAnimationTime (animationTime) {  
+  setAnimationTime (animationTime) {
     let i
     let animationTimeIndex = 0
     let newTime = (animationTime != null) ? animationTime : this.animationTime_

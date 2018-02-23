@@ -448,7 +448,7 @@ MapAnimation.prototype.initMap = function () {
   let visible
   if (target == null) {
     return
-  }  
+  }
   mapContainerElement = document.getElementById(mapContainer)
   if (map != null) {
     layerVisibility = map.get('layerVisibility')
@@ -1971,7 +1971,7 @@ MapAnimation.prototype.updateAnimation = function () {
     mapLayers = animationGroups[i]
     if (mapLayers.length <= pGrp[i]) {
       continue
-    }    
+    }
     animation = mapLayers[pGrp[i]].get('animation')
     if (((pGrp[i] === mapLayers.length - 1) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['observation']) && (animationTime > animation['animationTime'])) || ((pGrp[i] === 0) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
       // Hide previous frame
@@ -2009,7 +2009,7 @@ MapAnimation.prototype.destroyAnimation = function () {
   this.set('extent', null)
   this.set('marker', null)
   this.set('callbacks', null)
-  this.set('animationGroups', null)
+  this.set('animationGroups', [])
   this.set('legends', null)
   this.set('pGrp', null)
   this.set('layerSwitcher', null)
@@ -2017,7 +2017,7 @@ MapAnimation.prototype.destroyAnimation = function () {
     let element = document.getElementById(elementName)
     if (element != null) {
     document.getElementById(elementName).innerHTML = ''
-    }    
+    }
     Array.from(document.getElementsByClassName(elementName)).forEach((element) => {
       element.innerHTML = ''
     })

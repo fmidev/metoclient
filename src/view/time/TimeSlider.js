@@ -101,6 +101,7 @@ export default class TimeSlider {
     momentsContainer.classList.add(TimeSlider.FRAMES_CONTAINER_CLASS)
     this.mouseListeners_.push(listen(momentsContainer, 'wheel', event => {
       self.step(event.deltaY)
+      event.preventDefault()
     }))
     clickableContainer.appendChild(momentsContainer)
 

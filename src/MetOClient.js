@@ -90,7 +90,7 @@ export class MetOClient {
     this.config_['map']['model']['layers'] = config['layers']
 
     if (this.config_['time']['model']['gridTime'] == null) {
-      this.config_['time']['model']['gridTime'] = (this.config_['time']['model']['resolutionTime'] != null) ? Math.max(constants.DEFAULT_GRID_TIME, this.config_['time']['model']['resolutionTime']) : constants.DEFAULT_GRID_TIME
+      this.config_['time']['model']['gridTime'] = (this.config_['time']['model']['resolutionTime'] != null) ? this.config_['time']['model']['resolutionTime'] : constants.DEFAULT_GRID_TIME
     }
 
     mapPostId = 0

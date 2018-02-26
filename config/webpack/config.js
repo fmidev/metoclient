@@ -8,15 +8,13 @@ const PACKAGE = require('../../package.json')
 const banner = PACKAGE.name + ' - ' + PACKAGE.version + ' | ' + PACKAGE.author + ' ' + new Date().getFullYear() + ' | ' + PACKAGE.license + ' | ' + PACKAGE.homepage
 
 module.exports = {
-  entry: ['babel-polyfill', path.resolve(__dirname, '../../src/MetOClient.js')],
+  entry: path.resolve(__dirname, '../../src/MetOClient.js'),
   output: {
     library: ['fi', 'fmi', 'metoclient'],
     libraryTarget: 'umd',
     filename: './dist/metoclient' + process.env.METOCLIENT_OUTPUT_POSTFIX + '.min.js'
   },
-  externals: {
-    'jquery': 'jQuery'
-  },
+  externals: {},
   module: {
     rules: [{
       test: /.js$/,
@@ -50,11 +48,6 @@ module.exports = {
   plugins: [
     // Ignore all locale files of moment.js
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        drop_debugger: false
-      }
-    }),
     new ExtractTextPlugin('style.css'),
     new CopyWebpackPlugin([
       {from: 'img', to: 'dist/img', force: true},
@@ -249,4 +242,12 @@ if (process.env.METOCLIENT_SKIP_OL_TILEGRID_WMTS) {
 }
 if (process.env.METOCLIENT_SKIP_OL_VIEW) {
   module.exports.externals['ol/view'] = 'OlView'
+}
+// Compress for production
+if (process.env.NODE_ENV === 'production') {
+  module.exports.plugins.push(new webpack.optimize.UglifyJsPlugin({
+    compress: {
+      drop_debugger: false
+    }
+  }))
 }

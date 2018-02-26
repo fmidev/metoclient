@@ -7,6 +7,8 @@
 import EventEmitter from 'wolfy87-eventemitter'
 import empty from 'empty-element'
 import listen from 'good-listener'
+import 'core-js/fn/array/from'
+import 'core-js/fn/number/parse-int'
 import elementResizeDetectorMaker from 'element-resize-detector'
 import TimeFrame from './TimeFrame'
 import * as constants from '../../constants'
@@ -19,9 +21,9 @@ export default class TimeSlider {
 
   /**
    * Creates an instance of TimeSlider.
-   * @param {any} config 
-   * @param {any} container 
-   * 
+   * @param {any} config
+   * @param {any} container
+   *
    * @memberOf TimeSlider
    */
   constructor (config, container) {
@@ -67,10 +69,10 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * @param {any} direction 
-   * 
+   *
+   *
+   * @param {any} direction
+   *
    * @memberOf TimeSlider
    */
   step (direction) {
@@ -82,9 +84,9 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * 
+   *
+   *
+   *
    * @memberOf TimeSlider
    */
   createContainers () {
@@ -99,6 +101,7 @@ export default class TimeSlider {
     momentsContainer.classList.add(TimeSlider.FRAMES_CONTAINER_CLASS)
     this.mouseListeners_.push(listen(momentsContainer, 'wheel', event => {
       self.step(event.deltaY)
+      event.preventDefault()
     }))
     clickableContainer.appendChild(momentsContainer)
 
@@ -195,7 +198,7 @@ export default class TimeSlider {
    * @memberOf TimeSlider
    */
   createTimezoneLabel () {
-    let timezoneLabel = document.createElement('span')
+    let timezoneLabel = document.createElement('div')
     timezoneLabel.innerHTML = this.timeZoneLabel_
     timezoneLabel.classList.add(TimeSlider.TIMEZONE_LABEL_CLASS)
     return timezoneLabel
@@ -314,7 +317,8 @@ export default class TimeSlider {
       textWrapperElement.classList.add(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)
 
       textElement = document.createElement('span')
-      textElement.classList.add(TimeSlider.FRAME_TEXT_CLASS, constants.NO_SELECT_CLASS)
+      textElement.classList.add(TimeSlider.FRAME_TEXT_CLASS)
+      textElement.classList.add(constants.NO_SELECT_CLASS)
       textElement.textContent = this.getTickText(frame['endTime'])
 
       textWrapperElement.appendChild(textElement)
@@ -342,9 +346,9 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * 
+   *
+   *
+   *
    * @memberOf TimeSlider
    */
   createPointer () {
@@ -356,7 +360,8 @@ export default class TimeSlider {
     textContainer.classList.add(TimeSlider.POINTER_WRAPPER_CLASS)
 
     let textItem = document.createElement('span')
-    textItem.classList.add(TimeSlider.POINTER_TEXT_CLASS, 'noselect')
+    textItem.classList.add(TimeSlider.POINTER_TEXT_CLASS)
+    textItem.classList.add('noselect')
     textItem.innerHTML = ''
 
     textContainer.appendChild(textItem)
@@ -445,7 +450,7 @@ export default class TimeSlider {
     }
     this.frames_.forEach((frame, index) => {
       Array.from(frame.element.getElementsByClassName(TimeSlider.INDICATOR_CLASS)).forEach(indicatorElement => {
-        indicatorElement.dataset.status = numIntervalItems[index].status
+        indicatorElement.setAttribute('data-status', numIntervalItems[index].status)
       })
     })
   }
@@ -485,7 +490,7 @@ export default class TimeSlider {
    * @param {boolean} showDate Show date information.
    * @return {string} Generated text presentation.
    */
-  getTickText (tickTime, showDate) {
+  getTickText (tickTime, showDate = true) {
     let zTime
     let numFrames
     let i
@@ -508,10 +513,10 @@ export default class TimeSlider {
     zTime = moment(tickTime).tz(this.timeZone_)
     day = zTime.dayOfYear()
     year = zTime.year()
-    if ((showDate == null) || (showDate)) {
+    if (showDate) {
       numFrames = this.frames_.length
       for (i = 0; i < numFrames; i++) {
-        frameTime = this.frames_[i].element['endTime']
+        frameTime = this.frames_[i]['endTime']
         if (frameTime >= tickTime) {
           break
         }

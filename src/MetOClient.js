@@ -6,6 +6,7 @@
 
 import './config/globalExport'
 import * as utils from './utils'
+import * as constants from './constants'
 import TimeController from './controller/TimeController'
 import MapController from './controller/MapController'
 import { tz } from 'moment-timezone'
@@ -87,6 +88,10 @@ export class MetOClient {
     this.config_ = extend(true, newConfig, this.config_)
     // The map model might be too slow to extend because of large vector data sets
     this.config_['map']['model']['layers'] = config['layers']
+
+    if (this.config_['time']['model']['gridTime'] == null) {
+      this.config_['time']['model']['gridTime'] = (this.config_['time']['model']['resolutionTime'] != null) ? this.config_['time']['model']['resolutionTime'] : constants.DEFAULT_GRID_TIME
+    }
 
     mapPostId = 0
     while (document.getElementById(`${this.config_['map']['view']['mapContainer']}-${mapPostId}`) != null) {
@@ -239,7 +244,7 @@ export class MetOClient {
   static transformCoordinates (fromProjection, toProjection, coordinates) {
     return proj4(fromProjection, toProjection, coordinates)
   };
-  
+
   /**
    * Produces a new time model and views.
    */
@@ -319,11 +324,10 @@ export class MetOClient {
           'autoReplay': true,
           'refreshInterval': 15 * 60 * 1000,
           'frameRate': 500,
-          'beginTime': new Date(),
-          'endTime': new Date(),
+          'beginTime': Date.now(),
+          'endTime': Date.now(),
           'endTimeDelay': 0,
-          'defaultAnimationTime': (new Date()).getTime(),
-          'gridTime': 60 * 60 * 1000,
+          'defaultAnimationTime': Date.now(),
           'gridTimeOffset': 0
         },
         'view': {
@@ -503,26 +507,26 @@ export class MetOClient {
    * @export
    */
   updateAnimation (options, callbacks) {
-    if (options['beginTime'] != null) {
+    if (typeof options['beginTime'] !== 'undefined') {
       this.timeController_.setBeginTime(options['beginTime'])
     }
-    if (options['endTime'] != null) {
+    if (typeof options['endTime'] !== 'undefined') {
       this.timeController_.setEndTime(options['endTime'])
     }
-    if (options['timeStep'] != null) {
+    if (typeof options['timeStep'] !== 'undefined') {
       this.timeController_.setTimeStep(options['timeStep'])
     }
-    if (options['timeZone'] != null) {
+    if (typeof options['timeZone'] !== 'undefined') {
       this.timeController_.setTimeZone(options['timeZone'])
     }
-    if (options['timeZoneLabel'] != null) {
+    if (typeof options['timeZoneLabel'] !== 'undefined') {
       this.timeController_.setTimeZoneLabel(options['timeZoneLabel'])
     }
-    if (options['layers'] != null) {
+    if (typeof options['layers'] !== 'undefined') {
       this.mapController_.setLayers(options['layers'])
     }
     this.timeController_.createTimer()
-    if (options['animationTime'] != null) {
+    if (typeof options['animationTime'] !== 'undefined') {
       this.timeController_.setAnimationTime(options['animationTime'])
     }
     this.refresh(callbacks)

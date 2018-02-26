@@ -187,7 +187,7 @@ export default class TimeController {
     this.model_.setAnimationTimes(numIntervalItems.reduce((animationTimes, intervalItem) => {
       animationTimes.push(intervalItem['endTime'])
       return animationTimes
-    }, [numIntervalItems[0]['beginTime']]))
+    }, []))
     for (i = 0; i < numViews; i++) {
       this.views_[i].updateTimeLoaderVis(numIntervalItems)
     }
@@ -262,11 +262,14 @@ export default class TimeController {
    * Refreshes current real-world time.
    */
   refreshTime () {
+    let timeShift
     const currentTime = Date.now()
     const resolutionTime = this.model_.getAnimationResolutionTime()
+    const creationTime = this.model_.getCreationTime()
     this.model_.setAnimationLastRefreshed(currentTime)
     this.model_.setCurrentTime(currentTime)
-    this.model_.moveAnimationTimeFrame(Math.floor(currentTime / resolutionTime) * resolutionTime - Math.floor(this.model_.getCreationTime() / resolutionTime) * resolutionTime)
+    timeShift = (resolutionTime != null) ? Math.floor(currentTime / resolutionTime) * resolutionTime - Math.floor(creationTime / resolutionTime) * resolutionTime : currentTime - creationTime
+    this.model_.moveAnimationTimeFrame(timeShift)
   };
 
   /**

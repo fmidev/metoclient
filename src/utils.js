@@ -73,7 +73,7 @@ export const supportOldBrowsers = () => {
 
     if (!window.requestAnimationFrame) {
       window.requestAnimationFrame = (callback, element) => {
-        const currTime = new Date().getTime()
+        const currTime = Date.now()
         const timeToCall = Math.max(0, 16 - (currTime - lastTime))
         const id = window.setTimeout(() => {
           callback(currTime + timeToCall)

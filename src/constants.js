@@ -46,3 +46,5 @@ export const LOADING_STATUS = {
 export const zIndex = {
   vector: 1000
 }
+
+export const DEFAULT_GRID_TIME = 60 * 60 * 1000

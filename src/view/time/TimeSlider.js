@@ -44,10 +44,11 @@ export default class TimeSlider {
     this.timeZone_ = config['timeZone']
     this.timeZoneLabel_ = config['timeZoneLabel']
     this.useLayerMoments_ = config['useLayerMoments']
-    this.previousTickTextTop_ = Number.NEGATIVE_INFINITY
+    this.previousTickTextTop_ = Number.POSITIVE_INFINITY
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY
     this.previousTickTextBottom_ = Number.NEGATIVE_INFINITY
-    this.previousTickTextLeft_ = Number.NEGATIVE_INFINITY
+    this.previousTickTextLeft_ = Number.POSITIVE_INFINITY
+    this.previousTickIndex_ = -1
     this.mouseListeners_ = []
     this.dragging_ = false
     this.actionEvents = new EventEmitter()
@@ -133,10 +134,10 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * @returns 
-   * 
+   *
+   *
+   * @returns
+   *
    * @memberOf TimeSlider
    */
   createPreMargin () {
@@ -150,10 +151,10 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * @returns 
-   * 
+   *
+   *
+   * @returns
+   *
    * @memberOf TimeSlider
    */
   createPreTools () {
@@ -174,10 +175,10 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * @returns 
-   * 
+   *
+   *
+   * @returns
+   *
    * @memberOf TimeSlider
    */
   createPostTools () {
@@ -191,10 +192,10 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * @returns 
-   * 
+   *
+   *
+   * @returns
+   *
    * @memberOf TimeSlider
    */
   createTimezoneLabel () {
@@ -205,10 +206,10 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * @param {any} moments 
-   * 
+   *
+   *
+   * @param {any} moments
+   *
    * @memberOf TimeSlider
    */
   createFrames (moments) {
@@ -240,14 +241,14 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * @param {any} beginTime 
-   * @param {any} endTime 
-   * @param {any} type 
-   * @param {any} weight 
-   * @returns 
-   * 
+   *
+   *
+   * @param {any} beginTime
+   * @param {any} endTime
+   * @param {any} type
+   * @param {any} weight
+   * @returns
+   *
    * @memberOf TimeSlider
    */
   createFrame (beginTime, endTime, type, weight) {
@@ -272,9 +273,9 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * 
+   *
+   *
+   *
    * @memberOf TimeSlider
    */
   createIndicators () {
@@ -291,27 +292,36 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * 
+   *
+   *
+   *
    * @memberOf TimeSlider
    */
   createTicks () {
     let self = this
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY
-    this.frames_.forEach((frame, index, array) => {
+    this.frames_.forEach((frame, index, frames) => {
       let tick
       let textWrapperElement
       let textElement
       let clientRect
 
-      if (index === array.length - 1) {
+      if (index === frames.length - 1) {
         return
       }
 
-      Array.from(frame.element.getElementsByClassName(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)).forEach(element => {
-        element.parentElement.removeChild(element)
-      })
+      let clearFrame = (frameIndex) => {
+        let frameToBeCleared = (frameIndex != null) ? frames[frameIndex] : frame
+        let removeChildrenByClass = (className) => {
+          Array.from(frameToBeCleared.element.getElementsByClassName(className)).forEach(element => {
+            element.parentElement.removeChild(element)
+          })
+        }
+        removeChildrenByClass(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)
+        removeChildrenByClass(TimeSlider.FRAME_TICK_CLASS)
+      }
+
+      clearFrame()
 
       textWrapperElement = document.createElement('div')
       textWrapperElement.classList.add(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)
@@ -326,22 +336,35 @@ export default class TimeSlider {
       frame.element.appendChild(textWrapperElement)
       clientRect = textElement.getBoundingClientRect()
 
-      // Prevent text overlapping
+      let createTick = (rect, endTime) => {
+        self.previousTickTextTop_ = rect.top
+        self.previousTickTextRight_ = rect.right
+        self.previousTickTextBottom_ = rect.bottom
+        self.previousTickTextLeft_ = rect.left
+        self.previousTickValue_ = endTime
+        self.previousTickIndex_ = index
+        tick = document.createElement('div')
+        tick.classList.add(TimeSlider.FRAME_TICK_CLASS)
+        tick.classList.add(TimeSlider.HIDDEN_CLASS)
+        frame.element.appendChild(tick)
+      }
+
+      // Prevent text overlapping, favor full hours
       if (self.previousTickTextRight_ < clientRect.left ||
           self.previousTickTextLeft_ > clientRect.right ||
           self.previousTickTextBottom_ < clientRect.top ||
           self.previousTickTextTop_ > clientRect.bottom) {
-        self.previousTickTextTop_ = clientRect.top
-        self.previousTickTextRight_ = clientRect.right
-        self.previousTickTextBottom_ = clientRect.bottom
-        self.previousTickTextLeft_ = clientRect.left
-        self.previousTickValue_ = frame['endTime']
-        tick = document.createElement('div')
-        tick.classList.add(TimeSlider.FRAME_TICK_CLASS)
-        frame.element.appendChild(tick)
+        createTick(clientRect, frame['endTime'])
+      } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) {
+        clearFrame(self.previousTickIndex_)
+        createTick(clientRect, frame['endTime'])
       } else {
         frame.element.removeChild(textWrapperElement)
       }
+    })
+
+    Array.from(document.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS)).forEach(element => {
+      element.classList.remove(TimeSlider.HIDDEN_CLASS)
     })
   }
 
@@ -538,9 +561,9 @@ export default class TimeSlider {
   }
 
   /**
-   * 
-   * 
-   * 
+   *
+   *
+   *
    * @memberOf TimeSlider
    */
   clear () {
@@ -580,5 +603,6 @@ TimeSlider.POINTER_WRAPPER_CLASS = 'fmi-metoclient-timeslider-pointer-wrapper'
 TimeSlider.POINTER_TEXT_CLASS = 'fmi-metoclient-timeslider-pointer-text'
 TimeSlider.POINTER_HANDLE_CLASS = 'fmi-metoclient-timeslider-pointer-handle'
 TimeSlider.INDICATOR_CLASS = 'fmi-metoclient-timeslider-indicator'
+TimeSlider.HIDDEN_CLASS = 'fmi-metoclient-timeslider-hidden'
 TimeSlider.BACKWARDS = -1
 TimeSlider.FORWARDS = 1

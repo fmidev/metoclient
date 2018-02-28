@@ -79,7 +79,7 @@ export class MetOClient {
     extend(true, newConfig, this.getDefaultConfig())
     // Configuration from newConfiguration files
     project = (this.config_['project'] == null) ? newConfig['project'] : this.config_['project']
-    if ((project) && (window['fi']) && (window['fi']['fmi']) && (window['fi']['fmi']['config']) && (window['fi']['fmi']['config']['metoclient'])) {
+    if ((project) && (window['fi']) && (window['fi']['fmi']) && (window['fi']['fmi']['config']) && (window['fi']['fmi']['config']['metoclient']) && (window['fi']['fmi']['config']['metoclient'][project])) {
       extend(true, newConfig, this.rearrangeConfig(window['fi']['fmi']['config']['metoclient'][project]))
     }
     this.config_['map']['view']['project'] = project
@@ -130,6 +130,9 @@ export class MetOClient {
    * @returns {Object} Nested configuration.
    */
   rearrangeConfig (userConfig) {
+    if (userConfig == null) {
+      return {}
+    }
     let config = {
       'project': userConfig['project'],
       'map': {

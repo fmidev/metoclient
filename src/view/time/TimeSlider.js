@@ -299,6 +299,7 @@ export default class TimeSlider {
    */
   createTicks () {
     let self = this
+    let currentDay = moment().tz(this.timeZone_).dayOfYear()
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY
     this.frames_.forEach((frame, index, frames) => {
       let tick
@@ -355,7 +356,7 @@ export default class TimeSlider {
           self.previousTickTextBottom_ < clientRect.top ||
           self.previousTickTextTop_ > clientRect.bottom) {
         createTick(clientRect, frame['endTime'])
-      } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) {
+      } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0) && (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).dayOfYear() === currentDay)) {
         clearFrame(self.previousTickIndex_)
         createTick(clientRect, frame['endTime'])
       } else {
@@ -547,7 +548,7 @@ export default class TimeSlider {
           prevTime = frameTime
         }
       }
-      currentMoment = moment()
+      currentMoment = moment().tz(this.timeZone_)
       if (prevTime != null) {
         zPrevTime = moment(prevTime).tz(this.timeZone_)
         if ((day !== zPrevTime.dayOfYear()) || (year !== zPrevTime.year())) {

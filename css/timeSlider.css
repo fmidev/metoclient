@@ -106,11 +106,12 @@ div.fmi-metoclient-timeslider-frame-tick {
 }
 
 div.fmi-metoclient-timeslider-frame-text-wrapper {
+    display: inline-block;
     box-sizing: border-box;
     position: absolute;
-    right: -50%;
+    right: 0;
     bottom: 32px;
-    width: 100%;
+    transform: translateX(50%);
     height: 12px;
     font-family: Roboto, Arial, Helvetica, sans-serif;
     font-size: 15px;
@@ -122,8 +123,8 @@ div.fmi-metoclient-timeslider-frame-text-wrapper {
 
 span.fmi-metoclient-timeslider-frame-text {
     white-space: nowrap;
-    padding-left: 4px;
-    padding-right: 4px;
+    padding-left: 3px;
+    padding-right: 3px;
 }
 
 div.fmi-metoclient-timeslider-post-tools {
@@ -216,4 +217,4 @@ div.fmi-metoclient-timeslider-timezone {
     right: 55px;
     top: 0;
     padding: 1px;
-}    
+}

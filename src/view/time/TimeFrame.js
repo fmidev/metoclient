@@ -1,14 +1,14 @@
 export default class TimeFrame {
-  
   /**
    * Creates an instance of TimeFrame.
-   * @param {any} options 
-   * 
+   * @param {any} options
+   *
    * @memberOf TimeFrame
    */
   constructor (options) {
     this['beginTime'] = options['beginTime']
     this['endTime'] = options['endTime']
+    this['useDateFormat'] = false
     this.element = document.createElement('div')
     this.element.style['flex-grow'] = options['weight']
     this.element.classList.add('fmi-metoclient-timeslider-frame')

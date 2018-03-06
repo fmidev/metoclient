@@ -26,6 +26,7 @@
     "core-js": "^2.5.3",
     "element-resize-detector": "^1.1.12",
     "empty-element": "^1.0.0",
+    "eslint-config-standard": "^11.0.0",
     "extend": "^3.0.1",
     "fast-isnumeric": "^1.1.1",
     "good-listener": "^1.2.2",

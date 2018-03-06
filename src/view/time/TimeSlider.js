@@ -299,10 +299,23 @@ export default class TimeSlider {
    */
   createTicks () {
     let self = this
-    let currentDay = moment().tz(this.timeZone_).dayOfYear()
+    let tick
+    let maxTextWidth = 0
+    let newTextWidth
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY
+
+    let clearFrame = (frame) => {
+      let removeChildrenByClass = (className) => {
+        Array.from(frame.element.getElementsByClassName(className)).forEach(element => {
+          element.parentElement.removeChild(element)
+        })
+      }
+      removeChildrenByClass(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)
+      removeChildrenByClass(TimeSlider.FRAME_TICK_CLASS)
+    }
+
     this.frames_.forEach((frame, index, frames) => {
-      let tick
+      let tickText
       let textWrapperElement
       let textElement
       let clientRect
@@ -311,18 +324,7 @@ export default class TimeSlider {
         return
       }
 
-      let clearFrame = (frameIndex) => {
-        let frameToBeCleared = (frameIndex != null) ? frames[frameIndex] : frame
-        let removeChildrenByClass = (className) => {
-          Array.from(frameToBeCleared.element.getElementsByClassName(className)).forEach(element => {
-            element.parentElement.removeChild(element)
-          })
-        }
-        removeChildrenByClass(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)
-        removeChildrenByClass(TimeSlider.FRAME_TICK_CLASS)
-      }
-
-      clearFrame()
+      clearFrame(frame)
 
       textWrapperElement = document.createElement('div')
       textWrapperElement.classList.add(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)
@@ -330,37 +332,59 @@ export default class TimeSlider {
       textElement = document.createElement('span')
       textElement.classList.add(TimeSlider.FRAME_TEXT_CLASS)
       textElement.classList.add(constants.NO_SELECT_CLASS)
-      textElement.textContent = this.getTickText(frame['endTime'])
+      tickText = this.getTickText(frame['endTime'])
+      textElement.textContent = tickText['content']
+      frame['useDateFormat'] = tickText['useDateFormat']
 
       textWrapperElement.appendChild(textElement)
 
       frame.element.appendChild(textWrapperElement)
       clientRect = textElement.getBoundingClientRect()
 
-      let createTick = (rect, endTime) => {
-        self.previousTickTextTop_ = rect.top
-        self.previousTickTextRight_ = rect.right
-        self.previousTickTextBottom_ = rect.bottom
-        self.previousTickTextLeft_ = rect.left
-        self.previousTickValue_ = endTime
-        self.previousTickIndex_ = index
-        tick = document.createElement('div')
-        tick.classList.add(TimeSlider.FRAME_TICK_CLASS)
-        tick.classList.add(TimeSlider.HIDDEN_CLASS)
-        frame.element.appendChild(tick)
+      if (maxTextWidth < clientRect['width']) {
+        maxTextWidth = clientRect['width']
       }
+    })
+
+    newTextWidth = Math.round(maxTextWidth) + 'px'
+    Array.from(document.getElementsByClassName(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)).forEach(element => {
+      element.style.width = newTextWidth
+    })
+
+    let createTick = (frame, index, rect, endTime) => {
+      self.previousTickTextTop_ = rect.top
+      self.previousTickTextRight_ = rect.right
+      self.previousTickTextBottom_ = rect.bottom
+      self.previousTickTextLeft_ = rect.left
+      self.previousTickValue_ = endTime
+      self.previousTickIndex_ = index
+      tick = document.createElement('div')
+      tick.classList.add(TimeSlider.FRAME_TICK_CLASS)
+      tick.classList.add(TimeSlider.HIDDEN_CLASS)
+      frame.element.appendChild(tick)
+    }
+
+    this.frames_.forEach((frame, index, frames) => {
+      let textWrapper
+      let clientRect
+      let textElementArray = Array.from(frame.element.getElementsByClassName(TimeSlider.FRAME_TEXT_WRAPPER_CLASS))
+      if (textElementArray.length === 0) {
+        return
+      }
+      textWrapper = textElementArray.shift()
+      clientRect = textWrapper.getBoundingClientRect()
 
       // Prevent text overlapping, favor full hours
       if (self.previousTickTextRight_ < clientRect.left ||
           self.previousTickTextLeft_ > clientRect.right ||
           self.previousTickTextBottom_ < clientRect.top ||
           self.previousTickTextTop_ > clientRect.bottom) {
-        createTick(clientRect, frame['endTime'])
-      } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0) && (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).dayOfYear() === currentDay)) {
-        clearFrame(self.previousTickIndex_)
-        createTick(clientRect, frame['endTime'])
+        createTick(frame, index, clientRect, frame['endTime'])
+      } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0) && (!frames[self.previousTickIndex_]['useDateFormat'])) {
+        clearFrame(frames[self.previousTickIndex_])
+        createTick(frame, index, clientRect, frame['endTime'])
       } else {
-        frame.element.removeChild(textWrapperElement)
+        frame.element.removeChild(textWrapper)
       }
     })
 
@@ -440,7 +464,7 @@ export default class TimeSlider {
       if (needsUpdate) {
         this.frames_[index].element.appendChild(this.visualPointer_)
         Array.from(this.visualPointer_.getElementsByClassName(TimeSlider.POINTER_TEXT_CLASS)).forEach(textElement => {
-          textElement.innerHTML = this.getTickText(this.frames_[index]['endTime'], false)
+          textElement.innerHTML = this.getTickText(this.frames_[index]['endTime'], false)['content']
         })
       }
     }
@@ -526,6 +550,7 @@ export default class TimeSlider {
     let currentMoment
     let format = 'HH:mm'
     const dateFormat = 'dd D.M.'
+    let useDateFormat = false;
     let beginTime = (this.frames_.length > 0) ? this.frames_[0]['endTime'] : Number.NEGATIVE_INFINITY
     if (beginTime == null) {
       return ''
@@ -552,13 +577,16 @@ export default class TimeSlider {
       if (prevTime != null) {
         zPrevTime = moment(prevTime).tz(this.timeZone_)
         if ((day !== zPrevTime.dayOfYear()) || (year !== zPrevTime.year())) {
-          format = dateFormat
+          useDateFormat = true
         }
       } else if ((tickTime === beginTime) && ((day !== currentMoment.tz(this.timeZone_).dayOfYear()) || (year !== currentMoment.tz(this.timeZone_).year()))) {
-        format = dateFormat
+        useDateFormat = true
       }
     }
-    return zTime.format(format)
+    return {
+      content: zTime.format(useDateFormat ? dateFormat : format),
+      useDateFormat: useDateFormat
+    }
   }
 
   /**

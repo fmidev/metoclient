@@ -878,6 +878,10 @@ MapAnimation.prototype.initListeners = function () {
       asyncLoadItem = self.asyncLoadQueue[loadId].shift()
       self.asyncLoadCount[loadId]++
       self.dispatchEvent('updateLoadQueue')
+      if (animationGroups.length === 0) {
+        // Not ready
+        return
+      }
       // Set source
       layer = animationGroups[asyncLoadItem['overlay']][asyncLoadItem['layer']]
       layer.setOpacity(0)
@@ -1171,7 +1175,6 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   let prevLayerTime = Number.NEGATIVE_INFINITY
   let i
   let j
-  let len
   let numIntervalsLen
   let iMin
   let iMax

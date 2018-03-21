@@ -302,6 +302,8 @@ export default class TimeSlider {
     let tick
     let maxTextWidth = 0
     let newTextWidth
+    let useTimeStep = false
+    let timeStep
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY
 
     let clearFrame = (frame) => {
@@ -315,12 +317,15 @@ export default class TimeSlider {
     }
 
     this.frames_.forEach((frame, index, frames) => {
+      let nextIndex
       let tickText
       let textWrapperElement
       let textElement
       let clientRect
+      let localTimeStep
 
-      if (index === frames.length - 1) {
+      nextIndex = index + 1
+      if (nextIndex === frames.length) {
         return
       }
 
@@ -344,7 +349,20 @@ export default class TimeSlider {
       if (maxTextWidth < clientRect['width']) {
         maxTextWidth = clientRect['width']
       }
+
+      localTimeStep = frames[nextIndex]['endTime'] - frame['endTime']
+      if (timeStep == null) {
+        useTimeStep = true
+        timeStep = localTimeStep
+      } else if ((useTimeStep) && (localTimeStep !== timeStep)) {
+        useTimeStep = false
+      }
+
     })
+    // Prevent common tick asynchrony
+    if (useTimeStep) {
+      timeStep *= 2;
+    }
 
     newTextWidth = Math.round(maxTextWidth) + 'px'
     Array.from(document.getElementsByClassName(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)).forEach(element => {
@@ -380,7 +398,7 @@ export default class TimeSlider {
           self.previousTickTextBottom_ < clientRect.top ||
           self.previousTickTextTop_ > clientRect.bottom) {
         createTick(frame, index, clientRect, frame['endTime'])
-      } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0) && (!frames[self.previousTickIndex_]['useDateFormat'])) {
+      } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) {
         clearFrame(frames[self.previousTickIndex_])
         createTick(frame, index, clientRect, frame['endTime'])
       } else {

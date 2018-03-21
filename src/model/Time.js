@@ -53,7 +53,7 @@ export default class Time {
     let i
     this.animationTimes_ = []
     this.animationNumIntervals_ = 0
-    if ((this.animationResolutionTime_) && (this.config_['gridTime'] != null)) {
+    if (this.config_['gridTime'] != null) {
       // Round initial animation time to previous tick
       this.animationBeginTime_ = utils.floorTime(this.beginTime_, this.animationGridTime_)
       // Time grid offset

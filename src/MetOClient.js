@@ -20,7 +20,6 @@ export class MetOClient {
    * @constructor
    */
   constructor (config) {
-console.log(JSON.stringify(config));
     let locale
     let project
     let mapPostId

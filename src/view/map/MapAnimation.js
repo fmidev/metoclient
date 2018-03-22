@@ -1192,6 +1192,8 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   let filteredCapabTimes = []
   let capabTimesDefined = false
   let deltaTime
+  let endTime
+
   layerVisibility = this.get('map').get('layerVisibility')
   currentVisibility = layerVisibility[layer['title']]
   if (typeof currentVisibility === 'undefined') {
@@ -1408,6 +1410,7 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
       callbacks['loadError'](target.getParams())
     }
   }
+
   currentTime = Date.now()
   for (i = iMin; i <= iMax; i++) {
     capabTimesDefined = (Array.isArray(animation['capabTimes']) && (animation['capabTimes'].length > 0))
@@ -1523,6 +1526,16 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   }
   if (this.numIntervalItems[loadId].length > 2) {
     this.numIntervalItems[loadId][0]['beginTime'] = 2 * this.numIntervalItems[loadId][0]['endTime'] - this.numIntervalItems[loadId][1]['endTime']
+  }
+  endTime = this.numIntervalItems[loadId][this.numIntervalItems[loadId].length-1]['endTime']
+  if ((this.get('animationResolutionTime') == null) && (absEndTime != null) && (endTime < absEndTime)) {
+    this.numIntervalItems[loadId].push({
+      'beginTime': endTime,
+      'endTime': absEndTime,
+      'status': '',
+      'loaded': 0,
+      'toBeLoaded': 0
+    })
   }
 }
 

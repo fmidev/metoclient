@@ -10,6 +10,7 @@ import OlStyleIcon from 'ol/style/icon'
 import OlStyleStroke from 'ol/style/stroke'
 import OlStyleStyle from 'ol/style/style'
 import OlStyleText from 'ol/style/text'
+import OlStyleCircle from 'ol/style/circle'
 import * as constants from '../../constants'
 
 /**
@@ -81,8 +82,18 @@ export default class FeatureProducer {
    */
   styleFactory (options, z) {
     const styleOptions = (options != null) ? options : {}
-    if ((styleOptions['image'] !== undefined) && (styleOptions['image']['type'] !== undefined) && (styleOptions['image']['type'].toLowerCase() === 'icon')) {
-      styleOptions['image'] = new OlStyleIcon(/** @type {olx.style.IconOptions} */ (styleOptions['image']))
+    if ((styleOptions['image'] !== undefined) && (styleOptions['image']['type'] !== undefined)) {
+      if (styleOptions['image']['type'].toLowerCase() === 'icon') {
+        styleOptions['image'] = new OlStyleIcon(/** @type {olx.style.IconOptions} */ (styleOptions['image']))
+      } else if (styleOptions['image']['type'].toLowerCase() === 'circle') {
+        if (styleOptions['image']['stroke'] !== undefined) {
+          styleOptions['image']['stroke'] = new OlStyleStroke(styleOptions['image']['stroke'])
+        }
+        if (styleOptions['image']['fill'] !== undefined) {
+          styleOptions['image']['fill'] = new OlStyleFill(styleOptions['image']['fill'])
+        }
+        styleOptions['image'] = new OlStyleCircle(/** @type {olx.style.CircleOptions} */ (styleOptions['image']))
+      }
       z['value'] = z['value'] | 8
     }
     if (styleOptions['text'] !== undefined) {
@@ -104,7 +115,6 @@ export default class FeatureProducer {
       z['value'] = z['value'] | 1
     }
     styleOptions['zIndex'] = ((styleOptions['zIndex'] !== undefined) ? styleOptions['zIndex'] : 0) + constants.zIndex.vector + z['value'] * 10
-
     return new OlStyleStyle(styleOptions)
   }
 }

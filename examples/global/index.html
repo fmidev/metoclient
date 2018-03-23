@@ -219,13 +219,39 @@
                 anchor: [0.5, 0.5],
                 anchorXUnits: 'fraction',
                 anchorYUnits: 'fraction',
-                opacity: 0.75,
+                opacity: 0.7,
+                rotation: 45,
+                src: '../../img/icon.png'
+              }
+            }
+          ],
+          styleHover: [
+            {
+              image: {
+                type: 'icon',
+                anchor: [0.5, 0.5],
+                anchorXUnits: 'fraction',
+                anchorYUnits: 'fraction',
+                opacity: 0.5,
+                rotation: 45,
+                src: '../../img/icon.png'
+              }
+            }
+          ],
+          styleSelected: [
+            {
+              image: {
+                type: 'icon',
+                anchor: [0.5, 0.5],
+                anchorXUnits: 'fraction',
+                anchorYUnits: 'fraction',
+                opacity: 1,
                 rotation: 45,
                 src: '../../img/icon.png'
               },
               text: {
                 font: '12px helvetica,sans-serif',
-                text: 'Kohde',
+                text: 'Selected',
                 rotation: 45,
                 fill: {
                   color: 'rgba(0, 255, 0, 1.0)'
@@ -303,7 +329,7 @@
     // weatherVisualization.createAnimation();
     // Advanced case:
     weatherVisualization.createAnimation({
-      loaded: function () {
+      loadedOnce: function () {
         // Add a click handler to the map to render the popup.
         var map = weatherVisualization.getMap()
 

@@ -55,6 +55,16 @@ export default class MapProducer {
    */
   layerFactory (options, extent, projection) {
     let numStyles
+    let style
+    let extraStyles = [
+      {
+        'name': 'styleHover',
+        'data': []
+      }, {
+        'name': 'styleSelected',
+        'data': []
+      }
+    ]
     let i
     let z
     let featureProducer
@@ -107,9 +117,23 @@ export default class MapProducer {
             }
           }
         }
+        extraStyles.forEach((extraStyle) => {
+          if (Array.isArray(options[extraStyle['name']])) {
+            numStyles = options[extraStyle['name']].length
+            for (i = 0; i < numStyles; i++) {
+              if (!(options[extraStyle['name']][i] instanceof OlStyleStyle)) {
+                style = featureProducer.styleFactory(options[extraStyle['name']][i], z)
+                if (style != null) {
+                  extraStyle['data'].push(style)
+                }
+              }
+            }
+          }
+        })
         options['zIndex'] = constants.zIndex.vector + z['value']
         let layer = new OlLayerVector(options)
         layer.setZIndex(options['zIndex'])
+        layer.set('extraStyles', extraStyles)
         return layer
     }
   }

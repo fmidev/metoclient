@@ -68,7 +68,6 @@ export default class FeatureProducer {
         }
         newFeature.setStyle(feature['style'], z)
       }
-      newFeature['id'] = featureCount
       features.push(newFeature)
     })
     return features

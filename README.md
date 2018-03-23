@@ -15,7 +15,7 @@ It is also possible to link with `script` tag to a build with or without global 
 Pseudo configuration and usage:
 
     var config = {
-        project: 'weather',                
+        project: 'weather',
         layers: [], // Your layers here
         container: 'animator-div-id',
         // Other options here
@@ -37,14 +37,19 @@ List of API functions:
 * createAnimation(callbacks)
     * possible event functions as callbacks
         * center(x,y)
+        * deselected(feature)
+        * hover(feature)
         * init()
         * loaded()
+        * loadedOnce()
         * loadError(params)
         * marker(x,y)
         * popupClosed()
         * preload()
         * rotation(angle)
+        * selected(feature)
         * time(timestamp_ms)
+        * unhover(feature)
         * zoom(level)
 * updateAnimation(options, callbacks)
     * possible options properties
@@ -55,16 +60,16 @@ List of API functions:
         * timeStep
         * timeZone
         * timeZoneLabel
-    * callbacks, see createAnimation     
-* addFeatures(layerTitle,projection,optionsArray)        
+    * callbacks, see createAnimation
+* addFeatures(layerTitle,projection,optionsArray)
 * clearFeatures(layerTitle)
-* createTimeSlider()        
+* createTimeSlider()
 * destroyAnimation()
 * destruct()
-* getFeatures(layerTitle)        
-* getFeaturesAt(layerTitle,x,y,tolerance_pix)        
-* getLayer(layerTitle)        
-* getMap()        
+* getFeatures(layerTitle)
+* getFeaturesAt(layerTitle,x,y,tolerance_pix)
+* getLayer(layerTitle)
+* getMap()
 * getStaticControls()
 * getTime()
 * hidePopup()

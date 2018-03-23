@@ -19,6 +19,7 @@ import FeatureProducer from './FeatureProducer'
 import Ol from 'ol/index'
 import OlCollection from 'ol/collection'
 import OlControlZoom from 'ol/control/zoom'
+import olEventsCondition from 'ol/events/condition'
 import OlFeature from 'ol/feature'
 import OlFormatWMSCapabilities from 'ol/format/wmscapabilities'
 import OlFormatWMTSCapabilities from 'ol/format/wmtscapabilities'
@@ -33,6 +34,7 @@ import OlInteractionKeyboardZoom from 'ol/interaction/keyboardzoom'
 import OlInteractionMouseWheelZoom from 'ol/interaction/mousewheelzoom'
 import OlInteractionPinchRotate from 'ol/interaction/pinchrotate'
 import OlInteractionPinchZoom from 'ol/interaction/pinchzoom'
+import OlInteractionSelect from 'ol/interaction/select'
 import OlLayerGroup from 'ol/layer/group'
 import OlLayerImage from 'ol/layer/image'
 import OlLayerTile from 'ol/layer/tile'
@@ -77,6 +79,7 @@ export default class MapAnimation {
     this.set('updateVisibility', null)
     this.set('interactionConfig', null)
     this.set('configChanged', false)
+    this.loadedOnce = false
     this.viewOptions = {}
     this.asyncLoadQueue = {}
     this.asyncLoadCount = {}
@@ -132,9 +135,9 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   let i
   let j
   let k
+  const map = this.get('map')
   if (layers != null) {
     numLayers = layers.length
-    const map = this.get('map')
     if (map != null) {
       layerGroups = map.getLayers()
       numLayerGroups = layerGroups.getLength()
@@ -629,6 +632,60 @@ MapAnimation.prototype.initMap = function () {
   Array.from(mapContainerElement.getElementsByClassName('ol-popup')).forEach((olPopup) => {
     olPopup.style.display = ''
   })
+  this.defineSelect();
+}
+
+
+/**
+ * Defines feature selection functionality and styles.
+ */
+MapAnimation.prototype.defineSelect = function() {
+  const map = this.get('map')
+  const config = this.get('config')
+  const callbacks = this.get('callbacks')
+  let select
+  let selectedFeatures
+  let extraStyles
+  let mappings = {
+    'styleHover': {
+      'condition': 'pointerMove',
+      'select': 'hover',
+      'deselect': 'unhover'
+    },
+    'styleSelected': {
+      'condition': 'singleClick',
+      'select': 'selected',
+      'deselect': 'deselected'
+    }
+  }
+  this.getLayersByGroup(config['featureGroupName']).forEach(layer => {
+    extraStyles = layer.get('extraStyles')
+    if (extraStyles != null) {
+      extraStyles.forEach((extraStyle) => {
+        extraStyle['data'].forEach((style) => {
+          if (style instanceof OlStyleStyle) {
+            select = new OlInteractionSelect({
+              'condition': olEventsCondition[mappings[extraStyle['name']]['condition']],
+              'layers': [layer],
+              'style': style
+            })
+            map.addInteraction(select);
+            selectedFeatures = select.getFeatures();
+            selectedFeatures.on('add', function(event) {
+              if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['select']] === 'function')) {
+                callbacks[mappings[extraStyle['name']]['select']](event['element'])
+              }
+            });
+            selectedFeatures.on('remove', function(event) {
+              if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['deselect']] === 'function')) {
+                callbacks[mappings[extraStyle['name']]['deselect']](event['element'])
+              }
+            });
+          }
+        })
+      })
+    }
+  })
 }
 
 /**
@@ -769,6 +826,10 @@ MapAnimation.prototype.initListeners = function () {
       callbacks = self.get('callbacks')
       if ((runLoaded) && (callbacks != null) && (typeof callbacks['loaded'] === 'function')) {
         callbacks['loaded']()
+      }
+      if ((runLoaded) && (!self.loadedOnce) && (callbacks != null) && (typeof callbacks['loadedOnce'] === 'function')) {
+        self.loadedOnce = true
+        callbacks['loadedOnce']()
       }
       if (requestUpdate) {
         this.set('updateRequested', Date.now())

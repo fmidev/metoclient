@@ -250,9 +250,10 @@ export class MetOClient {
 
   /**
    * Produces a new time model and views.
+   * @param {Object=} callbacks Callback functions for time events.
    */
-  createTime () {
-    this.timeController_.createTime()
+  createTime (callbacks) {
+    this.timeController_.createTime(callbacks)
   };
 
   /**
@@ -585,11 +586,11 @@ export class MetOClient {
 
   /**
    * Refreshes animation data.
-   * @param {Object=} callbacks Callback functions for map events.
+   * @param {Object=} callbacks Callback functions for map and time events.
    * @export
    */
   refresh (callbacks) {
-    this.timeController_.refreshTime()
+    this.timeController_.refreshTime(callbacks)
     this.createMap(callbacks)
   };
 
@@ -864,7 +865,7 @@ export class MetOClient {
     }
     this.mapController_.variableEvents.addListener('numIntervalItems', this.numIntervalItemsListener_)
 
-    this.createTime()
+    this.createTime(callbacks)
     this.createMap(callbacks)
     return this
   };

@@ -23,12 +23,14 @@ export default class TimeSlider {
    * Creates an instance of TimeSlider.
    * @param {any} config
    * @param {any} container
+   * @param {Object=} callbacks Callback functions for time events.
    *
    * @memberOf TimeSlider
    */
-  constructor (config, container) {
+  constructor (config, container, callbacks) {
     this.container_ = container
     this.config_ = config
+    this.callbacks_ = callbacks
     this.paper_ = null
     this.visualPointer_ = null
     this.frameWidth_ = 0
@@ -67,6 +69,9 @@ export default class TimeSlider {
     this.createIndicators()
     this.createTicks()
     this.createPointer()
+    if ((this.callbacks_ != null) && (typeof this.callbacks_['timeSliderCreated'] === 'function')) {
+      this.callbacks_['timeSliderCreated'](moments)
+    }
   }
 
   /**
@@ -548,6 +553,14 @@ export default class TimeSlider {
    */
   setTimeZoneLabel (timeZoneLabel) {
     this.timeZoneLabel_ = timeZoneLabel
+  }
+
+  /**
+   * Sets callbacks.
+   * @param {Object=} callbacks Callback functions for time events.
+   */
+  setCallbacks (callbacks) {
+    this.callbacks_ = callbacks
   }
 
   /**

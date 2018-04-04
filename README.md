@@ -49,6 +49,7 @@ List of API functions:
         * rotation(angle)
         * selected(feature)
         * time(timestamp_ms)
+        * timeSliderCreated(moments)
         * unhover(feature)
         * zoom(level)
 * updateAnimation(options, callbacks)

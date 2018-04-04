@@ -80,8 +80,9 @@ export default class TimeController {
 
   /**
    * Produces a time model and views.
+   * @param {Object=} callbacks Callback functions for time events.
    */
-  createTime () {
+  createTime (callbacks) {
     const self = this
     let containers
     let numViews
@@ -105,7 +106,7 @@ export default class TimeController {
     containers = document.getElementsByClassName(this.config_['view']['timeSliderContainer'])
     numViews = containers.length
     for (i = 0; i < numViews; i++) {
-      this.views_.push(new TimeSlider(this.config_['view'], containers[i]))
+      this.views_.push(new TimeSlider(this.config_['view'], containers[i], callbacks))
       this.views_[i].actionEvents.addListener('previous', self.previousListener_)
       this.views_[i].actionEvents.addListener('next', self.nextListener_)
       this.views_[i].variableEvents.addListener('animationTime', self.animationTimeUserListener_)
@@ -260,8 +261,8 @@ export default class TimeController {
 
   /**
    * Refreshes current real-world time.
-   */
-  refreshTime () {
+   * @param {Object=} callbacks Callback functions for time events.   */
+  refreshTime (callbacks) {
     let timeShift
     const currentTime = Date.now()
     const resolutionTime = this.model_.getAnimationResolutionTime()
@@ -270,6 +271,9 @@ export default class TimeController {
     this.model_.setCurrentTime(currentTime)
     timeShift = (resolutionTime != null) ? Math.floor(currentTime / resolutionTime) * resolutionTime - Math.floor(creationTime / resolutionTime) * resolutionTime : currentTime - creationTime
     this.model_.moveAnimationTimeFrame(timeShift)
+    this.views_.forEach(view => {
+      view.setCallbacks(callbacks)
+    })
   };
 
   /**

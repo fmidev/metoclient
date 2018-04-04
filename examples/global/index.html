@@ -192,7 +192,6 @@
           useSavedVisible: true,
           editOpacity: true,
           useSavedOpacity: true,
-          popup: true,
           source: {
             projection: 'EPSG:4326',
             features: [
@@ -361,7 +360,7 @@
           var customControl = document.createElement('div')
           customControl.appendChild(document.createElement('button'))
           customControl.classList.add('ol-unselectable', 'ol-control', 'custom-control')
-          customControl.addEventListener('click', event => {
+          customControl.addEventListener('click', function(event) {
             var coord = weatherVisualization.getMap().getView().getCenter()
             weatherVisualization.showPopup('<p>Map center:</p><code>' + coord.join(', ') + '</code>', coord[0], coord[1])
           })

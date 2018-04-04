@@ -653,7 +653,14 @@ MapAnimation.prototype.defineSelect = function() {
       'deselect': 'unhover'
     },
     'styleSelected': {
-      'condition': 'singleClick',
+      'condition': function (event) {
+        if (event['type'] === 'singleclick') {
+          return map.forEachFeatureAtPixel(event['pixel'], function () {
+            return true;
+          })
+        }
+        return false
+      },
       'select': 'selected',
       'deselect': 'deselected'
     }
@@ -665,26 +672,31 @@ MapAnimation.prototype.defineSelect = function() {
         extraStyle['data'].forEach((style) => {
           if (style instanceof OlStyleStyle) {
             select = new OlInteractionSelect({
-              'condition': olEventsCondition[mappings[extraStyle['name']]['condition']],
+              'condition': typeof mappings[extraStyle['name']]['condition'] === 'function' ? mappings[extraStyle['name']]['condition'] : olEventsCondition[mappings[extraStyle['name']]['condition']],
               'layers': [layer],
               'style': style
             })
-            map.addInteraction(select);
-            selectedFeatures = select.getFeatures();
+            map.addInteraction(select)
+            selectedFeatures = select.getFeatures()
             selectedFeatures.on('add', function(event) {
               if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['select']] === 'function')) {
                 callbacks[mappings[extraStyle['name']]['select']](event['element'])
               }
-            });
+            })
             selectedFeatures.on('remove', function(event) {
               if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['deselect']] === 'function')) {
                 callbacks[mappings[extraStyle['name']]['deselect']](event['element'])
               }
-            });
+            })
           }
         })
       })
     }
+    layer.getSource().getFeatures().forEach(feature => {
+      if (feature.get('selected')) {
+        selectedFeatures.push(feature)
+      }
+    })
   })
 }
 

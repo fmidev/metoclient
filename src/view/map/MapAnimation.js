@@ -1351,8 +1351,10 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
       // Todo: toteuta nämä funktioina LayerSwitcherissä
       self.loading = true
       layerSwitcherContainer = document.getElementById(config['layerSwitcherContainer'])
-      layerSwitcherContainer.classList.add('disabled')
-      layerSwitcherContainer.parentNode.classList.remove('shown')
+      if (layerSwitcherContainer != null) {
+        layerSwitcherContainer.classList.add('disabled')
+        layerSwitcherContainer.parentNode.classList.remove('shown')
+      }
       Array.from(document.querySelectorAll('.layer-switcher input')).forEach((layerSwitcher) => {
         layerSwitcher.disabled = true
       })

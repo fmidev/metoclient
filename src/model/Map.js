@@ -123,8 +123,8 @@ export default class Map {
         } else {
           promises.push(new Promise(function (resolve, reject) {
             let req = new XMLHttpRequest()
-            req.timeout = 20000
             req.open('GET', url)
+            req.timeout = 20000
             req.onload = function () {
               if (req.status === 200) {
                 capabilities[url] = req.response

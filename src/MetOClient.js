@@ -384,7 +384,8 @@ export class MetOClient {
           'layersTooltip': 'Layers',
           'browserNotSupported': 'This browser is not supported.'
         }
-      }
+      },
+      'disableTouch': false
     }
   };
 
@@ -469,6 +470,12 @@ export class MetOClient {
     popupContent.setAttribute('id', `${mapContainerIdOrClass}-popup-content`)
     popupContainer.appendChild(popupContent)
     animatorContainer.appendChild(popupContainer)
+
+    if (!this.config_['disableTouch']) {
+      animatorContainer.addEventListener('touchmove', function () {
+        event.preventDefault();
+      }, false);
+    }
 
     // Debug div for mobile devices
     // jQuery(divElement).attr('id','fmi-debug-div').width('320px').height('200px').css({'background-color':'#EEEEEE', 'position':'absolute', 'right': '0px'}).appendTo(animatorContainer);

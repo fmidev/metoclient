@@ -432,7 +432,7 @@ export class MetOClient {
     }
     animatorContainer = document.getElementById(animatorContainerId)
     if (animatorContainer == null) {
-      animatorContainerClass = animatorContainerIdOrClass.replace(/\./g, ' ');
+      animatorContainerClass = animatorContainerIdOrClass.replace(/\./g, ' ')
       animatorContainers = document.getElementsByClassName(animatorContainerClass)
       if (animatorContainers.length === 0) {
         return
@@ -472,9 +472,9 @@ export class MetOClient {
     animatorContainer.appendChild(popupContainer)
 
     if (!this.config_['disableTouch']) {
-      animatorContainer.addEventListener('touchmove', function () {
-        event.preventDefault();
-      }, false);
+      animatorContainer.addEventListener('touchmove', function (event) {
+        event.preventDefault()
+      }, false)
     }
 
     // Debug div for mobile devices

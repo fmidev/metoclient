@@ -632,19 +632,18 @@ MapAnimation.prototype.initMap = function () {
   Array.from(mapContainerElement.getElementsByClassName('ol-popup')).forEach((olPopup) => {
     olPopup.style.display = ''
   })
-  this.defineSelect();
+  this.defineSelect()
 }
-
 
 /**
  * Defines feature selection functionality and styles.
  */
-MapAnimation.prototype.defineSelect = function() {
+MapAnimation.prototype.defineSelect = function () {
   const map = this.get('map')
   const config = this.get('config')
   const callbacks = this.get('callbacks')
   let select
-  let selectedFeatures
+  let selectedFeatures = new OlCollection()
   let extraStyles
   let mappings = {
     'styleHover': {
@@ -656,7 +655,7 @@ MapAnimation.prototype.defineSelect = function() {
       'condition': function (event) {
         if (event['type'] === 'singleclick') {
           return map.forEachFeatureAtPixel(event['pixel'], function () {
-            return true;
+            return true
           })
         }
         return false
@@ -678,7 +677,7 @@ MapAnimation.prototype.defineSelect = function() {
             })
             map.addInteraction(select)
             selectedFeatures = select.getFeatures()
-            selectedFeatures.on('add', function(event) {
+            selectedFeatures.on('add', function (event) {
               if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['select']] === 'function')) {
                 callbacks[mappings[extraStyle['name']]['select']](event['element'])
               }
@@ -1171,7 +1170,7 @@ MapAnimation.prototype.createLayer = function (options) {
   let mapProducer = new MapProducer()
   let projection = /** @type {ol.proj.Projection|string} */ (this.get('viewProjection'))
   // Features may be too slow to extend
-  template = options['type'] === this.layerTypes['features'] ? options : extend(true, {}, options)
+  template = (options['type'] === this.layerTypes['features']) ? options : extend(true, {}, options)
   return mapProducer.layerFactory(template, extent, projection)
 }
 

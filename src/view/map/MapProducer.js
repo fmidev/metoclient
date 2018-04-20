@@ -74,7 +74,11 @@ export default class MapProducer {
     if (options['sourceOptions'] !== undefined) {
       sourceKey += 'Options'
     }
-    source = this.sourceFactory(typeLwr, options[sourceKey], projection)
+    if (!((options[sourceKey] != null) && (options[sourceKey]['addFeature'] != null))) {
+      source = this.sourceFactory(typeLwr, options[sourceKey], projection)
+    } else {
+      source = options[sourceKey]
+    }
     switch (typeLwr) {
       case 'tilewms':
       case 'wmts':

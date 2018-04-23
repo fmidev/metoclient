@@ -25,7 +25,7 @@ export default class MapProducer {
    * @param projection {string} Projection.
    * @returns {Array} Source.
    */
-  sourceFactory (type, options, projection) {
+  sourceFactory (type, options, projection, beginTime, endTime) {
     if (options == null) {
       options = {}
     }
@@ -53,7 +53,7 @@ export default class MapProducer {
    * @param projection {string} Projection.
    * @returns {Array} Layer.
    */
-  layerFactory (options, extent, projection) {
+  layerFactory (options, extent, projection, beginTime, endTime) {
     let numStyles
     let style
     let extraStyles = [
@@ -71,11 +71,23 @@ export default class MapProducer {
     let typeLwr = options['className'].toLowerCase()
     let source
     let sourceKey = 'source'
+    let animation
+    let layerBeginTime = beginTime
+    let layerEndTime = endTime
     if (options['sourceOptions'] !== undefined) {
       sourceKey += 'Options'
     }
     if (!((options[sourceKey] != null) && (options[sourceKey]['addFeature'] != null))) {
-      source = this.sourceFactory(typeLwr, options[sourceKey], projection)
+      animation = options['animation']
+      if (animation != null) {
+        if (animation['beginTime'] != null) {
+          layerBeginTime = animation['beginTime']
+        }
+        if (animation['endTime'] != null) {
+          layerEndTime = animation['endTime']
+        }
+      }
+      source = this.sourceFactory(typeLwr, options[sourceKey], projection, layerBeginTime, layerEndTime)
     } else {
       source = options[sourceKey]
     }

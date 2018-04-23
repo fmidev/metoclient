@@ -1171,7 +1171,7 @@ MapAnimation.prototype.createLayer = function (options) {
   let projection = /** @type {ol.proj.Projection|string} */ (this.get('viewProjection'))
   // Features may be too slow to extend
   template = (options['type'] === this.layerTypes['features']) ? options : extend(true, {}, options)
-  return mapProducer.layerFactory(template, extent, projection)
+  return mapProducer.layerFactory(template, extent, projection, this.get('animationBeginTime'), this.get('animationEndTime'))
 }
 
 /**
@@ -1197,8 +1197,10 @@ MapAnimation.prototype.loadLayerPropertyFromLocalStorage = function (layer, prop
  * @returns {Array} Base layers.
  */
 MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) {
+  let self = this
   const layers = this.get('layers')
   let numLayers
+  let layer
   const layerData = []
   let template
   let visible = false
@@ -1217,10 +1219,50 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
       if ((!visible) && (template['visible'])) {
         visible = true
       }
-      layerData.push(this.createLayer(template))
+      layer = this.createLayer(template)
+      if (layerType === this.layerTypes['features']) {
+        layer.getSource().on('addfeature', (event) => {
+          let newFeature = event['feature']
+          if (newFeature == null) {
+            return
+          }
+          newFeature.setStyle(new OlStyleStyle({}))
+          let featureTime = newFeature.get('time')
+          if (featureTime == null) {
+            return
+          }
+          let timestamp = moment(featureTime).utc().valueOf()
+          let featureEndTime = newFeature.get('endtime')
+          let endTimestamp = (featureEndTime != null) ? moment(featureEndTime).utc().valueOf() : Number.POSITIVE_INFINITY
+          let vectorSource = event['target']
+          let featureTimes = vectorSource.get('featureTimes')
+          let numFeatureTimes
+          let newIndex
+          let i
+          if (featureTimes == null) {
+            featureTimes = []
+          }
+          numFeatureTimes = featureTimes.length
+          newIndex = 0
+          for (i = 0; i < numFeatureTimes; i++) {
+            if (timestamp >= featureTimes[i]) {
+              break
+            }
+            newIndex++
+          }
+          featureTimes.splice(newIndex, 0, {
+            time: timestamp,
+            endtime: endTimestamp,
+            feature: newFeature
+          })
+          vectorSource.set('featureTimes', featureTimes)
+          self.updateFeatureAnimation()
+        })
+      }
+      layerData.push(layer)
     }
   }
-  if ((!visible) && (layerType === 'map') && (layerData.length > 0)) {
+  if ((!visible) && (layerType === this.layerTypes['map']) && (layerData.length > 0)) {
     layerData[0].set('visible', true)
   }
   return layerData
@@ -1990,6 +2032,29 @@ MapAnimation.prototype.setAnimationTime = function (animationTime) {
     callbacks['time'](animationTime)
   }
   this.updateAnimation()
+  this.updateFeatureAnimation()
+}
+
+MapAnimation.prototype.getPreviousAnimationTime = function (animationTime) {
+  let i
+  const key = this.latestLoadId
+  if (key == null) {
+    return null
+  }
+  const intervals = this.numIntervalItems[key]
+  if (intervals == null) {
+    return null
+  }
+  const lastIndex = intervals.length - 1
+  if (lastIndex < 0) {
+    return null
+  }
+  for (i = lastIndex; i >= 0; i--) {
+    if (intervals[i]['endTime'] < animationTime) {
+      return intervals[i]['endTime']
+    }
+  }
+  return intervals[lastIndex]['endTime']
 }
 
 MapAnimation.prototype.getNextAnimationTime = function (animationTime) {
@@ -2080,6 +2145,38 @@ MapAnimation.prototype.updateAnimation = function () {
   }
 }
 
+
+MapAnimation.prototype.updateFeatureAnimation = function () {
+  let animationTime = /** @type {number} */ (this.get('animationTime'))
+  let previousAnimationTime = this.getPreviousAnimationTime(animationTime)
+  const config = this.get('config')
+  const featureGroupName = config['featureGroupName']
+  const map = this.get('map')
+  let layers
+  if (map == null) {
+    return
+  }
+  layers = this.getLayersByGroup(featureGroupName)
+  layers.forEach((layer) => {
+    let source = layer.getSource()
+    if (source == null) {
+      return
+    }
+    let featureTimes = source.get('featureTimes')
+    if (featureTimes == null) {
+      return
+    }
+    featureTimes.forEach((featureTime, index, allFeatureTimes) => {
+      featureTime['feature'].setStyle(null)
+      if (((previousAnimationTime < featureTime['time']) && (featureTime['time'] <= animationTime)) || ((featureTime['time'] <= animationTime) && (previousAnimationTime < featureTime['endtime']))) {
+        featureTime['feature'].setStyle(null)
+      } else {
+        featureTime['feature'].setStyle(new OlStyleStyle({}))
+      }
+    })
+  })
+}
+
 /**
  * Destroys map animation.
  */
@@ -2106,7 +2203,7 @@ MapAnimation.prototype.destroyAnimation = function () {
   elementNames.forEach((elementName) => {
     let element = document.getElementById(elementName)
     if (element != null) {
-    document.getElementById(elementName).innerHTML = ''
+      document.getElementById(elementName).innerHTML = ''
     }
     Array.from(document.getElementsByClassName(elementName)).forEach((element) => {
       element.innerHTML = ''

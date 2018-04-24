@@ -38,7 +38,7 @@ export default class MapProducer {
       case 'wmts':
         return new WMTS(options)
       case 'vector':
-        return new Vector(options, projection)
+        return new Vector(options, projection, beginTime, endTime)
       case 'stamen':
         return new Stamen(options)
       case 'osm':

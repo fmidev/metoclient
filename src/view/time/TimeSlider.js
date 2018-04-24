@@ -69,6 +69,9 @@ export default class TimeSlider {
     this.createIndicators()
     this.createTicks()
     this.createPointer()
+    if (this.animationTime_ != null) {
+      this.updatePointer(this.animationTime_)
+    }
     if ((this.callbacks_ != null) && (typeof this.callbacks_['timeSliderCreated'] === 'function')) {
       this.callbacks_['timeSliderCreated'](moments)
     }
@@ -309,6 +312,7 @@ export default class TimeSlider {
     let newTextWidth
     let useTimeStep = false
     let timeStep
+    let playButton
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY
 
     let clearFrame = (frame) => {
@@ -362,11 +366,10 @@ export default class TimeSlider {
       } else if ((useTimeStep) && (localTimeStep !== timeStep)) {
         useTimeStep = false
       }
-
     })
     // Prevent common tick asynchrony
     if (useTimeStep) {
-      timeStep *= 2;
+      timeStep *= 2
     }
 
     newTextWidth = Math.round(maxTextWidth) + 'px'
@@ -387,6 +390,11 @@ export default class TimeSlider {
       frame.element.appendChild(tick)
     }
 
+    playButton = Array.from(document.getElementsByClassName(TimeSlider.PLAY_BUTTON_CLASS))
+    if (playButton.length > 0) {
+      playButton = playButton[0].getBoundingClientRect()
+    }
+
     this.frames_.forEach((frame, index, frames) => {
       let textWrapper
       let clientRect
@@ -398,10 +406,14 @@ export default class TimeSlider {
       clientRect = textWrapper.getBoundingClientRect()
 
       // Prevent text overlapping, favor full hours
-      if (self.previousTickTextRight_ < clientRect.left ||
+      if ((self.previousTickTextRight_ < clientRect.left ||
           self.previousTickTextLeft_ > clientRect.right ||
           self.previousTickTextBottom_ < clientRect.top ||
-          self.previousTickTextTop_ > clientRect.bottom) {
+          self.previousTickTextTop_ > clientRect.bottom) &&
+          ((playButton.length === 0) || (playButton.right < clientRect.left ||
+          playButton.left_ > clientRect.right ||
+          playButton.bottom < clientRect.top ||
+          playButton.top > clientRect.bottom))) {
         createTick(frame, index, clientRect, frame['endTime'])
       } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (((((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) {
         clearFrame(frames[self.previousTickIndex_])

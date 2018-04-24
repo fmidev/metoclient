@@ -1170,7 +1170,7 @@ MapAnimation.prototype.createLayer = function (options) {
   let mapProducer = new MapProducer()
   let projection = /** @type {ol.proj.Projection|string} */ (this.get('viewProjection'))
   // Features may be too slow to extend
-  template = (options['type'] === this.layerTypes['features']) ? options : extend(true, {}, options)
+  template = ((options['source'] == null) || (options['source']['features'] == null)) ? options : extend(true, {}, options)
   return mapProducer.layerFactory(template, extent, projection, this.get('animationBeginTime'), this.get('animationEndTime'))
 }
 
@@ -1212,7 +1212,7 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   for (i = 0; i < numLayers; i++) {
     if (layers[i]['type'] === layerType) {
       // Features may be too slow to extend
-      template = (layerType === this.layerTypes['features']) ? layers[i] : extend(true, {}, layers[i])
+      template = (layers[i]['features'] != null) ? layers[i] : extend(true, {}, layers[i])
       if (layerVisibility[template['title']] != null) {
         template['visible'] = layerVisibility[template['title']]
       }
@@ -1220,7 +1220,7 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
         visible = true
       }
       layer = this.createLayer(template)
-      if (layerType === this.layerTypes['features']) {
+      if ((layerType === this.layerTypes['features']) && (layer.get('animation') != null)) {
         layer.getSource().on('addfeature', (event) => {
           let newFeature = event['feature']
           if (newFeature == null) {
@@ -2035,6 +2035,18 @@ MapAnimation.prototype.setAnimationTime = function (animationTime) {
   this.updateFeatureAnimation()
 }
 
+MapAnimation.prototype.getFirstAnimationTime = function () {
+  const key = this.latestLoadId
+  if (key == null) {
+    return null
+  }
+  const intervals = this.numIntervalItems[key]
+  if ((intervals == null) || (intervals.length === 0)) {
+    return null
+  }
+  return intervals[0]['beginTime']
+}
+
 MapAnimation.prototype.getPreviousAnimationTime = function (animationTime) {
   let i
   const key = this.latestLoadId
@@ -2167,7 +2179,6 @@ MapAnimation.prototype.updateFeatureAnimation = function () {
       return
     }
     featureTimes.forEach((featureTime, index, allFeatureTimes) => {
-      featureTime['feature'].setStyle(null)
       if (((previousAnimationTime < featureTime['time']) && (featureTime['time'] <= animationTime)) || ((featureTime['time'] <= animationTime) && (previousAnimationTime < featureTime['endtime']))) {
         featureTime['feature'].setStyle(null)
       } else {

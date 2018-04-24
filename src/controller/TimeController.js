@@ -139,6 +139,7 @@ export default class TimeController {
     this.model_.variableEvents.addListener('animationTime', this.animationTimeTimerListener_)
 
     this.createTimer()
+    this.createTimeSlider()
   };
 
   /**
@@ -151,14 +152,7 @@ export default class TimeController {
       return
     }
     for (i = 0; i < numViews; i++) {
-      this.views_[i].createTimeSlider(
-        this.model_.getCurrentTime(),
-        this.model_.getAnimationTime(),
-        this.model_.getAnimationBeginTime(),
-        this.model_.getAnimationEndTime(),
-        this.model_.getAnimationResolutionTime(),
-        this.model_.getAnimationNumIntervals()
-      )
+      this.views_[i].createTimeSlider(this.model_.getAnimationTimes())
     }
   };
 

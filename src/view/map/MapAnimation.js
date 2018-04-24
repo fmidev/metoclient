@@ -1356,9 +1356,9 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
     }
     filteredCapabTimes = animation['capabTimes'].reduce((capabTimes, capabTime) => {
       const numCapabTimes = capabTimes.length
-    if (((animation['resolutionTime'] != null)) && ((numCapabTimes >= 2) && (capabTimes[numCapabTimes - 1] - capabTimes[numCapabTimes - 2] < animation['resolutionTime']) && (capabTime - capabTimes[numCapabTimes - 2] < animation['resolutionTime']))) {
+      if (((animation['resolutionTime'] != null)) && ((numCapabTimes >= 2) && (capabTimes[numCapabTimes - 1] - capabTimes[numCapabTimes - 2] < animation['resolutionTime']) && (capabTime - capabTimes[numCapabTimes - 2] < animation['resolutionTime']))) {
         capabTimes[numCapabTimes - 1] = capabTime
-    } else if ((capabTime >= animation['beginTime']) && (capabTime <= animation['endTime'])) {
+      } else if ((capabTime >= animation['beginTime']) && (capabTime <= animation['endTime'])) {
         capabTimes.push(capabTime)
       }
       return capabTimes

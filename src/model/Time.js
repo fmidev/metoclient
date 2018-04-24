@@ -418,6 +418,14 @@ export default class Time {
   }
 
   /**
+   * Gets animation times as an array.
+   * @returns {Array|*} Animation times.
+   */
+  getAnimationTimes () {
+    return this.animationTimes_;
+  }
+
+  /**
    * Destroys current timer.
    */
   destroyTimer () {

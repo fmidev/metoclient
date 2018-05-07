@@ -63,6 +63,9 @@ export default class TimeSlider {
    * @param {Array} moments Time values for the slider.
    */
   createTimeSlider (moments) {
+    if ((moments == null) || (moments.length === 0)) {
+      return
+    }
     this.clear()
     this.createContainers()
     this.createFrames(moments)

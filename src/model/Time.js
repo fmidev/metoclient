@@ -50,12 +50,17 @@ export default class Time {
     let offsetTime
     let animationTimeIndex = 0
     let defaultTime = this.defaultTime_
+    let timeDifference
     let i
     this.animationTimes_ = []
     this.animationNumIntervals_ = 0
-    if (this.config_['gridTime'] != null) {
+    if (this.animationGridTime_ != null) {
       // Round initial animation time to previous tick
       this.animationBeginTime_ = utils.floorTime(this.beginTime_, this.animationGridTime_)
+      if ((this.endTime_ != null) && ((this.animationResolutionTime_ == null))) {
+        this.animationEndTime_ = utils.floorTime(this.endTime_ + this.animationGridTime_, this.animationGridTime_)
+        timeDifference = this.animationEndTime_ - this.animationBeginTime_
+      }
       // Time grid offset
       if (this.animationGridTimeOffset_ > 0) {
         offsetTime = this.animationBeginTime_ + this.animationGridTimeOffset_
@@ -63,6 +68,9 @@ export default class Time {
           offsetTime -= this.animationGridTime_
         }
         this.animationBeginTime_ = offsetTime
+        if (timeDifference != null) {
+          this.animationEndTime_ = this.animationBeginTime_ + timeDifference
+        }
       }
     } else {
       this.animationBeginTime_ = this.beginTime_
@@ -71,8 +79,6 @@ export default class Time {
     if (this.animationResolutionTime_ != null) {
       this.animationNumIntervals_ = Math.floor((this.endTime_ - this.animationBeginTime_) / this.animationResolutionTime_) + 1
       this.animationEndTime_ = this.animationBeginTime_ + (this.animationNumIntervals_ - 1) * this.animationResolutionTime_
-    } else {
-      this.animationEndTime_ = this.endTime_
     }
     defaultTime = Math.max(this.animationBeginTime_, defaultTime)
     defaultTime = Math.min(this.animationEndTime_, defaultTime)

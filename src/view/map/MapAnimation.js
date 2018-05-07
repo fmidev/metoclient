@@ -1633,15 +1633,17 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   if (this.numIntervalItems[loadId].length > 2) {
     this.numIntervalItems[loadId][0]['beginTime'] = 2 * this.numIntervalItems[loadId][0]['endTime'] - this.numIntervalItems[loadId][1]['endTime']
   }
-  endTime = this.numIntervalItems[loadId][this.numIntervalItems[loadId].length - 1]['endTime']
-  if ((this.get('animationResolutionTime') == null) && (absEndTime != null) && (endTime < absEndTime)) {
-    this.numIntervalItems[loadId].push({
-      'beginTime': endTime,
-      'endTime': absEndTime,
-      'status': '',
-      'loaded': 0,
-      'toBeLoaded': 0
-    })
+  if (this.numIntervalItems[loadId].length > 0) {
+    endTime = this.numIntervalItems[loadId][this.numIntervalItems[loadId].length - 1]['endTime']
+    if ((this.get('animationResolutionTime') == null) && (absEndTime != null) && (endTime < absEndTime)) {
+      this.numIntervalItems[loadId].push({
+        'beginTime': endTime,
+        'endTime': absEndTime,
+        'status': '',
+        'loaded': 0,
+        'toBeLoaded': 0
+      })
+    }
   }
 }
 
@@ -1810,7 +1812,7 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
           'layers': mapLayers,
           'legends': layerLegend !== null ? [layerLegend] : [],
           'visible': mapLayers.getLength() > 0 ? true : layer['visible'],
-          'opacity': layer['visible'] ? opacity : 0,
+          'opacity': opacity,
           'editOpacity': layer['editOpacity']
         })
         overlay.set('defaultOpacity', opacity)

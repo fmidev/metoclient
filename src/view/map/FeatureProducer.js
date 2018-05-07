@@ -27,7 +27,6 @@ export default class FeatureProducer {
   featureFactory (options) {
     let i
     let numStyles
-    let featureCount
     let newFeature
     const features = []
     const z = {

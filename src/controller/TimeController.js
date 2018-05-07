@@ -139,6 +139,7 @@ export default class TimeController {
     this.model_.variableEvents.addListener('animationTime', this.animationTimeTimerListener_)
 
     this.createTimer()
+    this.createTimeSlider()
   };
 
   /**
@@ -151,14 +152,7 @@ export default class TimeController {
       return
     }
     for (i = 0; i < numViews; i++) {
-      this.views_[i].createTimeSlider(
-        this.model_.getCurrentTime(),
-        this.model_.getAnimationTime(),
-        this.model_.getAnimationBeginTime(),
-        this.model_.getAnimationEndTime(),
-        this.model_.getAnimationResolutionTime(),
-        this.model_.getAnimationNumIntervals()
-      )
+      this.views_[i].createTimeSlider(this.model_.getAnimationTimes())
     }
   };
 
@@ -265,11 +259,18 @@ export default class TimeController {
   refreshTime (callbacks) {
     let timeShift
     const currentTime = Date.now()
-    const resolutionTime = this.model_.getAnimationResolutionTime()
+    let resolutionTime = this.model_.getAnimationResolutionTime()
     const creationTime = this.model_.getCreationTime()
+    let animationTimes
+    if (resolutionTime == null) {
+      animationTimes = this.model_.getAnimationTimes()
+      if ((animationTimes != null) && (animationTimes.length > 0)) {
+        resolutionTime = animationTimes[1] - animationTimes[0]
+      }
+    }
+    timeShift = (resolutionTime != null) ? Math.floor(currentTime / resolutionTime) * resolutionTime - Math.floor(creationTime / resolutionTime) * resolutionTime : currentTime - creationTime
     this.model_.setAnimationLastRefreshed(currentTime)
     this.model_.setCurrentTime(currentTime)
-    timeShift = (resolutionTime != null) ? Math.floor(currentTime / resolutionTime) * resolutionTime - Math.floor(creationTime / resolutionTime) * resolutionTime : currentTime - creationTime
     this.model_.moveAnimationTimeFrame(timeShift)
     this.views_.forEach(view => {
       view.setCallbacks(callbacks)

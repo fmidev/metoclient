@@ -595,11 +595,11 @@ MapAnimation.prototype.initMap = function () {
   map.on('singleclick', function (evt) {
     let features = []
     let popupData = ''
-    let popupShown = false;
+    let popupShown = false
     let view = map.getView()
     let viewResolution = /** @type {number} */ (view.getResolution())
     let viewProjection = view.getProjection()
-    map.forEachFeatureAtPixel(evt['pixel'], function(feature, layer) {
+    map.forEachFeatureAtPixel(evt['pixel'], function (feature, layer) {
       const layerPopupData = layer.get('popupData')
       if (layerPopupData == null) {
         return
@@ -614,9 +614,9 @@ MapAnimation.prototype.initMap = function () {
       features.push(feature)
     }, {
       hitTolerance: 8
-    });
-    features.sort(function(a, b) {
-      const layerIdProperty = 'layerId';
+    })
+    features.sort(function (a, b) {
+      const layerIdProperty = 'layerId'
       const timeProperty = 'time'
       const aLayerId = a.get(layerIdProperty)
       const bLayerId = b.get(layerIdProperty)
@@ -643,7 +643,7 @@ MapAnimation.prototype.initMap = function () {
     let numFeatures = features.length
     if (numFeatures > 0) {
       let content = ''
-      for (let j=0; j < numFeatures; j++) {
+      for (let j = 0; j < numFeatures; j++) {
         popupData = features[j].get('popupData')
         let properties = popupData.split(',')
         let numProperties = properties.length
@@ -703,7 +703,6 @@ MapAnimation.prototype.initMap = function () {
       }, [])
     }
     let req
-    let url
     let layers = map.getLayers()
     let tooltipLayers = getPopupLayers(layers)
     let getFeatureInfoOnLoad = (req, layer) => {
@@ -714,16 +713,20 @@ MapAnimation.prototype.initMap = function () {
         try {
           response = JSON.parse(req.response)
         } catch (e) {
-          console.log('GetFeatureInfo response error');
+          console.log('GetFeatureInfo response error')
           return
         }
         if ((response['features'] != null) && (response['features'].length > 0) && (response['features'][0]['properties'] != null)) {
           properties = response['features'][0]['properties']
+        } else if ((Array.isArray(response)) && (response.length > 0)) {
+          properties = response[0]
+        }
+        if (properties != null) {
           let propertyNames = Object.keys(properties)
           propertyNames.sort()
           let popupData = layer.get('popupData')
           popupText += propertyNames.reduce((currentText, propertyName) => {
-            if (popupData.includes(propertyName)) {
+            if ((popupData.includes(propertyName)) && (properties[propertyName] != null)) {
               currentText += propertyName + ': ' + properties[propertyName] + '<br>'
             }
             return currentText
@@ -741,9 +744,30 @@ MapAnimation.prototype.initMap = function () {
     }
 
     tooltipLayers.forEach((layer) => {
-      url = layer.getSource().getGetFeatureInfoUrl(evt['coordinate'], viewResolution, viewProjection, {
-        'INFO_FORMAT': 'application/json'
-      })
+      let source = layer.getSource()
+      if (source == null) {
+        return
+      }
+      let url = layer.get('popupUrl')
+      if (url != null) {
+        let popupData = layer.get('popupData').replace(/\s+/g, '')
+        let animationTime = self.get('animationTime')
+        let coord = evt['coordinate']
+        if ((animationTime == null) || (popupData == null) || (coord == null)) {
+          return
+        }
+        let timeParameter = moment(animationTime).format('YYYYMMDDTHHmmss')
+        let coord4326 = OlProj.transform(
+          coord,
+          viewProjection,
+          'EPSG:4326'
+        )
+        url += `/timeseries?precision=double&tz=UTC&producer=fmi&format=json&param=${popupData}&starttime=${timeParameter}&endtime=${timeParameter}&lonlat=${coord4326[0].toFixed(6)},${coord4326[1].toFixed(6)}`
+      } else {
+        url = source.getGetFeatureInfoUrl(evt['coordinate'], viewResolution, viewProjection, {
+          'INFO_FORMAT': 'application/json'
+        })
+      }
       req = new XMLHttpRequest()
       req.open('GET', url)
       req.timeout = 20000
@@ -2199,6 +2223,7 @@ MapAnimation.prototype.setAnimationTime = function (animationTime) {
   if ((callbacks != null) && (typeof callbacks['time'] === 'function')) {
     callbacks['time'](animationTime)
   }
+  this.hidePopup()
   this.updateAnimation()
   this.updateFeatureAnimation()
 }

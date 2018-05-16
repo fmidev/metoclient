@@ -10,7 +10,6 @@ import * as constants from './constants'
 import TimeController from './controller/TimeController'
 import MapController from './controller/MapController'
 import { tz } from 'moment-timezone'
-import { default as proj4 } from 'proj4'
 import extend from 'extend'
 
 export class MetOClient {
@@ -237,15 +236,12 @@ export class MetOClient {
   };
 
   /**
-   * Transforms coordinates between projections.
-   * @param fromProjection {string} Source projection.
-   * @param toProjection {string} Target projection.
-   * @param coordinates {number[]} Coordinates to be transformed.
-   * @return {number[]} Transformed coordinates.
+   * Static getter for an utility function transformCoordinates.
+   * @return {function} Function to transform coordinates between projections.
    * @export
    */
-  static transformCoordinates (fromProjection, toProjection, coordinates) {
-    return proj4(fromProjection, toProjection, coordinates)
+  static get transformCoordinates () {
+    return utils['transformCoordinates']
   };
 
   /**

@@ -4,6 +4,7 @@
  * @license MIT
  */
 
+import { default as proj4 } from 'proj4'
 import { tz } from 'moment-timezone'
 import moment from 'moment-timezone'
 import fi from 'moment/locale/fi'
@@ -119,3 +120,14 @@ export const createMenu = (options) => {
   }
   return ul
 }
+
+/**
+ * Transforms coordinates between projections.
+ * @param fromProjection {string} Source projection.
+ * @param toProjection {string} Target projection.
+ * @param coordinates {number[]} Coordinates to be transformed.
+ * @return {number[]} Transformed coordinates.
+ */
+export const transformCoordinates = (fromProjection, toProjection, coordinates) => {
+  return proj4(fromProjection, toProjection, coordinates)
+};

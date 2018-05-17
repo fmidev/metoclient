@@ -85,6 +85,7 @@ export default class MapAnimation {
     this.asyncLoadCount = {}
     this.numIntervalItems = {}
     this.loadId = 0
+    this.ready = 0
     this.finishedId = 0
     this.actionEvents = new EventEmitter()
     this.variableEvents = new EventEmitter()
@@ -955,15 +956,15 @@ MapAnimation.prototype.isAnimationLayer = function (layer) {
  */
 MapAnimation.prototype.initListeners = function () {
   const self = this
-  let layerSwitcher
   self.set('listenersInitialized', true)
 
   this.on('updateLoadState', function (e) {
     const config = self.get('config')
     let len
     let finished = true
+    let ready = true
     let key
-    let callbacks
+    let callbacks = self.get('callbacks')
     let runLoaded = false
     let i
     const map = self.get('map')
@@ -980,10 +981,17 @@ MapAnimation.prototype.initListeners = function () {
       if ((self.numIntervalItems[key][i]['loaded'] >= self.numIntervalItems[key][i]['toBeLoaded']) && (self.numIntervalItems[key][i]['status'] !== constants.LOADING_STATUS['error']) && (self.numIntervalItems[key][i]['status'] !== constants.LOADING_STATUS['ready'])) {
         self.numIntervalItems[key][i]['status'] = constants.LOADING_STATUS['ready']
       }
+      ready = ready && (self.numIntervalItems[key][i]['status'] === '' || self.numIntervalItems[key][i]['status'] === constants.LOADING_STATUS['ready'] || self.numIntervalItems[key][i]['status'] === constants.LOADING_STATUS['error'])
       finished = finished && (self.numIntervalItems[key][i]['status'] === constants.LOADING_STATUS['ready'] || self.numIntervalItems[key][i]['status'] === constants.LOADING_STATUS['error'])
     }
     if (key !== self.loadId) {
       return
+    }
+    if ((ready) && (self.ready < key)) {
+      self.ready = key
+      if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
+        callbacks['ready']()
+      }
     }
     self.variableEvents.emitEvent('numIntervalItems', [self.numIntervalItems[key]])
     // Everything is loaded
@@ -992,30 +1000,12 @@ MapAnimation.prototype.initListeners = function () {
         self.loading = false
         self.finishedId = key
         runLoaded = true
-        // Todo: toteuta nämä funktiona LayerSwitcherissä
-        layerSwitcher = self.get('layerSwitcher')
-        if (layerSwitcher != null) {
-          layerSwitcher.setMap(self.getMap())
-          document.getElementById(config['layerSwitcherContainer']).classList.remove('disabled')
-        }
         if (self.get('updateVisibility') !== null) {
           map.set('layerVisibility', self.get('updateVisibility'))
           self.set('updateVisibility', null)
           requestUpdate = true
         }
       }
-      if (layerSwitcher != null) {
-        Array.from(document.querySelectorAll('.layer-switcher input:disabled')).forEach((layerSwitcher) => {
-          layerSwitcher.disabled = false
-        })
-      }
-      if (config['showLoadProgress']) {
-        // Remove spinner
-        Array.from(document.getElementsByClassName(config['spinnerContainer'])).forEach((spinner) => {
-          spinner.style.display = 'none'
-        })
-      }
-      // Todo: tee onFinished-funktio
       // Update visibility values
       this.getLayersByGroup(config['overlayGroupName']).forEach(overlay => {
         if (overlay.get('opacity') === 0) {
@@ -1024,7 +1014,6 @@ MapAnimation.prototype.initListeners = function () {
         }
       })
       self.updateAnimation()
-      callbacks = self.get('callbacks')
       if ((runLoaded) && (callbacks != null) && (typeof callbacks['loaded'] === 'function')) {
         callbacks['loaded']()
       }
@@ -1471,7 +1460,6 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   const animation = layer['animation']
   const absBeginTime = /** @type {number} */ (this.get('animationBeginTime'))
   const absEndTime = /** @type {number} */ (this.get('animationEndTime'))
-  const newOverlay = false
   let layerTime
   let layerOptions
   let layerVisibility
@@ -1483,13 +1471,6 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   let iMin
   let iMax
   let mapLayer
-  let largest
-  let t
-  let tEnd
-  let k
-  let tAnimation
-  let tk
-  let tkEnd
   let currentTime
   const epsilon = this.layerResolution
   let resolutionTime = /** @type {number} */ (self.get('animationResolutionTime'))
@@ -1497,6 +1478,8 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   let capabTimesDefined = false
   let deltaTime
   let endTime
+  let layerTimes = []
+  let animationTime = this.get('animationTime')
 
   layerVisibility = this.get('map').get('layerVisibility')
   currentVisibility = layerVisibility[layer['title']]
@@ -1569,31 +1552,12 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
 
   const loadStart = ({target}) => {
     let i
-    const config = self.get('config')
     const loadId = target.get('loadId')
     let numIntervalItemsLength
-    let layerSwitcherContainer
     let layerTime
     let intervalIndex
     if (target.get('loadId') !== self.loadId) {
       return
-    }
-    if (self.finishedId < target.get('loadId')) {
-      // Todo: toteuta nämä funktioina LayerSwitcherissä
-      self.loading = true
-      layerSwitcherContainer = document.getElementById(config['layerSwitcherContainer'])
-      if (layerSwitcherContainer != null) {
-        layerSwitcherContainer.classList.add('disabled')
-        layerSwitcherContainer.parentNode.classList.remove('shown')
-      }
-      Array.from(document.querySelectorAll('.layer-switcher input')).forEach((layerSwitcher) => {
-        layerSwitcher.disabled = true
-      })
-      if ((config['showLoadProgress'])) {
-        Array.from(document.getElementsByClassName(config['spinnerContainer'])).forEach((spinner) => {
-          spinner.style.display = ''
-        })
-      }
     }
     let tilesLoading = target.get('tilesLoading')
     if (tilesLoading === undefined) {
@@ -1734,6 +1698,7 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
     if (layerTime - prevLayerTime < epsilon) {
       continue
     }
+    layerTimes.push(layerTime)
     prevLayerTime = layerTime
     numIntervalsLen = this.numIntervalItems[loadId].length
     if (numIntervalsLen === 0) {
@@ -1770,66 +1735,47 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
         }
       }
     }
-
-    layerOptions = {
-      'extent': extent,
-      'animation': {
-        'animationTime': layerTime
-      },
-      'sourceOptions': {
-        'params': {
-          'TIME': new Date(layerTime).toISOString()
-        }
+  }
+  layerOptions = {
+    'extent': extent,
+    'animation': {
+      'animationTime': animationTime
+    },
+    'layerTimes': layerTimes,
+    'sourceOptions': {
+      'transition': 0,
+      'params': {
+        'TIME': new Date(animationTime).toISOString(),
+        'TRANSPARENT': 'FALSE'
       }
-    }
-    layerOptions = /** @type {olx.layer.TileOptions} */ (extend(true, layerOptions, layer))
-    layerOptions['defaultOpacity'] = (layer['opacity'] !== undefined) ? layer['opacity'] : 1
-    layerOptions['sourceProperties'] = {
-      'loadId': loadId,
-      'layerTime': layerTime,
-      'tilesLoaded': 0,
-      'tilesLoading': 0
-    }
-    layerOptions['visible'] = true
-    // Todo: Generalize
-    if (layerOptions['className'] === 'ImageWMS') {
-      layerOptions['sourceOn'] = {
-        'imageloadstart': loadStart,
-        'imageloadend': loadEnd,
-        'imageloaderror': loadError
-      }
-      mapLayer = new OlLayerImage(layerOptions)
-    } else {
-      layerOptions['sourceOn'] = {
-        'tileloadstart': loadStart,
-        'tileloadend': loadEnd,
-        'tileloaderror': loadError
-      }
-      mapLayer = new OlLayerTile(layerOptions)
-    }
-    largest = true
-    // Add layer to an existing layer group
-    if (!newOverlay) {
-      t = layerTime
-      tEnd = animation['endTime']
-      k = 0
-      while (k < mapLayers.getLength()) {
-        tAnimation = mapLayers.item(k).get('animation')
-        tk = tAnimation['animationTime']
-        tkEnd = tAnimation['endTime']
-        // When time values are identical, observation is shown, not forecast.
-        if ((t < tk) || ((t === tk) && (layer['type'] === this.layerTypes['forecast']) && (mapLayers.item(k).get('type') === this.layerTypes['observation']))) {
-          mapLayers.insertAt(k, mapLayer)
-          largest = false
-          break
-        }
-        k++
-      }
-    }
-    if (largest) {
-      mapLayers.push(mapLayer)
     }
   }
+  layerOptions = /** @type {olx.layer.TileOptions} */ (extend(true, layerOptions, layer))
+  layerOptions['defaultOpacity'] = (layer['opacity'] !== undefined) ? layer['opacity'] : 1
+  layerOptions['sourceProperties'] = {
+    'loadId': loadId,
+    'layerTime': animationTime,
+    'tilesLoaded': 0,
+    'tilesLoading': 0
+  }
+  layerOptions['visible'] = true
+  // Todo: Generalize
+  if (layerOptions['className'] === 'ImageWMS') {
+    layerOptions['sourceOn'] = {
+      'imageloadstart': loadStart,
+      'imageloadend': loadEnd,
+      'imageloaderror': loadError
+    }
+    mapLayer = new OlLayerImage(layerOptions)
+  } else {
+    layerOptions['sourceOn'] = {
+      'tileloadstart': loadStart,
+      'tileloadend': loadEnd,
+      'tileloaderror': loadError
+    }
+    mapLayer = new OlLayerTile(layerOptions)
+  }
+  mapLayers.push(mapLayer)
   if (this.numIntervalItems[loadId].length > 2) {
     this.numIntervalItems[loadId][0]['beginTime'] = 2 * this.numIntervalItems[loadId][0]['endTime'] - this.numIntervalItems[loadId][1]['endTime']
   }
@@ -2289,7 +2235,9 @@ MapAnimation.prototype.getNextAnimationTime = function (animationTime) {
  */
 MapAnimation.prototype.updateAnimation = function () {
   let i
+  let mapLayer
   let mapLayers
+  let source
   let nextPGrp
   let lastIndex
   const newPGrp = []
@@ -2297,55 +2245,70 @@ MapAnimation.prototype.updateAnimation = function () {
   const numGroups = animationGroups.length
   const pGrp = this.get('pGrp')
   const currentTime = Date.now()
-  const time = /** @type {number} */ (this.get('animationTime'))
+  const animationTime = /** @type {number} */ (this.get('animationTime'))
+  if (!isNumeric(animationTime)) {
+    return
+  }
   let animation
-  let animationTime
-  let nextAnimationTime = this.getNextAnimationTime(time)
-  if (nextAnimationTime == null) {
+  let animationTimes
+  let nextAnimationTime = this.getNextAnimationTime(animationTime)
+  if (!isNumeric(nextAnimationTime)) {
     return
   }
   // Collect updating information
   for (i = 0; i < numGroups; i++) {
+    if (animationGroups[i].length === 0) {
+      continue
+    }
     mapLayers = animationGroups[i]
-    if (mapLayers.length <= pGrp[i]) {
+    mapLayer = mapLayers[0]
+    animationTimes = mapLayer.get('layerTimes')
+    if (animationTimes.length <= pGrp[i]) {
       newPGrp.push(pGrp[i])
       continue
     }
+
     // Restart from beginning
-    lastIndex = mapLayers.length - 1
-    if (mapLayers[pGrp[i]].get('animation')['animationTime'] > time) {
+    lastIndex = animationTimes.length - 1
+    if (animationTimes[pGrp[i]] > animationTime) {
       nextPGrp = 0
-    } else if (mapLayers[lastIndex].get('animation')['animationTime'] <= time) {
+    } else if (animationTimes[lastIndex] <= animationTime) {
       nextPGrp = lastIndex
     } else {
       nextPGrp = pGrp[i]
     }
-    while ((nextPGrp < mapLayers.length - 1) && (mapLayers[nextPGrp + 1].get('animation')['animationTime'] < nextAnimationTime)) {
+    while ((nextPGrp < animationTimes.length - 1) && (animationTimes[nextPGrp + 1] < nextAnimationTime)) {
       nextPGrp = nextPGrp + 1
     }
     newPGrp.push(nextPGrp)
   }
   // Update
-  animationTime = /** @type {number} */ (this.get('animationTime'))
   for (i = 0; i < numGroups; i++) {
+    if (animationGroups[i].length === 0) {
+      continue
+    }
     mapLayers = animationGroups[i]
-    if (mapLayers.length <= pGrp[i]) {
+    mapLayer = mapLayers[0]
+    animationTimes = mapLayer.get('layerTimes')
+    if (animationTimes.length <= pGrp[i]) {
       continue
     }
-    animation = mapLayers[pGrp[i]].get('animation')
-    if (((pGrp[i] === mapLayers.length - 1) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['observation']) && (animationTime > animation['animationTime'])) || ((pGrp[i] === 0) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
+    animation = mapLayer.get('animation')
+    if (((pGrp[i] === animationTimes.length - 1) && (mapLayer.get('type') === this.layerTypes['observation']) && (animationTime > animation['animationTime'])) || ((pGrp[i] === 0) && (mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
       // Hide previous frame
-      mapLayers[pGrp[i]].setOpacity(0)
+      mapLayer.setOpacity(0)
       continue
-    }
-    if (pGrp[i] !== newPGrp[i]) {
-      // Hide previous frame
-      mapLayers[pGrp[i]].setOpacity(0)
     }
     pGrp[i] = newPGrp[i]
-    if (!((pGrp[i] === 0) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
-      // Show current frame
-      mapLayers[pGrp[i]].setOpacity(1)
+    if (!((pGrp[i] === 0) && (mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
+      source = mapLayer.getSource()
+      if (source.get('layerTime') !== animationTime) {
+        source.set('layerTime', animationTime)
+        source.updateParams({
+          'TIME': new Date(animationTime).toISOString()
+        })
+      }
+      mapLayer.setOpacity(1)
     }
   }
 }
@@ -2387,7 +2350,7 @@ MapAnimation.prototype.destroyAnimation = function () {
   this.actionEvents.removeAllListeners()
   this.variableEvents.removeAllListeners()
   const config = this.get('config')
-  let elementNames = [config['spinnerContainer'], config['legendContainer'], config['mapContainer'], config['container']]
+  let elementNames = [config['legendContainer'], config['mapContainer'], config['container']]
   let map = this.get('map')
   if (map !== null) {
     map.setTarget(null)

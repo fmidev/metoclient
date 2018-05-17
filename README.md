@@ -46,6 +46,7 @@ List of API functions:
         * marker(x,y)
         * popupClosed()
         * preload()
+        * ready()
         * rotation(angle)
         * selected(feature)
         * time(timestamp_ms)

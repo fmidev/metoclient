@@ -169,9 +169,7 @@ export class MetOClient {
       'resolutions',
       'showLayerSwitcher',
       'showLegend',
-      'showLoadProgress',
       'showMarker',
-      'spinnerContainer',
       'staticControls',
       'staticOverlayGroupName'
     ]
@@ -295,8 +293,6 @@ export class MetOClient {
           'mapContainer': 'fmi-metoclient-map',
           'layerSwitcherContainer': 'fmi-metoclient-layer-switcher',
           'legendContainer': 'fmi-metoclient-legend',
-          'spinnerContainer': 'fmi-metoclient-spinner',
-          'showLoadProgress': false,
           'staticControls': false,
           'overlayGroupName': 'Overlays',
           'baseGroupName': 'Base layers',
@@ -392,7 +388,6 @@ export class MetOClient {
     const animatorContainerIdOrClass = this.config_['map']['view']['container']
     const mapContainerIdOrClass = this.config_['map']['view']['mapContainer']
     const legendContainerClass = this.config_['map']['view']['legendContainer']
-    const spinnerContainerClass = this.config_['map']['view']['spinnerContainer']
     const timeSliderContainerClass = this.config_['time']['view']['timeSliderContainer']
     let animatorContainers
     let animatorContainer
@@ -403,7 +398,6 @@ export class MetOClient {
     let popupCloser
     let popupContent
     let legendContainer
-    let spinnerContainer
     let timeSliderContainer
 
     if (!animatorContainerIdOrClass) {
@@ -443,10 +437,6 @@ export class MetOClient {
     legendContainer = document.createElement('div')
     addClassListToContainer(legendContainerClass, legendContainer)
     mapContainer.appendChild(legendContainer)
-    spinnerContainer = document.createElement('div')
-    addClassListToContainer(spinnerContainerClass, spinnerContainer)
-    spinnerContainer.style.display = 'none'
-    mapContainer.appendChild(spinnerContainer)
     timeSliderContainer = document.createElement('div')
     addClassListToContainer(timeSliderContainerClass, timeSliderContainer)
     mapContainer.appendChild(timeSliderContainer)

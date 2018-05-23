@@ -85,8 +85,8 @@ export default class MapAnimation {
     this.asyncLoadCount = {}
     this.numIntervalItems = {}
     this.loadId = 0
-    this.ready = 0
     this.finishedId = 0
+    this.ready = 0
     this.actionEvents = new EventEmitter()
     this.variableEvents = new EventEmitter()
     this.loading = false
@@ -987,17 +987,20 @@ MapAnimation.prototype.initListeners = function () {
     if (key !== self.loadId) {
       return
     }
-    if ((ready) && (self.ready < key)) {
-      self.ready = key
-      if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
-        callbacks['ready']()
+    if (ready) {
+      self.loading = false
+      self.updateAnimation()
+      if (self.ready < key) {
+        self.ready = key
+        if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
+          callbacks['ready']()
+        }
       }
     }
     self.variableEvents.emitEvent('numIntervalItems', [self.numIntervalItems[key]])
     // Everything is loaded
     if (finished) {
       if (key > self.finishedId) {
-        self.loading = false
         self.finishedId = key
         runLoaded = true
         if (self.get('updateVisibility') !== null) {
@@ -1135,7 +1138,6 @@ MapAnimation.prototype.initListeners = function () {
       }
       // Set source
       layer = animationGroups[asyncLoadItem['overlay']][asyncLoadItem['layer']]
-      layer.setOpacity(0)
       className = layer.get('className')
       sourceOptions = layer.get('sourceOptions')
       if (sourceOptions == null) {
@@ -1227,12 +1229,10 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
       if (numSubLayers === 0) {
         return true
       }
-      subLayerExtent = subLayers.item(0).get('extent') // Todo: check all items
-      if ((subLayerExtent.length !== extent.length) ||
-        (subLayerExtent[0] > extent[0]) ||
-        (subLayerExtent[1] > extent[1]) ||
-        (subLayerExtent[2] < extent[2]) ||
-        (subLayerExtent[3] < extent[3])) {
+      // Todo: check all items
+      subLayerExtent = subLayers.item(0).get('extent')
+      // Todo: yhtäsuuruudelle epsilon-käsittely
+      if ((subLayerExtent.length !== extent.length) || (subLayerExtent.some((v, i) => v !== extent[i]))) {
         return true
       }
     }
@@ -1551,6 +1551,7 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   }
 
   const loadStart = ({target}) => {
+    self.loading = true
     let i
     const loadId = target.get('loadId')
     let numIntervalItemsLength
@@ -2234,6 +2235,9 @@ MapAnimation.prototype.getNextAnimationTime = function (animationTime) {
  * Updates map animation.
  */
 MapAnimation.prototype.updateAnimation = function () {
+  if (this.loading) {
+    return
+  }
   let i
   let mapLayer
   let mapLayers
@@ -2294,7 +2298,7 @@ MapAnimation.prototype.updateAnimation = function () {
       continue
     }
     animation = mapLayer.get('animation')
-    if (((pGrp[i] === animationTimes.length - 1) && (mapLayer.get('type') === this.layerTypes['observation']) && (animationTime > animation['animationTime'])) || ((pGrp[i] === 0) && (mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
+    if (((animation['beginTime'] != null) && (animationTime < animation['beginTime'])) || ((animation['endTime'] != null) && (animationTime > animation['endTime'])) || ((pGrp[i] === 0) && (mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
       // Hide previous frame
       mapLayer.setOpacity(0)
       continue
@@ -2304,11 +2308,21 @@ MapAnimation.prototype.updateAnimation = function () {
       source = mapLayer.getSource()
       if (source.get('layerTime') !== animationTime) {
         source.set('layerTime', animationTime)
-        source.updateParams({
-          'TIME': new Date(animationTime).toISOString()
-        })
+        source.set('tilesLoaded', 0)
+        source.set('tilesLoading', 0)
+        mapLayer.setOpacity(0)
+        if (source.get('sourceType') === 'WMTS') {
+          let timeFormatted = moment(animationTime).toISOString()
+          source.set('timeFormatted', timeFormatted)
+          source.refresh()
+        } else {
+          source.updateParams({
+            'TIME': new Date(animationTime).toISOString()
+          })
+        }
+      } else if (this.ready === this.loadId) {
+        mapLayer.setOpacity(1)
       }
-      mapLayer.setOpacity(1)
     }
   }
 }

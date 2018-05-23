@@ -580,6 +580,10 @@ MapAnimation.prototype.initMap = function () {
   })
   map.set('layerVisibility', layerVisibility)
   map.on('moveend', () => {
+    self.loadId = -1
+    self.set('updateRequested', Date.now())
+  })
+  map.on('change:layerVisibility', () => {
     self.set('updateRequested', Date.now())
   })
   map.on('pointermove', function (evt) {
@@ -987,8 +991,8 @@ MapAnimation.prototype.initListeners = function () {
     if (key !== self.loadId) {
       return
     }
+    self.loading = !ready
     if (ready) {
-      self.loading = false
       self.updateAnimation()
       if (self.ready < key) {
         self.ready = key
@@ -1033,7 +1037,6 @@ MapAnimation.prototype.initListeners = function () {
   this.on('change:updateRequested', function (e) {
     const updateRequested = /** @type {number} */ (this.get('updateRequested'))
     const self = this
-    self.loadId = -1
 
     setTimeout(() => {
       let loadId
@@ -1069,10 +1072,6 @@ MapAnimation.prototype.initListeners = function () {
         asyncLoadCount[loadId] = 0
         self.asyncLoadCount = asyncLoadCount
         self.numIntervalItems = []
-        // Todo: toteuta tämä LayerSwitcherissä funktiona
-        Array.from(document.querySelectorAll('.layer-switcher input')).forEach((layerSwitcher) => {
-          layerSwitcher.disabled = true
-        })
         self.actionEvents.emitEvent('reload')
         self.loadOverlayGroup(extent, loadId)
       } else {
@@ -1551,7 +1550,6 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   }
 
   const loadStart = ({target}) => {
-    self.loading = true
     let i
     const loadId = target.get('loadId')
     let numIntervalItemsLength
@@ -2036,14 +2034,6 @@ MapAnimation.prototype.scheduleOverlayLoading = function (overlays, loadId) {
     }
   }
   self.asyncLoadQueue = asyncLoadQueue
-  if (asyncLoadQueue[loadId].length === 0) {
-    layerSwitcher = self.get('layerSwitcher')
-    if (layerSwitcher != null) {
-      Array.from(document.querySelectorAll('.layer-switcher input:disabled')).forEach((layerSwitcher) => {
-        layerSwitcher.disabled = false
-      })
-    }
-  }
 }
 
 /**
@@ -2234,7 +2224,7 @@ MapAnimation.prototype.getNextAnimationTime = function (animationTime) {
 /**
  * Updates map animation.
  */
-MapAnimation.prototype.updateAnimation = function () {
+MapAnimation.prototype.updateAnimation = function (forceUpdate) {
   if (this.loading) {
     return
   }
@@ -2306,7 +2296,7 @@ MapAnimation.prototype.updateAnimation = function () {
     pGrp[i] = newPGrp[i]
     if (!((pGrp[i] === 0) && (mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
       source = mapLayer.getSource()
-      if (source.get('layerTime') !== animationTime) {
+      if ((forceUpdate) || (source.get('layerTime') !== animationTime)) {
         source.set('layerTime', animationTime)
         source.set('tilesLoaded', 0)
         source.set('tilesLoading', 0)
@@ -2314,12 +2304,12 @@ MapAnimation.prototype.updateAnimation = function () {
         if (source.get('sourceType') === 'WMTS') {
           let timeFormatted = moment(animationTime).toISOString()
           source.set('timeFormatted', timeFormatted)
-          source.refresh()
         } else {
           source.updateParams({
             'TIME': new Date(animationTime).toISOString()
           })
         }
+        source.refresh()
       } else if (this.ready === this.loadId) {
         mapLayer.setOpacity(1)
       }

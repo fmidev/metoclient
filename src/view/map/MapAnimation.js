@@ -79,6 +79,7 @@ export default class MapAnimation {
     this.set('updateVisibility', null)
     this.set('interactionConfig', null)
     this.set('configChanged', false)
+    this.nextLayerId = 0
     this.loadedOnce = false
     this.viewOptions = {}
     this.asyncLoadQueue = {}
@@ -1466,10 +1467,11 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   let prevLayerTime = Number.NEGATIVE_INFINITY
   let i
   let j
+  let k
   let numIntervalsLen
   let iMin
   let iMax
-  let mapLayer
+  let newLayers = []
   let currentTime
   const epsilon = this.layerResolution
   let resolutionTime = /** @type {number} */ (self.get('animationResolutionTime'))
@@ -1759,22 +1761,31 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   }
   layerOptions['visible'] = true
   // Todo: Generalize
-  if (layerOptions['className'] === 'ImageWMS') {
-    layerOptions['sourceOn'] = {
-      'imageloadstart': loadStart,
-      'imageloadend': loadEnd,
-      'imageloaderror': loadError
+  for (k = 0; k < 2; k++) {
+    if (layerOptions['className'] === 'ImageWMS') {
+      layerOptions['sourceOn'] = {
+        'imageloadstart': loadStart,
+        'imageloadend': loadEnd,
+        'imageloaderror': loadError
+      }
+      newLayers[k] = new OlLayerImage(layerOptions)
+    } else {
+      layerOptions['sourceOn'] = {
+        'tileloadstart': loadStart,
+        'tileloadend': loadEnd,
+        'tileloaderror': loadError
+      }
+      newLayers[k] = new OlLayerTile(layerOptions)
     }
-    mapLayer = new OlLayerImage(layerOptions)
-  } else {
-    layerOptions['sourceOn'] = {
-      'tileloadstart': loadStart,
-      'tileloadend': loadEnd,
-      'tileloaderror': loadError
-    }
-    mapLayer = new OlLayerTile(layerOptions)
   }
-  mapLayers.push(mapLayer)
+  newLayers[0].set('clone', newLayers[1])
+  newLayers[0].set('active', true)
+  newLayers[0].set('id', ++self.nextLayerId)
+  newLayers[1].set('clone', newLayers[0])
+  newLayers[1].set('active', false)
+  newLayers[1].set('id', ++self.nextLayerId)
+  mapLayers.push(newLayers[0])
+  mapLayers.push(newLayers[1])
   if (this.numIntervalItems[loadId].length > 2) {
     this.numIntervalItems[loadId][0]['beginTime'] = 2 * this.numIntervalItems[loadId][0]['endTime'] - this.numIntervalItems[loadId][1]['endTime']
   }
@@ -2224,55 +2235,50 @@ MapAnimation.prototype.getNextAnimationTime = function (animationTime) {
 /**
  * Updates map animation.
  */
-MapAnimation.prototype.updateAnimation = function (forceUpdate) {
+MapAnimation.prototype.updateAnimation = function () {
   if (this.loading) {
     return
   }
   let i
+  let j
+  let prevMapLayer
   let mapLayer
+  let mapLayerClone
   let mapLayers
+  let numMapLayers
   let source
+  let sourceClone
   let nextPGrp
-  let lastIndex
   const newPGrp = []
   const animationGroups = this.get('animationGroups')
   const numGroups = animationGroups.length
   const pGrp = this.get('pGrp')
   const currentTime = Date.now()
   const animationTime = /** @type {number} */ (this.get('animationTime'))
+  const animationTimeFormatted = new Date(animationTime).toISOString()
   if (!isNumeric(animationTime)) {
     return
   }
-  let animation
   let animationTimes
+  let numAnimationTimes
   let nextAnimationTime = this.getNextAnimationTime(animationTime)
   if (!isNumeric(nextAnimationTime)) {
     return
   }
+
   // Collect updating information
   for (i = 0; i < numGroups; i++) {
-    if (animationGroups[i].length === 0) {
-      continue
-    }
     mapLayers = animationGroups[i]
-    mapLayer = mapLayers[0]
-    animationTimes = mapLayer.get('layerTimes')
-    if (animationTimes.length <= pGrp[i]) {
-      newPGrp.push(pGrp[i])
-      continue
-    }
-
-    // Restart from beginning
-    lastIndex = animationTimes.length - 1
-    if (animationTimes[pGrp[i]] > animationTime) {
-      nextPGrp = 0
-    } else if (animationTimes[lastIndex] <= animationTime) {
-      nextPGrp = lastIndex
-    } else {
-      nextPGrp = pGrp[i]
-    }
-    while ((nextPGrp < animationTimes.length - 1) && (animationTimes[nextPGrp + 1] < nextAnimationTime)) {
-      nextPGrp = nextPGrp + 1
+    numMapLayers = mapLayers.length
+    nextPGrp = numMapLayers - 1
+    for (j = 0; j < numMapLayers; j++) {
+      mapLayer = mapLayers[j]
+      animationTimes = mapLayer.get('layerTimes')
+      numAnimationTimes = animationTimes.length
+      if ((numAnimationTimes > 0) && (mapLayer.get('active')) && (animationTime <= animationTimes[numAnimationTimes - 1])) {
+        nextPGrp = j
+        break
+      }
     }
     newPGrp.push(nextPGrp)
   }
@@ -2282,36 +2288,45 @@ MapAnimation.prototype.updateAnimation = function (forceUpdate) {
       continue
     }
     mapLayers = animationGroups[i]
-    mapLayer = mapLayers[0]
-    animationTimes = mapLayer.get('layerTimes')
-    if (animationTimes.length <= pGrp[i]) {
+    numMapLayers = mapLayers.length
+    if ((numMapLayers <= pGrp[i]) || (numMapLayers <= newPGrp[i])) {
       continue
     }
-    animation = mapLayer.get('animation')
-    if (((animation['beginTime'] != null) && (animationTime < animation['beginTime'])) || ((animation['endTime'] != null) && (animationTime > animation['endTime'])) || ((pGrp[i] === 0) && (mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
-      // Hide previous frame
-      mapLayer.setOpacity(0)
-      continue
+    prevMapLayer = mapLayers[pGrp[i]]
+    mapLayer = mapLayers[newPGrp[i]]
+    if ((prevMapLayer.get('id') !== mapLayer.get('id')) && (prevMapLayer.get('id') !== mapLayer.get('clone').get('id'))) {
+      prevMapLayer.setOpacity(0)
+      prevMapLayer.get('clone').setOpacity(0)
     }
     pGrp[i] = newPGrp[i]
-    if (!((pGrp[i] === 0) && (mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
+    mapLayer = mapLayers[pGrp[i]]
+    mapLayerClone = mapLayer.get('clone')
+    mapLayerClone.setOpacity(0)
+    if ((mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime)) {
+      mapLayer.setOpacity(0)
+      mapLayer.get('clone').setOpacity(0)
+    } else {
       source = mapLayer.getSource()
-      if ((forceUpdate) || (source.get('layerTime') !== animationTime)) {
-        source.set('layerTime', animationTime)
-        source.set('tilesLoaded', 0)
-        source.set('tilesLoading', 0)
-        mapLayer.setOpacity(0)
-        if (source.get('sourceType') === 'WMTS') {
-          let timeFormatted = moment(animationTime).toISOString()
-          source.set('timeFormatted', timeFormatted)
+      if (source.get('layerTime') !== animationTime) {
+        sourceClone = mapLayerClone.getSource()
+        if (sourceClone.get('layerTime') !== animationTime) {
+          sourceClone.set('layerTime', animationTime)
+          sourceClone.set('tilesLoaded', 0)
+          sourceClone.set('tilesLoading', 0)
+          if (sourceClone.get('sourceType') === 'WMTS') {
+            sourceClone.set('timeFormatted', animationTimeFormatted)
+          } else {
+            sourceClone.updateParams({
+              'TIME': animationTimeFormatted
+            })
+          }
+          sourceClone.refresh()
         } else {
-          source.updateParams({
-            'TIME': new Date(animationTime).toISOString()
-          })
+          mapLayer.setOpacity(0)
+          mapLayerClone.setOpacity(1)
+          mapLayer.set('active', false)
+          mapLayerClone.set('active', true)
         }
-        source.refresh()
-      } else if (this.ready === this.loadId) {
-        mapLayer.setOpacity(1)
       }
     }
   }

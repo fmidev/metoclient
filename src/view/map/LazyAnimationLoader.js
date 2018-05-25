@@ -50,7 +50,7 @@ import OlSourceVector from 'ol/source/vector'
 import OlSourceWMTS from 'ol/source/wmts'
 import OlGeomPoint from 'ol/geom/point'
 
-export default class MapAnimation {
+export default class LazyAnimationLoader {
   /**
    * Constructs OpenLayers 4 based map view.
    * @constructor
@@ -79,6 +79,7 @@ export default class MapAnimation {
     this.set('updateVisibility', null)
     this.set('interactionConfig', null)
     this.set('configChanged', false)
+    this.nextLayerId = 0
     this.loadedOnce = false
     this.viewOptions = {}
     this.asyncLoadQueue = {}
@@ -86,6 +87,7 @@ export default class MapAnimation {
     this.numIntervalItems = {}
     this.loadId = 0
     this.finishedId = 0
+    this.ready = 0
     this.actionEvents = new EventEmitter()
     this.variableEvents = new EventEmitter()
     this.loading = false
@@ -104,7 +106,7 @@ export default class MapAnimation {
     this.layerResolution = 60 * 1000
   };
 }
-Ol.inherits(MapAnimation, OlObject)
+Ol.inherits(LazyAnimationLoader, OlObject)
 
 /**
  * Creates layered animated map.
@@ -118,7 +120,7 @@ Ol.inherits(MapAnimation, OlObject)
  * @param {number=} animationNumIntervals Number of animation intervals.
  * @param {Object=} callbacks Callback functions for map events.
  */
-MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks) {
+LazyAnimationLoader.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
   let isFeatureGroup
@@ -210,7 +212,7 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
 /**
  * Performs bidirectional data exchange with local storage.
  */
-MapAnimation.prototype.updateStorage = function () {
+LazyAnimationLoader.prototype.updateStorage = function () {
   try {
     if (typeof window['localStorage'] === 'undefined') {
       return
@@ -254,7 +256,7 @@ MapAnimation.prototype.updateStorage = function () {
  * @param {Object} layer Layer configuration.
  * @param {string} values Capabilities time definitions.
  */
-MapAnimation.prototype.parseCapabTimes = function (layerAnimation, values) {
+LazyAnimationLoader.prototype.parseCapabTimes = function (layerAnimation, values) {
   let parameters = values.split('/')
   let i, dates, datesLen, capabTime
   if (parameters.length >= 3) {
@@ -281,7 +283,7 @@ MapAnimation.prototype.parseCapabTimes = function (layerAnimation, values) {
  * Defines type and animation time properties for layers.
  * @param {Object=} capabilities Capabilities for time steps.
  */
-MapAnimation.prototype.parameterizeLayers = function (capabilities) {
+LazyAnimationLoader.prototype.parameterizeLayers = function (capabilities) {
   const results = {}
   const layers = this.get('layers')
   let result
@@ -412,14 +414,14 @@ MapAnimation.prototype.parameterizeLayers = function (capabilities) {
 /**
  * Defines EPSG:3067 projection.
  */
-MapAnimation.prototype.initEPSG3067Projection = () => {
+LazyAnimationLoader.prototype.initEPSG3067Projection = () => {
   proj4.defs('EPSG:3067', '+proj=utm +zone=35 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
 }
 
 /**
  * Initializes map.
  */
-MapAnimation.prototype.initMap = function () {
+LazyAnimationLoader.prototype.initMap = function () {
   // Create controls and interactions
   let config = this.get('config')
   const callbacks = this.get('callbacks')
@@ -579,6 +581,10 @@ MapAnimation.prototype.initMap = function () {
   })
   map.set('layerVisibility', layerVisibility)
   map.on('moveend', () => {
+    self.loadId = -1
+    self.set('updateRequested', Date.now())
+  })
+  map.on('change:layerVisibility', () => {
     self.set('updateRequested', Date.now())
   })
   map.on('pointermove', function (evt) {
@@ -828,7 +834,7 @@ MapAnimation.prototype.initMap = function () {
 /**
  * Defines feature selection functionality and styles.
  */
-MapAnimation.prototype.defineSelect = function () {
+LazyAnimationLoader.prototype.defineSelect = function () {
   const map = this.get('map')
   const config = this.get('config')
   const callbacks = this.get('callbacks')
@@ -892,7 +898,7 @@ MapAnimation.prototype.defineSelect = function () {
 /**
  * Sets view property change listeners.
  */
-MapAnimation.prototype.setViewListeners = function () {
+LazyAnimationLoader.prototype.setViewListeners = function () {
   const self = this
   const callbacks = this.get('callbacks')
   this.get('map').getView().on('propertychange', function (e) {
@@ -925,7 +931,7 @@ MapAnimation.prototype.setViewListeners = function () {
  * Initializes interaction options for a static map.
  * @param {Object} interactionOptions Default interaction options.
  */
-MapAnimation.prototype.initStaticInteractions = function (interactionOptions) {
+LazyAnimationLoader.prototype.initStaticInteractions = function (interactionOptions) {
   const config = this.get('config')
   interactionOptions['doubleClickZoom'] = false
   interactionOptions['dragPan'] = false
@@ -946,24 +952,24 @@ MapAnimation.prototype.initStaticInteractions = function (interactionOptions) {
  * @param layer Layer to be tested.
  * @returns {boolean} Support result.
  */
-MapAnimation.prototype.isAnimationLayer = function (layer) {
+LazyAnimationLoader.prototype.isAnimationLayer = function (layer) {
   return (([this.layerTypes['observation'], this.layerTypes['forecast'], ''].includes(layer['type'])) && (layer['animation'] !== undefined))
 }
 
 /**
  * Initializes listeners utilized by the animator view.
  */
-MapAnimation.prototype.initListeners = function () {
+LazyAnimationLoader.prototype.initListeners = function () {
   const self = this
-  let layerSwitcher
   self.set('listenersInitialized', true)
 
   this.on('updateLoadState', function (e) {
     const config = self.get('config')
     let len
     let finished = true
+    let ready = true
     let key
-    let callbacks
+    let callbacks = self.get('callbacks')
     let runLoaded = false
     let i
     const map = self.get('map')
@@ -980,42 +986,34 @@ MapAnimation.prototype.initListeners = function () {
       if ((self.numIntervalItems[key][i]['loaded'] >= self.numIntervalItems[key][i]['toBeLoaded']) && (self.numIntervalItems[key][i]['status'] !== constants.LOADING_STATUS['error']) && (self.numIntervalItems[key][i]['status'] !== constants.LOADING_STATUS['ready'])) {
         self.numIntervalItems[key][i]['status'] = constants.LOADING_STATUS['ready']
       }
+      ready = ready && (self.numIntervalItems[key][i]['status'] === '' || self.numIntervalItems[key][i]['status'] === constants.LOADING_STATUS['ready'] || self.numIntervalItems[key][i]['status'] === constants.LOADING_STATUS['error'])
       finished = finished && (self.numIntervalItems[key][i]['status'] === constants.LOADING_STATUS['ready'] || self.numIntervalItems[key][i]['status'] === constants.LOADING_STATUS['error'])
     }
     if (key !== self.loadId) {
       return
     }
+    self.loading = !ready
+    if (ready) {
+      self.updateAnimation()
+      if (self.ready < key) {
+        self.ready = key
+        if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
+          callbacks['ready']()
+        }
+      }
+    }
     self.variableEvents.emitEvent('numIntervalItems', [self.numIntervalItems[key]])
     // Everything is loaded
     if (finished) {
       if (key > self.finishedId) {
-        self.loading = false
         self.finishedId = key
         runLoaded = true
-        // Todo: toteuta nämä funktiona LayerSwitcherissä
-        layerSwitcher = self.get('layerSwitcher')
-        if (layerSwitcher != null) {
-          layerSwitcher.setMap(self.getMap())
-          document.getElementById(config['layerSwitcherContainer']).classList.remove('disabled')
-        }
         if (self.get('updateVisibility') !== null) {
           map.set('layerVisibility', self.get('updateVisibility'))
           self.set('updateVisibility', null)
           requestUpdate = true
         }
       }
-      if (layerSwitcher != null) {
-        Array.from(document.querySelectorAll('.layer-switcher input:disabled')).forEach((layerSwitcher) => {
-          layerSwitcher.disabled = false
-        })
-      }
-      if (config['showLoadProgress']) {
-        // Remove spinner
-        Array.from(document.getElementsByClassName(config['spinnerContainer'])).forEach((spinner) => {
-          spinner.style.display = 'none'
-        })
-      }
-      // Todo: tee onFinished-funktio
       // Update visibility values
       this.getLayersByGroup(config['overlayGroupName']).forEach(overlay => {
         if (overlay.get('opacity') === 0) {
@@ -1024,7 +1022,6 @@ MapAnimation.prototype.initListeners = function () {
         }
       })
       self.updateAnimation()
-      callbacks = self.get('callbacks')
       if ((runLoaded) && (callbacks != null) && (typeof callbacks['loaded'] === 'function')) {
         callbacks['loaded']()
       }
@@ -1041,7 +1038,6 @@ MapAnimation.prototype.initListeners = function () {
   this.on('change:updateRequested', function (e) {
     const updateRequested = /** @type {number} */ (this.get('updateRequested'))
     const self = this
-    self.loadId = -1
 
     setTimeout(() => {
       let loadId
@@ -1077,10 +1073,6 @@ MapAnimation.prototype.initListeners = function () {
         asyncLoadCount[loadId] = 0
         self.asyncLoadCount = asyncLoadCount
         self.numIntervalItems = []
-        // Todo: toteuta tämä LayerSwitcherissä funktiona
-        Array.from(document.querySelectorAll('.layer-switcher input')).forEach((layerSwitcher) => {
-          layerSwitcher.disabled = true
-        })
         self.actionEvents.emitEvent('reload')
         self.loadOverlayGroup(extent, loadId)
       } else {
@@ -1146,7 +1138,6 @@ MapAnimation.prototype.initListeners = function () {
       }
       // Set source
       layer = animationGroups[asyncLoadItem['overlay']][asyncLoadItem['layer']]
-      layer.setOpacity(0)
       className = layer.get('className')
       sourceOptions = layer.get('sourceOptions')
       if (sourceOptions == null) {
@@ -1192,7 +1183,7 @@ MapAnimation.prototype.initListeners = function () {
  * @param {Array} extent Extent of overlays to be loaded.
  * @returns {boolean} Reload need.
  */
-MapAnimation.prototype.reloadNeeded = function (extent) {
+LazyAnimationLoader.prototype.reloadNeeded = function (extent) {
   let map
   let layerVisibility
   let currentVisibility
@@ -1253,7 +1244,7 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
  * Creates a layer for markers.
  * @returns {ol.layer.Vector} Marker layer.
  */
-MapAnimation.prototype.createMarkerLayer = function () {
+LazyAnimationLoader.prototype.createMarkerLayer = function () {
   const marker = new OlGeomPoint([null, null])
   this.set('marker', marker)
   const markerFeature = new OlFeature({
@@ -1282,7 +1273,7 @@ MapAnimation.prototype.createMarkerLayer = function () {
  * @param {boolean} useMap True if current map is used.
  * @returns {Array} Extent.
  */
-MapAnimation.prototype.calculateExtent = function (useMap) {
+LazyAnimationLoader.prototype.calculateExtent = function (useMap) {
   const self = this
   const config = this.get('config')
   const projection = /** @type {ol.proj.Projection|string} */ (this.get('viewProjection'))
@@ -1317,7 +1308,7 @@ MapAnimation.prototype.calculateExtent = function (useMap) {
  * @param {Array} extent Extent of overlays to be loaded.
  * @param {number} loadId Identifier for loading instance.
  */
-MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
+LazyAnimationLoader.prototype.loadOverlayGroup = function (extent, loadId) {
   const layerGroups = this.get('map').getLayers()
   let layerGroup
   const numLayerGroups = layerGroups.getLength()
@@ -1352,7 +1343,7 @@ MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
  * @param {Object} options Layer template based on user configuration.
  * @returns {ol.layer.Tile|ol.layer.Image|ol.layer.Vector} Map layer.
  */
-MapAnimation.prototype.createLayer = function (options) {
+LazyAnimationLoader.prototype.createLayer = function (options) {
   const extent = this.calculateExtent(false)
   let template
   let mapProducer = new MapProducer()
@@ -1367,7 +1358,7 @@ MapAnimation.prototype.createLayer = function (options) {
  * @param {string} layer Layer title.
  * @param {string} property Property name.
  */
-MapAnimation.prototype.loadLayerPropertyFromLocalStorage = function (layer, property) {
+LazyAnimationLoader.prototype.loadLayerPropertyFromLocalStorage = function (layer, property) {
   if (typeof window['localStorage'] === 'undefined') {
     return null
   }
@@ -1384,7 +1375,7 @@ MapAnimation.prototype.loadLayerPropertyFromLocalStorage = function (layer, prop
  * @param {string} layerType Layer type for filtering.
  * @returns {Array} Base layers.
  */
-MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) {
+LazyAnimationLoader.prototype.loadStaticLayers = function (layerVisibility, layerType) {
   let self = this
   const layers = this.get('layers')
   let numLayers
@@ -1463,13 +1454,12 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
  * @param {Array} extent Extent of overlays to be loaded.
  * @param {number} loadId Identifier for loading instance.
  */
-MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId) {
+LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, loadId) {
   const self = this
   const config = self.get('config')
   const animation = layer['animation']
   const absBeginTime = /** @type {number} */ (this.get('animationBeginTime'))
   const absEndTime = /** @type {number} */ (this.get('animationEndTime'))
-  const newOverlay = false
   let layerTime
   let layerOptions
   let layerVisibility
@@ -1477,17 +1467,11 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   let prevLayerTime = Number.NEGATIVE_INFINITY
   let i
   let j
+  let k
   let numIntervalsLen
   let iMin
   let iMax
-  let mapLayer
-  let largest
-  let t
-  let tEnd
-  let k
-  let tAnimation
-  let tk
-  let tkEnd
+  let newLayers = []
   let currentTime
   const epsilon = this.layerResolution
   let resolutionTime = /** @type {number} */ (self.get('animationResolutionTime'))
@@ -1495,6 +1479,8 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
   let capabTimesDefined = false
   let deltaTime
   let endTime
+  let layerTimes = []
+  let animationTime = this.get('animationTime')
 
   layerVisibility = this.get('map').get('layerVisibility')
   currentVisibility = layerVisibility[layer['title']]
@@ -1567,31 +1553,12 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
 
   const loadStart = ({target}) => {
     let i
-    const config = self.get('config')
     const loadId = target.get('loadId')
     let numIntervalItemsLength
-    let layerSwitcherContainer
     let layerTime
     let intervalIndex
     if (target.get('loadId') !== self.loadId) {
       return
-    }
-    if (self.finishedId < target.get('loadId')) {
-      // Todo: toteuta nämä funktioina LayerSwitcherissä
-      self.loading = true
-      layerSwitcherContainer = document.getElementById(config['layerSwitcherContainer'])
-      if (layerSwitcherContainer != null) {
-        layerSwitcherContainer.classList.add('disabled')
-        layerSwitcherContainer.parentNode.classList.remove('shown')
-      }
-      Array.from(document.querySelectorAll('.layer-switcher input')).forEach((layerSwitcher) => {
-        layerSwitcher.disabled = true
-      })
-      if ((config['showLoadProgress'])) {
-        Array.from(document.getElementsByClassName(config['spinnerContainer'])).forEach((spinner) => {
-          spinner.style.display = ''
-        })
-      }
     }
     let tilesLoading = target.get('tilesLoading')
     if (tilesLoading === undefined) {
@@ -1732,6 +1699,7 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
     if (layerTime - prevLayerTime < epsilon) {
       continue
     }
+    layerTimes.push(layerTime)
     prevLayerTime = layerTime
     numIntervalsLen = this.numIntervalItems[loadId].length
     if (numIntervalsLen === 0) {
@@ -1768,66 +1736,56 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
         }
       }
     }
-
-    layerOptions = {
-      'extent': extent,
-      'animation': {
-        'animationTime': layerTime
-      },
-      'sourceOptions': {
-        'params': {
-          'TIME': new Date(layerTime).toISOString()
-        }
+  }
+  layerOptions = {
+    'extent': extent,
+    'animation': {
+      'animationTime': animationTime
+    },
+    'layerTimes': layerTimes,
+    'sourceOptions': {
+      'transition': 0,
+      'params': {
+        'TIME': new Date(animationTime).toISOString(),
+        'TRANSPARENT': 'FALSE'
       }
     }
-    layerOptions = /** @type {olx.layer.TileOptions} */ (extend(true, layerOptions, layer))
-    layerOptions['defaultOpacity'] = (layer['opacity'] !== undefined) ? layer['opacity'] : 1
-    layerOptions['sourceProperties'] = {
-      'loadId': loadId,
-      'layerTime': layerTime,
-      'tilesLoaded': 0,
-      'tilesLoading': 0
-    }
-    layerOptions['visible'] = true
-    // Todo: Generalize
+  }
+  layerOptions = /** @type {olx.layer.TileOptions} */ (extend(true, layerOptions, layer))
+  layerOptions['defaultOpacity'] = (layer['opacity'] !== undefined) ? layer['opacity'] : 1
+  layerOptions['sourceProperties'] = {
+    'loadId': loadId,
+    'layerTime': animationTime,
+    'tilesLoaded': 0,
+    'tilesLoading': 0
+  }
+  layerOptions['visible'] = true
+  // Todo: Generalize
+  for (k = 0; k < 2; k++) {
     if (layerOptions['className'] === 'ImageWMS') {
       layerOptions['sourceOn'] = {
         'imageloadstart': loadStart,
         'imageloadend': loadEnd,
         'imageloaderror': loadError
       }
-      mapLayer = new OlLayerImage(layerOptions)
+      newLayers[k] = new OlLayerImage(layerOptions)
     } else {
       layerOptions['sourceOn'] = {
         'tileloadstart': loadStart,
         'tileloadend': loadEnd,
         'tileloaderror': loadError
       }
-      mapLayer = new OlLayerTile(layerOptions)
-    }
-    largest = true
-    // Add layer to an existing layer group
-    if (!newOverlay) {
-      t = layerTime
-      tEnd = animation['endTime']
-      k = 0
-      while (k < mapLayers.getLength()) {
-        tAnimation = mapLayers.item(k).get('animation')
-        tk = tAnimation['animationTime']
-        tkEnd = tAnimation['endTime']
-        // When time values are identical, observation is shown, not forecast.
-        if ((t < tk) || ((t === tk) && (layer['type'] === this.layerTypes['forecast']) && (mapLayers.item(k).get('type') === this.layerTypes['observation']))) {
-          mapLayers.insertAt(k, mapLayer)
-          largest = false
-          break
-        }
-        k++
-      }
-    }
-    if (largest) {
-      mapLayers.push(mapLayer)
+      newLayers[k] = new OlLayerTile(layerOptions)
     }
   }
+  newLayers[0].set('clone', newLayers[1])
+  newLayers[0].set('active', true)
+  newLayers[0].set('id', ++self.nextLayerId)
+  newLayers[1].set('clone', newLayers[0])
+  newLayers[1].set('active', false)
+  newLayers[1].set('id', ++self.nextLayerId)
+  mapLayers.push(newLayers[0])
+  mapLayers.push(newLayers[1])
   if (this.numIntervalItems[loadId].length > 2) {
     this.numIntervalItems[loadId][0]['beginTime'] = 2 * this.numIntervalItems[loadId][0]['endTime'] - this.numIntervalItems[loadId][1]['endTime']
   }
@@ -1851,7 +1809,7 @@ MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId)
  * @param {number} loadId Identifier for loading instance.
  * @returns {Array} Data layers.
  */
-MapAnimation.prototype.loadOverlays = function (extent, loadId) {
+LazyAnimationLoader.prototype.loadOverlays = function (extent, loadId) {
   const layers = this.get('layers')
   const config = this.get('config')
   const animationGroups = []
@@ -2041,7 +1999,7 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
  * @param {Array} overlays Data layers to be loaded.
  * @param {number} loadId Identifier for loading instance.
  */
-MapAnimation.prototype.scheduleOverlayLoading = function (overlays, loadId) {
+LazyAnimationLoader.prototype.scheduleOverlayLoading = function (overlays, loadId) {
   const self = this
   const asyncLoadQueue = {}
   const animationTime = /** @type {number} */ (this.get('animationTime'))
@@ -2087,14 +2045,6 @@ MapAnimation.prototype.scheduleOverlayLoading = function (overlays, loadId) {
     }
   }
   self.asyncLoadQueue = asyncLoadQueue
-  if (asyncLoadQueue[loadId].length === 0) {
-    layerSwitcher = self.get('layerSwitcher')
-    if (layerSwitcher != null) {
-      Array.from(document.querySelectorAll('.layer-switcher input:disabled')).forEach((layerSwitcher) => {
-        layerSwitcher.disabled = false
-      })
-    }
-  }
 }
 
 /**
@@ -2102,7 +2052,7 @@ MapAnimation.prototype.scheduleOverlayLoading = function (overlays, loadId) {
  * @param {Object} layer Map layer.
  * @returns {Array} Legend urls.
  */
-MapAnimation.prototype.getLegendUrls = layer => {
+LazyAnimationLoader.prototype.getLegendUrls = layer => {
   let urls, hasLegend, baseUrl, params, layerIds, lastChar, imageFormat, layerId, i
   urls = []
   if (!(layer && layer['animation'])) {
@@ -2163,7 +2113,7 @@ MapAnimation.prototype.getLegendUrls = layer => {
  * @param {Array} legends Information of legends.
  * @param {number} defaultLegend Index of visible default legend.
  */
-MapAnimation.prototype.generateLegendFigures = function (legends, defaultLegend) {
+LazyAnimationLoader.prototype.generateLegendFigures = function (legends, defaultLegend) {
   let config,
     containers,
     img,
@@ -2211,7 +2161,7 @@ MapAnimation.prototype.generateLegendFigures = function (legends, defaultLegend)
  * Sets animation time.
  * @param {number} animationTime Animation time.
  */
-MapAnimation.prototype.setAnimationTime = function (animationTime) {
+LazyAnimationLoader.prototype.setAnimationTime = function (animationTime) {
   let callbacks = this.get('callbacks')
   let currentTime = this.get('animationTime')
   if (currentTime === animationTime) {
@@ -2226,7 +2176,7 @@ MapAnimation.prototype.setAnimationTime = function (animationTime) {
   this.updateFeatureAnimation()
 }
 
-MapAnimation.prototype.getFirstAnimationTime = function () {
+LazyAnimationLoader.prototype.getFirstAnimationTime = function () {
   const key = this.latestLoadId
   if (key == null) {
     return null
@@ -2238,7 +2188,7 @@ MapAnimation.prototype.getFirstAnimationTime = function () {
   return intervals[0]['beginTime']
 }
 
-MapAnimation.prototype.getPreviousAnimationTime = function (animationTime) {
+LazyAnimationLoader.prototype.getPreviousAnimationTime = function (animationTime) {
   let i
   const key = this.latestLoadId
   if (key == null) {
@@ -2260,7 +2210,7 @@ MapAnimation.prototype.getPreviousAnimationTime = function (animationTime) {
   return intervals[lastIndex]['endTime']
 }
 
-MapAnimation.prototype.getNextAnimationTime = function (animationTime) {
+LazyAnimationLoader.prototype.getNextAnimationTime = function (animationTime) {
   let i
   const key = this.latestLoadId
   if (key == null) {
@@ -2285,70 +2235,104 @@ MapAnimation.prototype.getNextAnimationTime = function (animationTime) {
 /**
  * Updates map animation.
  */
-MapAnimation.prototype.updateAnimation = function () {
+LazyAnimationLoader.prototype.updateAnimation = function () {
+  if (this.loading) {
+    return
+  }
   let i
+  let j
+  let prevMapLayer
+  let mapLayer
+  let mapLayerClone
   let mapLayers
+  let numMapLayers
+  let source
+  let sourceClone
   let nextPGrp
-  let lastIndex
   const newPGrp = []
   const animationGroups = this.get('animationGroups')
   const numGroups = animationGroups.length
   const pGrp = this.get('pGrp')
   const currentTime = Date.now()
-  const time = /** @type {number} */ (this.get('animationTime'))
-  let animation
-  let animationTime
-  let nextAnimationTime = this.getNextAnimationTime(time)
-  if (nextAnimationTime == null) {
+  const animationTime = /** @type {number} */ (this.get('animationTime'))
+  const animationTimeFormatted = new Date(animationTime).toISOString()
+  if (!isNumeric(animationTime)) {
     return
   }
+  let animationTimes
+  let numAnimationTimes
+  let nextAnimationTime = this.getNextAnimationTime(animationTime)
+  if (!isNumeric(nextAnimationTime)) {
+    return
+  }
+
   // Collect updating information
   for (i = 0; i < numGroups; i++) {
     mapLayers = animationGroups[i]
-    if (mapLayers.length <= pGrp[i]) {
-      newPGrp.push(pGrp[i])
-      continue
-    }
-    // Restart from beginning
-    lastIndex = mapLayers.length - 1
-    if (mapLayers[pGrp[i]].get('animation')['animationTime'] > time) {
-      nextPGrp = 0
-    } else if (mapLayers[lastIndex].get('animation')['animationTime'] <= time) {
-      nextPGrp = lastIndex
-    } else {
-      nextPGrp = pGrp[i]
-    }
-    while ((nextPGrp < mapLayers.length - 1) && (mapLayers[nextPGrp + 1].get('animation')['animationTime'] < nextAnimationTime)) {
-      nextPGrp = nextPGrp + 1
+    numMapLayers = mapLayers.length
+    nextPGrp = numMapLayers - 1
+    for (j = 0; j < numMapLayers; j++) {
+      mapLayer = mapLayers[j]
+      animationTimes = mapLayer.get('layerTimes')
+      numAnimationTimes = animationTimes.length
+      if ((numAnimationTimes > 0) && (mapLayer.get('active')) && (animationTime <= animationTimes[numAnimationTimes - 1])) {
+        nextPGrp = j
+        break
+      }
     }
     newPGrp.push(nextPGrp)
   }
   // Update
-  animationTime = /** @type {number} */ (this.get('animationTime'))
   for (i = 0; i < numGroups; i++) {
+    if (animationGroups[i].length === 0) {
+      continue
+    }
     mapLayers = animationGroups[i]
-    if (mapLayers.length <= pGrp[i]) {
+    numMapLayers = mapLayers.length
+    if ((numMapLayers <= pGrp[i]) || (numMapLayers <= newPGrp[i])) {
       continue
     }
-    animation = mapLayers[pGrp[i]].get('animation')
-    if (((pGrp[i] === mapLayers.length - 1) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['observation']) && (animationTime > animation['animationTime'])) || ((pGrp[i] === 0) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
-      // Hide previous frame
-      mapLayers[pGrp[i]].setOpacity(0)
-      continue
-    }
-    if (pGrp[i] !== newPGrp[i]) {
-      // Hide previous frame
-      mapLayers[pGrp[i]].setOpacity(0)
+    prevMapLayer = mapLayers[pGrp[i]]
+    mapLayer = mapLayers[newPGrp[i]]
+    if ((prevMapLayer.get('id') !== mapLayer.get('id')) && (prevMapLayer.get('id') !== mapLayer.get('clone').get('id'))) {
+      prevMapLayer.setOpacity(0)
+      prevMapLayer.get('clone').setOpacity(0)
     }
     pGrp[i] = newPGrp[i]
-    if (!((pGrp[i] === 0) && (mapLayers[pGrp[i]].get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
-      // Show current frame
-      mapLayers[pGrp[i]].setOpacity(1)
+    mapLayer = mapLayers[pGrp[i]]
+    mapLayerClone = mapLayer.get('clone')
+    mapLayerClone.setOpacity(0)
+    if ((mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime)) {
+      mapLayer.setOpacity(0)
+      mapLayer.get('clone').setOpacity(0)
+    } else {
+      source = mapLayer.getSource()
+      if (source.get('layerTime') !== animationTime) {
+        sourceClone = mapLayerClone.getSource()
+        if (sourceClone.get('layerTime') !== animationTime) {
+          sourceClone.set('layerTime', animationTime)
+          sourceClone.set('tilesLoaded', 0)
+          sourceClone.set('tilesLoading', 0)
+          if (sourceClone.get('sourceType') === 'WMTS') {
+            sourceClone.set('timeFormatted', animationTimeFormatted)
+          } else {
+            sourceClone.updateParams({
+              'TIME': animationTimeFormatted
+            })
+          }
+          sourceClone.refresh()
+        } else {
+          mapLayer.setOpacity(0)
+          mapLayerClone.setOpacity(1)
+          mapLayer.set('active', false)
+          mapLayerClone.set('active', true)
+        }
+      }
     }
   }
 }
 
-MapAnimation.prototype.updateFeatureAnimation = function () {
+LazyAnimationLoader.prototype.updateFeatureAnimation = function () {
   let animationTime = /** @type {number} */ (this.get('animationTime'))
   let previousAnimationTime = this.getPreviousAnimationTime(animationTime)
   const config = this.get('config')
@@ -2381,11 +2365,11 @@ MapAnimation.prototype.updateFeatureAnimation = function () {
 /**
  * Destroys map animation.
  */
-MapAnimation.prototype.destroyAnimation = function () {
+LazyAnimationLoader.prototype.destroyAnimation = function () {
   this.actionEvents.removeAllListeners()
   this.variableEvents.removeAllListeners()
   const config = this.get('config')
-  let elementNames = [config['spinnerContainer'], config['legendContainer'], config['mapContainer'], config['container']]
+  let elementNames = [config['legendContainer'], config['mapContainer'], config['container']]
   let map = this.get('map')
   if (map !== null) {
     map.setTarget(null)
@@ -2417,7 +2401,7 @@ MapAnimation.prototype.destroyAnimation = function () {
  * @param {string} groupTitle Group title.
  * @returns {Array} Layers array.
  */
-MapAnimation.prototype.getLayersByGroup = function (groupTitle) {
+LazyAnimationLoader.prototype.getLayersByGroup = function (groupTitle) {
   let map = this.get('map')
   let layerGroups = (map != null) ? map.getLayers() : new OlCollection()
   let numLayerGroups = layerGroups.getLength()
@@ -2435,7 +2419,7 @@ MapAnimation.prototype.getLayersByGroup = function (groupTitle) {
  * Sets map zoom level.
  * @param {number} level Zoom level.
  */
-MapAnimation.prototype.setZoom = function (level) {
+LazyAnimationLoader.prototype.setZoom = function (level) {
   let map = this.get('map')
   if (map != null) {
     map.getView().setZoom(level)
@@ -2446,7 +2430,7 @@ MapAnimation.prototype.setZoom = function (level) {
  * Sets map center.
  * @param {Array} coordinates Center coordinates.
  */
-MapAnimation.prototype.setCenter = function (coordinates) {
+LazyAnimationLoader.prototype.setCenter = function (coordinates) {
   const view = this.get('map').getView()
   const centerProjection = this.get('config')['defaultCenterProjection']
   const viewProjection = view.getProjection()
@@ -2461,7 +2445,7 @@ MapAnimation.prototype.setCenter = function (coordinates) {
  * Sets map rotation.
  * @param {number} angle Rotation.
  */
-MapAnimation.prototype.setRotation = function (angle) {
+LazyAnimationLoader.prototype.setRotation = function (angle) {
   this.get('map').getView().setRotation(angle)
 }
 
@@ -2469,7 +2453,7 @@ MapAnimation.prototype.setRotation = function (angle) {
  * Gets the animation map.
  * @return {Object} Animation map.
  */
-MapAnimation.prototype.getMap = function () {
+LazyAnimationLoader.prototype.getMap = function () {
   return /** @type {Object} */ (this.get('map'))
 }
 
@@ -2478,7 +2462,7 @@ MapAnimation.prototype.getMap = function () {
  * @param layerTitle {string} Vector layer title.
  * @return {Array<Object>} Features.
  */
-MapAnimation.prototype.getFeatures = function (layerTitle) {
+LazyAnimationLoader.prototype.getFeatures = function (layerTitle) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
   const map = this.get('map')
@@ -2510,7 +2494,7 @@ MapAnimation.prototype.getFeatures = function (layerTitle) {
  * @param tolerance {number} Coordinate resolution in pixels.
  * @return {Array<Object>} Features.
  */
-MapAnimation.prototype.getFeaturesAt = function (layerTitle, coordinate, tolerance) {
+LazyAnimationLoader.prototype.getFeaturesAt = function (layerTitle, coordinate, tolerance) {
   const config = this.get('config')
   const baseGroupName = config['featureGroupName']
   const map = this.get('map')
@@ -2569,7 +2553,7 @@ MapAnimation.prototype.getFeaturesAt = function (layerTitle, coordinate, toleran
  * @param projection {string} Projection.
  * @param featureOptions {Array<Object>} New feature options.
  */
-MapAnimation.prototype.addFeatures = function (layerTitle, projection, featureOptions) {
+LazyAnimationLoader.prototype.addFeatures = function (layerTitle, projection, featureOptions) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
   let layers
@@ -2604,7 +2588,7 @@ MapAnimation.prototype.addFeatures = function (layerTitle, projection, featureOp
  * Removes all features from a vector layer.
  * @param layerTitle {string} Vector layer title.
  */
-MapAnimation.prototype.clearFeatures = function (layerTitle) {
+LazyAnimationLoader.prototype.clearFeatures = function (layerTitle) {
   const config = this.get('config')
   let layers
   let layer
@@ -2626,7 +2610,7 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
  * @param content {string} HTML content of the popup window.
  * @param coordinate {Array} Popup coordinates.
  */
-MapAnimation.prototype.showPopup = function (content, coordinate) {
+LazyAnimationLoader.prototype.showPopup = function (content, coordinate) {
   const popupContent = document.getElementById(`${this.get('config')['mapContainer']}-popup-content`)
   popupContent['innerHTML'] = content
   this.get('overlay').setPosition(coordinate)
@@ -2635,7 +2619,7 @@ MapAnimation.prototype.showPopup = function (content, coordinate) {
 /**
  * Hides popup window on the map.
  */
-MapAnimation.prototype.hidePopup = function () {
+LazyAnimationLoader.prototype.hidePopup = function () {
   const mapContainer = this.get('config')['mapContainer']
   let popupCloser
   const overlay = this.get('overlay')
@@ -2653,7 +2637,7 @@ MapAnimation.prototype.hidePopup = function () {
  * @param layerTitle {string} Layer title.
  * @return {Object} Map layer.
  */
-MapAnimation.prototype.getLayer = function (layerTitle) {
+LazyAnimationLoader.prototype.getLayer = function (layerTitle) {
   const map = this.get('map')
   const layerGroups = map.getLayers()
   const numLayerGroups = layerGroups.getLength()
@@ -2680,7 +2664,7 @@ MapAnimation.prototype.getLayer = function (layerTitle) {
 /**
  * Request a map view update.
  */
-MapAnimation.prototype.requestViewUpdate = function () {
+LazyAnimationLoader.prototype.requestViewUpdate = function () {
   this.set('updateRequested', Date.now())
 }
 
@@ -2689,7 +2673,7 @@ MapAnimation.prototype.requestViewUpdate = function () {
  * @param layerTitle {string} Layer title.
  * @param visibility {boolean} Layer visibility.
  */
-MapAnimation.prototype.setLayerVisible = function (layerTitle, visibility) {
+LazyAnimationLoader.prototype.setLayerVisible = function (layerTitle, visibility) {
   const map = this.get('map')
   const localStorageId = this.get('config')['project'] + '-' + layerTitle + '-visible'
   const layerVisibility = map.get('layerVisibility')
@@ -2726,7 +2710,7 @@ MapAnimation.prototype.setLayerVisible = function (layerTitle, visibility) {
  * Sets map interactions.
  * @param interactionOptions {Object} Interaction options.
  */
-MapAnimation.prototype.setInteractions = function (interactionOptions) {
+LazyAnimationLoader.prototype.setInteractions = function (interactionOptions) {
   let map = this.get('map')
   let interaction
   let mapInteractions
@@ -2897,7 +2881,7 @@ MapAnimation.prototype.setInteractions = function (interactionOptions) {
  * Enables or disables static map controls.
  * @param staticControls {boolean} Static controls status.
  */
-MapAnimation.prototype.setStaticControls = function (staticControls) {
+LazyAnimationLoader.prototype.setStaticControls = function (staticControls) {
   const config = this.get('config')
   config['staticControls'] = staticControls
   this.set('configChanged', true)
@@ -2908,7 +2892,7 @@ MapAnimation.prototype.setStaticControls = function (staticControls) {
  * Returns static map controls status.
  * @return {boolean} Static controls status.
  */
-MapAnimation.prototype.getStaticControls = function () {
+LazyAnimationLoader.prototype.getStaticControls = function () {
   return this.get('config')['staticControls'] === true
 }
 
@@ -2916,7 +2900,7 @@ MapAnimation.prototype.getStaticControls = function () {
  * Sets callback functions.
  * @param callbacks {Object} Callback functions.
  */
-MapAnimation.prototype.setCallbacks = function (callbacks) {
+LazyAnimationLoader.prototype.setCallbacks = function (callbacks) {
   const callbackFunctions = this.get('callbacks')
   for (const callback in callbacks) {
     if (callbacks.hasOwnProperty(callback)) {

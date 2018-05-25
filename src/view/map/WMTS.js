@@ -14,13 +14,22 @@ export default class SourceWMTS extends OlSourceWMTS {
     }
     super(options)
     let plainTileUrlFunction = this.getTileUrlFunction()
+    if ((options['params'] != null) && (options['params']['TIME'] != null) && (options['params']['TIME'].length >  0)) {
+      this.set('timeFormatted', options['params']['TIME'])
+    }
+    if (options['elevation'] != null) {
+      this.set('elevation', options['elevation'])
+    }
+    this.set('sourceType', 'WMTS');
     this.setTileUrlFunction((tileCoord, pxlRatio, proj) => {
       let url = plainTileUrlFunction(tileCoord, pxlRatio, proj)
-      if ((options['params'] != null) && (options['params']['TIME'] != null)) {
-        url = `${url}&Time=${options['params']['TIME']}`
+      let time = this.get('timeFormatted')
+      if ((time != null) && (time.length > 0)) {
+        url = `${url}&Time=${time}`
       }
-      if (options['elevation'] != null) {
-        url = `${url}&Elevation=${options['elevation']}`
+      let elevation = this.get('elevation')
+      if (elevation != null) {
+        url = `${url}&Elevation=${elevation}`
       }
       return url
     })

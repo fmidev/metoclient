@@ -161,6 +161,7 @@ export class MetOClient {
       'legendContainer',
       'legendLabel',
       'mapContainer',
+      'mapLoader',
       'markerImagePath',
       'maxAsyncLoadCount',
       'noLegendText',
@@ -169,9 +170,7 @@ export class MetOClient {
       'resolutions',
       'showLayerSwitcher',
       'showLegend',
-      'showLoadProgress',
       'showMarker',
-      'spinnerContainer',
       'staticControls',
       'staticOverlayGroupName'
     ]
@@ -284,101 +283,100 @@ export class MetOClient {
           'layers': {}
         },
         'view': {
+          'asyncLoadDelay': 10,
+          'baseGroupName': 'Base layers',
           'container': 'fmi-metoclient',
-          'projection': 'EPSG:3067',
-          'defaultMinZoom': 0,
-          'defaultMaxZoom': 15,
           'defaultCenterLocation': [389042, 6673664],
           'defaultCenterProjection': 'EPSG:3067',
+          'defaultMaxZoom': 15,
+          'defaultMinZoom': 0,
           'defaultZoomLevel': 5,
           'extent': [50199.4814, 6582464.0358, 761274.6247, 7799839.8902],
-          'mapContainer': 'fmi-metoclient-map',
-          'layerSwitcherContainer': 'fmi-metoclient-layer-switcher',
-          'legendContainer': 'fmi-metoclient-legend',
-          'spinnerContainer': 'fmi-metoclient-spinner',
-          'showLoadProgress': false,
-          'staticControls': false,
-          'overlayGroupName': 'Overlays',
-          'baseGroupName': 'Base layers',
           'featureGroupName': 'Features',
-          'staticOverlayGroupName': 'Static overlays',
-          'showLayerSwitcher': true,
-          'showLegend': true,
-          'legendLabel': 'Legend',
-          'noLegendText': 'None',
-          'maxAsyncLoadCount': 5,
-          'asyncLoadDelay': 10,
           'ignoreObsOffset': 0,
-          'showMarker': false,
-          'markerImagePath': '../img/marker.png',
           'interactions': {
             'pinchRotate': false,
             'altShiftDragRotate': false
-          }
+          },
+          'layerSwitcherContainer': 'fmi-metoclient-layer-switcher',
+          'legendContainer': 'fmi-metoclient-legend',
+          'legendLabel': 'Legend',
+          'mapContainer': 'fmi-metoclient-map',
+          'mapLoader': 'single',
+          'markerImagePath': '../img/marker.png',
+          'maxAsyncLoadCount': 5,
+          'noLegendText': 'None',
+          'overlayGroupName': 'Overlays',
+          'projection': 'EPSG:3067',
+          'showLayerSwitcher': true,
+          'showLegend': true,
+          'showMarker': false,
+          'staticControls': false,
+          'staticOverlayGroupName': 'Static overlays'
         }
       },
       'time': {
         'model': {
-          'autoStart': false,
-          'waitUntilLoaded': false,
           'autoReplay': true,
-          'refreshInterval': 15 * 60 * 1000,
-          'frameRate': 500,
+          'autoStart': false,
           'beginTime': Date.now(),
+          'defaultAnimationTime': Date.now(),
           'endTime': Date.now(),
           'endTimeDelay': 0,
-          'defaultAnimationTime': Date.now(),
-          'gridTimeOffset': 0
+          'frameRate': 500,
+          'gridTimeOffset': 0,
+          'refreshInterval': 15 * 60 * 1000,
+          'waitUntilLoaded': false
         },
         'view': {
-          'vertical': false,
-          'timeSliderContainer': 'fmi-metoclient-timeslider',
-          'showTimeSlider': true,
           'locale': 'en',
+          'showTimeSlider': true,
+          'timeSliderContainer': 'fmi-metoclient-timeslider',
           'timeZone': tz.guess(),
-          'timeZoneLabel': ''
+          'timeZoneLabel': '',
+          'vertical': false
         }
       },
       'localization': {
         'locale': 'en',
         'fi': {
-          'opacity': 'Peittokyky',
-          'overlays': 'Sääaineistot',
           'baseLayers': 'Taustakartat',
+          'browserNotSupported': 'Tämä selain ei ole tuettu.',
           'features': 'Kohteet',
-          'staticOverlays': 'Merkinnät',
+          'layersTooltip': 'Karttatasot',
           'legend': 'Selite',
           'noLegend': 'Ei selitettä',
+          'opacity': 'Peittokyky',
+          'overlays': 'Sääaineistot',
+          'staticOverlays': 'Merkinnät',
           'zoomInTooltip': 'Lähennä',
-          'zoomOutTooltip': 'Loitonna',
-          'layersTooltip': 'Karttatasot',
-          'browserNotSupported': 'Tämä selain ei ole tuettu.'
+          'zoomOutTooltip': 'Loitonna'
         },
         'sv': {
-          'opacity': 'Opacitet',
-          'overlays': 'Väder data',
           'baseLayers': 'Bakgrundskartor',
+          'browserNotSupported': 'Webbläsaren stöds inte.',
           'features': 'Objekter',
-          'staticOverlays': 'Statisk data',
+          'layersTooltip': 'Nivåer',
           'legend': 'Legend',
           'noLegend': 'Ingen legend',
+          'opacity': 'Opacitet',
+          'overlays': 'Väder data',
+          'staticOverlays': 'Statisk data',
           'zoomInTooltip': 'Zooma in',
-          'zoomOutTooltip': 'Zooma ut',
-          'layersTooltip': 'Nivåer',
-          'browserNotSupported': 'Webbläsaren stöds inte.'
+          'zoomOutTooltip': 'Zooma ut'
         },
         'en': {
-          'opacity': 'Opacity',
-          'overlays': 'Overlays',
           'baseLayers': 'Base layers',
+          'browserNotSupported': 'This browser is not supported.',
           'features': 'Features',
-          'staticOverlays': 'Static overlays',
+          'layersTooltip': 'Layers',
           'legend': 'Legend',
           'noLegend': 'None',
+          'opacity': 'Opacity',
+          'overlays': 'Overlays',
+          'staticOverlays': 'Static overlays',
           'zoomInTooltip': 'Zoom in',
-          'zoomOutTooltip': 'Zoom out',
-          'layersTooltip': 'Layers',
-          'browserNotSupported': 'This browser is not supported.'
+          'zoomOutTooltip': 'Zoom out'
         }
       },
       'disableTouch': false
@@ -392,7 +390,6 @@ export class MetOClient {
     const animatorContainerIdOrClass = this.config_['map']['view']['container']
     const mapContainerIdOrClass = this.config_['map']['view']['mapContainer']
     const legendContainerClass = this.config_['map']['view']['legendContainer']
-    const spinnerContainerClass = this.config_['map']['view']['spinnerContainer']
     const timeSliderContainerClass = this.config_['time']['view']['timeSliderContainer']
     let animatorContainers
     let animatorContainer
@@ -403,7 +400,6 @@ export class MetOClient {
     let popupCloser
     let popupContent
     let legendContainer
-    let spinnerContainer
     let timeSliderContainer
 
     if (!animatorContainerIdOrClass) {
@@ -443,10 +439,6 @@ export class MetOClient {
     legendContainer = document.createElement('div')
     addClassListToContainer(legendContainerClass, legendContainer)
     mapContainer.appendChild(legendContainer)
-    spinnerContainer = document.createElement('div')
-    addClassListToContainer(spinnerContainerClass, spinnerContainer)
-    spinnerContainer.style.display = 'none'
-    mapContainer.appendChild(spinnerContainer)
     timeSliderContainer = document.createElement('div')
     addClassListToContainer(timeSliderContainerClass, timeSliderContainer)
     mapContainer.appendChild(timeSliderContainer)

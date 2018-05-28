@@ -262,7 +262,7 @@ OlControlLayerSwitcher.prototype.setVisible_ = function (lyr, visible) {
     }
     return
   }
-  map.dispatchEvent('moveend')
+  map.dispatchEvent('change:layerVisibility')
 }
 
 /**

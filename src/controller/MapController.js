@@ -5,7 +5,8 @@
  */
 
 import Map from '../model/Map'
-import MapAnimation from '../view/map/MapAnimation'
+import LazyAnimationLoader from '../view/map/LazyAnimationLoader'
+import FullAnimationLoader from '../view/map/FullAnimationLoader'
 import EventEmitter from 'wolfy87-eventemitter'
 import 'core-js/fn/promise'
 
@@ -33,7 +34,7 @@ export default class MapController {
      * @type {Object}
      * @private
      */
-    this.view_ = new MapAnimation(config['view'])
+    this.view_ = (config['view']['mapLoader'] === 'all') ? new FullAnimationLoader(config['view']) : new LazyAnimationLoader(config['view'])
     this.reloadListener_ = () => {
     }
     this.numIntervalItemsListener_ = () => {

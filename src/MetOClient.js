@@ -302,7 +302,7 @@ export class MetOClient {
           'legendContainer': 'fmi-metoclient-legend',
           'legendLabel': 'Legend',
           'mapContainer': 'fmi-metoclient-map',
-          'mapLoader': 'lazy',
+          'mapLoader': 'single',
           'markerImagePath': '../img/marker.png',
           'maxAsyncLoadCount': 5,
           'noLegendText': 'None',

@@ -5,7 +5,6 @@
  */
 
 import EventEmitter from 'wolfy87-eventemitter'
-import elementResizeDetectorMaker from 'element-resize-detector'
 import extend from 'extend'
 import isNumeric from 'fast-isnumeric'
 import { default as proj4 } from 'proj4'
@@ -13,17 +12,14 @@ import 'core-js/fn/array/from'
 import moment from 'moment-timezone'
 import * as constants from '../../constants'
 import renameKeys from 'rename-keys'
-import LayerSwitcher from './LayerSwitcher'
 import MapProducer from './MapProducer'
 import FeatureProducer from './FeatureProducer'
 import Ol from 'ol/index'
 import OlCollection from 'ol/collection'
-import OlControlZoom from 'ol/control/zoom'
 import olEventsCondition from 'ol/events/condition'
 import OlFeature from 'ol/feature'
 import OlFormatWMSCapabilities from 'ol/format/wmscapabilities'
 import OlFormatWMTSCapabilities from 'ol/format/wmtscapabilities'
-import OlInteraction from 'ol/interaction'
 import OlInteractionDoubleClickZoom from 'ol/interaction/doubleclickzoom'
 import OlInteractionDragPan from 'ol/interaction/dragpan'
 import OlInteractionDragRotate from 'ol/interaction/dragrotate'
@@ -36,12 +32,8 @@ import OlInteractionPinchRotate from 'ol/interaction/pinchrotate'
 import OlInteractionPinchZoom from 'ol/interaction/pinchzoom'
 import OlInteractionSelect from 'ol/interaction/select'
 import OlLayerGroup from 'ol/layer/group'
-import OlLayerImage from 'ol/layer/image'
-import OlLayerTile from 'ol/layer/tile'
 import OlLayerVector from 'ol/layer/vector'
-import OlMap from 'ol/map'
 import OlObject from 'ol/object'
-import OlOverlay from 'ol/overlay'
 import OlProj from 'ol/proj'
 import OlStyleIcon from 'ol/style/icon'
 import OlStyleStyle from 'ol/style/style'
@@ -79,6 +71,7 @@ export default class MapAnimation {
     this.set('updateVisibility', null)
     this.set('interactionConfig', null)
     this.set('configChanged', false)
+    this.activeInteractions = []
     this.loadedOnce = false
     this.viewOptions = {}
     this.asyncLoadQueue = {}
@@ -205,6 +198,257 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   this.updateStorage()
   this.parameterizeLayers(capabilities)
   this.initMap()
+}
+
+/**
+ * Inits mouse hover and click functionality.
+ */
+MapAnimation.prototype.initMouseInteractions = function () {
+  let self = this
+  let map = this.get('map')
+
+  let handleWFSInteraction = (type, pixel) => {
+    let dataShown = false
+    let features = []
+    let view = map.getView()
+    let viewProjection = view.getProjection()
+    let typeActive = false;
+    map.forEachFeatureAtPixel(pixel, function (feature, layer) {
+      const layerData = layer.get(type + 'Data')
+      if ((!Array.isArray(layerData)) || (layerData.length === 0)) {
+        return
+      }
+      typeActive = true
+      feature.set(type + 'Data', layerData)
+      let layerId = feature.getId()
+      const separatorIndex = layerId.indexOf('.')
+      if (separatorIndex > 0) {
+        layerId = layerId.substr(0, separatorIndex)
+      }
+      feature.set('layerId', layerId)
+      features.push(feature)
+    }, {
+      'hitTolerance': 8
+    })
+    features.sort(function (a, b) {
+      const layerIdProperty = 'layerId'
+      const timeProperty = 'time'
+      const aLayerId = a.get(layerIdProperty)
+      const bLayerId = b.get(layerIdProperty)
+      if (aLayerId !== bLayerId) {
+        return aLayerId.localeCompare(bLayerId)
+      }
+      let aMs = null
+      const aTime = a.get(timeProperty)
+      if (aTime != null) {
+        aMs = Date.parse(aTime)
+      }
+      if (aMs != null) {
+        let bMs = null
+        const bTime = b.get(timeProperty)
+        if (bTime != null) {
+          bMs = Date.parse(bTime)
+        }
+        if (bMs != null) {
+          return aMs - bMs
+        }
+      }
+      return 0
+    })
+    let numFeatures = features.length
+    if (numFeatures > 0) {
+      let content = ''
+      for (let j = 0; j < numFeatures; j++) {
+        let properties = features[j].get(type + 'Data')
+        let numProperties = properties.length
+        let layerId = features[j].get('layerId')
+        if (content.length === 0) {
+          content += '<div class="fmi-metoclient-' + type + '-content">'
+        }
+        content += '<div class="fmi-metoclient-' + type + '-item"><b>' + layerId + '</b><br>'
+        for (let i = 0; i < numProperties; i++) {
+          let property = properties[i].trim()
+          if (property === 'the_geom') {
+            let coord = features[j].getGeometry().getCoordinates()
+            if (coord != null) {
+              let coord4326 = OlProj.transform(
+                coord,
+                viewProjection,
+                'EPSG:4326'
+              )
+              content += 'coordinates: ' + coord4326[1].toFixed(3) + ' ' + coord4326[0].toFixed(3) + '<br>'
+            }
+          } else {
+            let propertyData = features[j].get(property)
+            if (propertyData != null) {
+              if (['time', 'begintime', 'endtime'].indexOf(property) >= 0) {
+                content += properties[i] + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'
+              } else {
+                content += properties[i] + ': ' + propertyData + '<br>'
+              }
+            }
+          }
+        }
+        content += '</div>'
+      }
+      if (content.length > 0) {
+        content += '</div>'
+        let coord = map.getCoordinateFromPixel(pixel)
+        self.showPopup(content, coord)
+        dataShown = true
+      }
+    } else if ((type !== 'tooltip') || (typeActive)) {
+      self.hidePopup()
+    }
+    return dataShown
+  }
+
+  map.on('pointermove', function (evt) {
+    let config = self.get('config')
+    let layers = self.getLayersByGroup(config['overlayGroupName']).getArray()
+    let numLayers = layers.length
+    let layer
+    let subLayers
+    let numSubLayers
+    let subLayer
+    let tooltipData
+    let hit = false
+    let i
+    let j
+    layers: for (i = 0; i < numLayers; i++) {
+      layer = layers[i]
+      subLayers = layer.getLayers().getArray()
+      numSubLayers = subLayers.length
+      for (j = 0; j < numSubLayers; j++) {
+        subLayer = subLayers[j]
+        tooltipData = subLayer.get('tooltipData')
+        if ((['ImageWMS', 'TileWMS'].includes(subLayer.get('className'))) && (subLayer.getVisible()) && (subLayer.getOpacity() > 0) && (Array.isArray(tooltipData)) && (tooltipData.length > 0)) {
+          hit = true
+          break layers
+        }
+      }
+    }
+    if (!hit) {
+      hit = this.forEachFeatureAtPixel(evt['pixel'], function(feature, layer) {
+        return ((layer.get('popupData') != null) || (layer.get('tooltipData') != null))
+      })
+    }
+    if (hit) {
+      this.getTargetElement().style.cursor = 'pointer'
+    } else {
+      this.getTarget().style.cursor = ''
+    }
+    handleWFSInteraction('tooltip', evt['pixel'])
+  })
+
+  map.on('singleclick', function (evt) {
+    let config = self.get('config')
+    let view = map.getView()
+    let viewResolution = /** @type {number} */ (view.getResolution())
+    let viewProjection = view.getProjection()
+    let popupShown = handleWFSInteraction('popup', evt['pixel'])
+    // WMS
+    let getPopupLayers = (layers) => {
+      return layers.getArray().reduce((tooltipLayers, layer) => {
+        if (layer instanceof OlLayerGroup) {
+          if (layer.get('title') !== config['featureGroupName']) {
+            return tooltipLayers.concat(getPopupLayers(layer.getLayers()))
+          }
+        } else if ((['TileWMS', 'ImageWMS'].includes(layer.get('className'))) && (layer.get('visible')) && (layer.get('opacity'))) {
+          let wmsPopupData = layer.get('popupData')
+          if (wmsPopupData != null) {
+            tooltipLayers.push(layer)
+          }
+        }
+        return tooltipLayers
+      }, [])
+    }
+    let req
+    let layers = map.getLayers()
+    let tooltipLayers = getPopupLayers(layers)
+    let getFeatureInfoOnLoad = (req, layer) => {
+      let response
+      let properties
+      let popupText = ''
+      if (req.status === 200) {
+        try {
+          response = JSON.parse(req.response)
+        } catch (e) {
+          console.log('GetFeatureInfo response error')
+          return
+        }
+        if ((response['features'] != null) && (response['features'].length > 0) && (response['features'][0]['properties'] != null)) {
+          properties = response['features'][0]['properties']
+        } else if ((Array.isArray(response)) && (response.length > 0)) {
+          properties = response[0]
+        }
+        if (properties != null) {
+          let propertyNames = Object.keys(properties)
+          propertyNames.sort()
+          let popupData = layer.get('popupData')
+          popupText += propertyNames.reduce((currentText, propertyName) => {
+            if ((popupData.includes(propertyName)) && (properties[propertyName] != null)) {
+              currentText += propertyName + ': ' + properties[propertyName] + '<br>'
+            }
+            return currentText
+          }, '<div class="fmi-metoclient-popup-item"><b>' + layer.get('title') + '</b><br>') + '</div>'
+          if (popupShown) {
+            const popupContent = document.getElementById(`${config['mapContainer']}-popup-content`)
+            popupContent['innerHTML'] += popupText
+          } else {
+console.log("....");
+            self.hidePopup()
+            self.showPopup(popupText, evt['coordinate'])
+            popupShown = true
+          }
+        }
+      }
+    }
+
+    tooltipLayers.forEach((layer) => {
+      let source = layer.getSource()
+      if (source == null) {
+        return
+      }
+      let url = layer.get('popupUrl')
+      if (url != null) {
+        let popupData = layer.get('popupData')
+        if ((!Array.isArray(popupData)) || (popupData.length === 0)) {
+          return
+        }
+        let popupDataString = popupData
+          .map(item => item.trim())
+          .join()
+          .replace(/\s+/g, '')
+        let animationTime = self.get('animationTime')
+        let coord = evt['coordinate']
+        if ((animationTime == null) || (popupDataString == null) || (coord == null)) {
+          return
+        }
+        let timeParameter = moment(animationTime).format('YYYYMMDDTHHmmss')
+        let coord4326 = OlProj.transform(
+          coord,
+          viewProjection,
+          'EPSG:4326'
+        )
+        url += `/timeseries?precision=double&tz=UTC&producer=fmi&format=json&param=${popupDataString}&starttime=${timeParameter}&endtime=${timeParameter}&lonlat=${coord4326[0].toFixed(6)},${coord4326[1].toFixed(6)}`
+      } else {
+        url = source.getGetFeatureInfoUrl(evt['coordinate'], viewResolution, viewProjection, {
+          'INFO_FORMAT': 'application/json'
+        })
+      }
+      req = new XMLHttpRequest()
+      req.open('GET', url)
+      req.timeout = 20000
+      req.onload = (event) => {
+        getFeatureInfoOnLoad(event['target'], layer)
+      }
+      req.onerror = () => {
+        console.log('Network error')
+      }
+      req.send()
+    })
+  })
 }
 
 /**
@@ -421,6 +665,7 @@ MapAnimation.prototype.initEPSG3067Projection = () => {
  * Defines feature selection functionality and styles.
  */
 MapAnimation.prototype.defineSelect = function () {
+  let self = this
   const map = this.get('map')
   const config = this.get('config')
   const callbacks = this.get('callbacks')
@@ -458,6 +703,7 @@ MapAnimation.prototype.defineSelect = function () {
               'style': style
             })
             map.addInteraction(select)
+            self.activeInteractions.push(select)
             selectedFeatures = select.getFeatures()
             selectedFeatures.on('add', function (event) {
               if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['select']] === 'function')) {
@@ -1225,7 +1471,7 @@ MapAnimation.prototype.destroyAnimation = function () {
   this.actionEvents.removeAllListeners()
   this.variableEvents.removeAllListeners()
   const config = this.get('config')
-  let elementNames = [config['spinnerContainer'], config['legendContainer'], config['mapContainer'], config['container']]
+  let elementNames = [config['legendContainer'], config['mapContainer'], config['container']]
   let map = this.get('map')
   if (map !== null) {
     map.setTarget(null)

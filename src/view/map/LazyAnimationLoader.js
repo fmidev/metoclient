@@ -8,7 +8,6 @@ import elementResizeDetectorMaker from 'element-resize-detector'
 import extend from 'extend'
 import isNumeric from 'fast-isnumeric'
 import 'core-js/fn/array/from'
-import moment from 'moment-timezone'
 import * as constants from '../../constants'
 import LayerSwitcher from './LayerSwitcher'
 import MapProducer from './MapProducer'
@@ -58,6 +57,7 @@ LazyAnimationLoader.prototype.initMap = function () {
   const viewProjection = /** @type {string} */ (this.get('viewProjection'))
   let interactionConfig = this.get('interactionConfig')
   let interactionOptions
+  let interaction
   let interactions
   let layerSwitcher
   let layerVisibility = {}
@@ -97,6 +97,11 @@ LazyAnimationLoader.prototype.initMap = function () {
         break
       }
     }
+    while (this.activeInteractions.length > 0) {
+      interaction = this.activeInteractions.pop()
+      map.removeInteraction(interaction)
+    }
+    this.defineSelect()
     this.requestViewUpdate()
     return
   }
@@ -211,206 +216,6 @@ LazyAnimationLoader.prototype.initMap = function () {
   map.on('change:layerVisibility', () => {
     self.set('updateRequested', Date.now())
   })
-  map.on('pointermove', function (evt) {
-    var hit = this.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
-      return layer.get('popupData') != null
-    })
-    if (hit) {
-      this.getTarget().style.cursor = 'pointer'
-    } else {
-      this.getTarget().style.cursor = ''
-    }
-  })
-
-  map.on('singleclick', function (evt) {
-    let features = []
-    let popupData = ''
-    let popupShown = false
-    let view = map.getView()
-    let viewResolution = /** @type {number} */ (view.getResolution())
-    let viewProjection = view.getProjection()
-    map.forEachFeatureAtPixel(evt['pixel'], function (feature, layer) {
-      const layerPopupData = layer.get('popupData')
-      if (layerPopupData == null) {
-        return
-      }
-      feature.set('popupData', layerPopupData)
-      let layerId = feature.getId()
-      const separatorIndex = layerId.indexOf('.')
-      if (separatorIndex > 0) {
-        layerId = layerId.substr(0, separatorIndex)
-      }
-      feature.set('layerId', layerId)
-      features.push(feature)
-    }, {
-      hitTolerance: 8
-    })
-    features.sort(function (a, b) {
-      const layerIdProperty = 'layerId'
-      const timeProperty = 'time'
-      const aLayerId = a.get(layerIdProperty)
-      const bLayerId = b.get(layerIdProperty)
-      if (aLayerId !== bLayerId) {
-        return aLayerId.localeCompare(bLayerId)
-      }
-      let aMs = null
-      const aTime = a.get(timeProperty)
-      if (aTime != null) {
-        aMs = Date.parse(aTime)
-      }
-      if (aMs != null) {
-        let bMs = null
-        const bTime = b.get(timeProperty)
-        if (bTime != null) {
-          bMs = Date.parse(bTime)
-        }
-        if (bMs != null) {
-          return aMs - bMs
-        }
-      }
-      return 0
-    })
-    let numFeatures = features.length
-    if (numFeatures > 0) {
-      let content = ''
-      for (let j = 0; j < numFeatures; j++) {
-        popupData = features[j].get('popupData')
-        let properties = popupData.split(',')
-        let numProperties = properties.length
-        let layerId = features[j].get('layerId')
-        if (content.length === 0) {
-          content += '<div class="fmi-metoclient-popup-content">'
-        }
-        content += '<div class="fmi-metoclient-popup-item"><b>' + layerId + '</b><br>'
-        for (let i = 0; i < numProperties; i++) {
-          let property = properties[i].trim()
-          if (property === 'the_geom') {
-            let coord = features[j].getGeometry().getCoordinates()
-            if (coord != null) {
-              let coord4326 = OlProj.transform(
-                coord,
-                viewProjection,
-                'EPSG:4326'
-              )
-              content += 'coordinates: ' + coord4326[1].toFixed(3) + ' ' + coord4326[0].toFixed(3) + '<br>'
-            }
-          } else {
-            let propertyData = features[j].get(property)
-            if (propertyData != null) {
-              if (['time', 'begintime', 'endtime'].indexOf(property) >= 0) {
-                content += properties[i] + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'
-              } else {
-                content += properties[i] + ': ' + propertyData + '<br>'
-              }
-            }
-          }
-        }
-        content += '</div>'
-      }
-      if (content.length > 0) {
-        content += '</div>'
-        let coord = map.getCoordinateFromPixel([evt['pixel'][0], evt['pixel'][1]])
-        self.showPopup(content, coord)
-        popupShown = true
-      }
-    } else {
-      self.hidePopup()
-    }
-    // WMS
-    let getPopupLayers = (layers) => {
-      return layers.getArray().reduce((tooltipLayers, layer) => {
-        if (layer instanceof OlLayerGroup) {
-          if (layer.get('title') !== config['featureGroupName']) {
-            return tooltipLayers.concat(getPopupLayers(layer.getLayers()))
-          }
-        } else if ((['TileWMS', 'ImageWMS'].includes(layer.get('className'))) && (layer.get('visible')) && (layer.get('opacity'))) {
-          let wmsPopupData = layer.get('popupData')
-          if (wmsPopupData != null) {
-            tooltipLayers.push(layer)
-          }
-        }
-        return tooltipLayers
-      }, [])
-    }
-    let req
-    let layers = map.getLayers()
-    let tooltipLayers = getPopupLayers(layers)
-    let getFeatureInfoOnLoad = (req, layer) => {
-      let response
-      let properties
-      let popupText = ''
-      if (req.status === 200) {
-        try {
-          response = JSON.parse(req.response)
-        } catch (e) {
-          console.log('GetFeatureInfo response error')
-          return
-        }
-        if ((response['features'] != null) && (response['features'].length > 0) && (response['features'][0]['properties'] != null)) {
-          properties = response['features'][0]['properties']
-        } else if ((Array.isArray(response)) && (response.length > 0)) {
-          properties = response[0]
-        }
-        if (properties != null) {
-          let propertyNames = Object.keys(properties)
-          propertyNames.sort()
-          let popupData = layer.get('popupData')
-          popupText += propertyNames.reduce((currentText, propertyName) => {
-            if ((popupData.includes(propertyName)) && (properties[propertyName] != null)) {
-              currentText += propertyName + ': ' + properties[propertyName] + '<br>'
-            }
-            return currentText
-          }, '<div class="fmi-metoclient-popup-item"><b>' + layer.get('title') + '</b><br>') + '</div>'
-          if (popupShown) {
-            const popupContent = document.getElementById(`${config['mapContainer']}-popup-content`)
-            popupContent['innerHTML'] += popupText
-          } else {
-            self.hidePopup()
-            self.showPopup(popupText, evt['coordinate'])
-            popupShown = true
-          }
-        }
-      }
-    }
-
-    tooltipLayers.forEach((layer) => {
-      let source = layer.getSource()
-      if (source == null) {
-        return
-      }
-      let url = layer.get('popupUrl')
-      if (url != null) {
-        let popupData = layer.get('popupData').replace(/\s+/g, '')
-        let animationTime = self.get('animationTime')
-        let coord = evt['coordinate']
-        if ((animationTime == null) || (popupData == null) || (coord == null)) {
-          return
-        }
-        let timeParameter = moment(animationTime).format('YYYYMMDDTHHmmss')
-        let coord4326 = OlProj.transform(
-          coord,
-          viewProjection,
-          'EPSG:4326'
-        )
-        url += `/timeseries?precision=double&tz=UTC&producer=fmi&format=json&param=${popupData}&starttime=${timeParameter}&endtime=${timeParameter}&lonlat=${coord4326[0].toFixed(6)},${coord4326[1].toFixed(6)}`
-      } else {
-        url = source.getGetFeatureInfoUrl(evt['coordinate'], viewResolution, viewProjection, {
-          'INFO_FORMAT': 'application/json'
-        })
-      }
-      req = new XMLHttpRequest()
-      req.open('GET', url)
-      req.timeout = 20000
-      req.onload = (event) => {
-        getFeatureInfoOnLoad(event['target'], layer)
-      }
-      req.onerror = () => {
-        console.log('Network error')
-      }
-      req.send()
-    })
-  })
-
   if (config['showMarker']) {
     map.addLayer(this.createMarkerLayer())
     map.on('singleclick', e => {
@@ -442,6 +247,7 @@ LazyAnimationLoader.prototype.initMap = function () {
     olViewport.style.touchAction = 'auto'
   })
   self.set('map', map)
+  this.initMouseInteractions()
   this.setViewListeners()
   if (!self.get('listenersInitialized')) {
     self.initListeners()
@@ -1161,9 +967,9 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
       mapLayer.get('clone').setOpacity(0)
     } else {
       source = mapLayer.getSource()
-      if (source.get('layerTime') !== animationTime) {
+      if ((source != null) && source.get('layerTime') !== animationTime) {
         sourceClone = mapLayerClone.getSource()
-        if (sourceClone.get('layerTime') !== animationTime) {
+        if ((sourceClone != null) && (sourceClone.get('layerTime') !== animationTime)) {
           sourceClone.set('layerTime', animationTime)
           sourceClone.set('tilesLoaded', 0)
           sourceClone.set('tilesLoading', 0)

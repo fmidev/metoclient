@@ -39,8 +39,6 @@ export default class LazyAnimationLoader extends MapAnimation {
   };
 }
 
-
-
 /**
  * Initializes map.
  */
@@ -773,6 +771,7 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
       }
     }
   }
+  this.variableEvents.emitEvent('numIntervalItems', [this.numIntervalItems[loadId]])
   layerOptions = {
     'extent': extent,
     'animation': {
@@ -915,6 +914,9 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
   const pGrp = this.get('pGrp')
   const currentTime = Date.now()
   const animationTime = /** @type {number} */ (this.get('animationTime'))
+  if (!isNumeric(animationTime)) {
+    return
+  }
   const animationTimeFormatted = new Date(animationTime).toISOString()
   if (!isNumeric(animationTime)) {
     return

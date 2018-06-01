@@ -30,6 +30,8 @@ Pseudo configuration and usage:
 
 Example directory: [examples/](examples/)
 
+Use configuration option `mapLoader: 'all'` to preload all time step data, but be aware that this might be too resource-intensive task for some devices.
+
 ### API
 
 List of API functions:

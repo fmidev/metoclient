@@ -15,6 +15,7 @@ export default class Time {
    *  @constructor
    */
   constructor (config) {
+    let animationResolutionTime
     this.config_ = config
     this.variableEvents = new EventEmitter()
     this.actionEvents = new EventEmitter()
@@ -33,7 +34,8 @@ export default class Time {
     this.animationInitBeginTime_ = 0
     this.animationInitEndTime_ = 0
     this.animationNumIntervals_ = 0
-    this.animationResolutionTime_ = this.config_['resolutionTime']
+    animationResolutionTime = Number(this.config_['resolutionTime'])
+    this.animationResolutionTime_ = ((isNumeric(animationResolutionTime)) && (animationResolutionTime > 0)) ? animationResolutionTime : null
     this.animationTimes_ = []
     this.animationTimeIndex_ = 0
     this.animationGridTime_ = this.config_['gridTime']
@@ -80,8 +82,12 @@ export default class Time {
       this.animationNumIntervals_ = Math.floor((this.endTime_ - this.animationBeginTime_) / this.animationResolutionTime_) + 1
       this.animationEndTime_ = this.animationBeginTime_ + (this.animationNumIntervals_ - 1) * this.animationResolutionTime_
     }
-    defaultTime = Math.max(this.animationBeginTime_, defaultTime)
-    defaultTime = Math.min(this.animationEndTime_, defaultTime)
+    if (this.animationBeginTime_ != null) {
+      defaultTime = Math.max(this.animationBeginTime_, defaultTime)
+    }
+    if (this.animationEndTime_ != null) {
+      defaultTime = Math.min(this.animationEndTime_, defaultTime)
+    }
     this.animationTimeIndex_ = 0
     if (this.animationResolutionTime_ != null) {
       for (i = 0; i < this.animationNumIntervals_; i++) {

@@ -11,6 +11,7 @@ import TimeController from './controller/TimeController'
 import MapController from './controller/MapController'
 import { tz } from 'moment-timezone'
 import extend from 'extend'
+import isNumeric from 'fast-isnumeric'
 
 export class MetOClient {
   /**
@@ -22,6 +23,7 @@ export class MetOClient {
     let locale
     let project
     let mapPostId
+    let animationResolutionTime
     let newConfig = {
       'project': '',
       'map': {
@@ -88,6 +90,10 @@ export class MetOClient {
     // The map model might be too slow to extend because of large vector data sets
     this.config_['map']['model']['layers'] = config['layers']
 
+    animationResolutionTime = Number(this.config_['time']['model']['resolutionTime'])
+    if ((!isNumeric(animationResolutionTime) || (animationResolutionTime <= 0))) {
+      this.config_['time']['model']['resolutionTime'] = null
+    }
     if (this.config_['time']['model']['gridTime'] == null) {
       this.config_['time']['model']['gridTime'] = (this.config_['time']['model']['resolutionTime'] != null) ? this.config_['time']['model']['resolutionTime'] : constants.DEFAULT_GRID_TIME
     }

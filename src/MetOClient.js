@@ -11,6 +11,7 @@ import TimeController from './controller/TimeController'
 import MapController from './controller/MapController'
 import { tz } from 'moment-timezone'
 import extend from 'extend'
+import isNumeric from 'fast-isnumeric'
 
 export class MetOClient {
   /**
@@ -22,6 +23,7 @@ export class MetOClient {
     let locale
     let project
     let mapPostId
+    let animationResolutionTime
     let newConfig = {
       'project': '',
       'map': {
@@ -88,6 +90,10 @@ export class MetOClient {
     // The map model might be too slow to extend because of large vector data sets
     this.config_['map']['model']['layers'] = config['layers']
 
+    animationResolutionTime = Number(this.config_['time']['model']['resolutionTime'])
+    if ((!isNumeric(animationResolutionTime) || (animationResolutionTime <= 0))) {
+      this.config_['time']['model']['resolutionTime'] = null
+    }
     if (this.config_['time']['model']['gridTime'] == null) {
       this.config_['time']['model']['gridTime'] = (this.config_['time']['model']['resolutionTime'] != null) ? this.config_['time']['model']['resolutionTime'] : constants.DEFAULT_GRID_TIME
     }
@@ -506,26 +512,26 @@ export class MetOClient {
    * @export
    */
   updateAnimation (options, callbacks) {
-    if (typeof options['beginTime'] !== 'undefined') {
+    if (options['beginTime'] != null) {
       this.timeController_.setBeginTime(options['beginTime'])
     }
-    if (typeof options['endTime'] !== 'undefined') {
+    if (options['endTime'] != null) {
       this.timeController_.setEndTime(options['endTime'])
     }
-    if (typeof options['timeStep'] !== 'undefined') {
+    if (options['timeStep'] != null) {
       this.timeController_.setTimeStep(options['timeStep'])
     }
-    if (typeof options['timeZone'] !== 'undefined') {
+    if (options['timeZone'] != null) {
       this.timeController_.setTimeZone(options['timeZone'])
     }
-    if (typeof options['timeZoneLabel'] !== 'undefined') {
+    if (options['timeZoneLabel'] != null) {
       this.timeController_.setTimeZoneLabel(options['timeZoneLabel'])
     }
-    if (typeof options['layers'] !== 'undefined') {
+    if (options['layers'] != null) {
       this.mapController_.setLayers(options['layers'])
     }
     this.timeController_.createTimer()
-    if (typeof options['animationTime'] !== 'undefined') {
+    if (options['animationTime'] != null) {
       this.timeController_.setAnimationTime(options['animationTime'])
     }
     this.refresh(callbacks)

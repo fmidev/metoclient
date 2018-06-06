@@ -29,6 +29,9 @@ export default class MapProducer {
     if (options == null) {
       options = {}
     }
+    if ((options['projection'] == null) && (projection != null)) {
+      options['projection'] = projection
+    }
     let typeLwr = type.toLowerCase()
     switch (typeLwr) {
       case 'tilewms':

@@ -349,27 +349,32 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let popupShown = handleWFSInteraction('popup', evt['pixel'])
     // WMS
     let getPopupLayers = (layers) => {
-      return layers.getArray().reduce((tooltipLayers, layer) => {
+      return layers.getArray().reduce((popupLayers, layer) => {
         if (layer instanceof OlLayerGroup) {
-          if (layer.get('title') !== config['featureGroupName']) {
-            return tooltipLayers.concat(getPopupLayers(layer.getLayers()))
+          if ((layer.get('title') !== config['featureGroupName']) && (layer.get('visible')) && (layer.get('opacity'))) {
+            return popupLayers.concat(getPopupLayers(layer.getLayers()))
           }
         } else if ((['TileWMS', 'ImageWMS'].includes(layer.get('className'))) && (layer.get('visible')) && (layer.get('opacity'))) {
           let wmsPopupData = layer.get('popupData')
           if (wmsPopupData != null) {
-            tooltipLayers.push(layer)
+            popupLayers.push(layer)
           }
         }
-        return tooltipLayers
+        return popupLayers
       }, [])
     }
     let req
     let layers = map.getLayers()
-    let tooltipLayers = getPopupLayers(layers)
+    let popupLayers = getPopupLayers(layers)
     let getFeatureInfoOnLoad = (req, layer) => {
       let response
       let properties
       let popupText = ''
+      let popupContent
+      let popupContentChild
+      let popupContentChildren
+      let numPopupContentChildren
+      let i
       if (req.status === 200) {
         try {
           response = JSON.parse(req.response)
@@ -393,10 +398,19 @@ MapAnimation.prototype.initMouseInteractions = function () {
             return currentText
           }, '<div class="fmi-metoclient-popup-item"><b>' + layer.get('title') + '</b><br>') + '</div>'
           if (popupShown) {
-            const popupContent = document.getElementById(`${config['mapContainer']}-popup-content`)
-            popupContent['innerHTML'] += popupText
+            popupContent = document.getElementById(`${config['mapContainer']}-popup-content`)
+            popupContentChildren = popupContent.children
+            if (popupContentChildren != null) {
+              numPopupContentChildren = popupContentChildren.length
+              for (i = 0; i < numPopupContentChildren; i++) {
+                popupContentChild = popupContentChildren[i]
+                if (popupContentChild.classList.contains('fmi-metoclient-popup-content')) {
+                  popupContentChild['innerHTML'] += popupText
+                  break;
+                }
+              }
+            }
           } else {
-console.log("....");
             self.hidePopup()
             self.showPopup(popupText, evt['coordinate'])
             popupShown = true
@@ -405,7 +419,7 @@ console.log("....");
       }
     }
 
-    tooltipLayers.forEach((layer) => {
+    popupLayers.forEach((layer) => {
       let source = layer.getSource()
       if (source == null) {
         return
@@ -1277,6 +1291,8 @@ MapAnimation.prototype.getLegendUrls = layer => {
       layerIds = params['LAYERS']
     } else if (typeof params['layers'] !== 'undefined') {
       layerIds = params['layers']
+    } else if (typeof params['Layers'] !== 'undefined') {
+      layerIds = params['Layers']
     } else {
       return urls
     }
@@ -1295,7 +1311,7 @@ MapAnimation.prototype.getLegendUrls = layer => {
       // because it was not included there yet.
       baseUrl += '&'
     }
-    imageFormat = params['format'] || params['FORMAT'] || 'image/png'
+    imageFormat = params['format'] || params['FORMAT'] || params['Format'] || 'image/png'
     baseUrl += `REQUEST=GetLegendGraphic&FORMAT=${encodeURIComponent(imageFormat)}&LAYER=`
     // Single layer may contain multiple layer IDs.
     // Provide separate URL for each layer ID.

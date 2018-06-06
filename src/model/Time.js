@@ -30,8 +30,8 @@ export default class Time {
     this.animationTime_ = null
     this.animationBeginTime_ = this.config_['beginTime']
     this.animationEndTime_ = this.config_['endTime']
-    this.animationInitBeginTime_ = 0
-    this.animationInitEndTime_ = 0
+    this.initBeginTime_ = 0
+    this.initEndTime_ = 0
     this.animationNumIntervals_ = 0
     this.animationResolutionTime_ = this.config_['resolutionTime']
     this.animationTimes_ = []
@@ -96,11 +96,11 @@ export default class Time {
       }
       this.setAnimationTime(this.animationTimes_[animationTimeIndex])
     }
-    if (this.animationInitBeginTime_ === 0) {
-      this.animationInitBeginTime_ = this.animationBeginTime_
+    if (this.initBeginTime_ === 0) {
+      this.initBeginTime_ = this.beginTime_
     }
-    if (this.animationInitEndTime_ === 0) {
-      this.animationInitEndTime_ = this.animationEndTime_
+    if (this.initEndTime_ === 0) {
+      this.initEndTime_ = this.endTime_
     }
     this.setAnimationLastRefreshed(Date.now())
     if ((this.config_['autoStart']) && (!this.config_['waitUntilLoaded'])) {
@@ -175,9 +175,11 @@ export default class Time {
         break
       }
     }
-    this.animationTime_ = this.animationTimes_[animationTimeIndex]
-    this.animationTimeIndex_ = animationTimeIndex
-    this.variableEvents.emitEvent('animationTime', [this.getAnimationTime()])
+    if (this.animationTimes_.length - 1 >= animationTimeIndex) {
+      this.animationTime_ = this.animationTimes_[animationTimeIndex]
+      this.animationTimeIndex_ = animationTimeIndex
+      this.variableEvents.emitEvent('animationTime', [this.getAnimationTime()])
+    }
   };
 
   /**
@@ -336,11 +338,12 @@ export default class Time {
    * @param {number} delta Time change.
    */
   moveAnimationTimeFrame (delta) {
-    this.animationBeginTime_ = this.animationInitBeginTime_ + delta
-    this.animationEndTime_ = this.animationInitEndTime_ + delta
+    this.beginTime_ = this.initBeginTime_ + delta
+    this.endTime_ = this.initEndTime_ + delta
     if (this.animationTime_ < this.animationBeginTime_) {
       this.setAnimationTime(this.animationBeginTime_)
     }
+    this.createTimer()
   };
 
   /**
@@ -353,12 +356,21 @@ export default class Time {
   };
 
   /**
+   * Sets animation grid time.
+   * @param {number} gridTime Animation grid time.
+   */
+  setGridTime (gridTime) {
+    this.animationGridTime_ = gridTime
+    this.createTimer()
+  };
+
+  /**
    * Sets animation begin time.
    * @param {number} beginTime Animation begin time.
    */
   setBeginTime (beginTime) {
     this.beginTime_ = beginTime
-    this.animationInitBeginTime_ = 0
+    this.initBeginTime_ = 0
     this.createTimer()
   };
 
@@ -368,7 +380,7 @@ export default class Time {
    */
   setEndTime (endTime) {
     this.endTime_ = endTime
-    this.animationInitEndTime_ = 0
+    this.initEndTime_ = 0
     this.createTimer()
   };
 
@@ -432,7 +444,7 @@ export default class Time {
    * @returns {Array|*} Animation times.
    */
   getAnimationTimes () {
-    return this.animationTimes_;
+    return this.animationTimes_
   }
 
   /**

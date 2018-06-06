@@ -1291,6 +1291,8 @@ MapAnimation.prototype.getLegendUrls = layer => {
       layerIds = params['LAYERS']
     } else if (typeof params['layers'] !== 'undefined') {
       layerIds = params['layers']
+    } else if (typeof params['Layers'] !== 'undefined') {
+      layerIds = params['Layers']
     } else {
       return urls
     }
@@ -1309,7 +1311,7 @@ MapAnimation.prototype.getLegendUrls = layer => {
       // because it was not included there yet.
       baseUrl += '&'
     }
-    imageFormat = params['format'] || params['FORMAT'] || 'image/png'
+    imageFormat = params['format'] || params['FORMAT'] || params['Format'] || 'image/png'
     baseUrl += `REQUEST=GetLegendGraphic&FORMAT=${encodeURIComponent(imageFormat)}&LAYER=`
     // Single layer may contain multiple layer IDs.
     // Provide separate URL for each layer ID.

@@ -14,7 +14,7 @@ export default class SourceWMTS extends OlSourceWMTS {
     }
     super(options)
     let plainTileUrlFunction = this.getTileUrlFunction()
-    if ((options['params'] != null) && (options['params']['TIME'] != null) && (options['params']['TIME'].length >  0)) {
+    if ((options['params'] != null) && (options['params']['TIME'] != null) && (options['params']['TIME'].length > 0)) {
       this.set('timeFormatted', options['params']['TIME'])
     }
     if (options['elevation'] != null) {

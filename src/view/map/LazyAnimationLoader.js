@@ -790,6 +790,7 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
     })
     layerOptions[k] = /** @type {olx.layer.TileOptions} */ (extend(true, layerOptions[k], layer))
     layerOptions[k]['defaultOpacity'] = (layer['opacity'] !== undefined) ? layer['opacity'] : 1
+    layerOptions[k]['opacity'] = 0
     layerOptions[k]['sourceProperties'] = {
       'loadId': loadId,
       'layerTime': animationTimes[k],
@@ -895,7 +896,7 @@ LazyAnimationLoader.prototype.scheduleOverlayLoading = function (overlays, loadI
  * Updates map animation.
  */
 LazyAnimationLoader.prototype.updateAnimation = function () {
-  if (this.loading) {
+  if ((this.loading) || (this.loadId < 0)) {
     return
   }
   let i
@@ -905,6 +906,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
   let mapLayerClone
   let mapLayers
   let numMapLayers
+  let mapAnimation
   let source
   let sourceClone
   let nextPGrp
@@ -925,6 +927,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
     return
   }
   const nextAnimationTimeFormatted = new Date(nextAnimationTime).toISOString()
+  let lenNumIntervalItems
 
   // Collect updating information
   for (i = 0; i < numGroups; i++) {
@@ -941,6 +944,10 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
       }
     }
     newPGrp.push(nextPGrp)
+  }
+  lenNumIntervalItems = this.numIntervalItems[this.loadId].length;
+  for (i = 0; i < lenNumIntervalItems; i++) {
+    this.numIntervalItems[this.loadId][i]['toBeLoaded'] = 1
   }
   // Update
   for (i = 0; i < numGroups; i++) {
@@ -967,35 +974,40 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
       mapLayer.get('clone').setOpacity(0)
     } else {
       source = mapLayer.getSource()
-      if ((source != null) && source.get('layerTime') !== animationTime) {
-        sourceClone = mapLayerClone.getSource()
-        if ((sourceClone != null) && (sourceClone.get('layerTime') !== animationTime)) {
-          sourceClone.set('layerTime', animationTime)
-          sourceClone.set('tilesLoaded', 0)
-          sourceClone.set('tilesLoading', 0)
-          if (sourceClone.get('sourceType') === 'WMTS') {
-            sourceClone.set('timeFormatted', animationTimeFormatted)
-          } else {
-            sourceClone.updateParams({
-              'TIME': animationTimeFormatted
-            })
-          }
-          sourceClone.refresh()
+      if (source != null) {
+        if (source.get('layerTime') === animationTime) {
+          mapLayer.setOpacity(1)
         } else {
-          mapLayer.setOpacity(0)
-          mapLayerClone.setOpacity(1)
-          mapLayer.set('active', false)
-          mapLayerClone.set('active', true)
-          if (source.get('layerTime') !== nextAnimationTime) {
-            source.set('layerTime', nextAnimationTime)
-            source.set('tilesLoaded', 0)
-            source.set('tilesLoading', 0)
-            if (source.get('sourceType') === 'WMTS') {
-              source.set('timeFormatted', nextAnimationTimeFormatted)
+          sourceClone = mapLayerClone.getSource()
+          if ((sourceClone != null) && (sourceClone.get('layerTime') !== animationTime)) {
+            sourceClone.set('layerTime', animationTime)
+            sourceClone.set('tilesLoaded', 0)
+            sourceClone.set('tilesLoading', 0)
+            if (sourceClone.get('sourceType') === 'WMTS') {
+              sourceClone.set('timeFormatted', animationTimeFormatted)
             } else {
-              source.updateParams({
-                'TIME': nextAnimationTimeFormatted
+              sourceClone.updateParams({
+                'TIME': animationTimeFormatted
               })
+            }
+            sourceClone.refresh()
+          } else {
+            mapLayer.setOpacity(0)
+            mapLayerClone.setOpacity(1)
+            mapLayer.set('active', false)
+            mapLayerClone.set('active', true)
+            mapAnimation = mapLayer.get('animation')
+            if ((source.get('layerTime') !== nextAnimationTime) && (mapAnimation.beginTime <= nextAnimationTime) && (nextAnimationTime <= mapAnimation.endTime)) {
+              source.set('layerTime', nextAnimationTime)
+              source.set('tilesLoaded', 0)
+              source.set('tilesLoading', 0)
+              if (source.get('sourceType') === 'WMTS') {
+                source.set('timeFormatted', nextAnimationTimeFormatted)
+              } else {
+                source.updateParams({
+                  'TIME': nextAnimationTimeFormatted
+                })
+              }
             }
           }
         }

@@ -1008,6 +1008,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
                   'TIME': nextAnimationTimeFormatted
                 })
               }
+              source.refresh()
             }
           }
         }

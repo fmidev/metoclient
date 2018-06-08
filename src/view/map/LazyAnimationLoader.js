@@ -938,7 +938,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
       mapLayer = mapLayers[j]
       animationTimes = mapLayer.get('layerTimes')
       numAnimationTimes = animationTimes.length
-      if ((numAnimationTimes > 0) && (mapLayer.get('active')) && (animationTime <= animationTimes[numAnimationTimes - 1])) {
+      if ((numAnimationTimes > 0) && (mapLayer.get('active')) && (animationTimes[0] <= animationTime) && (animationTime <= animationTimes[numAnimationTimes - 1])) {
         nextPGrp = j
         break
       }

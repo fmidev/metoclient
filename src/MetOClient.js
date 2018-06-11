@@ -512,6 +512,9 @@ export class MetOClient {
    * @export
    */
   updateAnimation (options, callbacks) {
+    if (options['gridTime'] != null) {
+      this.timeController_.setGridTime(options['gridTime'])
+    }
     if (options['beginTime'] != null) {
       this.timeController_.setBeginTime(options['beginTime'])
     }

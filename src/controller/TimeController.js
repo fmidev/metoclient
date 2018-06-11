@@ -338,6 +338,14 @@ export default class TimeController {
   };
 
   /**
+   * Sets animation grid time.
+   * @param {number} gridTime Animation grid time.
+   */
+  setGridTime (gridTime) {
+    this.model_.setGridTime(gridTime)
+  };
+
+  /**
    * Sets animation begin time.
    * @param {number} beginTime Animation begin time.
    */

@@ -495,7 +495,7 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   const absBeginTime = /** @type {number} */ (this.get('animationBeginTime'))
   const absEndTime = /** @type {number} */ (this.get('animationEndTime'))
   let layerTime
-  let layerOptions
+  let layerOptions = []
   let layerVisibility
   let currentVisibility
   let prevLayerTime = Number.NEGATIVE_INFINITY
@@ -515,6 +515,7 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   let endTime
   let layerTimes = []
   let animationTime = this.get('animationTime')
+  let animationTimes = [animationTime, this.getNextAnimationTime(animationTime)]
 
   layerVisibility = this.get('map').get('layerVisibility')
   currentVisibility = layerVisibility[layer['title']]
@@ -772,45 +773,46 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
     }
   }
   this.variableEvents.emitEvent('numIntervalItems', [this.numIntervalItems[loadId]])
-  layerOptions = {
-    'extent': extent,
-    'animation': {
-      'animationTime': animationTime
-    },
-    'layerTimes': layerTimes,
-    'sourceOptions': {
-      'transition': 0,
-      'params': {
-        'TIME': new Date(animationTime).toISOString(),
-        'TRANSPARENT': 'FALSE'
-      }
-    }
-  }
-  layerOptions = /** @type {olx.layer.TileOptions} */ (extend(true, layerOptions, layer))
-  layerOptions['defaultOpacity'] = (layer['opacity'] !== undefined) ? layer['opacity'] : 1
-  layerOptions['sourceProperties'] = {
-    'loadId': loadId,
-    'layerTime': animationTime,
-    'tilesLoaded': 0,
-    'tilesLoading': 0
-  }
-  layerOptions['visible'] = true
-  // Todo: Generalize
   for (k = 0; k < 2; k++) {
-    if (layerOptions['className'] === 'ImageWMS') {
-      layerOptions['sourceOn'] = {
+    layerOptions.push({
+      'extent': extent,
+      'animation': {
+        'animationTime': animationTimes[k]
+      },
+      'layerTimes': layerTimes,
+      'sourceOptions': {
+        'transition': 0,
+        'params': {
+          'TIME': new Date(animationTimes[k]).toISOString(),
+          'TRANSPARENT': 'FALSE'
+        }
+      }
+    })
+    layerOptions[k] = /** @type {olx.layer.TileOptions} */ (extend(true, layerOptions[k], layer))
+    layerOptions[k]['defaultOpacity'] = (layer['opacity'] !== undefined) ? layer['opacity'] : 1
+    layerOptions[k]['opacity'] = 0
+    layerOptions[k]['sourceProperties'] = {
+      'loadId': loadId,
+      'layerTime': animationTimes[k],
+      'tilesLoaded': 0,
+      'tilesLoading': 0
+    }
+    layerOptions[k]['visible'] = true
+    // Todo: Generalize
+    if (layerOptions[k]['className'] === 'ImageWMS') {
+      layerOptions[k]['sourceOn'] = {
         'imageloadstart': loadStart,
         'imageloadend': loadEnd,
         'imageloaderror': loadError
       }
-      newLayers[k] = new OlLayerImage(layerOptions)
+      newLayers[k] = new OlLayerImage(layerOptions[k])
     } else {
-      layerOptions['sourceOn'] = {
+      layerOptions[k]['sourceOn'] = {
         'tileloadstart': loadStart,
         'tileloadend': loadEnd,
         'tileloaderror': loadError
       }
-      newLayers[k] = new OlLayerTile(layerOptions)
+      newLayers[k] = new OlLayerTile(layerOptions[k])
     }
   }
   newLayers[0].set('clone', newLayers[1])
@@ -859,7 +861,6 @@ LazyAnimationLoader.prototype.scheduleOverlayLoading = function (overlays, loadI
   let r
   let item
   let asyncLoadItem
-  let layerSwitcher
   asyncLoadQueue[loadId] = []
   for (i = 0, len = overlays.length; i < len; i++) {
     overlay = overlays[i]
@@ -895,7 +896,7 @@ LazyAnimationLoader.prototype.scheduleOverlayLoading = function (overlays, loadI
  * Updates map animation.
  */
 LazyAnimationLoader.prototype.updateAnimation = function () {
-  if (this.loading) {
+  if ((this.loading) || (this.loadId < 0)) {
     return
   }
   let i
@@ -905,6 +906,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
   let mapLayerClone
   let mapLayers
   let numMapLayers
+  let mapAnimation
   let source
   let sourceClone
   let nextPGrp
@@ -918,15 +920,14 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
     return
   }
   const animationTimeFormatted = new Date(animationTime).toISOString()
-  if (!isNumeric(animationTime)) {
-    return
-  }
   let animationTimes
   let numAnimationTimes
   let nextAnimationTime = this.getNextAnimationTime(animationTime)
   if (!isNumeric(nextAnimationTime)) {
     return
   }
+  const nextAnimationTimeFormatted = new Date(nextAnimationTime).toISOString()
+  let lenNumIntervalItems
 
   // Collect updating information
   for (i = 0; i < numGroups; i++) {
@@ -937,12 +938,16 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
       mapLayer = mapLayers[j]
       animationTimes = mapLayer.get('layerTimes')
       numAnimationTimes = animationTimes.length
-      if ((numAnimationTimes > 0) && (mapLayer.get('active')) && (animationTime <= animationTimes[numAnimationTimes - 1])) {
+      if ((numAnimationTimes > 0) && (mapLayer.get('active')) && (animationTimes[0] <= animationTime) && (animationTime <= animationTimes[numAnimationTimes - 1])) {
         nextPGrp = j
         break
       }
     }
     newPGrp.push(nextPGrp)
+  }
+  lenNumIntervalItems = this.numIntervalItems[this.loadId].length;
+  for (i = 0; i < lenNumIntervalItems; i++) {
+    this.numIntervalItems[this.loadId][i]['toBeLoaded'] = 1
   }
   // Update
   for (i = 0; i < numGroups; i++) {
@@ -969,25 +974,43 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
       mapLayer.get('clone').setOpacity(0)
     } else {
       source = mapLayer.getSource()
-      if ((source != null) && source.get('layerTime') !== animationTime) {
-        sourceClone = mapLayerClone.getSource()
-        if ((sourceClone != null) && (sourceClone.get('layerTime') !== animationTime)) {
-          sourceClone.set('layerTime', animationTime)
-          sourceClone.set('tilesLoaded', 0)
-          sourceClone.set('tilesLoading', 0)
-          if (sourceClone.get('sourceType') === 'WMTS') {
-            sourceClone.set('timeFormatted', animationTimeFormatted)
-          } else {
-            sourceClone.updateParams({
-              'TIME': animationTimeFormatted
-            })
-          }
-          sourceClone.refresh()
+      if (source != null) {
+        if (source.get('layerTime') === animationTime) {
+          mapLayer.setOpacity(1)
         } else {
-          mapLayer.setOpacity(0)
-          mapLayerClone.setOpacity(1)
-          mapLayer.set('active', false)
-          mapLayerClone.set('active', true)
+          sourceClone = mapLayerClone.getSource()
+          if ((sourceClone != null) && (sourceClone.get('layerTime') !== animationTime)) {
+            sourceClone.set('layerTime', animationTime)
+            sourceClone.set('tilesLoaded', 0)
+            sourceClone.set('tilesLoading', 0)
+            if (sourceClone.get('sourceType') === 'WMTS') {
+              sourceClone.set('timeFormatted', animationTimeFormatted)
+            } else {
+              sourceClone.updateParams({
+                'TIME': animationTimeFormatted
+              })
+            }
+            sourceClone.refresh()
+          } else {
+            mapLayer.setOpacity(0)
+            mapLayerClone.setOpacity(1)
+            mapLayer.set('active', false)
+            mapLayerClone.set('active', true)
+            mapAnimation = mapLayer.get('animation')
+            if ((source.get('layerTime') !== nextAnimationTime) && (mapAnimation.beginTime <= nextAnimationTime) && (nextAnimationTime <= mapAnimation.endTime)) {
+              source.set('layerTime', nextAnimationTime)
+              source.set('tilesLoaded', 0)
+              source.set('tilesLoading', 0)
+              if (source.get('sourceType') === 'WMTS') {
+                source.set('timeFormatted', nextAnimationTimeFormatted)
+              } else {
+                source.updateParams({
+                  'TIME': nextAnimationTimeFormatted
+                })
+              }
+              source.refresh()
+            }
+          }
         }
       }
     }

@@ -25,17 +25,8 @@ import OlView from 'ol/view'
 import MapAnimation from './MapAnimation'
 
 export default class FullAnimationLoader extends MapAnimation {
-  /**
-   * Constructs OpenLayers 4 based map view.
-   * @constructor
-   * @param config {object} Configuration for map view.
-   * @extends {ol.Object}
-   * @implements {fi.fmi.metoclient.ui.animator.view.interfaces.Animation}
-   */
-  constructor (config) {
-    super(config)
-  }
 }
+
 /**
  * Initializes map.
  */
@@ -495,7 +486,6 @@ FullAnimationLoader.prototype.initListeners = function () {
  */
 FullAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, loadId) {
   const self = this
-  const config = self.get('config')
   const animation = layer['animation']
   const absBeginTime = /** @type {number} */ (this.get('animationBeginTime'))
   const absEndTime = /** @type {number} */ (this.get('animationEndTime'))
@@ -744,17 +734,12 @@ FullAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   for (i = iMin; i <= iMax; i++) {
     capabTimesDefined = (Array.isArray(animation['capabTimes']) && (animation['capabTimes'].length > 0))
     layerTime = capabTimesDefined ? animation['capabTimes'][i] : animation['beginTime'] + i * animation['resolutionTime']
-    // Ignore future observations (empty images)
-    if ((layerTime >= currentTime - config['ignoreObsOffset']) && (layer['type'] === self.layerTypes['observation'])) {
+    if (!this.isValidLayerTime(layerTime, prevLayerTime, currentTime, layer)) {
       continue
     }
     deltaTime = capabTimesDefined ? animation['capabTimes'][Math.min(i + 1, iMax)] - animation['capabTimes'][i] : animation['resolutionTime']
     // Ignore forecast history
     if ((layerTime <= currentTime - deltaTime) && (layer['type'] === self.layerTypes['forecast'])) {
-      continue
-    }
-    // Checking maximum resolution
-    if (layerTime - prevLayerTime < epsilon) {
       continue
     }
     prevLayerTime = layerTime

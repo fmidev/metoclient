@@ -2036,3 +2036,25 @@ MapAnimation.prototype.setCallbacks = function (callbacks) {
     }
   }
 }
+
+/**
+ * Checks if animation time is valid for a given layer.
+ *
+ * @param {number} layerTime Layer time value to be checked.
+ * @param {number} prevLayerTime Previous time value.
+ * @param {number} currentTime Current time.
+ * @param layerOptions Layer template based on user configurations.
+ *
+ */
+MapAnimation.prototype.isValidLayerTime = function (layerTime, prevLayerTime, currentTime, layerOptions) {
+  let config = this.get('config')
+  // Ignore future observations (empty images)
+  if ((layerTime >= currentTime - config['ignoreObsOffset']) && (layerOptions['type'] === this.layerTypes['observation'])) {
+    return false
+  }
+  // Checking maximum resolution
+  if (layerTime - prevLayerTime < this.layerResolution) {
+    return false
+  }
+  return true
+}

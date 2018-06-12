@@ -212,8 +212,11 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let features = []
     let view = map.getView()
     let viewProjection = view.getProjection()
-    let typeActive = false;
+    let typeActive = false
     map.forEachFeatureAtPixel(pixel, function (feature, layer) {
+      if (layer == null) {
+        return
+      }
       const layerData = layer.get(type + 'Data')
       if ((!Array.isArray(layerData)) || (layerData.length === 0)) {
         return
@@ -334,7 +337,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     }
     if (!hit) {
       hit = this.forEachFeatureAtPixel(evt['pixel'], function (feature, layer) {
-        return ((layer.get('popupData') != null) || (layer.get('tooltipData') != null))
+        return ((layer != null) && ((layer.get('popupData') != null) || (layer.get('tooltipData') != null)))
       })
     }
     if (hit) {

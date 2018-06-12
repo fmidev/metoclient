@@ -512,7 +512,6 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   let filteredCapabTimes = []
   let capabTimesDefined = false
   let deltaTime
-  let endTime
   let layerTimes = []
   let animationTime = this.get('animationTime')
   let animationTimes = [animationTime, this.getNextAnimationTime(animationTime)]

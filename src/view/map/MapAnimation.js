@@ -1712,12 +1712,15 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
   let layer
   let numLayers
   let i
-  layers = this.getLayersByGroup(config['overlayGroupName'])
+  let source
+  layers = this.getLayersByGroup(config['featureGroupName'])
   numLayers = layers.getLength()
   for (i = 0; i < numLayers; i++) {
     layer = layers.item(i)
     if (layer.get('title') === layerTitle) {
-      layer.getSource().clear()
+      source = layer.getSource()
+      source.clear()
+      source.refresh()
       return
     }
   }

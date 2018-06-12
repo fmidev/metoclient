@@ -86,7 +86,8 @@ export default class Time {
       defaultTime = Math.min(this.animationEndTime_, defaultTime)
     }
     this.animationTimeIndex_ = 0
-    if (this.animationResolutionTime_ != null) {
+    if (this.animationResolutionTime_) {
+      this.animationNumIntervals_ = Math.ceil((this.animationEndTime_ - this.animationBeginTime_) / this.animationResolutionTime_)
       for (i = 0; i < this.animationNumIntervals_; i++) {
         this.animationTimes_.push(this.animationBeginTime_ + i * this.animationResolutionTime_)
         if (this.animationTimes_[i] <= defaultTime) {

@@ -312,30 +312,34 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let numSubLayers
     let subLayer
     let tooltipData
+    let tooltipDataLayer
+    let tooltipDataFound = false
     let hit = false
     let i
     let j
-    layers: for (i = 0; i < numLayers; i++) {
+    loopLayers: for (i = 0; i < numLayers; i++) {
       layer = layers[i]
       subLayers = layer.getLayers().getArray()
       numSubLayers = subLayers.length
       for (j = 0; j < numSubLayers; j++) {
         subLayer = subLayers[j]
         tooltipData = subLayer.get('tooltipData')
-        if ((['ImageWMS', 'TileWMS'].includes(subLayer.get('className'))) && (subLayer.getVisible()) && (subLayer.getOpacity() > 0) && (Array.isArray(tooltipData)) && (tooltipData.length > 0)) {
+        tooltipDataLayer = (Array.isArray(tooltipData)) && (tooltipData.length > 0)
+        tooltipDataFound = tooltipDataFound || tooltipDataLayer
+        if ((['ImageWMS', 'TileWMS'].includes(subLayer.get('className'))) && (subLayer.getVisible()) && (subLayer.getOpacity() > 0) && (tooltipDataLayer)) {
           hit = true
-          break layers
+          break loopLayers
         }
       }
     }
     if (!hit) {
-      hit = this.forEachFeatureAtPixel(evt['pixel'], function(feature, layer) {
+      hit = this.forEachFeatureAtPixel(evt['pixel'], function (feature, layer) {
         return ((layer.get('popupData') != null) || (layer.get('tooltipData') != null))
       })
     }
     if (hit) {
       this.getTargetElement().style.cursor = 'pointer'
-    } else {
+    } else if (tooltipDataFound) {
       this.getTarget().style.cursor = ''
     }
     handleWFSInteraction('tooltip', evt['pixel'])

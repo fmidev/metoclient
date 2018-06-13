@@ -521,7 +521,7 @@ export class MetOClient {
     if (options['endTime'] != null) {
       this.timeController_.setEndTime(options['endTime'])
     }
-    if (options['timeStep'] != null) {
+    if (typeof options['timeStep'] !== 'undefined') {
       this.timeController_.setTimeStep(options['timeStep'])
     }
     if (options['timeZone'] != null) {

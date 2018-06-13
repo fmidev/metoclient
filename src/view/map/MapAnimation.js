@@ -328,6 +328,9 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let k
     loopGroups: for (i = 0; i < numGroups; i++) {
       group = groups[i]
+      if (typeof group.getLayers !== 'function') {
+        continue
+      }
       layers = group.getLayers().getArray()
       numLayers = layers.length
       loopLayers: for (j = 0; j < numLayers; j++) {

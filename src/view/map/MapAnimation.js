@@ -307,31 +307,67 @@ MapAnimation.prototype.initMouseInteractions = function () {
   }
 
   map.on('pointermove', function (evt) {
-    let config = self.get('config')
-    let layers = self.getLayersByGroup(config['overlayGroupName']).getArray()
-    let numLayers = layers.length
+    let map = self.get('map')
+    let groups = map.getLayers().getArray()
+    let numGroups = groups.length
+    let group
+    let layers
+    let numLayers
     let layer
+    let source
     let subLayers
     let numSubLayers
     let subLayer
     let tooltipData
-    let tooltipDataLayer
-    let tooltipDataFound = false
+    let popupData
+    let dataFound = false
     let hit = false
+    let className
     let i
     let j
-    loopLayers: for (i = 0; i < numLayers; i++) {
-      layer = layers[i]
-      subLayers = layer.getLayers().getArray()
-      numSubLayers = subLayers.length
-      for (j = 0; j < numSubLayers; j++) {
-        subLayer = subLayers[j]
-        tooltipData = subLayer.get('tooltipData')
-        tooltipDataLayer = (Array.isArray(tooltipData)) && (tooltipData.length > 0)
-        tooltipDataFound = tooltipDataFound || tooltipDataLayer
-        if ((['ImageWMS', 'TileWMS'].includes(subLayer.get('className'))) && (subLayer.getVisible()) && (subLayer.getOpacity() > 0) && (tooltipDataLayer)) {
-          hit = true
-          break loopLayers
+    let k
+    loopGroups: for (i = 0; i < numGroups; i++) {
+      group = groups[i]
+      layers = group.getLayers().getArray()
+      numLayers = layers.length
+      loopLayers: for (j = 0; j < numLayers; j++) {
+        layer = layers[j]
+        subLayers = (typeof layer.getLayers === 'function') ? layer.getLayers().getArray() : [layer]
+        numSubLayers = subLayers.length
+        for (k = 0; k < numSubLayers; k++) {
+          subLayer = subLayers[k]
+          if ((subLayer.getVisible()) && (subLayer.getOpacity() > 0)) {
+            source = subLayer.getSource()
+            className = ''
+            if (source != null) {
+              className = source.get('className')
+            }
+            if ((className != null) && (className.length > 0) && (['imagewms', 'tilewms', 'wmts'].includes(className.toLowerCase()))) {
+              tooltipData = subLayer.get('tooltipData')
+              if ((Array.isArray(tooltipData)) && (tooltipData.length > 0)) {
+                hit = true
+                dataFound = true
+                break loopGroups
+              }
+            } else {
+              className = subLayer.get('className')
+              if ((className == null) || (className.length === 0)) {
+                continue
+              }
+              if (className.toLowerCase() === 'vector') {
+                tooltipData = subLayer.get('tooltipData')
+                if ((Array.isArray(tooltipData)) && (tooltipData.length > 0)) {
+                  dataFound = true
+                  break loopLayers
+                }
+                popupData = subLayer.get('popupData')
+                if ((Array.isArray(popupData)) && (popupData.length > 0)) {
+                  dataFound = true
+                  break loopLayers
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -342,7 +378,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     }
     if (hit) {
       this.getTargetElement().style.cursor = 'pointer'
-    } else if (tooltipDataFound) {
+    } else if (dataFound) {
       this.getTarget().style.cursor = ''
     }
     handleWFSInteraction('tooltip', evt['pixel'])

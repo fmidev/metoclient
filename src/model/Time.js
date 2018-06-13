@@ -52,20 +52,24 @@ export default class Time {
     let defaultTime = this.defaultTime_
     let timeDifference
     let i
+    let gridTimes
+    let gridTime
     this.animationTimes_ = []
     this.animationNumIntervals_ = 0
     if (this.animationGridTime_ != null) {
+      gridTimes = (Array.isArray(this.animationGridTime_)) ? this.animationGridTime_ : [this.animationGridTime_, this.animationGridTime_]
       // Round initial animation time to previous tick
-      this.animationBeginTime_ = utils.floorTime(this.beginTime_, this.animationGridTime_)
-      if ((this.endTime_ != null) && ((this.animationResolutionTime_ == null))) {
-        this.animationEndTime_ = utils.floorTime(this.endTime_ + this.animationGridTime_, this.animationGridTime_)
+      this.animationBeginTime_ = utils.floorTime(this.beginTime_, gridTimes[0])
+      if (this.endTime_ != null) {
+        gridTime = (this.animationResolutionTime_ != null) ? this.animationResolutionTime_ : gridTimes[1]
+        this.animationEndTime_ = utils.floorTime(this.endTime_ + gridTime, gridTime)
         timeDifference = this.animationEndTime_ - this.animationBeginTime_
       }
       // Time grid offset
       if (this.animationGridTimeOffset_ > 0) {
         offsetTime = this.animationBeginTime_ + this.animationGridTimeOffset_
-        if (offsetTime - this.animationGridTime_ > this.defaultTime_) {
-          offsetTime -= this.animationGridTime_
+        if (offsetTime - gridTimes[0] > this.defaultTime_) {
+          offsetTime -= gridTimes[0]
         }
         this.animationBeginTime_ = offsetTime
         if (timeDifference != null) {
@@ -75,11 +79,6 @@ export default class Time {
     } else {
       this.animationBeginTime_ = this.beginTime_
     }
-
-    if (this.animationResolutionTime_ != null) {
-      this.animationNumIntervals_ = Math.floor((this.endTime_ - this.animationBeginTime_) / this.animationResolutionTime_) + 1
-      this.animationEndTime_ = this.animationBeginTime_ + (this.animationNumIntervals_ - 1) * this.animationResolutionTime_
-    }
     if (this.animationBeginTime_ != null) {
       defaultTime = Math.max(this.animationBeginTime_, defaultTime)
     }
@@ -87,7 +86,8 @@ export default class Time {
       defaultTime = Math.min(this.animationEndTime_, defaultTime)
     }
     this.animationTimeIndex_ = 0
-    if (this.animationResolutionTime_ != null) {
+    if (this.animationResolutionTime_) {
+      this.animationNumIntervals_ = Math.ceil((this.animationEndTime_ - this.animationBeginTime_) / this.animationResolutionTime_)
       for (i = 0; i < this.animationNumIntervals_; i++) {
         this.animationTimes_.push(this.animationBeginTime_ + i * this.animationResolutionTime_)
         if (this.animationTimes_[i] <= defaultTime) {

@@ -212,8 +212,11 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let features = []
     let view = map.getView()
     let viewProjection = view.getProjection()
-    let typeActive = false;
+    let typeActive = false
     map.forEachFeatureAtPixel(pixel, function (feature, layer) {
+      if (layer == null) {
+        return
+      }
       const layerData = layer.get(type + 'Data')
       if ((!Array.isArray(layerData)) || (layerData.length === 0)) {
         return
@@ -304,38 +307,81 @@ MapAnimation.prototype.initMouseInteractions = function () {
   }
 
   map.on('pointermove', function (evt) {
-    let config = self.get('config')
-    let layers = self.getLayersByGroup(config['overlayGroupName']).getArray()
-    let numLayers = layers.length
+    let map = self.get('map')
+    let groups = map.getLayers().getArray()
+    let numGroups = groups.length
+    let group
+    let layers
+    let numLayers
     let layer
+    let source
     let subLayers
     let numSubLayers
     let subLayer
     let tooltipData
+    let popupData
+    let dataFound = false
     let hit = false
+    let className
     let i
     let j
-    layers: for (i = 0; i < numLayers; i++) {
-      layer = layers[i]
-      subLayers = layer.getLayers().getArray()
-      numSubLayers = subLayers.length
-      for (j = 0; j < numSubLayers; j++) {
-        subLayer = subLayers[j]
-        tooltipData = subLayer.get('tooltipData')
-        if ((['ImageWMS', 'TileWMS'].includes(subLayer.get('className'))) && (subLayer.getVisible()) && (subLayer.getOpacity() > 0) && (Array.isArray(tooltipData)) && (tooltipData.length > 0)) {
-          hit = true
-          break layers
+    let k
+    loopGroups: for (i = 0; i < numGroups; i++) {
+      group = groups[i]
+      if (typeof group.getLayers !== 'function') {
+        continue
+      }
+      layers = group.getLayers().getArray()
+      numLayers = layers.length
+      loopLayers: for (j = 0; j < numLayers; j++) {
+        layer = layers[j]
+        subLayers = (typeof layer.getLayers === 'function') ? layer.getLayers().getArray() : [layer]
+        numSubLayers = subLayers.length
+        for (k = 0; k < numSubLayers; k++) {
+          subLayer = subLayers[k]
+          if ((subLayer.getVisible()) && (subLayer.getOpacity() > 0)) {
+            source = subLayer.getSource()
+            className = ''
+            if (source != null) {
+              className = source.get('className')
+            }
+            if ((className != null) && (className.length > 0) && (['imagewms', 'tilewms', 'wmts'].includes(className.toLowerCase()))) {
+              tooltipData = subLayer.get('tooltipData')
+              if ((Array.isArray(tooltipData)) && (tooltipData.length > 0)) {
+                hit = true
+                dataFound = true
+                break loopGroups
+              }
+            } else {
+              className = subLayer.get('className')
+              if ((className == null) || (className.length === 0)) {
+                continue
+              }
+              if (className.toLowerCase() === 'vector') {
+                tooltipData = subLayer.get('tooltipData')
+                if ((Array.isArray(tooltipData)) && (tooltipData.length > 0)) {
+                  dataFound = true
+                  break loopLayers
+                }
+                popupData = subLayer.get('popupData')
+                if ((Array.isArray(popupData)) && (popupData.length > 0)) {
+                  dataFound = true
+                  break loopLayers
+                }
+              }
+            }
+          }
         }
       }
     }
     if (!hit) {
-      hit = this.forEachFeatureAtPixel(evt['pixel'], function(feature, layer) {
-        return ((layer.get('popupData') != null) || (layer.get('tooltipData') != null))
+      hit = this.forEachFeatureAtPixel(evt['pixel'], function (feature, layer) {
+        return ((layer != null) && ((layer.get('popupData') != null) || (layer.get('tooltipData') != null)))
       })
     }
     if (hit) {
       this.getTargetElement().style.cursor = 'pointer'
-    } else {
+    } else if (dataFound) {
       this.getTarget().style.cursor = ''
     }
     handleWFSInteraction('tooltip', evt['pixel'])
@@ -1712,12 +1758,15 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
   let layer
   let numLayers
   let i
-  layers = this.getLayersByGroup(config['overlayGroupName'])
+  let source
+  layers = this.getLayersByGroup(config['featureGroupName'])
   numLayers = layers.getLength()
   for (i = 0; i < numLayers; i++) {
     layer = layers.item(i)
     if (layer.get('title') === layerTitle) {
-      layer.getSource().clear()
+      source = layer.getSource()
+      source.clear()
+      source.refresh()
       return
     }
   }
@@ -2025,4 +2074,26 @@ MapAnimation.prototype.setCallbacks = function (callbacks) {
       callbackFunctions[callback] = callbacks[callback]
     }
   }
+}
+
+/**
+ * Checks if animation time is valid for a given layer.
+ *
+ * @param {number} layerTime Layer time value to be checked.
+ * @param {number} prevLayerTime Previous time value.
+ * @param {number} currentTime Current time.
+ * @param layerOptions Layer template based on user configurations.
+ *
+ */
+MapAnimation.prototype.isValidLayerTime = function (layerTime, prevLayerTime, currentTime, layerOptions) {
+  let config = this.get('config')
+  // Ignore future observations (empty images)
+  if ((layerTime >= currentTime - config['ignoreObsOffset']) && (layerOptions['type'] === this.layerTypes['observation'])) {
+    return false
+  }
+  // Checking maximum resolution
+  if (layerTime - prevLayerTime < this.layerResolution) {
+    return false
+  }
+  return true
 }

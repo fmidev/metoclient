@@ -490,7 +490,6 @@ LazyAnimationLoader.prototype.initListeners = function () {
  */
 LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, loadId) {
   const self = this
-  const config = self.get('config')
   const animation = layer['animation']
   const absBeginTime = /** @type {number} */ (this.get('animationBeginTime'))
   const absEndTime = /** @type {number} */ (this.get('animationEndTime'))
@@ -507,16 +506,23 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   let iMax
   let newLayers = []
   let currentTime
-  const epsilon = this.layerResolution
   let resolutionTime = /** @type {number} */ (self.get('animationResolutionTime'))
   let filteredCapabTimes = []
   let capabTimesDefined = false
   let deltaTime
-  let endTime
   let layerTimes = []
   let animationTime = this.get('animationTime')
-  let animationTimes = [animationTime, this.getNextAnimationTime(animationTime)]
+  let animationTimes = []
+  let nextAnimationTime
+  let hideLoading = false
 
+  if ((animation['beginTime'] != null) && (animationTime < animation['beginTime'])) {
+    animationTime = animation['beginTime']
+    hideLoading = true
+  } else if ((animation['endTime'] != null) && (animationTime > animation['endTime'])) {
+    animationTime = animation['endTime']
+    hideLoading = true
+  }
   layerVisibility = this.get('map').get('layerVisibility')
   currentVisibility = layerVisibility[layer['title']]
   if (typeof currentVisibility === 'undefined') {
@@ -592,7 +598,7 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
     let numIntervalItemsLength
     let layerTime
     let intervalIndex
-    if (target.get('loadId') !== self.loadId) {
+    if ((target.get('loadId') !== self.loadId) || (target.get('hideLoading'))) {
       return
     }
     let tilesLoading = target.get('tilesLoading')
@@ -630,8 +636,7 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
     let numIntervalItemsLength
     let layerTime
     let intervalIndex
-
-    if (target.get('loadId') !== self.loadId) {
+    if ((target.get('loadId') !== self.loadId) || (target.get('hideLoading'))) {
       return
     }
     if (tilesLoaded == null) {
@@ -675,8 +680,7 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
     let numIntervalItemsLength
     let layerTime
     let intervalIndex
-
-    if (target.get('loadId') !== self.loadId) {
+    if ((target.get('loadId') !== self.loadId) || ((target.get('hideLoading')))) {
       return
     }
     if (tilesLoaded == null) {
@@ -721,17 +725,12 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   for (i = iMin; i <= iMax; i++) {
     capabTimesDefined = (Array.isArray(animation['capabTimes']) && (animation['capabTimes'].length > 0))
     layerTime = capabTimesDefined ? animation['capabTimes'][i] : animation['beginTime'] + i * animation['resolutionTime']
-    // Ignore future observations (empty images)
-    if ((layerTime >= currentTime - config['ignoreObsOffset']) && (layer['type'] === self.layerTypes['observation'])) {
+    if (!this.isValidLayerTime(layerTime, prevLayerTime, currentTime, layer)) {
       continue
     }
     deltaTime = capabTimesDefined ? animation['capabTimes'][Math.min(i + 1, iMax)] - animation['capabTimes'][i] : animation['resolutionTime']
     // Ignore forecast history
     if ((layerTime <= currentTime - deltaTime) && (layer['type'] === self.layerTypes['forecast'])) {
-      continue
-    }
-    // Checking maximum resolution
-    if (layerTime - prevLayerTime < epsilon) {
       continue
     }
     layerTimes.push(layerTime)
@@ -773,6 +772,9 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
     }
   }
   this.variableEvents.emitEvent('numIntervalItems', [this.numIntervalItems[loadId]])
+  nextAnimationTime = this.getNextAnimationTime(animationTime)
+  animationTimes[0] = animationTime
+  animationTimes[1] = (((animation['beginTime'] == null) || (animation['beginTime'] <= nextAnimationTime)) && ((animation['endTime'] == null) || (nextAnimationTime <= animation['endTime'])) && (this.isValidLayerTime(nextAnimationTime, animationTime, currentTime, layer))) ? nextAnimationTime : animationTime
   for (k = 0; k < 2; k++) {
     layerOptions.push({
       'extent': extent,
@@ -795,7 +797,8 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
       'loadId': loadId,
       'layerTime': animationTimes[k],
       'tilesLoaded': 0,
-      'tilesLoading': 0
+      'tilesLoading': 0,
+      'hideLoading': hideLoading
     }
     layerOptions[k]['visible'] = true
     // Todo: Generalize
@@ -825,18 +828,6 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   mapLayers.push(newLayers[1])
   if (this.numIntervalItems[loadId].length > 2) {
     this.numIntervalItems[loadId][0]['beginTime'] = 2 * this.numIntervalItems[loadId][0]['endTime'] - this.numIntervalItems[loadId][1]['endTime']
-  }
-  if (this.numIntervalItems[loadId].length > 0) {
-    endTime = this.numIntervalItems[loadId][this.numIntervalItems[loadId].length - 1]['endTime']
-    if ((this.get('animationResolutionTime') == null) && (absEndTime != null) && (endTime < absEndTime)) {
-      this.numIntervalItems[loadId].push({
-        'beginTime': endTime,
-        'endTime': absEndTime,
-        'status': '',
-        'loaded': 0,
-        'toBeLoaded': 0
-      })
-    }
   }
 }
 
@@ -901,14 +892,15 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
   }
   let i
   let j
+  let k
   let prevMapLayer
   let mapLayer
   let mapLayerClone
   let mapLayers
   let numMapLayers
-  let mapAnimation
   let source
   let sourceClone
+  let sourceNext
   let nextPGrp
   const newPGrp = []
   const animationGroups = this.get('animationGroups')
@@ -969,7 +961,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
     mapLayer = mapLayers[pGrp[i]]
     mapLayerClone = mapLayer.get('clone')
     mapLayerClone.setOpacity(0)
-    if ((mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime)) {
+    if (((mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime)) || ((mapLayer.get('type') === this.layerTypes['observation']) && (currentTime < animationTime))) {
       mapLayer.setOpacity(0)
       mapLayer.get('clone').setOpacity(0)
     } else {
@@ -980,27 +972,30 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
         } else {
           sourceClone = mapLayerClone.getSource()
           if ((sourceClone != null) && (sourceClone.get('layerTime') !== animationTime)) {
-            sourceClone.set('layerTime', animationTime)
-            sourceClone.set('tilesLoaded', 0)
-            sourceClone.set('tilesLoading', 0)
-            if (sourceClone.get('sourceType') === 'WMTS') {
-              sourceClone.set('timeFormatted', animationTimeFormatted)
-            } else {
-              sourceClone.updateParams({
-                'TIME': animationTimeFormatted
-              })
+            if (mapLayerClone.get('layerTimes').includes(animationTime)) {
+              sourceClone.set('layerTime', animationTime)
+              sourceClone.set('tilesLoaded', 0)
+              sourceClone.set('tilesLoading', 0)
+              sourceClone.set('hideLoading', false)
+              if (sourceClone.get('sourceType') === 'WMTS') {
+                sourceClone.set('timeFormatted', animationTimeFormatted)
+              } else {
+                sourceClone.updateParams({
+                  'TIME': animationTimeFormatted
+                })
+              }
+              sourceClone.refresh()
             }
-            sourceClone.refresh()
           } else {
             mapLayer.setOpacity(0)
             mapLayerClone.setOpacity(1)
             mapLayer.set('active', false)
             mapLayerClone.set('active', true)
-            mapAnimation = mapLayer.get('animation')
-            if ((source.get('layerTime') !== nextAnimationTime) && (mapAnimation.beginTime <= nextAnimationTime) && (nextAnimationTime <= mapAnimation.endTime)) {
+            if ((source.get('layerTime') !== nextAnimationTime) && (mapLayer.get('layerTimes').includes(nextAnimationTime))) {
               source.set('layerTime', nextAnimationTime)
               source.set('tilesLoaded', 0)
               source.set('tilesLoading', 0)
+              source.set('hideLoading', false)
               if (source.get('sourceType') === 'WMTS') {
                 source.set('timeFormatted', nextAnimationTimeFormatted)
               } else {
@@ -1014,6 +1009,17 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
         }
       }
     }
+    loopAllLayers: for (j = 0; j < numMapLayers; j++) {
+      sourceNext = mapLayers[j].getSource()
+      if ((sourceNext != null) && (isNumeric(nextAnimationTime)) && (sourceNext.get('layerTime') === nextAnimationTime) && (sourceNext.get('hideLoading'))) {
+        for (k = 0; k < lenNumIntervalItems; k++) {
+          if (nextAnimationTime === this.numIntervalItems[this.loadId][k]['endTime']) {
+            this.numIntervalItems[this.loadId][k]['status'] = constants.LOADING_STATUS['ready']
+            this.variableEvents.emitEvent('numIntervalItems', [this.numIntervalItems[this.loadId]])
+            break loopAllLayers
+          }
+        }
+      }
+    }
   }
 }
-

@@ -455,10 +455,10 @@ export class MetOClient {
     popupContainer.classList.add('ol-popup')
     popupContainer.setAttribute('id', `${mapContainerIdOrClass}-popup`)
     popupContainer.style.display = 'none'
-    popupCloser = document.createElement('a')
+    popupCloser = document.createElement('div')
     popupCloser.classList.add('ol-popup-closer')
     popupCloser.setAttribute('id', `${mapContainerIdOrClass}-popup-closer`)
-    popupCloser.setAttribute('href', '#')
+    popupCloser.innerHTML = '✖'
     popupContainer.appendChild(popupCloser)
     popupContent = document.createElement('div')
     popupContent.setAttribute('id', `${mapContainerIdOrClass}-popup-content`)
@@ -521,7 +521,7 @@ export class MetOClient {
     if (options['endTime'] != null) {
       this.timeController_.setEndTime(options['endTime'])
     }
-    if (options['timeStep'] != null) {
+    if (typeof options['timeStep'] !== 'undefined') {
       this.timeController_.setTimeStep(options['timeStep'])
     }
     if (options['timeZone'] != null) {

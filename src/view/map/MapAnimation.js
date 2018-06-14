@@ -392,7 +392,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let view = map.getView()
     let viewResolution = /** @type {number} */ (view.getResolution())
     let viewProjection = view.getProjection()
-    let popupShown = handleWFSInteraction('popup', evt['pixel'])
+    let popupShown = false
     // WMS
     let getPopupLayers = (layers) => {
       return layers.getArray().reduce((popupLayers, layer) => {
@@ -412,6 +412,9 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let req
     let layers = map.getLayers()
     let popupLayers = getPopupLayers(layers)
+    if (popupLayers > 0) {
+      popupShown = handleWFSInteraction('popup', evt['pixel'])
+    }
     let getFeatureInfoOnLoad = (req, layer) => {
       let response
       let properties

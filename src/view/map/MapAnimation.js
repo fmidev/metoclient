@@ -412,9 +412,8 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let req
     let layers = map.getLayers()
     let popupLayers = getPopupLayers(layers)
-    if (popupLayers > 0) {
-      popupShown = handleWFSInteraction('popup', evt['pixel'])
-    }
+    popupShown = handleWFSInteraction('popup', evt['pixel'])
+
     let getFeatureInfoOnLoad = (req, layer) => {
       let response
       let properties
@@ -1438,7 +1437,6 @@ MapAnimation.prototype.setAnimationTime = function (animationTime) {
   if ((callbacks != null) && (typeof callbacks['time'] === 'function')) {
     callbacks['time'](animationTime)
   }
-  this.hidePopup()
   this.updateAnimation()
   this.updateFeatureAnimation()
 }

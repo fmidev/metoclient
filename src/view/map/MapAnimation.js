@@ -109,11 +109,13 @@ Ol.inherits(MapAnimation, OlObject)
  * @param {number=} animationEndTime Animation end time.
  * @param {number=} animationResolutionTime Animation end time.
  * @param {number=} animationNumIntervals Number of animation intervals.
- * @param {Object=} callbacks Callback functions for map events.
+ * @param {Object=} animationCallbacks Callback functions for map events.
  */
-MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks) {
+MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, animationCallbacks) {
   const config = this.get('config')
+  let callbacks
   const featureGroupName = config['featureGroupName']
+  const overlayGroupName = config['overlayGroupName']
   let isFeatureGroup
   let layerGroups
   let layerGroup
@@ -125,6 +127,7 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   let currentLayerTitle
   let numCurrentLayers
   let currentSource
+  let foundAnimLayers = false
   let i
   let j
   let k
@@ -142,6 +145,7 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
         currentLayers = layerGroup.getLayers()
         isFeatureGroup = (layerGroup.get('title') === featureGroupName)
         numCurrentLayers = currentLayers.getLength()
+        foundAnimLayers = foundAnimLayers || ((layerGroup.get('title') === overlayGroupName) && (numCurrentLayers > 0))
         for (j = 0; j < numCurrentLayers; j++) {
           currentLayer = currentLayers.item(j)
           currentLayerTitle = currentLayer.get('title')
@@ -190,14 +194,20 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
     this.initEPSG3067Projection()
   }
 
-  if (callbacks != null) {
-    this.set('callbacks', callbacks)
+  if (animationCallbacks != null) {
+    this.set('callbacks', animationCallbacks)
   }
 
   this.set('viewProjection', this.get('config')['projection'])
   this.updateStorage()
   this.parameterizeLayers(capabilities)
   this.initMap()
+  if (!foundAnimLayers) {
+    callbacks = this.get('callbacks')
+    if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
+      callbacks['ready']()
+    }
+  }
 }
 
 /**

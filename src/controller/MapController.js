@@ -194,9 +194,10 @@ export default class MapController {
    * Shows a popup window on the map.
    * @param content {string} HTML content of the popup window.
    * @param coordinate {Array} Popup coordinates.
+   * @param append {boolean=} Append content into popup, if it already exists and is located at the same coordinates.
    */
-  showPopup (content, coordinate) {
-    this.view_.showPopup(content, coordinate)
+  showPopup (content, coordinate, append) {
+    this.view_.showPopup(content, coordinate, append)
   };
 
   /**

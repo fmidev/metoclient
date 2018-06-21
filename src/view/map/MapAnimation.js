@@ -307,7 +307,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
       if (content.length > 0) {
         content += '</div>'
         let coord = map.getCoordinateFromPixel(pixel)
-        self.showPopup(content, coord)
+        self.showPopup(content, coord, true)
         dataShown = true
       }
     } else if ((type !== 'tooltip') || (typeActive)) {
@@ -350,20 +350,15 @@ MapAnimation.prototype.initMouseInteractions = function () {
         for (k = 0; k < numSubLayers; k++) {
           subLayer = subLayers[k]
           if ((subLayer.getVisible()) && (subLayer.getOpacity() > 0)) {
-            source = subLayer.getSource()
-            className = ''
-            if (source != null) {
-              className = source.get('className')
-            }
+            className = subLayer.get('className')
             if ((className != null) && (className.length > 0) && (['imagewms', 'tilewms', 'wmts'].includes(className.toLowerCase()))) {
-              tooltipData = subLayer.get('tooltipData')
-              if ((Array.isArray(tooltipData)) && (tooltipData.length > 0)) {
+              popupData = subLayer.get('popupData')
+              if ((Array.isArray(popupData)) && (popupData.length > 0)) {
                 hit = true
                 dataFound = true
                 break loopGroups
               }
             } else {
-              className = subLayer.get('className')
               if ((className == null) || (className.length === 0)) {
                 continue
               }
@@ -392,7 +387,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     if (hit) {
       this.getTargetElement().style.cursor = 'pointer'
     } else if (dataFound) {
-      this.getTarget().style.cursor = ''
+      this.getTargetElement().style.cursor = ''
     }
     handleWFSInteraction('tooltip', evt['pixel'])
   })
@@ -469,8 +464,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
               }
             }
           } else {
-            self.hidePopup()
-            self.showPopup(popupText, evt['coordinate'])
+            self.showPopup(popupText, evt['coordinate'], true)
             popupShown = true
           }
         }
@@ -482,33 +476,9 @@ MapAnimation.prototype.initMouseInteractions = function () {
       if (source == null) {
         return
       }
-      let url = layer.get('popupUrl')
-      if (url != null) {
-        let popupData = layer.get('popupData')
-        if ((!Array.isArray(popupData)) || (popupData.length === 0)) {
-          return
-        }
-        let popupDataString = popupData
-          .map(item => item.trim())
-          .join()
-          .replace(/\s+/g, '')
-        let animationTime = self.get('animationTime')
-        let coord = evt['coordinate']
-        if ((animationTime == null) || (popupDataString == null) || (coord == null)) {
-          return
-        }
-        let timeParameter = moment(animationTime).format('YYYYMMDDTHHmmss')
-        let coord4326 = OlProj.transform(
-          coord,
-          viewProjection,
-          'EPSG:4326'
-        )
-        url += `/timeseries?precision=double&tz=UTC&producer=fmi&format=json&param=${popupDataString}&starttime=${timeParameter}&endtime=${timeParameter}&lonlat=${coord4326[0].toFixed(6)},${coord4326[1].toFixed(6)}`
-      } else {
-        url = source.getGetFeatureInfoUrl(evt['coordinate'], viewResolution, viewProjection, {
-          'INFO_FORMAT': 'application/json'
-        })
-      }
+      let url = source.getGetFeatureInfoUrl(evt['coordinate'], viewResolution, viewProjection, {
+        'INFO_FORMAT': 'application/json'
+      })
       req = new XMLHttpRequest()
       req.open('GET', url)
       req.timeout = 20000
@@ -1787,11 +1757,19 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
  * Shows a popup window on the map.
  * @param content {string} HTML content of the popup window.
  * @param coordinate {Array} Popup coordinates.
+ * @param append {boolean=} Append content into popup, if it already exists and is located at the same coordinates.
  */
-MapAnimation.prototype.showPopup = function (content, coordinate) {
+MapAnimation.prototype.showPopup = function (content, coordinate, append) {
   const popupContent = document.getElementById(`${this.get('config')['mapContainer']}-popup-content`)
-  popupContent['innerHTML'] = content
-  this.get('overlay').setPosition(coordinate)
+  let overlay = this.get('overlay')
+  let overlayPosition = overlay.get('position')
+
+  if ((append) && (overlayPosition != null) && (overlayPosition[0] === coordinate[0]) && (overlayPosition[1] === coordinate[1])) {
+    popupContent['innerHTML'] += content
+  } else {
+    popupContent['innerHTML'] = content
+    overlay.setPosition(coordinate)
+  }
 }
 
 /**

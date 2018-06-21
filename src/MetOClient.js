@@ -733,10 +733,11 @@ export class MetOClient {
    * @param content {string} HTML content of the popup window.
    * @param x {number} Popup X coordinate.
    * @param y {number} Popup Y coordinate.
+   * @param append {boolean=} Append content into popup, if it already exists and is located at the same coordinates.
    * @export
    */
-  showPopup (content, x, y) {
-    this.mapController_.showPopup(content, [x, y])
+  showPopup (content, x, y, append) {
+    this.mapController_.showPopup(content, [x, y], append)
   };
 
   /**

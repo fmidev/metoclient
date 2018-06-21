@@ -986,7 +986,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
               sourceClone.set('tilesLoaded', 0)
               sourceClone.set('tilesLoading', 0)
               sourceClone.set('hideLoading', false)
-              if (sourceClone.get('sourceType') === 'WMTS') {
+              if (mapLayerClone.get('className') === 'WMTS') {
                 sourceClone.set('timeFormatted', animationTimeFormatted)
               } else {
                 sourceClone.updateParams({
@@ -1005,7 +1005,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
               source.set('tilesLoaded', 0)
               source.set('tilesLoading', 0)
               source.set('hideLoading', false)
-              if (source.get('sourceType') === 'WMTS') {
+              if (mapLayer.get('className') === 'WMTS') {
                 source.set('timeFormatted', nextAnimationTimeFormatted)
               } else {
                 source.updateParams({

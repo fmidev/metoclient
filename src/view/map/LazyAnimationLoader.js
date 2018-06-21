@@ -71,6 +71,7 @@ LazyAnimationLoader.prototype.initMap = function () {
   let layerGroups
   let numLayerGroups
   let staticLayers
+  let layerType
   if (target == null) {
     return
   }
@@ -86,13 +87,21 @@ LazyAnimationLoader.prototype.initMap = function () {
     layerGroups = map.getLayers()
     numLayerGroups = layerGroups.getLength()
     for (i = 0; i < numLayerGroups; i++) {
+      layerType = null
       layerGroup = layerGroups.item(i)
-      if (layerGroup.get('title') === config['featureGroupName']) {
-        staticLayers = self.loadStaticLayers(layerVisibility, this.layerTypes['features'])
+      switch (layerGroup.get('title')) {
+        case config['featureGroupName']:
+          layerType = this.layerTypes['features']
+          break
+        case config['baseGroupName']:
+          layerType = this.layerTypes['map']
+          break
+      }
+      if (layerType != null) {
+        staticLayers = self.loadStaticLayers(layerVisibility, this.layerTypes[layerType])
         if (staticLayers != null) {
           layerGroup.setLayers(new OlCollection(staticLayers))
         }
-        break
       }
     }
     while (this.activeInteractions.length > 0) {

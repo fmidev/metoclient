@@ -223,15 +223,26 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let view = map.getView()
     let viewProjection = view.getProjection()
     let typeActive = false
+    let config = self.get('config')
+    let layers = self.getLayersByGroup(config['featureGroupName']).getArray()
+    let numLayers = layers.length
+    let i
+    let layerData
+    for (i = 0; i < numLayers; i++) {
+      layerData = layers[i].get(type + 'Data')
+      if ((Array.isArray(layerData)) && (layerData.length > 0) && (layers[i].get('visible')) && (layers[i].get('opacity'))) {
+        typeActive = true
+        break
+      }
+    }
     map.forEachFeatureAtPixel(pixel, function (feature, layer) {
       if (layer == null) {
         return
       }
-      const layerData = layer.get(type + 'Data')
+      layerData = layer.get(type + 'Data')
       if ((!Array.isArray(layerData)) || (layerData.length === 0)) {
         return
       }
-      typeActive = true
       feature.set(type + 'Data', layerData)
       let layerId = feature.getId()
       const separatorIndex = layerId.indexOf('.')
@@ -310,7 +321,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
         self.showPopup(content, coord, true)
         dataShown = true
       }
-    } else if ((type !== 'tooltip') || (typeActive)) {
+    } else if ((type !== 'tooltip') && (typeActive)) {
       self.hidePopup()
     }
     return dataShown
@@ -324,7 +335,6 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let layers
     let numLayers
     let layer
-    let source
     let subLayers
     let numSubLayers
     let subLayer

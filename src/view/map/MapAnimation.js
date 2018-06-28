@@ -228,6 +228,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let numLayers = layers.length
     let i
     let layerData
+    let coordOffset = [0, 0]
     for (i = 0; i < numLayers; i++) {
       layerData = layers[i].get(type + 'Data')
       if ((Array.isArray(layerData)) && (layerData.length > 0) && (layers[i].get('visible')) && (layers[i].get('opacity'))) {
@@ -326,7 +327,10 @@ MapAnimation.prototype.initMouseInteractions = function () {
       }
       if (content.length > 0) {
         content += '</div>'
-        let coord = map.getCoordinateFromPixel(pixel)
+        if (type === 'tooltip') {
+          coordOffset = config['tooltipOffset']
+        }
+        let coord = map.getCoordinateFromPixel([pixel[0] + coordOffset[0], pixel[1] + coordOffset[1]])
         self.showPopup(content, coord, true, type)
         dataShown = true
       }

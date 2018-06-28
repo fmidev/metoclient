@@ -178,7 +178,8 @@ export class MetOClient {
       'showLegend',
       'showMarker',
       'staticControls',
-      'staticOverlayGroupName'
+      'staticOverlayGroupName',
+      'tooltipOffset'
     ]
     let timeModel = [
       'autoReplay',
@@ -318,7 +319,8 @@ export class MetOClient {
           'showLegend': true,
           'showMarker': false,
           'staticControls': false,
-          'staticOverlayGroupName': 'Static overlays'
+          'staticOverlayGroupName': 'Static overlays',
+          'tooltipOffset': [20, 0]
         }
       },
       'time': {

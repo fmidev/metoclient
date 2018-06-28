@@ -245,9 +245,13 @@ MapAnimation.prototype.initMouseInteractions = function () {
       }
       feature.set(type + 'Data', layerData)
       let layerId = feature.getId()
-      const separatorIndex = layerId.indexOf('.')
-      if (separatorIndex > 0) {
-        layerId = layerId.substr(0, separatorIndex)
+      if (layerId != null) {
+        const separatorIndex = layerId.indexOf('.')
+        if (separatorIndex > 0) {
+          layerId = layerId.substr(0, separatorIndex)
+        }
+      } else {
+        layerId = ''
       }
       feature.set('layerId', layerId)
       features.push(feature)
@@ -289,7 +293,10 @@ MapAnimation.prototype.initMouseInteractions = function () {
         if (content.length === 0) {
           content += '<div class="fmi-metoclient-' + type + '-content">'
         }
-        content += '<div class="fmi-metoclient-' + type + '-item"><b>' + layerId + '</b><br>'
+        content += '<div class="fmi-metoclient-' + type + '-item">'
+        if (layerId.length > 0) {
+          content += '<b>' + layerId + '</b><br>'
+        }
         for (let i = 0; i < numProperties; i++) {
           let property = properties[i].trim()
           if (property === 'the_geom') {
@@ -306,9 +313,11 @@ MapAnimation.prototype.initMouseInteractions = function () {
             let propertyData = features[j].get(property)
             if (propertyData != null) {
               if (['time', 'begintime', 'endtime'].indexOf(property) >= 0) {
-                content += properties[i] + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'
-              } else {
-                content += properties[i] + ': ' + propertyData + '<br>'
+                content += property + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'
+              } else if ((property === 'name') && (numProperties === 1)) {
+                content += propertyData + '<br>'
+              } else  {
+                content += property + ': ' + propertyData + '<br>'
               }
             }
           }
@@ -318,10 +327,10 @@ MapAnimation.prototype.initMouseInteractions = function () {
       if (content.length > 0) {
         content += '</div>'
         let coord = map.getCoordinateFromPixel(pixel)
-        self.showPopup(content, coord, true)
+        self.showPopup(content, coord, true, type)
         dataShown = true
       }
-    } else if ((type !== 'tooltip') && (typeActive)) {
+    } else if (typeActive) {
       self.hidePopup()
     }
     return dataShown
@@ -1768,17 +1777,26 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
  * @param content {string} HTML content of the popup window.
  * @param coordinate {Array} Popup coordinates.
  * @param append {boolean=} Append content into popup, if it already exists and is located at the same coordinates.
+ * @param type {string=} Popup type.
  */
-MapAnimation.prototype.showPopup = function (content, coordinate, append) {
+MapAnimation.prototype.showPopup = function (content, coordinate, append, type) {
   const popupContent = document.getElementById(`${this.get('config')['mapContainer']}-popup-content`)
   let overlay = this.get('overlay')
   let overlayPosition = overlay.get('position')
 
   if ((append) && (overlayPosition != null) && (overlayPosition[0] === coordinate[0]) && (overlayPosition[1] === coordinate[1])) {
-    popupContent['innerHTML'] += content
+    // Todo: improve popup to have structure instead of single string
+    if (!popupContent['innerHTML'].includes(content)) {
+      popupContent['innerHTML'] += content
+    }
   } else {
-    popupContent['innerHTML'] = content
-    overlay.setPosition(coordinate)
+    if (popupContent['innerHTML'] !== content) {
+      popupContent['innerHTML'] = content
+      overlay.setPosition(coordinate)
+    }
+  }
+  if (type != null) {
+    popupContent.parentElement.setAttribute('data-fmi-metoclient-popup-type', type)
   }
 }
 
@@ -1786,6 +1804,7 @@ MapAnimation.prototype.showPopup = function (content, coordinate, append) {
  * Hides popup window on the map.
  */
 MapAnimation.prototype.hidePopup = function () {
+  const popupContent = document.getElementById(`${this.get('config')['mapContainer']}-popup-content`)
   const mapContainer = this.get('config')['mapContainer']
   let popupCloser
   const overlay = this.get('overlay')
@@ -1796,6 +1815,8 @@ MapAnimation.prototype.hidePopup = function () {
   if (popupCloser != null) {
     popupCloser.blur()
   }
+  popupContent['innerHTML'] = ''
+  popupContent.parentElement.setAttribute('data-fmi-metoclient-popup-type', '')
 }
 
 /**

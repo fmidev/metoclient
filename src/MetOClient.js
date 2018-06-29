@@ -172,13 +172,15 @@ export class MetOClient {
       'maxAsyncLoadCount',
       'noLegendText',
       'overlayGroupName',
+      'overlayOptions',
       'projection',
       'resolutions',
       'showLayerSwitcher',
       'showLegend',
       'showMarker',
       'staticControls',
-      'staticOverlayGroupName'
+      'staticOverlayGroupName',
+      'tooltipOffset'
     ]
     let timeModel = [
       'autoReplay',
@@ -313,12 +315,14 @@ export class MetOClient {
           'maxAsyncLoadCount': 5,
           'noLegendText': 'None',
           'overlayGroupName': 'Overlays',
+          'overlayOptions': {},
           'projection': 'EPSG:3067',
           'showLayerSwitcher': true,
           'showLegend': true,
           'showMarker': false,
           'staticControls': false,
-          'staticOverlayGroupName': 'Static overlays'
+          'staticOverlayGroupName': 'Static overlays',
+          'tooltipOffset': [20, 0]
         }
       },
       'time': {
@@ -733,10 +737,11 @@ export class MetOClient {
    * @param content {string} HTML content of the popup window.
    * @param x {number} Popup X coordinate.
    * @param y {number} Popup Y coordinate.
+   * @param append {boolean=} Append content into popup, if it already exists and is located at the same coordinates.
    * @export
    */
-  showPopup (content, x, y) {
-    this.mapController_.showPopup(content, [x, y])
+  showPopup (content, x, y, append) {
+    this.mapController_.showPopup(content, [x, y], append)
   };
 
   /**

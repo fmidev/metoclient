@@ -20,7 +20,6 @@ export default class SourceWMTS extends OlSourceWMTS {
     if (options['elevation'] != null) {
       this.set('elevation', options['elevation'])
     }
-    this.set('sourceType', 'WMTS');
     this.setTileUrlFunction((tileCoord, pxlRatio, proj) => {
       let url = plainTileUrlFunction(tileCoord, pxlRatio, proj)
       let time = this.get('timeFormatted')

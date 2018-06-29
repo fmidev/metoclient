@@ -109,6 +109,7 @@ export default class MapProducer {
           'editOpacity': options['editOpacity'],
           'zIndex': options['zIndex'],
           'popupDataFMI': options['popupDataFMI'],
+          'className': typeLwr,
           'source': source
         })
       case 'imagewms':
@@ -122,6 +123,7 @@ export default class MapProducer {
           'editOpacity': options['editOpacity'],
           'zIndex': options['zIndex'],
           'popupDataFMI': options['popupDataFMI'],
+          'className': typeLwr,
           'source': source
         })
       case 'vector':

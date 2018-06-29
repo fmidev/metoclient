@@ -98,7 +98,7 @@ List of API functions:
 * setTimeRate(rate_ms)
 * setTimeStep(timeStep)
 * setZoom(level)
-* showPopup(content,x,y)
+* showPopup(content,x,y,append)
 * stop()
 
 More information: [build/jsdoc/MetOClient.html](build/jsdoc/MetOClient.html)

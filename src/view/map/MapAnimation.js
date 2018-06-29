@@ -109,11 +109,13 @@ Ol.inherits(MapAnimation, OlObject)
  * @param {number=} animationEndTime Animation end time.
  * @param {number=} animationResolutionTime Animation end time.
  * @param {number=} animationNumIntervals Number of animation intervals.
- * @param {Object=} callbacks Callback functions for map events.
+ * @param {Object=} animationCallbacks Callback functions for map events.
  */
-MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks) {
+MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, animationCallbacks) {
   const config = this.get('config')
+  let callbacks
   const featureGroupName = config['featureGroupName']
+  const overlayGroupName = config['overlayGroupName']
   let isFeatureGroup
   let layerGroups
   let layerGroup
@@ -125,6 +127,7 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   let currentLayerTitle
   let numCurrentLayers
   let currentSource
+  let foundAnimLayers = false
   let i
   let j
   let k
@@ -142,6 +145,7 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
         currentLayers = layerGroup.getLayers()
         isFeatureGroup = (layerGroup.get('title') === featureGroupName)
         numCurrentLayers = currentLayers.getLength()
+        foundAnimLayers = foundAnimLayers || ((layerGroup.get('title') === overlayGroupName) && (numCurrentLayers > 0))
         for (j = 0; j < numCurrentLayers; j++) {
           currentLayer = currentLayers.item(j)
           currentLayerTitle = currentLayer.get('title')
@@ -190,14 +194,20 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
     this.initEPSG3067Projection()
   }
 
-  if (callbacks != null) {
-    this.set('callbacks', callbacks)
+  if (animationCallbacks != null) {
+    this.set('callbacks', animationCallbacks)
   }
 
   this.set('viewProjection', this.get('config')['projection'])
   this.updateStorage()
   this.parameterizeLayers(capabilities)
   this.initMap()
+  if (!foundAnimLayers) {
+    callbacks = this.get('callbacks')
+    if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
+      callbacks['ready']()
+    }
+  }
 }
 
 /**
@@ -213,20 +223,36 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let view = map.getView()
     let viewProjection = view.getProjection()
     let typeActive = false
+    let config = self.get('config')
+    let layers = self.getLayersByGroup(config['featureGroupName']).getArray()
+    let numLayers = layers.length
+    let i
+    let layerData
+    let coordOffset = [0, 0]
+    for (i = 0; i < numLayers; i++) {
+      layerData = layers[i].get(type + 'Data')
+      if ((Array.isArray(layerData)) && (layerData.length > 0) && (layers[i].get('visible')) && (layers[i].get('opacity'))) {
+        typeActive = true
+        break
+      }
+    }
     map.forEachFeatureAtPixel(pixel, function (feature, layer) {
       if (layer == null) {
         return
       }
-      const layerData = layer.get(type + 'Data')
+      layerData = layer.get(type + 'Data')
       if ((!Array.isArray(layerData)) || (layerData.length === 0)) {
         return
       }
-      typeActive = true
       feature.set(type + 'Data', layerData)
       let layerId = feature.getId()
-      const separatorIndex = layerId.indexOf('.')
-      if (separatorIndex > 0) {
-        layerId = layerId.substr(0, separatorIndex)
+      if (layerId != null) {
+        const separatorIndex = layerId.indexOf('.')
+        if (separatorIndex > 0) {
+          layerId = layerId.substr(0, separatorIndex)
+        }
+      } else {
+        layerId = ''
       }
       feature.set('layerId', layerId)
       features.push(feature)
@@ -268,7 +294,10 @@ MapAnimation.prototype.initMouseInteractions = function () {
         if (content.length === 0) {
           content += '<div class="fmi-metoclient-' + type + '-content">'
         }
-        content += '<div class="fmi-metoclient-' + type + '-item"><b>' + layerId + '</b><br>'
+        content += '<div class="fmi-metoclient-' + type + '-item">'
+        if (layerId.length > 0) {
+          content += '<b>' + layerId + '</b><br>'
+        }
         for (let i = 0; i < numProperties; i++) {
           let property = properties[i].trim()
           if (property === 'the_geom') {
@@ -285,9 +314,11 @@ MapAnimation.prototype.initMouseInteractions = function () {
             let propertyData = features[j].get(property)
             if (propertyData != null) {
               if (['time', 'begintime', 'endtime'].indexOf(property) >= 0) {
-                content += properties[i] + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'
-              } else {
-                content += properties[i] + ': ' + propertyData + '<br>'
+                content += property + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'
+              } else if ((property === 'name') && (numProperties === 1)) {
+                content += propertyData + '<br>'
+              } else  {
+                content += property + ': ' + propertyData + '<br>'
               }
             }
           }
@@ -296,11 +327,14 @@ MapAnimation.prototype.initMouseInteractions = function () {
       }
       if (content.length > 0) {
         content += '</div>'
-        let coord = map.getCoordinateFromPixel(pixel)
-        self.showPopup(content, coord)
+        if (type === 'tooltip') {
+          coordOffset = config['tooltipOffset']
+        }
+        let coord = map.getCoordinateFromPixel([pixel[0] + coordOffset[0], pixel[1] + coordOffset[1]])
+        self.showPopup(content, coord, true, type)
         dataShown = true
       }
-    } else if ((type !== 'tooltip') || (typeActive)) {
+    } else if (typeActive) {
       self.hidePopup()
     }
     return dataShown
@@ -314,7 +348,6 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let layers
     let numLayers
     let layer
-    let source
     let subLayers
     let numSubLayers
     let subLayer
@@ -340,20 +373,15 @@ MapAnimation.prototype.initMouseInteractions = function () {
         for (k = 0; k < numSubLayers; k++) {
           subLayer = subLayers[k]
           if ((subLayer.getVisible()) && (subLayer.getOpacity() > 0)) {
-            source = subLayer.getSource()
-            className = ''
-            if (source != null) {
-              className = source.get('className')
-            }
+            className = subLayer.get('className')
             if ((className != null) && (className.length > 0) && (['imagewms', 'tilewms', 'wmts'].includes(className.toLowerCase()))) {
-              tooltipData = subLayer.get('tooltipData')
-              if ((Array.isArray(tooltipData)) && (tooltipData.length > 0)) {
+              popupData = subLayer.get('popupData')
+              if ((Array.isArray(popupData)) && (popupData.length > 0)) {
                 hit = true
                 dataFound = true
                 break loopGroups
               }
             } else {
-              className = subLayer.get('className')
               if ((className == null) || (className.length === 0)) {
                 continue
               }
@@ -382,7 +410,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     if (hit) {
       this.getTargetElement().style.cursor = 'pointer'
     } else if (dataFound) {
-      this.getTarget().style.cursor = ''
+      this.getTargetElement().style.cursor = ''
     }
     handleWFSInteraction('tooltip', evt['pixel'])
   })
@@ -392,7 +420,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let view = map.getView()
     let viewResolution = /** @type {number} */ (view.getResolution())
     let viewProjection = view.getProjection()
-    let popupShown = handleWFSInteraction('popup', evt['pixel'])
+    let popupShown = false
     // WMS
     let getPopupLayers = (layers) => {
       return layers.getArray().reduce((popupLayers, layer) => {
@@ -412,6 +440,8 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let req
     let layers = map.getLayers()
     let popupLayers = getPopupLayers(layers)
+    popupShown = handleWFSInteraction('popup', evt['pixel'])
+
     let getFeatureInfoOnLoad = (req, layer) => {
       let response
       let properties
@@ -457,8 +487,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
               }
             }
           } else {
-            self.hidePopup()
-            self.showPopup(popupText, evt['coordinate'])
+            self.showPopup(popupText, evt['coordinate'], true)
             popupShown = true
           }
         }
@@ -470,33 +499,9 @@ MapAnimation.prototype.initMouseInteractions = function () {
       if (source == null) {
         return
       }
-      let url = layer.get('popupUrl')
-      if (url != null) {
-        let popupData = layer.get('popupData')
-        if ((!Array.isArray(popupData)) || (popupData.length === 0)) {
-          return
-        }
-        let popupDataString = popupData
-          .map(item => item.trim())
-          .join()
-          .replace(/\s+/g, '')
-        let animationTime = self.get('animationTime')
-        let coord = evt['coordinate']
-        if ((animationTime == null) || (popupDataString == null) || (coord == null)) {
-          return
-        }
-        let timeParameter = moment(animationTime).format('YYYYMMDDTHHmmss')
-        let coord4326 = OlProj.transform(
-          coord,
-          viewProjection,
-          'EPSG:4326'
-        )
-        url += `/timeseries?precision=double&tz=UTC&producer=fmi&format=json&param=${popupDataString}&starttime=${timeParameter}&endtime=${timeParameter}&lonlat=${coord4326[0].toFixed(6)},${coord4326[1].toFixed(6)}`
-      } else {
-        url = source.getGetFeatureInfoUrl(evt['coordinate'], viewResolution, viewProjection, {
-          'INFO_FORMAT': 'application/json'
-        })
-      }
+      let url = source.getGetFeatureInfoUrl(evt['coordinate'], viewResolution, viewProjection, {
+        'INFO_FORMAT': 'application/json'
+      })
       req = new XMLHttpRequest()
       req.open('GET', url)
       req.timeout = 20000
@@ -1435,7 +1440,6 @@ MapAnimation.prototype.setAnimationTime = function (animationTime) {
   if ((callbacks != null) && (typeof callbacks['time'] === 'function')) {
     callbacks['time'](animationTime)
   }
-  this.hidePopup()
   this.updateAnimation()
   this.updateFeatureAnimation()
 }
@@ -1776,17 +1780,35 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
  * Shows a popup window on the map.
  * @param content {string} HTML content of the popup window.
  * @param coordinate {Array} Popup coordinates.
+ * @param append {boolean=} Append content into popup, if it already exists and is located at the same coordinates.
+ * @param type {string=} Popup type.
  */
-MapAnimation.prototype.showPopup = function (content, coordinate) {
+MapAnimation.prototype.showPopup = function (content, coordinate, append, type) {
   const popupContent = document.getElementById(`${this.get('config')['mapContainer']}-popup-content`)
-  popupContent['innerHTML'] = content
-  this.get('overlay').setPosition(coordinate)
+  let overlay = this.get('overlay')
+  let overlayPosition = overlay.get('position')
+
+  if ((append) && (overlayPosition != null) && (overlayPosition[0] === coordinate[0]) && (overlayPosition[1] === coordinate[1])) {
+    // Todo: improve popup to have structure instead of single string
+    if (!popupContent['innerHTML'].includes(content)) {
+      popupContent['innerHTML'] += content
+    }
+  } else {
+    if (popupContent['innerHTML'] !== content) {
+      popupContent['innerHTML'] = content
+      overlay.setPosition(coordinate)
+    }
+  }
+  if (type != null) {
+    popupContent.parentElement.setAttribute('data-fmi-metoclient-popup-type', type)
+  }
 }
 
 /**
  * Hides popup window on the map.
  */
 MapAnimation.prototype.hidePopup = function () {
+  const popupContent = document.getElementById(`${this.get('config')['mapContainer']}-popup-content`)
   const mapContainer = this.get('config')['mapContainer']
   let popupCloser
   const overlay = this.get('overlay')
@@ -1797,6 +1819,8 @@ MapAnimation.prototype.hidePopup = function () {
   if (popupCloser != null) {
     popupCloser.blur()
   }
+  popupContent['innerHTML'] = ''
+  popupContent.parentElement.setAttribute('data-fmi-metoclient-popup-type', '')
 }
 
 /**

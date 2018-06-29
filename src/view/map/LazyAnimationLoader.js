@@ -64,6 +64,7 @@ LazyAnimationLoader.prototype.initMap = function () {
   let mapContainerElement
   let popupCloser
   let popupContainer
+  let overlayOptions
   let viewCenter
   let viewZoom
   let i
@@ -71,6 +72,7 @@ LazyAnimationLoader.prototype.initMap = function () {
   let layerGroups
   let numLayerGroups
   let staticLayers
+  let layerType
   if (target == null) {
     return
   }
@@ -86,13 +88,21 @@ LazyAnimationLoader.prototype.initMap = function () {
     layerGroups = map.getLayers()
     numLayerGroups = layerGroups.getLength()
     for (i = 0; i < numLayerGroups; i++) {
+      layerType = null
       layerGroup = layerGroups.item(i)
-      if (layerGroup.get('title') === config['featureGroupName']) {
-        staticLayers = self.loadStaticLayers(layerVisibility, this.layerTypes['features'])
+      switch (layerGroup.get('title')) {
+        case config['featureGroupName']:
+          layerType = this.layerTypes['features']
+          break
+        case config['baseGroupName']:
+          layerType = this.layerTypes['map']
+          break
+      }
+      if (layerType != null) {
+        staticLayers = self.loadStaticLayers(layerVisibility, this.layerTypes[layerType])
         if (staticLayers != null) {
           layerGroup.setLayers(new OlCollection(staticLayers))
         }
-        break
       }
     }
     while (this.activeInteractions.length > 0) {
@@ -145,13 +155,10 @@ LazyAnimationLoader.prototype.initMap = function () {
   popupContainer = document.getElementById(`${mapContainer}-popup`)
   popupCloser = document.getElementById(`${mapContainer}-popup-closer`)
   // Create an overlay to anchor the popup to the map.
-  overlay = new OlOverlay(/** @type {olx.OverlayOptions} */ ({
-    'element': popupContainer,
-    'autoPan': true,
-    'autoPanAnimation': {
-      'duration': 250
-    }
-  }))
+  overlayOptions = extend(true, {
+    'element': popupContainer
+  }, config['overlayOptions'])
+  overlay = new OlOverlay(/** @type {olx.OverlayOptions} */ (overlayOptions))
   this.set('overlay', overlay)
   if (popupCloser != null) {
     /**
@@ -977,7 +984,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
               sourceClone.set('tilesLoaded', 0)
               sourceClone.set('tilesLoading', 0)
               sourceClone.set('hideLoading', false)
-              if (sourceClone.get('sourceType') === 'WMTS') {
+              if (mapLayerClone.get('className') === 'WMTS') {
                 sourceClone.set('timeFormatted', animationTimeFormatted)
               } else {
                 sourceClone.updateParams({
@@ -996,7 +1003,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
               source.set('tilesLoaded', 0)
               source.set('tilesLoading', 0)
               source.set('hideLoading', false)
-              if (source.get('sourceType') === 'WMTS') {
+              if (mapLayer.get('className') === 'WMTS') {
                 source.set('timeFormatted', nextAnimationTimeFormatted)
               } else {
                 source.updateParams({

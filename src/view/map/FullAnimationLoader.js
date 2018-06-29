@@ -52,6 +52,7 @@ FullAnimationLoader.prototype.initMap = function () {
   let mapContainerElement
   let popupCloser
   let popupContainer
+  let overlayOptions
   let viewCenter
   let viewZoom
   let i
@@ -142,13 +143,10 @@ FullAnimationLoader.prototype.initMap = function () {
   popupContainer = document.getElementById(`${mapContainer}-popup`)
   popupCloser = document.getElementById(`${mapContainer}-popup-closer`)
   // Create an overlay to anchor the popup to the map.
-  overlay = new OlOverlay(/** @type {olx.OverlayOptions} */ ({
-    'element': popupContainer,
-    'autoPan': true,
-    'autoPanAnimation': {
-      'duration': 250
-    }
-  }))
+  overlayOptions = extend(true, {
+    'element': popupContainer
+  }, config['overlayOptions'])
+  overlay = new OlOverlay(/** @type {olx.OverlayOptions} */ (overlayOptions))
   this.set('overlay', overlay)
   if (popupCloser != null) {
     /**

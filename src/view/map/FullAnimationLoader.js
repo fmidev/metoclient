@@ -516,7 +516,6 @@ FullAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   let tk
   let tkEnd
   let currentTime
-  const epsilon = this.layerResolution
   let resolutionTime = /** @type {number} */ (self.get('animationResolutionTime'))
   let filteredCapabTimes = []
   let capabTimesDefined = false
@@ -545,6 +544,9 @@ FullAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
       animation['resolutionTime'] = animation['capabResolutionTime']
     }
     animation['beginTime'] -= Math.ceil((animation['beginTime'] - absBeginTime) / animation['resolutionTime']) * animation['resolutionTime']
+    if (layer['type'] === self.layerTypes['forecast']) {
+      animation['beginTime'] -= animation['beginTime'] % animation['resolutionTime']
+    }
     if (!isNumeric(animation['endTime'])) {
       animation['endTime'] = animation['capabEndTime']
     } else if (isNumeric(animation['capabEndTime'])) {

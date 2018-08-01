@@ -191,6 +191,14 @@ export default class MapController {
   };
 
   /**
+   * Selects a vector feature.
+   * @param {Object} feature Feature to be selected.
+   */
+  selectFeature (feature) {
+    this.view_.selectFeature(feature)
+  };
+
+  /**
    * Shows a popup window on the map.
    * @param content {string} HTML content of the popup window.
    * @param coordinate {Array} Popup coordinates.

@@ -552,6 +552,9 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
       animation['resolutionTime'] = animation['capabResolutionTime']
     }
     animation['beginTime'] -= Math.ceil((animation['beginTime'] - absBeginTime) / animation['resolutionTime']) * animation['resolutionTime']
+    if (layer['type'] === self.layerTypes['forecast']) {
+      animation['beginTime'] -= animation['beginTime'] % animation['resolutionTime']
+    }
     if (!isNumeric(animation['endTime'])) {
       animation['endTime'] = animation['capabEndTime']
     } else if (isNumeric(animation['capabEndTime'])) {

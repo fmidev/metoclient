@@ -139,7 +139,6 @@ export default class TimeController {
     this.model_.variableEvents.addListener('animationTime', this.animationTimeTimerListener_)
 
     this.createTimer()
-    this.createTimeSlider()
   };
 
   /**
@@ -416,5 +415,13 @@ export default class TimeController {
       this.views_[i].destroyTimeSlider()
     }
     this.model_.destroyTimer()
+  };
+
+  /**
+   * Gets animation time moments.
+   * @return {Array<number>} Time moments.
+   */
+  getAnimationTimes () {
+    return this.model_.getAnimationTimes()
   };
 }

@@ -894,4 +894,22 @@ export class MetOClient {
   createTimeSlider () {
     this.timeController_.createTimeSlider()
   };
+
+  /**
+   * Selects a vector feature.
+   * @param {Object} feature Feature to be selected.
+   * @export
+   */
+  selectFeature (feature) {
+    this.mapController_.selectFeature(feature)
+  };
+
+  /**
+   * Gets animation time moments.
+   * @return {Array<number>} Time moments.
+   * @export
+   */
+  getAnimationTimes () {
+    return this.timeController_.getAnimationTimes()
+  };
 }

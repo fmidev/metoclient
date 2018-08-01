@@ -168,6 +168,12 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
           }
         }
       }
+      if (!foundAnimLayers) {
+        callbacks = this.get('callbacks')
+        if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
+          callbacks['ready']()
+        }
+      }
     }
     this.set('layers', layers)
   }
@@ -202,12 +208,6 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   this.updateStorage()
   this.parameterizeLayers(capabilities)
   this.initMap()
-  if (!foundAnimLayers) {
-    callbacks = this.get('callbacks')
-    if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
-      callbacks['ready']()
-    }
-  }
 }
 
 /**
@@ -767,6 +767,7 @@ MapAnimation.prototype.defineSelect = function () {
               'layers': [layer],
               'style': style
             })
+            select.set('type', mappings[extraStyle['name']]['select'])
             map.addInteraction(select)
             self.activeInteractions.push(select)
             selectedFeatures = select.getFeatures()
@@ -2116,8 +2117,27 @@ MapAnimation.prototype.isValidLayerTime = function (layerTime, prevLayerTime, cu
     return false
   }
   // Checking maximum resolution
-  if (layerTime - prevLayerTime < this.layerResolution) {
-    return false
+  return layerTime - prevLayerTime >= this.layerResolution;
+}
+
+/**
+ * Selects a vector feature.
+ * @param {Object} feature Feature to be selected.
+ */
+MapAnimation.prototype.selectFeature = function (feature) {
+  let interactions = this.activeInteractions
+  if (interactions == null) {
+    return
   }
-  return true
+  let numInteraction = interactions.length
+  let interaction
+  let i
+  for (i = 0; i < numInteraction; i++) {
+    interaction = interactions[i]
+    if (interaction.get('type') === 'selected') {
+      interaction.getFeatures().clear()
+      interaction.getFeatures().push(feature)
+      break
+    }
+  }
 }

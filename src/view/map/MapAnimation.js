@@ -1329,7 +1329,7 @@ MapAnimation.prototype.getLegendUrls = layer => {
   hasLegend = layer['animation']['hasLegend']
   if (typeof hasLegend === 'string') {
     // Explicit legend URL
-    urls.push(encodeURI(hasLegend))
+    urls.push(hasLegend)
   } else {
     if (!(layer['sourceOptions'] && layer['sourceOptions']['params'])) {
       return urls

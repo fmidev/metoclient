@@ -1384,28 +1384,25 @@ MapAnimation.prototype.getLegendUrls = layer => {
  * @param {number} defaultLegend Index of visible default legend.
  */
 MapAnimation.prototype.generateLegendFigures = function (legends, defaultLegend) {
-  let config,
-    containers,
-    img,
-    captionText,
-    createFigure
+  const config = this.get('config')
+  let containers
+  let createFigure
   // Are legends already drawn?
   if (this.get('legendsCreated')) {
     return
   }
-  config = this.get('config')
   containers = Array.from(document.getElementsByClassName(config['legendContainer']))
   containers.forEach((container) => {
     container.innerHTML = ''
     container.classList.add(constants.LEGEND_CONTAINER_CLASS)
   })
   createFigure = (legend, visible) => {
-    let caption
+    let img
+    const caption = document.createElement('figcaption')
+    const captionText= document.createTextNode(legend['title'])
     const figure = document.createElement('figure')
     figure.style.display = (visible ? '' : 'none')
     figure.classList.add(constants.LEGEND_FIGURE_CLASS_PREFIX + legend['id'].toString(10))
-    caption = document.createElement('figcaption')
-    captionText = document.createTextNode(legend['title'])
     caption.appendChild(captionText)
     figure.appendChild(caption)
     if (legend['source'] !== undefined) {
@@ -1421,9 +1418,9 @@ MapAnimation.prototype.generateLegendFigures = function (legends, defaultLegend)
       container.appendChild(figure)
     })
   }
-  for (let i = 0; i < legends.length; i++) {
-    createFigure(legends[i], i === defaultLegend)
-  }
+  legends.forEach((legend, index) => {
+    createFigure(legend, index === defaultLegend)
+  })
   this.set('legendsCreated', true)
 }
 

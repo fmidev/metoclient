@@ -166,8 +166,7 @@ LazyAnimationLoader.prototype.initMap = function () {
      * @return {boolean} Don't follow the href.
      */
     popupCloser.onclick = () => {
-      overlay.setPosition(undefined)
-      popupCloser.blur()
+      self.hidePopup()
       if ((callbacks != null) && (typeof callbacks['popupClosed'] === 'function')) {
         callbacks['popupClosed']()
       }

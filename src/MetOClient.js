@@ -76,7 +76,7 @@ export class MetOClient {
     this.animationTimeListener_ = animationTime => {
     }
 
-    this.refreshCallback_ = null;
+    this.refreshCallback_ = null
 
     // Configuration from default values
     extend(true, newConfig, this.getDefaultConfig())
@@ -544,7 +544,7 @@ export class MetOClient {
       this.timeController_.setAnimationTime(options['animationTime'])
     }
     if ((callbacks != null) && (callbacks['refreshed'] != null)) {
-      this.refreshCallback_ = callbacks['refreshed'];
+      this.refreshCallback_ = callbacks['refreshed']
     }
     this.refresh(callbacks)
   };
@@ -819,7 +819,7 @@ export class MetOClient {
    */
   setCallbacks (callbacks) {
     if ((callbacks != null) && (callbacks['refreshed'] != null)) {
-      this.refreshCallback_ = callbacks['refreshed'];
+      this.refreshCallback_ = callbacks['refreshed']
     }
     this.mapController_.setCallbacks(callbacks)
   };
@@ -885,7 +885,7 @@ export class MetOClient {
     }
     this.mapController_.variableEvents.addListener('numIntervalItems', this.numIntervalItemsListener_)
     if ((callbacks != null) && (callbacks['refreshed'] != null)) {
-      this.refreshCallback_ = callbacks['refreshed'];
+      this.refreshCallback_ = callbacks['refreshed']
     }
     this.createTime(callbacks)
     this.createMap(callbacks)

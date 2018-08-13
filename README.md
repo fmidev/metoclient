@@ -49,6 +49,7 @@ List of API functions:
         * popupClosed()
         * preload()
         * ready()
+        * refreshed()
         * rotation(angle)
         * selected(feature)
         * time(timestamp_ms)

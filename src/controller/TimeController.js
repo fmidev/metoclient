@@ -105,12 +105,14 @@ export default class TimeController {
     }
     containers = document.getElementsByClassName(this.config_['view']['timeSliderContainer'])
     numViews = containers.length
-    for (i = 0; i < numViews; i++) {
-      this.views_.push(new TimeSlider(this.config_['view'], containers[i], callbacks))
-      this.views_[i].actionEvents.addListener('previous', self.previousListener_)
-      this.views_[i].actionEvents.addListener('next', self.nextListener_)
-      this.views_[i].variableEvents.addListener('animationTime', self.animationTimeUserListener_)
-      this.views_[i].variableEvents.addListener('animationPlay', self.animationPlayListener_)
+    if (this.config_['view']['showTimeSlider']) {
+      for (i = 0; i < numViews; i++) {
+        this.views_.push(new TimeSlider(this.config_['view'], containers[i], callbacks))
+        this.views_[i].actionEvents.addListener('previous', self.previousListener_)
+        this.views_[i].actionEvents.addListener('next', self.nextListener_)
+        this.views_[i].variableEvents.addListener('animationTime', self.animationTimeUserListener_)
+        this.views_[i].variableEvents.addListener('animationPlay', self.animationPlayListener_)
+      }
     }
 
     /**
@@ -131,9 +133,7 @@ export default class TimeController {
      * @private
      */
     this.animationTimeTimerListener_ = animationTime => {
-      if (self.config_['view']['showTimeSlider']) {
-        self.updateTimeSlider()
-      }
+      self.updateTimeSlider()
       self.variableEvents.emitEvent('animationTime', [animationTime])
     }
     this.model_.variableEvents.addListener('animationTime', this.animationTimeTimerListener_)
@@ -162,6 +162,9 @@ export default class TimeController {
     const animationTime = this.model_.getAnimationTime()
     const numViews = this.views_.length
     let i
+    if (!this.config_['view']['showTimeSlider']) {
+      return
+    }
     for (i = 0; i < numViews; i++) {
       this.views_[i].setAnimationTime(animationTime)
     }
@@ -271,9 +274,11 @@ export default class TimeController {
     this.model_.setAnimationLastRefreshed(currentTime)
     this.model_.setCurrentTime(currentTime)
     this.model_.moveAnimationTimeFrame(timeShift)
-    this.views_.forEach(view => {
-      view.setCallbacks(callbacks)
-    })
+    if (callbacks != null) {
+      this.views_.forEach(view => {
+        view.setCallbacks(callbacks)
+      })
+    }
   };
 
   /**

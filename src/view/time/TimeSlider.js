@@ -175,6 +175,9 @@ export default class TimeSlider {
 
     let playButton = document.createElement('div')
     playButton.classList.add(TimeSlider.PLAY_BUTTON_CLASS)
+    if (this.animationPlay_) {
+      playButton.classList.add(TimeSlider.PLAYING_CLASS)
+    }
     this.mouseListeners_.push(listen(playButton, 'click', () => {
       self.animationPlay_ = !self.animationPlay_
       self.variableEvents.emitEvent('animationPlay', [self.animationPlay_])

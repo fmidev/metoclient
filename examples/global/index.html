@@ -13,12 +13,6 @@
     <!-- The map will be inserted here -->
 </div>
 <script>
-  // API-KEY is required as part of the base URL that is used for the layers
-  // when FMI services are used.
-  var API_KEY = 'insert-your-apikey-here'
-  if (!API_KEY) {
-    alert('Check HTML source: proper API-KEY should be set.')
-  } else {
     // Initialize options objects for animation.
     var resolutionTime = 60 * 60 * 1000
     var currentDate = new Date()
@@ -26,8 +20,7 @@
     var beginTime = currentTime - 5 * resolutionTime
     var endTime = currentTime + 5 * resolutionTime
     var resolutions = [2048, 1024, 512, 256, 128, 64]
-    var baseUrl = 'http://wms.fmi.fi/fmi-apikey/' + API_KEY + '/geoserver/'
-    var wmsBaseUrl = baseUrl + 'wms'
+    var wmsBaseUrl = 'http://openwms.fmi.fi/geoserver/wms'
     var origins1024 = [[-118331.36640836, 8432773.1670142], [-118331.36640836, 8432773.1670142], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352]]
     var extent = [-1000000, 5000000, 5000000, 20000000]
     var imgPath = '../../dist/img/'
@@ -401,7 +394,6 @@
         })(25)
       }
     })
-  }
 </script>
 </body>
 </html>

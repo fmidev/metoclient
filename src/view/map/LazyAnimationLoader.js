@@ -970,7 +970,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
     mapLayer = mapLayers[pGrp[i]]
     mapLayerClone = mapLayer.get('clone')
     mapLayerClone.setOpacity(0)
-    if (((mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime)) || ((mapLayer.get('type') === this.layerTypes['observation']) && (currentTime < animationTime))) {
+    if ((mapLayer.get('type') === this.layerTypes['observation']) && (currentTime < animationTime)) {
       mapLayer.setOpacity(0)
       mapLayer.get('clone').setOpacity(0)
     } else {

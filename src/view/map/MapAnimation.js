@@ -989,22 +989,32 @@ MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
   let layerGroup
   const numLayerGroups = layerGroups.getLength()
   const config = this.get('config')
+  const callbacks = this.get('callbacks')
   const overlayGroupName = config['overlayGroupName']
+  let numVisibleLayers
   let i
+  let layers
   if (overlayGroupName == null) {
     return
   }
   for (i = 0; i < numLayerGroups; i++) {
     layerGroup = layerGroups.item(i)
     if (layerGroup.get('title') === overlayGroupName) {
+      layers = this.loadOverlays(extent, loadId)
       layerGroups.setAt(i, new OlLayerGroup({
         'nested': true,
         'title': config['overlayGroupName'],
-        'layers': this.loadOverlays(extent, loadId)
+        'layers': layers
       }))
+      numVisibleLayers = layers.reduce((numVisible, layer) => {
+        return numVisible + (layer.get('visible') ? 1 : 0)
+      }, 0)
     }
   }
   if (loadId === this.loadId) {
+    if ((numVisibleLayers === 0) && (callbacks != null) && (typeof callbacks['ready'] === 'function')) {
+      callbacks['ready']()
+    }
     this.dispatchEvent('updateLoadQueue')
     this.updateAnimation()
   }

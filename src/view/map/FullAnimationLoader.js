@@ -270,6 +270,7 @@ FullAnimationLoader.prototype.initListeners = function () {
     let i
     const map = self.get('map')
     let requestUpdate = false
+    let layerSwitcherContainer
     key = self.loadId
     len = self.numIntervalItems[key].length
     if (len === 0) {
@@ -294,11 +295,14 @@ FullAnimationLoader.prototype.initListeners = function () {
         self.loading = false
         self.finishedId = key
         runLoaded = true
-        // Todo: toteuta nämä funktiona LayerSwitcherissä
+        // Todo: move to LayerSwitcher.js
         layerSwitcher = self.get('layerSwitcher')
         if (layerSwitcher != null) {
           layerSwitcher.setMap(self.getMap())
-          document.getElementById(config['layerSwitcherContainer']).classList.remove('disabled')
+          layerSwitcherContainer = document.getElementById(config['layerSwitcherContainer'])
+          if (layerSwitcherContainer != null) {
+            layerSwitcherContainer.classList.remove('disabled')
+          }
         }
         if (self.get('updateVisibility') !== null) {
           map.set('layerVisibility', self.get('updateVisibility'))

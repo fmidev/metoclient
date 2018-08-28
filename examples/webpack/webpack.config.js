@@ -1,5 +1,5 @@
 const webpack = require('webpack')
-const path = require('path');
+const path = require('path')
 
 let config = {
   entry: './src/index.js',
@@ -25,9 +25,9 @@ let config = {
       }
     ]
   },
-  plugins: [
-    new webpack.optimize.UglifyJsPlugin()
-  ]
+  optimization: {
+    minimize: true
+  }
 }
 
 module.exports = config

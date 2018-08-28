@@ -306,9 +306,6 @@ LazyAnimationLoader.prototype.initListeners = function () {
       self.updateAnimation()
       if (self.ready < key) {
         self.ready = key
-        if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
-          callbacks['ready']()
-        }
       }
     }
     self.variableEvents.emitEvent('numIntervalItems', [self.numIntervalItems[key]])
@@ -956,7 +953,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
     }
     newPGrp.push(nextPGrp)
   }
-  lenNumIntervalItems = this.numIntervalItems[this.loadId].length;
+  lenNumIntervalItems = this.numIntervalItems[this.loadId].length
   for (i = 0; i < lenNumIntervalItems; i++) {
     this.numIntervalItems[this.loadId][i]['toBeLoaded'] = 1
   }

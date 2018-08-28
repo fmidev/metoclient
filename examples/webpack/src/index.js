@@ -9,8 +9,7 @@ let currentTime = MetOClient.floorTime(currentDate.getTime(), resolutionTime)
 let beginTime = currentTime - 5 * resolutionTime
 let endTime = currentTime + 5 * resolutionTime
 let resolutions = [2048, 1024, 512, 256, 128, 64]
-let baseUrl = 'http://wms.fmi.fi/fmi-apikey/' + API_KEY + '/geoserver/'
-let wmsBaseUrl = baseUrl + 'wms'
+let wmsBaseUrl = 'http://openwms.fmi.fi/geoserver/wms'
 let origins1024 = [[-118331.36640836, 8432773.1670142], [-118331.36640836, 8432773.1670142], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352], [-118331.36640836, 7907751.53726352]]
 let extent = [-1000000, 5000000, 5000000, 20000000]
 // Create animation layers.

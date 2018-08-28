@@ -48,7 +48,6 @@ export default class MapAnimation {
    * @constructor
    * @param config {object} Configuration for map view.
    * @extends {ol.Object}
-   * @implements {fi.fmi.metoclient.ui.animator.view.interfaces.Animation}
    */
   constructor (config) {
     // Call to the OpenLayers superclass constructor
@@ -113,9 +112,7 @@ Ol.inherits(MapAnimation, OlObject)
  */
 MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, animationCallbacks) {
   const config = this.get('config')
-  let callbacks
   const featureGroupName = config['featureGroupName']
-  const overlayGroupName = config['overlayGroupName']
   let isFeatureGroup
   let layerGroups
   let layerGroup
@@ -127,7 +124,6 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   let currentLayerTitle
   let numCurrentLayers
   let currentSource
-  let foundAnimLayers = false
   let i
   let j
   let k
@@ -145,7 +141,6 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
         currentLayers = layerGroup.getLayers()
         isFeatureGroup = (layerGroup.get('title') === featureGroupName)
         numCurrentLayers = currentLayers.getLength()
-        foundAnimLayers = foundAnimLayers || ((layerGroup.get('title') === overlayGroupName) && (numCurrentLayers > 0))
         for (j = 0; j < numCurrentLayers; j++) {
           currentLayer = currentLayers.item(j)
           currentLayerTitle = currentLayer.get('title')
@@ -166,12 +161,6 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
               break
             }
           }
-        }
-      }
-      if (!foundAnimLayers) {
-        callbacks = this.get('callbacks')
-        if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
-          callbacks['ready']()
         }
       }
     }
@@ -317,7 +306,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
                 content += property + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'
               } else if ((property === 'name') && (numProperties === 1)) {
                 content += propertyData + '<br>'
-              } else  {
+              } else {
                 content += property + ': ' + propertyData + '<br>'
               }
             }
@@ -482,7 +471,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
                 popupContentChild = popupContentChildren[i]
                 if (popupContentChild.classList.contains('fmi-metoclient-popup-content')) {
                   popupContentChild['innerHTML'] += popupText
-                  break;
+                  break
                 }
               }
             }
@@ -724,7 +713,6 @@ MapAnimation.prototype.parameterizeLayers = function (capabilities) {
 MapAnimation.prototype.initEPSG3067Projection = () => {
   proj4.defs('EPSG:3067', '+proj=utm +zone=35 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
 }
-
 
 /**
  * Defines feature selection functionality and styles.
@@ -991,36 +979,30 @@ MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
   const config = this.get('config')
   const callbacks = this.get('callbacks')
   const overlayGroupName = config['overlayGroupName']
-  let numVisibleLayers
   let i
-  let layers
   if (overlayGroupName == null) {
     return
   }
   for (i = 0; i < numLayerGroups; i++) {
     layerGroup = layerGroups.item(i)
     if (layerGroup.get('title') === overlayGroupName) {
-      layers = this.loadOverlays(extent, loadId)
       layerGroups.setAt(i, new OlLayerGroup({
         'nested': true,
         'title': config['overlayGroupName'],
-        'layers': layers
+        'layers': this.loadOverlays(extent, loadId)
       }))
-      numVisibleLayers = layers.reduce((numVisible, layer) => {
-        return numVisible + (layer.get('visible') ? 1 : 0)
-      }, 0)
     }
   }
   if (loadId === this.loadId) {
-    if ((numVisibleLayers === 0) && (callbacks != null) && (typeof callbacks['ready'] === 'function')) {
-      callbacks['ready']()
-    }
     this.dispatchEvent('updateLoadQueue')
     this.updateAnimation()
   }
   if (config['showMarker']) {
     this.get('marker').setCoordinates(this.get('map').getView().getCenter())
     this.dispatchEvent('markerMoved')
+  }
+  if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
+    callbacks['ready']()
   }
 }
 
@@ -1132,7 +1114,6 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   }
   return layerData
 }
-
 
 /**
  * Load all data layers.
@@ -1409,7 +1390,7 @@ MapAnimation.prototype.generateLegendFigures = function (legends, defaultLegend)
   createFigure = (legend, visible) => {
     let img
     const caption = document.createElement('figcaption')
-    const captionText= document.createTextNode(legend['title'])
+    const captionText = document.createTextNode(legend['title'])
     const figure = document.createElement('figure')
     figure.style.display = (visible ? '' : 'none')
     figure.classList.add(constants.LEGEND_FIGURE_CLASS_PREFIX + legend['id'].toString(10))
@@ -1528,7 +1509,7 @@ MapAnimation.prototype.updateFeatureAnimation = function () {
     if (featureTimes == null) {
       return
     }
-    featureTimes.forEach((featureTime, index, allFeatureTimes) => {
+    featureTimes.forEach((featureTime, index) => {
       if (((previousAnimationTime < featureTime['time']) && (featureTime['time'] <= animationTime)) || ((featureTime['time'] <= animationTime) && (previousAnimationTime < featureTime['endtime']))) {
         featureTime['feature'].setStyle(null)
       } else {
@@ -2124,7 +2105,7 @@ MapAnimation.prototype.isValidLayerTime = function (layerTime, prevLayerTime, cu
     return false
   }
   // Checking maximum resolution
-  return layerTime - prevLayerTime >= this.layerResolution;
+  return layerTime - prevLayerTime >= this.layerResolution
 }
 
 /**

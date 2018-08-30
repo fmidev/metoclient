@@ -126,7 +126,7 @@ export default class TimeSlider {
     }))
     clickableContainer.appendChild(postMargin)
 
-    clickableContainer.appendChild(this.createTimezoneLabel())
+    clickableContainer.appendChild(this.createTimeZoneLabel())
 
     this.container_.appendChild(clickableContainer)
 
@@ -212,7 +212,7 @@ export default class TimeSlider {
    *
    * @memberOf TimeSlider
    */
-  createTimezoneLabel () {
+  createTimeZoneLabel () {
     let timezoneLabel = document.createElement('div')
     timezoneLabel.innerHTML = this.timeZoneLabel_
     timezoneLabel.classList.add(TimeSlider.TIMEZONE_LABEL_CLASS)
@@ -562,7 +562,15 @@ export default class TimeSlider {
    * @param {string} timeZone Time zone.
    */
   setTimeZone (timeZone) {
+    let self = this
     this.timeZone_ = timeZone
+    this.frames_.forEach(frame => {
+      let tickText = self.getTickText(frame['endTime'])
+      let textElement = frame.element.getElementsByClassName(TimeSlider.FRAME_TEXT_CLASS)
+      if (textElement.length > 0) {
+        textElement[0].textContent = tickText['content']
+      }
+    })
   }
 
   /**
@@ -570,7 +578,11 @@ export default class TimeSlider {
    * @param {string} timeZoneLabel Time zone label.
    */
   setTimeZoneLabel (timeZoneLabel) {
+    let self = this
     this.timeZoneLabel_ = timeZoneLabel
+    Array.from(this.container_.getElementsByClassName(TimeSlider.TIMEZONE_LABEL_CLASS)).forEach(timeZoneLabelElement => {
+      timeZoneLabelElement.innerHTML = self.timeZoneLabel_
+    })
   }
 
   /**

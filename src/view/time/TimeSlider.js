@@ -196,12 +196,18 @@ export default class TimeSlider {
    * @memberOf TimeSlider
    */
   createPostTools () {
+    let self = this
     let postTools = document.createElement('div')
     postTools.classList.add(TimeSlider.POST_TOOLS_CLASS)
 
-    let stepButton = document.createElement('div')
-    stepButton.classList.add(TimeSlider.STEP_BUTTON_CLASS)
-    postTools.appendChild(stepButton)
+    let postButton = document.createElement('div')
+    postButton.classList.add(TimeSlider.POST_BUTTON_CLASS)
+    this.mouseListeners_.push(listen(postButton, 'click', () => {
+      if ((self.callbacks_ != null) && (typeof self.callbacks_['toolClicked'] === 'function')) {
+        this.callbacks_['toolClicked']('timeslider-right-button')
+      }
+    }))
+    postTools.appendChild(postButton)
     return postTools
   }
 
@@ -682,7 +688,7 @@ TimeSlider.PRE_TOOLS_CLASS = 'fmi-metoclient-timeslider-pre-tools'
 TimeSlider.FRAMES_CONTAINER_CLASS = 'fmi-metoclient-timeslider-frames-container'
 TimeSlider.PLAY_BUTTON_CLASS = 'fmi-metoclient-timeslider-play-button'
 TimeSlider.POST_TOOLS_CLASS = 'fmi-metoclient-timeslider-post-tools'
-TimeSlider.STEP_BUTTON_CLASS = 'fmi-metoclient-timeslider-step-button'
+TimeSlider.POST_BUTTON_CLASS = 'fmi-metoclient-timeslider-step-button'
 TimeSlider.POST_MARGIN_CLASS = 'fmi-metoclient-timeslider-post-margin'
 TimeSlider.TIMEZONE_LABEL_CLASS = 'fmi-metoclient-timeslider-timezone'
 TimeSlider.FRAME_TICK_CLASS = 'fmi-metoclient-timeslider-frame-tick'

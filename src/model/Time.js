@@ -62,7 +62,7 @@ export default class Time {
       this.animationBeginTime_ = utils.floorTime(this.beginTime_, gridTimes[0])
       if (this.endTime_ != null) {
         gridTime = (this.animationResolutionTime_ != null) ? this.animationResolutionTime_ : gridTimes[1]
-        this.animationEndTime_ = utils.floorTime(this.endTime_ + gridTime, gridTime)
+        this.animationEndTime_ = utils.floorTime(this.endTime_ + gridTime - 1, gridTime)
         timeDifference = this.animationEndTime_ - this.animationBeginTime_
       }
       // Time grid offset

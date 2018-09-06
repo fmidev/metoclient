@@ -545,7 +545,28 @@ export default class TimeSlider {
     }
     this.frames_.forEach((frame, index) => {
       Array.from(frame.element.getElementsByClassName(TimeSlider.INDICATOR_CLASS)).forEach(indicatorElement => {
-        indicatorElement.setAttribute('data-status', numIntervalItems[index].status)
+        let numIntervals
+        let i
+        let time
+        let elementTime
+        let endTime
+        if ((indicatorElement.parentElement != null) && (indicatorElement.parentElement.dataset != null)) {
+          elementTime = indicatorElement.parentElement.dataset.time
+        }
+        if (elementTime == null) {
+          return
+        }
+        time = parseInt(elementTime)
+        if (time != null) {
+          numIntervals = numIntervalItems.length;
+          for (i = 0; i < numIntervals; i++) {
+            endTime = numIntervalItems[i].endTime;
+            if ((endTime != null) && (endTime === time)) {
+              indicatorElement.setAttribute('data-status', numIntervalItems[i].status)
+              break;
+            }
+          }
+        }
       })
     })
   }

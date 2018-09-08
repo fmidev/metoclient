@@ -94,8 +94,10 @@ export default class Time {
           animationTimeIndex = i
         }
       }
-      this.setAnimationTime(this.animationTimes_[animationTimeIndex])
+    } else {
+      this.animationTimes_ = [this.animationBeginTime_, this.animationEndTime_]
     }
+    this.setAnimationTime(this.animationTimes_[animationTimeIndex])
     if (this.initBeginTime_ === 0) {
       this.initBeginTime_ = this.beginTime_
     }

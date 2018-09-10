@@ -1052,6 +1052,7 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   let template
   let visible = false
   let i
+  let animation
   if (layers === undefined) {
     return layerData
   }
@@ -1067,7 +1068,8 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
         visible = true
       }
       layer = this.createLayer(template)
-      if ((layerType === this.layerTypes['features']) && (layer.get('animation') != null)) {
+      animation = layer.get('animation')
+      if ((layerType === this.layerTypes['features']) && (animation != null) && (!animation['static'])) {
         layer.getSource().on('addfeature', (event) => {
           let newFeature = event['feature']
           if (newFeature == null) {

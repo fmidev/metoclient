@@ -30,7 +30,6 @@ export default class LazyAnimationLoader extends MapAnimation {
    * @constructor
    * @param config {object} Configuration for map view.
    * @extends {ol.Object}
-   * @implements {fi.fmi.metoclient.ui.animator.view.interfaces.Animation}
    */
   constructor (config) {
     super(config)

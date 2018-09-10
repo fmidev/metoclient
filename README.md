@@ -54,6 +54,7 @@ List of API functions:
         * selected(feature)
         * time(timestamp_ms)
         * timeSliderCreated(moments)
+        * toolClicked(name)
         * unhover(feature)
         * zoom(level)
 * updateAnimation(options, callbacks)

@@ -62,7 +62,7 @@ export default class Time {
       this.animationBeginTime_ = utils.floorTime(this.beginTime_, gridTimes[0])
       if (this.endTime_ != null) {
         gridTime = (this.animationResolutionTime_ != null) ? this.animationResolutionTime_ : gridTimes[1]
-        this.animationEndTime_ = utils.floorTime(this.endTime_ + gridTime, gridTime)
+        this.animationEndTime_ = utils.floorTime(this.endTime_, gridTime)
         timeDifference = this.animationEndTime_ - this.animationBeginTime_
       }
       // Time grid offset
@@ -87,15 +87,17 @@ export default class Time {
     }
     this.animationTimeIndex_ = 0
     if (this.animationResolutionTime_) {
-      this.animationNumIntervals_ = Math.ceil((this.animationEndTime_ - this.animationBeginTime_) / this.animationResolutionTime_)
+      this.animationNumIntervals_ = Math.floor((this.animationEndTime_ - this.animationBeginTime_) / this.animationResolutionTime_) + 1
       for (i = 0; i < this.animationNumIntervals_; i++) {
         this.animationTimes_.push(this.animationBeginTime_ + i * this.animationResolutionTime_)
         if (this.animationTimes_[i] <= defaultTime) {
           animationTimeIndex = i
         }
       }
-      this.setAnimationTime(this.animationTimes_[animationTimeIndex])
+    } else {
+      this.animationTimes_ = [this.animationBeginTime_, this.animationEndTime_]
     }
+    this.setAnimationTime(this.animationTimes_[animationTimeIndex])
     if (this.initBeginTime_ === 0) {
       this.initBeginTime_ = this.beginTime_
     }

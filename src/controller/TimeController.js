@@ -176,11 +176,39 @@ export default class TimeController {
    */
   updateTimeSteps (numIntervalItems) {
     const numViews = this.views_.length
-    const numIntervals = numIntervalItems.length
+    let numIntervals
     let i
+    let empty = true;
     if (numIntervalItems.length === 0) {
       return
     }
+    // Remove empty time steps from start and end if not every step is empty
+    numIntervals = numIntervalItems.length
+    for (i = 0; i < numIntervals; i++) {
+      if ((numIntervalItems[i].toBeLoaded == null) || (numIntervalItems[i].toBeLoaded > 0)) {
+        empty = false
+        break
+      }
+    }
+    if (!empty) {
+      i = 0
+      while (i < numIntervalItems.length) {
+        if ((numIntervalItems[i].toBeLoaded == null) || (numIntervalItems[i].toBeLoaded > 0)) {
+          break
+        }
+        numIntervalItems.shift();
+        i++
+      }
+      i = numIntervalItems.length - 1
+      while (i >= 0) {
+        if ((numIntervalItems[i].toBeLoaded == null) || (numIntervalItems[i].toBeLoaded > 0)) {
+          break
+        }
+        numIntervalItems.pop()
+        i--
+      }
+    }
+    numIntervals = numIntervalItems.length
     this.model_.setAnimationTimes(numIntervalItems.reduce((animationTimes, intervalItem) => {
       animationTimes.push(intervalItem['endTime'])
       return animationTimes

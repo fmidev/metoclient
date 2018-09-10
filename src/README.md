@@ -27,14 +27,23 @@ List of API methods:
 * createAnimation(callbacks)
     * possible event functions as callbacks
         * center(x,y)
+        * deselected(feature)
+        * hover(feature)
         * init()
         * loaded()
+        * loadedOnce()
         * loadError(params)
         * marker(x,y)
         * popupClosed()
         * preload()
+        * ready()
+        * refreshed()
         * rotation(angle)
+        * selected(feature)
         * time(timestamp_ms)
+        * timeSliderCreated(moments)
+        * toolClicked(name)
+        * unhover(feature)
         * zoom(level)
 * updateAnimation(options, callbacks)
     * possible options properties
@@ -45,16 +54,17 @@ List of API methods:
         * timeStep
         * timeZone
         * timeZoneLabel
-    * callbacks, see createAnimation     
-* addFeatures(layerTitle,projection,optionsArray)        
+    * callbacks, see createAnimation
+* addFeatures(layerTitle,projection,optionsArray)
 * clearFeatures(layerTitle)
-* createTimeSlider()        
+* createTimeSlider()
 * destroyAnimation()
 * destruct()
-* getFeatures(layerTitle)        
-* getFeaturesAt(layerTitle,x,y,tolerance_pix)        
-* getLayer(layerTitle)        
-* getMap()        
+* getFeatures(layerTitle)
+* getFeaturesAt(layerTitle,x,y,tolerance_pix)
+* getLayer(layerTitle)
+* getMap()
+* getAnimationTimes()
 * getStaticControls()
 * getTime()
 * hidePopup()
@@ -65,6 +75,7 @@ List of API methods:
 * refresh(callbacks)
 * refreshMap()
 * requestViewUpdate()
+* selectFeature(feature)
 * setBeginTime(time)
 * setCallbacks(callbacks)
 * setCapabilities(urlMap)
@@ -79,7 +90,5 @@ List of API methods:
 * setTimeRate(rate_ms)
 * setTimeStep(timeStep)
 * setZoom(level)
-* showPopup(content,x,y)
+* showPopup(content,x,y,append)
 * stop()
-
-

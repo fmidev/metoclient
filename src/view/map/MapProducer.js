@@ -89,6 +89,9 @@ export default class MapProducer {
         if (animation['endTime'] != null) {
           layerEndTime = animation['endTime']
         }
+      } else {
+        layerBeginTime = undefined
+        layerEndTime = undefined
       }
       source = this.sourceFactory(typeLwr, options[sourceKey], projection, layerBeginTime, layerEndTime)
     } else {

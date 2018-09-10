@@ -126,7 +126,7 @@ export default class TimeSlider {
     }))
     clickableContainer.appendChild(postMargin)
 
-    clickableContainer.appendChild(this.createTimezoneLabel())
+    clickableContainer.appendChild(this.createTimeZoneLabel())
 
     this.container_.appendChild(clickableContainer)
 
@@ -196,12 +196,18 @@ export default class TimeSlider {
    * @memberOf TimeSlider
    */
   createPostTools () {
+    let self = this
     let postTools = document.createElement('div')
     postTools.classList.add(TimeSlider.POST_TOOLS_CLASS)
 
-    let stepButton = document.createElement('div')
-    stepButton.classList.add(TimeSlider.STEP_BUTTON_CLASS)
-    postTools.appendChild(stepButton)
+    let postButton = document.createElement('div')
+    postButton.classList.add(TimeSlider.POST_BUTTON_CLASS)
+    this.mouseListeners_.push(listen(postButton, 'click', () => {
+      if ((self.callbacks_ != null) && (typeof self.callbacks_['toolClicked'] === 'function')) {
+        this.callbacks_['toolClicked']('timeslider-right-button')
+      }
+    }))
+    postTools.appendChild(postButton)
     return postTools
   }
 
@@ -212,7 +218,7 @@ export default class TimeSlider {
    *
    * @memberOf TimeSlider
    */
-  createTimezoneLabel () {
+  createTimeZoneLabel () {
     let timezoneLabel = document.createElement('div')
     timezoneLabel.innerHTML = this.timeZoneLabel_
     timezoneLabel.classList.add(TimeSlider.TIMEZONE_LABEL_CLASS)
@@ -539,7 +545,28 @@ export default class TimeSlider {
     }
     this.frames_.forEach((frame, index) => {
       Array.from(frame.element.getElementsByClassName(TimeSlider.INDICATOR_CLASS)).forEach(indicatorElement => {
-        indicatorElement.setAttribute('data-status', numIntervalItems[index].status)
+        let numIntervals
+        let i
+        let time
+        let elementTime
+        let endTime
+        if ((indicatorElement.parentElement != null) && (indicatorElement.parentElement.dataset != null)) {
+          elementTime = indicatorElement.parentElement.dataset.time
+        }
+        if (elementTime == null) {
+          return
+        }
+        time = parseInt(elementTime)
+        if (time != null) {
+          numIntervals = numIntervalItems.length;
+          for (i = 0; i < numIntervals; i++) {
+            endTime = numIntervalItems[i].endTime;
+            if ((endTime != null) && (endTime === time)) {
+              indicatorElement.setAttribute('data-status', numIntervalItems[i].status)
+              break;
+            }
+          }
+        }
       })
     })
   }
@@ -562,7 +589,15 @@ export default class TimeSlider {
    * @param {string} timeZone Time zone.
    */
   setTimeZone (timeZone) {
+    let self = this
     this.timeZone_ = timeZone
+    this.frames_.forEach(frame => {
+      let tickText = self.getTickText(frame['endTime'])
+      let textElement = frame.element.getElementsByClassName(TimeSlider.FRAME_TEXT_CLASS)
+      if (textElement.length > 0) {
+        textElement[0].textContent = tickText['content']
+      }
+    })
   }
 
   /**
@@ -570,7 +605,11 @@ export default class TimeSlider {
    * @param {string} timeZoneLabel Time zone label.
    */
   setTimeZoneLabel (timeZoneLabel) {
+    let self = this
     this.timeZoneLabel_ = timeZoneLabel
+    Array.from(this.container_.getElementsByClassName(TimeSlider.TIMEZONE_LABEL_CLASS)).forEach(timeZoneLabelElement => {
+      timeZoneLabelElement.innerHTML = self.timeZoneLabel_
+    })
   }
 
   /**
@@ -670,7 +709,7 @@ TimeSlider.PRE_TOOLS_CLASS = 'fmi-metoclient-timeslider-pre-tools'
 TimeSlider.FRAMES_CONTAINER_CLASS = 'fmi-metoclient-timeslider-frames-container'
 TimeSlider.PLAY_BUTTON_CLASS = 'fmi-metoclient-timeslider-play-button'
 TimeSlider.POST_TOOLS_CLASS = 'fmi-metoclient-timeslider-post-tools'
-TimeSlider.STEP_BUTTON_CLASS = 'fmi-metoclient-timeslider-step-button'
+TimeSlider.POST_BUTTON_CLASS = 'fmi-metoclient-timeslider-step-button'
 TimeSlider.POST_MARGIN_CLASS = 'fmi-metoclient-timeslider-post-margin'
 TimeSlider.TIMEZONE_LABEL_CLASS = 'fmi-metoclient-timeslider-timezone'
 TimeSlider.FRAME_TICK_CLASS = 'fmi-metoclient-timeslider-frame-tick'

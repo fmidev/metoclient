@@ -26,7 +26,7 @@
     "mikkoparviainen <mikko.parviainen@fmi.fi>"
   ],
   "name": "@fmidev/metoclient",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   }

@@ -15,12 +15,13 @@ export default class TimeController {
    * @param {Object} config User
    * @constructor
    */
-  constructor (config) {
+  constructor (config, instance) {
     /**
      * @type {Object}
      * @private
      */
     this.config_ = config
+    this.instance_ = instance
     this.variableEvents = new EventEmitter()
     this.actionEvents = new EventEmitter()
     /**
@@ -107,7 +108,7 @@ export default class TimeController {
     numViews = containers.length
     if (this.config_['view']['showTimeSlider']) {
       for (i = 0; i < numViews; i++) {
-        this.views_.push(new TimeSlider(this.config_['view'], containers[i], callbacks))
+        this.views_.push(new TimeSlider(this.config_['view'], containers[i], callbacks, this.instance_, this.config_['model']))
         this.views_[i].actionEvents.addListener('previous', self.previousListener_)
         this.views_[i].actionEvents.addListener('next', self.nextListener_)
         this.views_[i].variableEvents.addListener('animationTime', self.animationTimeUserListener_)

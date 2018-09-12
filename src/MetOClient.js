@@ -124,7 +124,7 @@ export class MetOClient {
     /**
      * @private
      */
-    this.timeController_ = new TimeController(this.config_['time'])
+    this.timeController_ = new TimeController(this.config_['time'], this)
     /**
      * @private
      */
@@ -188,19 +188,23 @@ export class MetOClient {
       'autoReplay',
       'autoStart',
       'beginTime',
+      'firstDataPointTime',
       'defaultAnimationTime',
       'endTime',
+      'lastDataPointTime',
       'endTimeDelay',
       'frameRate',
       'gridTime',
       'gridTimeOffset',
       'refreshInterval',
       'resolutionTime',
+      'modifiedResolutionTime',
       'waitUntilLoaded'
     ]
     let timeView = [
       'locale',
       'showTimeSlider',
+      'showTimeSliderMenu',
       'timeSliderContainer',
       'timeZone',
       'timeZoneLabel',
@@ -242,6 +246,15 @@ export class MetOClient {
    */
   static get createMenu () {
     return utils['createMenu']
+  };
+
+  /**
+   * Static getter for an utility function createTimeMenu.
+   * @return {function} Function to generate dropdown menu used in MetOClient.
+   * @export
+   */
+  static get createTimeMenu () {
+    return utils['createTimeMenu']
   };
 
   /**
@@ -343,6 +356,7 @@ export class MetOClient {
         'view': {
           'locale': 'en',
           'showTimeSlider': true,
+          'showTimeSliderMenu': false,
           'timeSliderContainer': 'fmi-metoclient-timeslider',
           'timeZone': tz.guess(),
           'timeZoneLabel': '',

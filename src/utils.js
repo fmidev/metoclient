@@ -122,6 +122,81 @@ export const createMenu = (options) => {
 }
 
 /**
+ * Generate an HTML list containing ranges to control timeslider.
+ * @param {Object} options Menu data.
+ * @return {HTMLElement} Unordered list of menu items.
+ */
+export const createTimeMenu = (options) => {
+  let ul = document.createElement('ul')
+  let li
+  let a
+  let title
+  ul.classList.add('metoclient-menu')
+  if (options.id != null) {
+    ul.setAttribute('id', options.id)
+  }
+  if (options.items != null) {
+    options.items.forEach((item) => {
+      if(item.type === 'button'){
+        li = document.createElement('li')
+        a = document.createElement('a')
+        a.href = '#'
+        a.innerHTML = item.title
+        li.appendChild(a)
+        if (typeof item.callback === 'function') {
+          li.addEventListener('click', item.callback)
+        }
+        ul.appendChild(li)
+      }
+      else if(item.type == "range"){
+        li = document.createElement('li')
+        title = document.createElement('a')
+        title.innerHTML = item.title
+        a = document.createElement('input')
+        a.setAttribute("type", "range")
+        a.setAttribute("min", "1")
+        a.setAttribute("max", item.size)
+        if (item.id == "step") {
+          if(item.resolutionTime === 300000) {
+            a.setAttribute("value", "1")
+          }else if (item.resolutionTime === 900000) {
+            a.setAttribute("value", "2")
+          }else if (item.resolutionTime === 1800000) {
+            a.setAttribute("value", "3")
+          }else if (item.resolutionTime === 3600000) {
+            a.setAttribute("value", "4")
+          }else if (item.resolutionTime === 10800000) {
+            a.setAttribute("value", "5")
+          }else if (item.resolutionTime === 21600000) {
+            a.setAttribute("value", "6")
+          }else if (item.resolutionTime === 43200000) {
+            a.setAttribute("value", "7")
+          }else if (item.resolutionTime === 86400000) {
+            a.setAttribute("value", "8")
+          }
+        } else if (item.id == "btime"){
+          a.setAttribute("value", Math.floor(item.beginPlace))
+        } else if (item.id == "etime"){
+          a.setAttribute("value", Math.ceil(item.endPlace))
+        }
+        a.setAttribute("id", item.id)
+        a.href = '#'
+        li.appendChild(title)
+        li.appendChild(a)
+        if (typeof item.callback === 'function') {
+          li.addEventListener('click', item.callback)
+        }
+        ul.appendChild(li)
+      }else{
+        console.log("Unsupported")
+      }
+
+    })
+  }
+  return ul
+}
+
+/**
  * Transforms coordinates between projections.
  * @param fromProjection {string} Source projection.
  * @param toProjection {string} Target projection.

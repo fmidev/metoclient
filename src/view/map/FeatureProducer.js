@@ -11,6 +11,7 @@ import OlStyleStroke from 'ol/style/stroke'
 import OlStyleStyle from 'ol/style/style'
 import OlStyleText from 'ol/style/text'
 import OlStyleCircle from 'ol/style/circle'
+import OlStyleRegularShape from 'ol/style/regularshape'
 import * as constants from '../../constants'
 
 /**
@@ -112,7 +113,7 @@ export default class FeatureProducer {
           },
           {
             'name': 'between',
-            'test': (a, b) => ((b <= a) && (a <= b))
+            'test': (a, b) => ((b[0] <= a) && (a <= b[1]))
           }
         ]
         numFilters = filters.length
@@ -138,14 +139,14 @@ export default class FeatureProducer {
       if ((styleOptions['image'] !== undefined) && (styleOptions['image']['type'] !== undefined)) {
         if (styleOptions['image']['type'].toLowerCase() === 'icon') {
           styleOptions['image'] = new OlStyleIcon(/** @type {olx.style.IconOptions} */ (styleOptions['image']))
-        } else if (styleOptions['image']['type'].toLowerCase() === 'circle') {
+        } else if (['circle', 'regularshape'].includes(styleOptions['image']['type'].toLowerCase())) {
           if (styleOptions['image']['stroke'] !== undefined) {
             styleOptions['image']['stroke'] = new OlStyleStroke(styleOptions['image']['stroke'])
           }
           if (styleOptions['image']['fill'] !== undefined) {
             styleOptions['image']['fill'] = new OlStyleFill(styleOptions['image']['fill'])
           }
-          styleOptions['image'] = new OlStyleCircle(/** @type {olx.style.CircleOptions} */ (styleOptions['image']))
+          styleOptions['image'] = (styleOptions['image']['type'].toLowerCase() === 'circle') ? new OlStyleCircle(styleOptions['image']) : new OlStyleRegularShape(styleOptions['image'])
         }
         z['value'] = z['value'] | 8
       }
@@ -167,7 +168,9 @@ export default class FeatureProducer {
         styleOptions['fill'] = new OlStyleFill((styleOptions['fill']))
         z['value'] = z['value'] | 1
       }
-      styleOptions['zIndex'] = ((styleOptions['zIndex'] !== undefined) ? styleOptions['zIndex'] : 0) + constants.zIndex.vector + z['value'] * 10
+      if (styleOptions['zIndex'] === undefined) {
+        styleOptions['zIndex'] = constants.zIndex.vector + z['value'] * 10
+      }
       return new OlStyleStyle(styleOptions)
     }, [])
   }

@@ -25,8 +25,6 @@ export default class FeatureProducer {
    * @returns {Array} Features.
    */
   featureFactory (options) {
-    let i
-    let numStyles
     let newFeature
     const features = []
     const z = {
@@ -61,11 +59,8 @@ export default class FeatureProducer {
         newFeature = feature
       }
       if (feature['style'] != null) {
-        numStyles = feature['style'].length
-        for (i = 0; i < numStyles; i++) {
-          feature['style'][i] = this.styleFactory(feature['style'][i], z)
-        }
-        newFeature.setStyle(feature['style'], z)
+        feature['style'] = this.styleFactory(feature['style'], z)
+        newFeature.setStyle(feature['style'])
       }
       features.push(newFeature)
     })
@@ -79,40 +74,101 @@ export default class FeatureProducer {
    * @returns {ol.style.Style} Feature style.
    */
   styleFactory (options, z) {
-    const styleOptions = (options != null) ? options : {}
-    if ((styleOptions['image'] !== undefined) && (styleOptions['image']['type'] !== undefined)) {
-      if (styleOptions['image']['type'].toLowerCase() === 'icon') {
-        styleOptions['image'] = new OlStyleIcon(/** @type {olx.style.IconOptions} */ (styleOptions['image']))
-      } else if (styleOptions['image']['type'].toLowerCase() === 'circle') {
-        if (styleOptions['image']['stroke'] !== undefined) {
-          styleOptions['image']['stroke'] = new OlStyleStroke(styleOptions['image']['stroke'])
+    if (options == null) {
+      return null
+    }
+    // Filter conditions
+    return (feature, resolution) => (Array.isArray(options) ? options : [options]).reduce((styles, styleOptions) => {
+      let numProperties
+      let i
+      let j
+      let name
+      let value
+      let filter
+      let filters
+      let numFilters
+      let property
+      if (styleOptions['condition'] != null) {
+        filters = [
+          {
+            'name': 'equalTo',
+            'test': (a, b) => (a === b)
+          },
+          {
+            'name': 'lessThan',
+            'test': (a, b) => (a < b)
+          },
+          {
+            'name': 'lessThanOrEqualTo',
+            'test': (a, b) => (a < b)
+          },
+          {
+            'name': 'greaterThan',
+            'test': (a, b) => (a > b)
+          },
+          {
+            'name': 'greaterThanOrEqualTo',
+            'test': (a, b) => (a >= b)
+          },
+          {
+            'name': 'between',
+            'test': (a, b) => ((b <= a) && (a <= b))
+          }
+        ]
+        numFilters = filters.length
+        if (Array.isArray(styleOptions['condition']['properties'])) {
+          numProperties = styleOptions['condition']['properties'].length
+          for (i = 0; i < numProperties; i++) {
+            property = styleOptions['condition']['properties'][i]
+            name = property['name']
+            if ((name != null) && (name.length > 0)) {
+              value = feature.get(name)
+              if (value != null) {
+                for (j = 0; j < numFilters; j++) {
+                  filter = property[filters[j]['name']]
+                  if ((typeof filter !== 'undefined') && (!filters[j]['test'](value, filter))) {
+                    return styles
+                  }
+                }
+              }
+            }
+          }
         }
-        if (styleOptions['image']['fill'] !== undefined) {
-          styleOptions['image']['fill'] = new OlStyleFill(styleOptions['image']['fill'])
+      }
+      if ((styleOptions['image'] !== undefined) && (styleOptions['image']['type'] !== undefined)) {
+        if (styleOptions['image']['type'].toLowerCase() === 'icon') {
+          styleOptions['image'] = new OlStyleIcon(/** @type {olx.style.IconOptions} */ (styleOptions['image']))
+        } else if (styleOptions['image']['type'].toLowerCase() === 'circle') {
+          if (styleOptions['image']['stroke'] !== undefined) {
+            styleOptions['image']['stroke'] = new OlStyleStroke(styleOptions['image']['stroke'])
+          }
+          if (styleOptions['image']['fill'] !== undefined) {
+            styleOptions['image']['fill'] = new OlStyleFill(styleOptions['image']['fill'])
+          }
+          styleOptions['image'] = new OlStyleCircle(/** @type {olx.style.CircleOptions} */ (styleOptions['image']))
         }
-        styleOptions['image'] = new OlStyleCircle(/** @type {olx.style.CircleOptions} */ (styleOptions['image']))
+        z['value'] = z['value'] | 8
       }
-      z['value'] = z['value'] | 8
-    }
-    if (styleOptions['text'] !== undefined) {
-      if (styleOptions['text']['fill'] !== undefined) {
-        styleOptions['text']['fill'] = new OlStyleFill(styleOptions['text']['fill'])
+      if (styleOptions['text'] !== undefined) {
+        if (styleOptions['text']['fill'] !== undefined) {
+          styleOptions['text']['fill'] = new OlStyleFill(styleOptions['text']['fill'])
+        }
+        if (styleOptions['text']['stroke'] !== undefined) {
+          styleOptions['text']['stroke'] = new OlStyleStroke(styleOptions['text']['stroke'])
+        }
+        styleOptions['text'] = new OlStyleText(styleOptions['text'])
+        z['value'] = z['value'] | 4
       }
-      if (styleOptions['text']['stroke'] !== undefined) {
-        styleOptions['text']['stroke'] = new OlStyleStroke(styleOptions['text']['stroke'])
+      if (styleOptions['stroke'] !== undefined) {
+        styleOptions['stroke'] = new OlStyleStroke((styleOptions['stroke']))
+        z['value'] = z['value'] | 2
       }
-      styleOptions['text'] = new OlStyleText(styleOptions['text'])
-      z['value'] = z['value'] | 4
-    }
-    if (styleOptions['stroke'] !== undefined) {
-      styleOptions['stroke'] = new OlStyleStroke((styleOptions['stroke']))
-      z['value'] = z['value'] | 2
-    }
-    if (styleOptions['fill'] !== undefined) {
-      styleOptions['fill'] = new OlStyleFill((styleOptions['fill']))
-      z['value'] = z['value'] | 1
-    }
-    styleOptions['zIndex'] = ((styleOptions['zIndex'] !== undefined) ? styleOptions['zIndex'] : 0) + constants.zIndex.vector + z['value'] * 10
-    return new OlStyleStyle(styleOptions)
+      if (styleOptions['fill'] !== undefined) {
+        styleOptions['fill'] = new OlStyleFill((styleOptions['fill']))
+        z['value'] = z['value'] | 1
+      }
+      styleOptions['zIndex'] = ((styleOptions['zIndex'] !== undefined) ? styleOptions['zIndex'] : 0) + constants.zIndex.vector + z['value'] * 10
+      return new OlStyleStyle(styleOptions)
+    }, [])
   }
 }

@@ -57,15 +57,14 @@ export default class MapProducer {
    * @returns {Array} Layer.
    */
   layerFactory (options, extent, projection, beginTime, endTime) {
-    let numStyles
     let style
     let extraStyles = [
       {
         'name': 'styleHover',
-        'data': []
+        'data': null
       }, {
         'name': 'styleSelected',
-        'data': []
+        'data': null
       }
     ]
     let i
@@ -136,23 +135,15 @@ export default class MapProducer {
         options['source'] = source
         featureProducer = new FeatureProducer()
         if (Array.isArray(options['style'])) {
-          numStyles = options['style'].length
-          for (i = 0; i < numStyles; i++) {
-            if (!(options['style'][i] instanceof OlStyleStyle)) {
-              options['style'][i] = featureProducer.styleFactory(options['style'][i], z)
-            }
+          if (!(options['style'] instanceof OlStyleStyle)) {
+            options['style'] = featureProducer.styleFactory(options['style'], z)
           }
         }
         extraStyles.forEach((extraStyle) => {
-          if (Array.isArray(options[extraStyle['name']])) {
-            numStyles = options[extraStyle['name']].length
-            for (i = 0; i < numStyles; i++) {
-              if (!(options[extraStyle['name']][i] instanceof OlStyleStyle)) {
-                style = featureProducer.styleFactory(options[extraStyle['name']][i], z)
-                if (style != null) {
-                  extraStyle['data'].push(style)
-                }
-              }
+          if ((Array.isArray(options[extraStyle['name']])) && (!(options[extraStyle['name']][i] instanceof OlStyleStyle))) {
+            style = featureProducer.styleFactory(options[extraStyle['name']], z)
+            if (style != null) {
+              extraStyle['data'] = style
             }
           }
         })

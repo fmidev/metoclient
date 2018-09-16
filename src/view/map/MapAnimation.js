@@ -745,32 +745,32 @@ MapAnimation.prototype.defineSelect = function () {
     }
   }
   this.getLayersByGroup(config['featureGroupName']).forEach(layer => {
+    let style
     extraStyles = layer.get('extraStyles')
     if (extraStyles != null) {
       extraStyles.forEach((extraStyle) => {
-        extraStyle['data'].forEach((style) => {
-          if (style instanceof OlStyleStyle) {
-            select = new OlInteractionSelect({
-              'condition': typeof mappings[extraStyle['name']]['condition'] === 'function' ? mappings[extraStyle['name']]['condition'] : olEventsCondition[mappings[extraStyle['name']]['condition']],
-              'layers': [layer],
-              'style': style
-            })
-            select.set('type', mappings[extraStyle['name']]['select'])
-            map.addInteraction(select)
-            self.activeInteractions.push(select)
-            selectedFeatures = select.getFeatures()
-            selectedFeatures.on('add', function (event) {
-              if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['select']] === 'function')) {
-                callbacks[mappings[extraStyle['name']]['select']](event['element'])
-              }
-            })
-            selectedFeatures.on('remove', function (event) {
-              if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['deselect']] === 'function')) {
-                callbacks[mappings[extraStyle['name']]['deselect']](event['element'])
-              }
-            })
-          }
-        })
+        style = extraStyle['data']
+        if (style != null) {
+          select = new OlInteractionSelect({
+            'condition': typeof mappings[extraStyle['name']]['condition'] === 'function' ? mappings[extraStyle['name']]['condition'] : olEventsCondition[mappings[extraStyle['name']]['condition']],
+            'layers': [layer],
+            'style': style
+          })
+          select.set('type', mappings[extraStyle['name']]['select'])
+          map.addInteraction(select)
+          self.activeInteractions.push(select)
+          selectedFeatures = select.getFeatures()
+          selectedFeatures.on('add', function (event) {
+            if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['select']] === 'function')) {
+              callbacks[mappings[extraStyle['name']]['select']](event['element'])
+            }
+          })
+          selectedFeatures.on('remove', function (event) {
+            if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['deselect']] === 'function')) {
+              callbacks[mappings[extraStyle['name']]['deselect']](event['element'])
+            }
+          })
+        }
       })
     }
     layer.getSource().getFeatures().forEach(feature => {

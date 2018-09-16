@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "4.10.6",
+  "version": "4.12.0",
   "private": false,
   "description": "Map animation library",
   "main": "src/MetOClient.js",
@@ -63,7 +63,6 @@
     "metalsmith": "^2.3.0",
     "metalsmith-layouts": "1.6.4",
     "nomnom": "1.8.1",
-    "phantomjs-prebuilt": "^2.1.16",
     "slimerjs": "^0.10.3",
     "standard": "^10.0.3",
     "style-loader": "^0.18.2",

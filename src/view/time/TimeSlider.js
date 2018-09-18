@@ -199,6 +199,7 @@ export default class TimeSlider {
    * @memberOf TimeSlider
    */
   createPostTools () {
+    let localization = this.instance_.timeController_.config_.view
     let self = this
     let postTools = document.createElement('div')
     postTools.classList.add(TimeSlider.POST_TOOLS_CLASS)
@@ -218,157 +219,80 @@ export default class TimeSlider {
     if (!this.viewConfig_['showTimeSliderMenu']) {
       return postTools;
     }
-    const createTimeMenu = utils['createTimeMenu']
 
-    const timeStepMenu = createTimeMenu({
-      id: 'timeslidermenu',
+    const timeStepMenu = utils['createTimeMenu']({
+      id: TimeSlider.MENU_CLASS,
       items: [{
-        title: 'TimeSteps: 5min - 15min - 30min - 1h - 3h - 6h - 12h - 24h',
-        id: 'step',
+        title: localization.beginTimeText + ': 5min - 15min - 30min - 1h - 3h - 6h - 12h - 24h',
+        id: TimeSlider.TIMESTEP_CLASS,
         size: 8,
         resolutionTime: this.timeConfig_.modifiedResolutionTime,
         beginPlace: ((this.timeConfig_.lastDataPointTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime) - ((this.timeConfig_.lastDataPointTime - this.timeConfig_.beginTime) / this.timeConfig_.resolutionTime),
         endPlace: (this.timeConfig_.endTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime,
         type: 'range',
         callback: () => {
-          const step = document.getElementById('step').value
-          const value = document.getElementById('btime').value
-
-          if(step === '1') {
-            this.instance_.setTimeStep(300000) //5min
+          const step = document.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
+          const value = document.getElementsByClassName(TimeSlider.BEGIN_TIME_CLASS)[0].value
+          this.instance_.setTimeStep(constants.AVAILABLE_TIMESTEPS[step])
+          this.timeConfig_.modifiedResolutionTime = constants.AVAILABLE_TIMESTEPS[step]
+          if ((this.timeConfig_.firstDataPointTime % constants.AVAILABLE_TIMESTEPS[step]) % this.timeConfig_.resolutionTime == 0){
+            if (constants.AVAILABLE_TIMESTEPS[step] > constants.AVAILABLE_TIMESTEPS[3]) {
+              this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3])
+              this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3]
+            }
+            this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step])
+            this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step]
+          }else {
             this.instance_.setTimeBegin(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
             this.timeConfig_.beginTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-            this.timeConfig_.modifiedResolutionTime = 300000
-          }else if(step === '2') {
-            if ((this.timeConfig_.firstDataPointTime % 900000) % this.timeConfig_.resolutionTime == 0){
-              this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 900000) * 900000)
-              this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 900000) * 900000
-            }else {
-              this.instance_.setTimeBegin(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
-              this.timeConfig_.beginTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-            }
-              this.instance_.setTimeStep(900000) //15min
-              this.timeConfig_.modifiedResolutionTime = 900000
-          }else if(step === '3') {
-            this.instance_.setTimeStep(1800000) //30min
-            if ((this.timeConfig_.firstDataPointTime % 1800000) % this.timeConfig_.resolutionTime == 0){
-              this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 1800000) * 1800000)
-              this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 1800000) * 1800000
-            }else {
-              this.instance_.setTimeBegin(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
-              this.timeConfig_.beginTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-            }
-            this.timeConfig_.modifiedResolutionTime = 1800000
-          }else{
-            if(step === '4') {
-              this.instance_.setTimeStep(3600000) //1h
-              this.timeConfig_.modifiedResolutionTime = 3600000
-            }else if(step === '5') {
-              this.instance_.setTimeStep(10800000) //3h
-              this.timeConfig_.modifiedResolutionTime = 10800000
-            }else if(step === '6') {
-              this.instance_.setTimeStep(21600000) //6h
-              this.timeConfig_.modifiedResolutionTime = 21600000
-            }else if(step === '7') {
-              this.instance_.setTimeStep(43200000) //12h
-              this.timeConfig_.modifiedResolutionTime = 43200000
-            }else {
-              this.instance_.setTimeStep(86400000) //24h
-              this.timeConfig_.modifiedResolutionTime = 86400000
-            }
-            if ((this.timeConfig_.firstDataPointTime % 3600000) % this.timeConfig_.resolutionTime == 0){
-              this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 3600000) * 3600000)
-              this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 3600000) * 3600000
-            }else{
-              this.instance_.setTimeBegin(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
-              this.timeConfig_.beginTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-            }
           }
         }
       }, {
-        title: 'Begin time',
-        id: 'btime',
+        title: localization.beginTimeText,
+        id: TimeSlider.BEGIN_TIME_CLASS,
         size: (this.timeConfig_.lastDataPointTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime,
         resolutionTime: this.timeConfig_.modifiedResolutionTime,
         beginPlace: ((this.timeConfig_.lastDataPointTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime) - ((this.timeConfig_.lastDataPointTime - this.timeConfig_.beginTime) / this.timeConfig_.resolutionTime),
         endPlace: (this.timeConfig_.endTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime,
         type: 'range',
         callback: () => {
-          const step = document.getElementById('step').value
-          const value = document.getElementById('btime').value
-          if(step === '1') {
-            this.instance_.setTimeStep(300000) //5min
+          const step = document.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
+          const value = document.getElementsByClassName(TimeSlider.BEGIN_TIME_CLASS)[0].value
+          this.instance_.setTimeStep(constants.AVAILABLE_TIMESTEPS[step])
+          if ((this.timeConfig_.firstDataPointTime % constants.AVAILABLE_TIMESTEPS[step]) % this.timeConfig_.resolutionTime == 0){
+            if (constants.AVAILABLE_TIMESTEPS[step] > constants.AVAILABLE_TIMESTEPS[3]) {
+              this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3])
+              this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3]
+            }
+            this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step])
+            this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step]
+          }else {
             this.instance_.setTimeBegin(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
             this.timeConfig_.beginTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-          }else if(step === '2') {
-            this.instance_.setTimeStep(900000) //15min
-            if ((this.timeConfig_.firstDataPointTime % 900000) % this.timeConfig_.resolutionTime == 0){
-              this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 900000) * 900000)
-              this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 900000) * 900000
-            }else {
-              this.instance_.setTimeBegin(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
-              this.timeConfig_.beginTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-            }
-          }else if(step === '3') {
-            this.instance_.setTimeStep(1800000) //30min
-            if ((this.timeConfig_.firstDataPointTime % 1800000) % this.timeConfig_.resolutionTime == 0){
-              this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 1800000) * 1800000)
-              this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 1800000) * 1800000
-            }else {
-              this.instance_.setTimeBegin(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
-              this.timeConfig_.beginTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-            }
-          }else{
-            if ((this.timeConfig_.firstDataPointTime % 3600000) % this.timeConfig_.resolutionTime == 0){
-              this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 3600000) * 3600000)
-              this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 3600000) * 3600000
-            }else{
-              this.instance_.setTimeBegin(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
-              this.timeConfig_.beginTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-            }
           }
         }
       }, {
-        title: 'End Time',
-        id: 'etime',
+        title: localization.endTimeText,
+        id: TimeSlider.END_TIME_CLASS,
         size: (this.timeConfig_.lastDataPointTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime,
         resolutionTime: this.timeConfig_.modifiedResolutionTime,
         beginPlace: ((this.timeConfig_.lastDataPointTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime) - ((this.timeConfig_.lastDataPointTime - this.timeConfig_.beginTime) / this.timeConfig_.resolutionTime),
         endPlace: (this.timeConfig_.endTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime,
         type: 'range',
         callback: () => {
-          const step = document.getElementById('step').value
-          const value = document.getElementById('etime').value
-          if(step === '1') {
-            this.instance_.setTimeStep(300000) //5min
+          const step = document.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
+          const value = document.getElementsByClassName(TimeSlider.END_TIME_CLASS)[0].value
+          this.instance_.setTimeStep(constants.AVAILABLE_TIMESTEPS[step])
+          if ((this.timeConfig_.firstDataPointTime % constants.AVAILABLE_TIMESTEPS[step]) % this.timeConfig_.resolutionTime == 0){
+            if (constants.AVAILABLE_TIMESTEPS[step] > constants.AVAILABLE_TIMESTEPS[3]) {
+              this.instance_.setTimeEnd(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3])
+              this.timeConfig_.endTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3]
+            }
+            this.instance_.setTimeEnd(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step])
+            this.timeConfig_.endTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step]
+          }else {
             this.instance_.setTimeEnd(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
             this.timeConfig_.endTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-          }else if(step === '2') {
-            this.instance_.setTimeStep(900000) //15min
-            if ((this.timeConfig_.firstDataPointTime % 900000) % this.timeConfig_.resolutionTime == 0){
-              this.instance_.setTimeEnd(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 900000) * 900000)
-              this.timeConfig_.endTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 900000) * 900000
-            }else {
-              this.instance_.setTimeEnd(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
-              this.timeConfig_.endTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-            }
-          }else if(step === '3') {
-            this.instance_.setTimeStep(1800000) //30min
-            if ((this.timeConfig_.firstDataPointTime % 1800000) % this.timeConfig_.resolutionTime == 0){
-              this.instance_.setTimeEnd(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 1800000) * 1800000)
-              this.timeConfig_.endTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 1800000) * 1800000
-            }else {
-              this.instance_.setTimeEnd(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
-              this.timeConfig_.endTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-            }
-          }else{
-            if ((this.timeConfig_.firstDataPointTime % 3600000) % this.timeConfig_.resolutionTime == 0){
-              this.instance_.setTimeEnd(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 3600000) * 3600000)
-              this.timeConfig_.endTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / 3600000) * 3600000
-            }else{
-              this.instance_.setTimeEnd(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
-              this.timeConfig_.endTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
-            }
           }
         }
       }]
@@ -889,5 +813,9 @@ TimeSlider.POINTER_TEXT_CLASS = 'fmi-metoclient-timeslider-pointer-text'
 TimeSlider.POINTER_HANDLE_CLASS = 'fmi-metoclient-timeslider-pointer-handle'
 TimeSlider.INDICATOR_CLASS = 'fmi-metoclient-timeslider-indicator'
 TimeSlider.HIDDEN_CLASS = 'fmi-metoclient-timeslider-hidden'
+TimeSlider.MENU_CLASS = 'fmi-metoclient-timeslider-menu'
+TimeSlider.BEGIN_TIME_CLASS = 'fmi-metoclient-timeslider-begintime'
+TimeSlider.END_TIME_CLASS = 'fmi-metoclient-timeslider-endtime'
+TimeSlider.TIMESTEP_CLASS = 'fmi-metoclient-timeslider-timestep'
 TimeSlider.BACKWARDS = -1
 TimeSlider.FORWARDS = 1

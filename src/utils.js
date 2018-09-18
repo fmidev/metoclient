@@ -7,6 +7,7 @@
 import { default as proj4 } from 'proj4'
 import { tz } from 'moment-timezone'
 import moment from 'moment-timezone'
+import { AVAILABLE_TIMESTEPS } from './constants'
 import fi from 'moment/locale/fi'
 import sv from 'moment/locale/sv'
 import uk from 'moment/locale/uk'
@@ -133,7 +134,7 @@ export const createTimeMenu = (options) => {
   let title
   ul.classList.add('metoclient-menu')
   if (options.id != null) {
-    ul.setAttribute('id', options.id)
+    ul.classList.add(options.id)
   }
   if (options.items != null) {
     options.items.forEach((item) => {
@@ -154,32 +155,20 @@ export const createTimeMenu = (options) => {
         title.innerHTML = item.title
         a = document.createElement('input')
         a.setAttribute("type", "range")
-        a.setAttribute("min", "1")
-        a.setAttribute("max", item.size)
-        if (item.id == "step") {
-          if(item.resolutionTime === 300000) {
-            a.setAttribute("value", "1")
-          }else if (item.resolutionTime === 900000) {
-            a.setAttribute("value", "2")
-          }else if (item.resolutionTime === 1800000) {
-            a.setAttribute("value", "3")
-          }else if (item.resolutionTime === 3600000) {
-            a.setAttribute("value", "4")
-          }else if (item.resolutionTime === 10800000) {
-            a.setAttribute("value", "5")
-          }else if (item.resolutionTime === 21600000) {
-            a.setAttribute("value", "6")
-          }else if (item.resolutionTime === 43200000) {
-            a.setAttribute("value", "7")
-          }else if (item.resolutionTime === 86400000) {
-            a.setAttribute("value", "8")
+        a.setAttribute("min", "0")
+        a.setAttribute("max", item.size - 1)
+        if (item.id == 'fmi-metoclient-timeslider-timestep') {
+          for(let i = 0 ; i < 8 ; i++) {
+            if(item.resolutionTime === AVAILABLE_TIMESTEPS[i]){
+              a.setAttribute("value", i)
+            }
           }
-        } else if (item.id == "btime"){
+        } else if (item.id == 'fmi-metoclient-timeslider-begintime'){
           a.setAttribute("value", Math.floor(item.beginPlace))
-        } else if (item.id == "etime"){
+        } else if (item.id == 'fmi-metoclient-timeslider-endtime'){
           a.setAttribute("value", Math.ceil(item.endPlace))
         }
-        a.setAttribute("id", item.id)
+        a.classList.add(item.id)
         a.href = '#'
         li.appendChild(title)
         li.appendChild(a)

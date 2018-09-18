@@ -219,3 +219,32 @@ div.fmi-metoclient-timeslider-timezone {
     top: 0;
     padding: 1px;
 }
+
+ul.fmi-metoclient-timeslider-menu {
+    top: -164px;
+    left: -440px;
+    width: 500px;
+    z-index: 30;
+}
+
+ul.fmi-metoclient-timeslider-menu.visible-menu {
+    top: -179px;
+    background-color: rgba(255,255,255,0.7);
+}
+
+ul.fmi-metoclient-timeslider-menu a {
+    background-color: transparent;
+}
+
+ul.fmi-metoclient-timeslider-menu a:hover {
+    background-color: transparent;
+    color: black;
+}
+
+ul.fmi-metoclient-timeslider-menu:before {
+    border-top-color: #fff;
+    bottom: -20px;
+    margin-left: -40px;
+    top: auto;
+    border-bottom-color: transparent;
+}

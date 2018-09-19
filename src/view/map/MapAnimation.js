@@ -983,7 +983,6 @@ MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
   let layerGroup
   const numLayerGroups = layerGroups.getLength()
   const config = this.get('config')
-  const callbacks = this.get('callbacks')
   const overlayGroupName = config['overlayGroupName']
   let i
   if (overlayGroupName == null) {
@@ -1006,9 +1005,6 @@ MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
   if (config['showMarker']) {
     this.get('marker').setCoordinates(this.get('map').getView().getCenter())
     this.dispatchEvent('markerMoved')
-  }
-  if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
-    callbacks['ready']()
   }
 }
 

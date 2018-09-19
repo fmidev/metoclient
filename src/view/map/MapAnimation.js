@@ -754,7 +754,8 @@ MapAnimation.prototype.defineSelect = function () {
           select = new OlInteractionSelect({
             'condition': typeof mappings[extraStyle['name']]['condition'] === 'function' ? mappings[extraStyle['name']]['condition'] : olEventsCondition[mappings[extraStyle['name']]['condition']],
             'layers': [layer],
-            'style': style
+            'style': style,
+            'multi': true
           })
           select.set('type', mappings[extraStyle['name']]['select'])
           map.addInteraction(select)

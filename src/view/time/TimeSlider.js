@@ -231,8 +231,8 @@ export default class TimeSlider {
         endPlace: (this.timeConfig_.endTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime,
         type: 'range',
         callback: () => {
-          const step = document.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
-          const value = document.getElementsByClassName(TimeSlider.BEGIN_TIME_CLASS)[0].value
+          const step = this.container_.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
+          const value = this.container_.getElementsByClassName(TimeSlider.BEGIN_TIME_CLASS)[0].value
           this.instance_.setTimeStep(constants.AVAILABLE_TIMESTEPS[step])
           this.timeConfig_.modifiedResolutionTime = constants.AVAILABLE_TIMESTEPS[step]
           if ((this.timeConfig_.firstDataPointTime % constants.AVAILABLE_TIMESTEPS[step]) % this.timeConfig_.resolutionTime == 0){
@@ -256,8 +256,8 @@ export default class TimeSlider {
         endPlace: (this.timeConfig_.endTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime,
         type: 'range',
         callback: () => {
-          const step = document.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
-          const value = document.getElementsByClassName(TimeSlider.BEGIN_TIME_CLASS)[0].value
+          const step = this.container_.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
+          const value = this.container_.getElementsByClassName(TimeSlider.BEGIN_TIME_CLASS)[0].value
           this.instance_.setTimeStep(constants.AVAILABLE_TIMESTEPS[step])
           if ((this.timeConfig_.firstDataPointTime % constants.AVAILABLE_TIMESTEPS[step]) % this.timeConfig_.resolutionTime == 0){
             if (constants.AVAILABLE_TIMESTEPS[step] > constants.AVAILABLE_TIMESTEPS[3]) {
@@ -280,8 +280,8 @@ export default class TimeSlider {
         endPlace: (this.timeConfig_.endTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime,
         type: 'range',
         callback: () => {
-          const step = document.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
-          const value = document.getElementsByClassName(TimeSlider.END_TIME_CLASS)[0].value
+          const step = this.container_.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
+          const value = this.container_.getElementsByClassName(TimeSlider.END_TIME_CLASS)[0].value
           this.instance_.setTimeStep(constants.AVAILABLE_TIMESTEPS[step])
           if ((this.timeConfig_.firstDataPointTime % constants.AVAILABLE_TIMESTEPS[step]) % this.timeConfig_.resolutionTime == 0){
             if (constants.AVAILABLE_TIMESTEPS[step] > constants.AVAILABLE_TIMESTEPS[3]) {

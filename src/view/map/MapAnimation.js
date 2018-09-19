@@ -94,6 +94,8 @@ export default class MapAnimation {
     this.updateRequestResolution = 50
     /** @const */
     this.layerResolution = 60 * 1000
+    /** @const */
+    this.hitTolerance = 8
   };
 }
 Ol.inherits(MapAnimation, OlObject)
@@ -246,7 +248,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
       feature.set('layerId', layerId)
       features.push(feature)
     }, {
-      'hitTolerance': 8
+      'hitTolerance': self.hitTolerance
     })
     features.sort(function (a, b) {
       const layerIdProperty = 'layerId'
@@ -729,7 +731,8 @@ MapAnimation.prototype.defineSelect = function () {
     'styleHover': {
       'condition': 'pointerMove',
       'select': 'hover',
-      'deselect': 'unhover'
+      'deselect': 'unhover',
+      'multi': true
     },
     'styleSelected': {
       'condition': function (event) {
@@ -741,7 +744,8 @@ MapAnimation.prototype.defineSelect = function () {
         return false
       },
       'select': 'selected',
-      'deselect': 'deselected'
+      'deselect': 'deselected',
+      'multi': false
     }
   }
   this.getLayersByGroup(config['featureGroupName']).forEach(layer => {
@@ -755,7 +759,8 @@ MapAnimation.prototype.defineSelect = function () {
             'condition': typeof mappings[extraStyle['name']]['condition'] === 'function' ? mappings[extraStyle['name']]['condition'] : olEventsCondition[mappings[extraStyle['name']]['condition']],
             'layers': [layer],
             'style': style,
-            'multi': true
+            'multi': mappings[extraStyle['name']]['multi'],
+            'hitTolerance': self.hitTolerance
           })
           select.set('type', mappings[extraStyle['name']]['select'])
           map.addInteraction(select)

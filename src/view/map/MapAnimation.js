@@ -95,7 +95,7 @@ export default class MapAnimation {
     /** @const */
     this.layerResolution = 60 * 1000
     /** @const */
-    this.hitTolerance = 8
+    this.hitTolerance = 0
   };
 }
 Ol.inherits(MapAnimation, OlObject)
@@ -725,14 +725,41 @@ MapAnimation.prototype.defineSelect = function () {
   const config = this.get('config')
   const callbacks = this.get('callbacks')
   let select
-  let selectedFeatures = new OlCollection()
+  let selectedFeatures = {}
   let extraStyles
   let mappings = {
     'styleHover': {
       'condition': 'pointerMove',
       'select': 'hover',
       'deselect': 'unhover',
-      'multi': true
+      'multi': true,
+      'onAdd': (feature) => {
+        let isSelected = false
+        let id = feature.getId()
+        if (id == null) {
+          return
+        }
+        selectedFeatures['styleSelected'].forEach((selectedFeature) => {
+          if (selectedFeature.getId() === id) {
+            selectedFeature.setStyle(extraStyles['styleHover']['data'])
+            isSelected = true
+          }
+        })
+        if (!isSelected) {
+          feature.setStyle(null)
+        }
+      },
+      'onRemove': (feature) => {
+        let id = feature.getId()
+        if (id == null) {
+          return
+        }
+        selectedFeatures['styleSelected'].forEach((selectedFeature) => {
+          if (selectedFeature.getId() === id) {
+            selectedFeature.setStyle(extraStyles['styleSelected']['data'])
+          }
+        })
+      }
     },
     'styleSelected': {
       'condition': function (event) {
@@ -745,35 +772,43 @@ MapAnimation.prototype.defineSelect = function () {
       },
       'select': 'selected',
       'deselect': 'deselected',
-      'multi': false
+      'multi': false,
+      'onAdd': (feature) => {
+        feature.setStyle(extraStyles['styleSelected']['data'])
+      },
+      'onRemove': (feature) => {
+        feature.setStyle(null)
+      }
     }
   }
   this.getLayersByGroup(config['featureGroupName']).forEach(layer => {
     let style
     extraStyles = layer.get('extraStyles')
     if (extraStyles != null) {
-      extraStyles.forEach((extraStyle) => {
-        style = extraStyle['data']
+      Object.keys(extraStyles).forEach((styleName) => {
+        style = extraStyles[styleName]['data']
         if (style != null) {
           select = new OlInteractionSelect({
-            'condition': typeof mappings[extraStyle['name']]['condition'] === 'function' ? mappings[extraStyle['name']]['condition'] : olEventsCondition[mappings[extraStyle['name']]['condition']],
+            'condition': typeof mappings[styleName]['condition'] === 'function' ? mappings[styleName]['condition'] : olEventsCondition[mappings[styleName]['condition']],
             'layers': [layer],
             'style': style,
-            'multi': mappings[extraStyle['name']]['multi'],
+            'multi': mappings[styleName]['multi'],
             'hitTolerance': self.hitTolerance
           })
-          select.set('type', mappings[extraStyle['name']]['select'])
+          select.set('type', mappings[styleName]['select'])
           map.addInteraction(select)
           self.activeInteractions.push(select)
-          selectedFeatures = select.getFeatures()
-          selectedFeatures.on('add', function (event) {
-            if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['select']] === 'function')) {
-              callbacks[mappings[extraStyle['name']]['select']](event['element'])
+          selectedFeatures[styleName] = select.getFeatures()
+          selectedFeatures[styleName].on('add', function (event) {
+            mappings[styleName]['onAdd'](event.element)
+            if ((callbacks != null) && (typeof callbacks[mappings[styleName]['select']] === 'function')) {
+              callbacks[mappings[styleName]['select']](event['element'])
             }
           })
-          selectedFeatures.on('remove', function (event) {
-            if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['deselect']] === 'function')) {
-              callbacks[mappings[extraStyle['name']]['deselect']](event['element'])
+          selectedFeatures[styleName].on('remove', function (event) {
+            mappings[styleName]['onRemove'](event.element)
+            if ((callbacks != null) && (typeof callbacks[mappings[styleName]['deselect']] === 'function')) {
+              callbacks[mappings[styleName]['deselect']](event['element'])
             }
           })
         }
@@ -781,7 +816,7 @@ MapAnimation.prototype.defineSelect = function () {
     }
     layer.getSource().getFeatures().forEach(feature => {
       if (feature.get('selected')) {
-        selectedFeatures.push(feature)
+        selectedFeatures['styleSelected'].push(feature)
       }
     })
   })

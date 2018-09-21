@@ -58,15 +58,14 @@ export default class MapProducer {
    */
   layerFactory (options, extent, projection, beginTime, endTime) {
     let style
-    let extraStyles = [
-      {
-        'name': 'styleHover',
+    let extraStyles = {
+      'styleHover': {
         'data': null
-      }, {
-        'name': 'styleSelected',
+      },
+      'styleSelected': {
         'data': null
       }
-    ]
+    }
     let i
     let z
     let featureProducer
@@ -139,11 +138,11 @@ export default class MapProducer {
             options['style'] = featureProducer.styleFactory(options['style'], z)
           }
         }
-        extraStyles.forEach((extraStyle) => {
-          if ((Array.isArray(options[extraStyle['name']])) && (!(options[extraStyle['name']][i] instanceof OlStyleStyle))) {
-            style = featureProducer.styleFactory(options[extraStyle['name']], z)
+        Object.keys(extraStyles).forEach((styleName) => {
+          if ((Array.isArray(options[styleName])) && (!(options[styleName][i] instanceof OlStyleStyle))) {
+            style = featureProducer.styleFactory(options[styleName], z)
             if (style != null) {
-              extraStyle['data'] = style
+              extraStyles[styleName]['data'] = style
             }
           }
         })

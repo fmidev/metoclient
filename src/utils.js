@@ -164,6 +164,8 @@ export const createTimeMenu = (options) => {
             }
           }
         } else if (item.id == 'fmi-metoclient-timeslider-begintime'){
+
+//        if (item.id == 'fmi-metoclient-timeslider-begintime'){
           a.setAttribute("value", Math.floor(item.beginPlace))
         } else if (item.id == 'fmi-metoclient-timeslider-endtime'){
           a.setAttribute("value", Math.ceil(item.endPlace))
@@ -176,7 +178,24 @@ export const createTimeMenu = (options) => {
           li.addEventListener('click', item.callback)
         }
         ul.appendChild(li)
-      }else{
+      } else if (item.type == 'stepButtons') {
+        li = document.createElement('li')
+        title = document.createElement('a')
+        title.innerHTML = item.title
+        li.appendChild(title)
+        for(let i = 0 ; i < AVAILABLE_TIMESTEPS.length ; i++) {
+          let button = document.createElement('button')
+          if (i > 2){
+            button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 3600000) + "h"
+          } else {
+            button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 60000) + "min"
+          }
+          button.classList.add('fmi-metoclient-timeslider-timestep-button')
+          button.addEventListener('click', item.callback)
+          li.appendChild(button)
+        }
+        ul.appendChild(li)
+      } else{
         console.log("Unsupported")
       }
 

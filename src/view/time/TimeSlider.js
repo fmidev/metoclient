@@ -223,25 +223,42 @@ export default class TimeSlider {
     const timeStepMenu = utils['createTimeMenu']({
       id: TimeSlider.MENU_CLASS,
       items: [{
-        title: localization.beginTimeText + ': 5min - 15min - 30min - 1h - 3h - 6h - 12h - 24h',
+        title: localization.timeStepText,
         id: TimeSlider.TIMESTEP_CLASS,
-        size: 8,
         resolutionTime: this.timeConfig_.modifiedResolutionTime,
         beginPlace: ((this.timeConfig_.lastDataPointTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime) - ((this.timeConfig_.lastDataPointTime - this.timeConfig_.beginTime) / this.timeConfig_.resolutionTime),
         endPlace: (this.timeConfig_.endTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime,
-        type: 'range',
-        callback: () => {
-          const step = this.container_.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
+        type: 'stepButtons',
+        callback: (e) => {
+          let step = e.target.innerHTML
+          switch (step) {
+              case "5min":
+                step = 0; break
+              case "15min":
+                step = 1; break
+              case "30min":
+                step = 2; break
+              case "1h":
+                step = 3; break
+              case "3h":
+                step = 4; break
+              case "6h":
+                step = 5; break
+              case "12h":
+                step = 6; break
+              case "24h":
+                step = 7
+          }
           const value = this.container_.getElementsByClassName(TimeSlider.BEGIN_TIME_CLASS)[0].value
-          this.instance_.setTimeStep(constants.AVAILABLE_TIMESTEPS[step])
           this.timeConfig_.modifiedResolutionTime = constants.AVAILABLE_TIMESTEPS[step]
-          if ((this.timeConfig_.firstDataPointTime % constants.AVAILABLE_TIMESTEPS[step]) % this.timeConfig_.resolutionTime == 0){
-            if (constants.AVAILABLE_TIMESTEPS[step] > constants.AVAILABLE_TIMESTEPS[3]) {
+          this.instance_.setTimeStep(this.timeConfig_.modifiedResolutionTime)
+          if ((this.timeConfig_.firstDataPointTime % this.timeConfig_.modifiedResolutionTime) % this.timeConfig_.resolutionTime == 0){
+            if (this.timeConfig_.modifiedResolutionTime > constants.AVAILABLE_TIMESTEPS[3]) {
               this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3])
               this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3]
             }
-            this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step])
-            this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step]
+            this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / this.timeConfig_.modifiedResolutionTime) * this.timeConfig_.modifiedResolutionTime)
+            this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / this.timeConfig_.modifiedResolutionTime) * this.timeConfig_.modifiedResolutionTime
           }else {
             this.instance_.setTimeBegin(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
             this.timeConfig_.beginTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
@@ -256,16 +273,15 @@ export default class TimeSlider {
         endPlace: (this.timeConfig_.endTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime,
         type: 'range',
         callback: () => {
-          const step = this.container_.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
           const value = this.container_.getElementsByClassName(TimeSlider.BEGIN_TIME_CLASS)[0].value
-          this.instance_.setTimeStep(constants.AVAILABLE_TIMESTEPS[step])
-          if ((this.timeConfig_.firstDataPointTime % constants.AVAILABLE_TIMESTEPS[step]) % this.timeConfig_.resolutionTime == 0){
-            if (constants.AVAILABLE_TIMESTEPS[step] > constants.AVAILABLE_TIMESTEPS[3]) {
+          this.instance_.setTimeStep(this.timeConfig_.modifiedResolutionTime)
+          if ((this.timeConfig_.firstDataPointTime % this.timeConfig_.modifiedResolutionTime) % this.timeConfig_.resolutionTime == 0){
+            if (this.timeConfig_.modifiedResolutionTime > constants.AVAILABLE_TIMESTEPS[3]) {
               this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3])
               this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3]
             }
-            this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step])
-            this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step]
+            this.instance_.setTimeBegin(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / this.timeConfig_.modifiedResolutionTime) * this.timeConfig_.modifiedResolutionTime)
+            this.timeConfig_.beginTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / this.timeConfig_.modifiedResolutionTime) * this.timeConfig_.modifiedResolutionTime
           }else {
             this.instance_.setTimeBegin(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
             this.timeConfig_.beginTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)
@@ -280,16 +296,15 @@ export default class TimeSlider {
         endPlace: (this.timeConfig_.endTime - this.timeConfig_.firstDataPointTime) / this.timeConfig_.resolutionTime,
         type: 'range',
         callback: () => {
-          const step = this.container_.getElementsByClassName(TimeSlider.TIMESTEP_CLASS)[0].value
           const value = this.container_.getElementsByClassName(TimeSlider.END_TIME_CLASS)[0].value
-          this.instance_.setTimeStep(constants.AVAILABLE_TIMESTEPS[step])
-          if ((this.timeConfig_.firstDataPointTime % constants.AVAILABLE_TIMESTEPS[step]) % this.timeConfig_.resolutionTime == 0){
-            if (constants.AVAILABLE_TIMESTEPS[step] > constants.AVAILABLE_TIMESTEPS[3]) {
+          this.instance_.setTimeStep(this.timeConfig_.modifiedResolutionTime)
+          if ((this.timeConfig_.firstDataPointTime % this.timeConfig_.modifiedResolutionTime) % this.timeConfig_.resolutionTime == 0){
+            if (this.timeConfig_.modifiedResolutionTime > constants.AVAILABLE_TIMESTEPS[3]) {
               this.instance_.setTimeEnd(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3])
               this.timeConfig_.endTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3]
             }
-            this.instance_.setTimeEnd(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step])
-            this.timeConfig_.endTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / constants.AVAILABLE_TIMESTEPS[step]) * constants.AVAILABLE_TIMESTEPS[step]
+            this.instance_.setTimeEnd(Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / this.timeConfig_.modifiedResolutionTime) * this.timeConfig_.modifiedResolutionTime)
+            this.timeConfig_.endTime = Math.ceil((this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)) / this.timeConfig_.modifiedResolutionTime) * this.timeConfig_.modifiedResolutionTime
           }else {
             this.instance_.setTimeEnd(this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value))
             this.timeConfig_.endTime = this.timeConfig_.firstDataPointTime + (this.timeConfig_.resolutionTime * value)

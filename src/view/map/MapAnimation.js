@@ -734,6 +734,9 @@ MapAnimation.prototype.defineSelect = function () {
       'deselect': 'unhover',
       'multi': true,
       'onAdd': (feature) => {
+        if (!Array.isArray(selectedFeatures['styleSelected'])) {
+          return
+        }
         let isSelected = false
         let id = feature.getId()
         if (id == null) {
@@ -750,6 +753,9 @@ MapAnimation.prototype.defineSelect = function () {
         }
       },
       'onRemove': (feature) => {
+        if (!Array.isArray(selectedFeatures['styleSelected'])) {
+          return
+        }
         let id = feature.getId()
         if (id == null) {
           return

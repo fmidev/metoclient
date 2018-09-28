@@ -41,6 +41,7 @@ export default class Time {
     this.play_ = false
     this.waitUntilLoaded_ = (this.config_['waitUntilLoaded'] != null) ? this.config_['waitUntilLoaded'] : false
     this.refreshStarted_ = false
+    this.continuePlay_ = false
   };
 
   /**
@@ -105,7 +106,8 @@ export default class Time {
       this.initEndTime_ = this.endTime_
     }
     this.setAnimationLastRefreshed(Date.now())
-    if ((this.config_['autoStart']) && (!this.config_['waitUntilLoaded'])) {
+    if ((this.continuePlay_) || ((this.config_['autoStart']) && (!this.config_['waitUntilLoaded']))) {
+      this.continuePlay_ = false
       this.actionEvents.emitEvent('play')
     }
     if (!this.refreshStarted_) {
@@ -121,7 +123,9 @@ export default class Time {
     let self = this
     // Todo: default from configuration
     let refreshInterval = (typeof this.refreshInterval_ === 'number') ? this.refreshInterval_ : 15 * 60 * 1000
-    this.handleTimer_()
+    if (!self.play_) {
+      this.handleTimer_()
+    }
     // Todo: default from configuration
     // Some browsers need this limitation to prevent overflow
     if (refreshInterval > 24 * 60 * 60 * 1000) {
@@ -142,6 +146,10 @@ export default class Time {
       let timeDelay
       let animationTimeIndex = 0
       if ((currentTime - self.animationLastRefreshed_ > self.refreshInterval_) && (currentTime - self.timeCreatedAt_ > 0.5 * self.refreshInterval_)) {
+        if (self.play_) {
+          self.pause()
+          self.continuePlay_ = true
+        }
         self.actionEvents.emitEvent('refresh')
       } else if (self.play_) {
         timeDelay = self.frameRate_
@@ -281,9 +289,11 @@ export default class Time {
    * Starts to play animation.
    */
   play () {
-    this.play_ = true
     this.waitUntilLoaded_ = false
-    this.handleTimer_()
+    if (!this.play_) {
+      this.play_ = true
+      this.handleTimer_()
+    }
   };
 
   /**
@@ -393,6 +403,14 @@ export default class Time {
   setResolutionTime (resolutionTime) {
     this.animationResolutionTime_ = resolutionTime
     this.createTimer()
+  };
+
+  /**
+   * Sets animation default time.
+   * @param defaultTime Default time.
+   */
+  setDefaultTime (defaultTime) {
+    this.defaultTime_ = defaultTime
   };
 
   /**

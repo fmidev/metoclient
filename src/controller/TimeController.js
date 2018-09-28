@@ -94,7 +94,7 @@ export default class TimeController {
       self.next()
     }
     this.animationTimeUserListener_ = (animationTime) => {
-      self.model_.setAnimationTime(animationTime)
+      self.setAnimationTime(animationTime)
     }
     this.animationPlayListener_ = (animationPlay) => {
       if (animationPlay) {
@@ -178,7 +178,7 @@ export default class TimeController {
     const numViews = this.views_.length
     let numIntervals
     let i
-    let empty = true;
+    let empty = true
     if (numIntervalItems.length === 0) {
       return
     }
@@ -196,7 +196,7 @@ export default class TimeController {
         if ((numIntervalItems[i].toBeLoaded == null) || (numIntervalItems[i].toBeLoaded > 0)) {
           break
         }
-        numIntervalItems.shift();
+        numIntervalItems.shift()
         i++
       }
       i = numIntervalItems.length - 1
@@ -292,6 +292,7 @@ export default class TimeController {
     let resolutionTime = this.model_.getAnimationResolutionTime()
     const creationTime = this.model_.getCreationTime()
     let animationTimes
+    this.model_.setDefaultTime(this.model_.getAnimationTime())
     if (resolutionTime == null) {
       animationTimes = this.model_.getAnimationTimes()
       if ((animationTimes != null) && (animationTimes.length > 0)) {

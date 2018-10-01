@@ -1025,7 +1025,7 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
           map.renderSync()
           mapLayer.set('active', false)
           mapLayerClone.set('active', true)
-          if ((source.get('layerTime') !== nextAnimationTime) && (mapLayer.get('layerTimes').includes(nextAnimationTime))) {
+          if ((source != null) && (source.get('layerTime') !== nextAnimationTime) && (mapLayer.get('layerTimes').includes(nextAnimationTime))) {
             source.set('layerTime', nextAnimationTime)
             source.set('tilesLoaded', 0)
             source.set('tilesLoading', 0)

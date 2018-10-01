@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "4.12.9",
+  "version": "4.12.10",
   "private": false,
   "description": "Map animation library",
   "main": "src/MetOClient.js",

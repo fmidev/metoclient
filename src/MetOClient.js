@@ -268,18 +268,21 @@ export class MetOClient {
   createMap (callbacks) {
     let self = this
     let currentAnimationTime = this.timeController_.getAnimationTime()
-    let mapCallbacks = {}
+    let mapCallbacks
     let userReadyCallback
-    if (callbacks != null) {
+    if (callbacks !== null) {
+      if (typeof callbacks === 'undefined') {
+        callbacks = {}
+      }
       if (typeof callbacks['ready'] === 'function') {
         userReadyCallback = callbacks['ready'].bind()
       }
       mapCallbacks = callbacks
-    }
-    mapCallbacks['ready'] = () => {
-      self.setTime(currentAnimationTime)
-      if (typeof userReadyCallback === 'function') {
-        userReadyCallback()
+      mapCallbacks['ready'] = () => {
+        self.setTime(currentAnimationTime)
+        if (typeof userReadyCallback === 'function') {
+          userReadyCallback()
+        }
       }
     }
     this.mapController_.createMap(
@@ -558,6 +561,9 @@ export class MetOClient {
     if ((callbacks != null) && (callbacks['refreshed'] != null)) {
       this.refreshCallback_ = callbacks['refreshed']
     }
+    if (typeof callbacks === 'undefined') {
+      callbacks = null
+    }
     this.refresh(callbacks)
   }
 
@@ -830,8 +836,22 @@ export class MetOClient {
    * @export
    */
   setCallbacks (callbacks) {
-    if ((callbacks != null) && (callbacks['refreshed'] != null)) {
-      this.refreshCallback_ = callbacks['refreshed']
+    let self = this
+    let currentAnimationTime = this.timeController_.getAnimationTime()
+    let userReadyCallback
+    if (callbacks != null) {
+      if (callbacks['refreshed'] != null) {
+        this.refreshCallback_ = callbacks['refreshed']
+      }
+      if (callbacks['ready'] != null) {
+        userReadyCallback = callbacks['ready'].bind()
+        callbacks['ready'] = () => {
+          self.setTime(currentAnimationTime)
+          if (typeof userReadyCallback === 'function') {
+            userReadyCallback()
+          }
+        }
+      }
     }
     this.mapController_.setCallbacks(callbacks)
   }
@@ -896,7 +916,10 @@ export class MetOClient {
       self.timeController_.updateTimeSteps(numIntervalItems)
     }
     this.mapController_.variableEvents.addListener('numIntervalItems', this.numIntervalItemsListener_)
-    if ((callbacks != null) && (callbacks['refreshed'] != null)) {
+    if (callbacks == null) {
+      callbacks = {}
+    }
+    if (callbacks['refreshed'] != null) {
       this.refreshCallback_ = callbacks['refreshed']
     }
     this.createTime(callbacks)

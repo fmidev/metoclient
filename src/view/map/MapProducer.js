@@ -75,6 +75,7 @@ export default class MapProducer {
     let animation
     let layerBeginTime = beginTime
     let layerEndTime = endTime
+    let timePropertyName
     if (options['sourceOptions'] !== undefined) {
       sourceKey += 'Options'
     }
@@ -131,7 +132,9 @@ export default class MapProducer {
         z = {
           'value': 0
         }
+        timePropertyName = options['source']['time']
         options['source'] = source
+        source.set('timePropertyName', timePropertyName)
         featureProducer = new FeatureProducer()
         if (Array.isArray(options['style'])) {
           if (!(options['style'] instanceof OlStyleStyle)) {

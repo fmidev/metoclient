@@ -551,7 +551,7 @@ MapAnimation.prototype.updateStorage = function () {
 
 /**
  * Parses time values from capabilities string.
- * @param {Object} layer Layer configuration.
+ * @param {Object} layerAnimation Layer configuration.
  * @param {string} values Capabilities time definitions.
  */
 MapAnimation.prototype.parseCapabTimes = function (layerAnimation, values) {
@@ -1096,6 +1096,10 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   let visible = false
   let i
   let animation
+  let source
+  let timePropertyName
+  let animationUpdatedTime = -1
+  let animationTime
   if (layers === undefined) {
     return layerData
   }
@@ -1113,42 +1117,34 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
       layer = this.createLayer(template)
       animation = layer.get('animation')
       if ((layerType === this.layerTypes['features']) && (animation != null) && (!animation['static'])) {
-        layer.getSource().on('addfeature', (event) => {
+        source = layer.getSource()
+        timePropertyName = source.get('timePropertyName')
+        source.on('addfeature', (event) => {
           let newFeature = event['feature']
           if (newFeature == null) {
             return
           }
           newFeature.setStyle(new OlStyleStyle({}))
-          let featureTime = newFeature.get('time')
+          let featureTime = newFeature.get(timePropertyName)
           if (featureTime == null) {
             return
           }
           let timestamp = moment(featureTime).utc().valueOf()
-          let featureEndTime = newFeature.get('endtime')
-          let endTimestamp = (featureEndTime != null) ? moment(featureEndTime).utc().valueOf() : Number.POSITIVE_INFINITY
           let vectorSource = event['target']
           let featureTimes = vectorSource.get('featureTimes')
-          let numFeatureTimes
-          let newIndex
-          let i
           if (featureTimes == null) {
             featureTimes = []
           }
-          numFeatureTimes = featureTimes.length
-          newIndex = 0
-          for (i = 0; i < numFeatureTimes; i++) {
-            if (timestamp >= featureTimes[i]) {
-              break
-            }
-            newIndex++
-          }
-          featureTimes.splice(newIndex, 0, {
-            time: timestamp,
-            endtime: endTimestamp,
-            feature: newFeature
+          featureTimes.push({
+            'time': timestamp,
+            'feature': newFeature
           })
           vectorSource.set('featureTimes', featureTimes)
-          self.updateFeatureAnimation()
+          animationTime = self.get('animationTime')
+          if ((timestamp > animationTime) && (animationTime > animationUpdatedTime)) {
+            self.updateFeatureAnimation()
+            animationUpdatedTime = animationTime
+          }
         })
       }
       layerData.push(layer)
@@ -1490,6 +1486,18 @@ MapAnimation.prototype.getFirstAnimationTime = function () {
   return intervals[0]['beginTime']
 }
 
+MapAnimation.prototype.getLastAnimationTime = function () {
+  const key = this.latestLoadId
+  if (key == null) {
+    return null
+  }
+  const intervals = this.numIntervalItems[key]
+  if ((intervals == null) || (intervals.length === 0)) {
+    return null
+  }
+  return intervals[intervals.length - 1]['endTime']
+}
+
 MapAnimation.prototype.getPreviousAnimationTime = function (animationTime) {
   let i
   const key = this.latestLoadId
@@ -1536,6 +1544,7 @@ MapAnimation.prototype.getNextAnimationTime = function (animationTime) {
 
 MapAnimation.prototype.updateFeatureAnimation = function () {
   let animationTime = /** @type {number} */ (this.get('animationTime'))
+  let lastAnimationTime = this.getLastAnimationTime()
   let previousAnimationTime = this.getPreviousAnimationTime(animationTime)
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
@@ -1555,7 +1564,7 @@ MapAnimation.prototype.updateFeatureAnimation = function () {
       return
     }
     featureTimes.forEach((featureTime, index) => {
-      if (((previousAnimationTime < featureTime['time']) && (featureTime['time'] <= animationTime)) || ((featureTime['time'] <= animationTime) && (previousAnimationTime < featureTime['endtime']))) {
+      if (((previousAnimationTime === lastAnimationTime) || (previousAnimationTime < featureTime['time'])) && (featureTime['time'] <= animationTime)) {
         featureTime['feature'].setStyle(null)
       } else {
         featureTime['feature'].setStyle(new OlStyleStyle({}))

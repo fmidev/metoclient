@@ -63,19 +63,22 @@ export default class Vector extends OlSourceVector {
           let endTimeMoment
           let beginAndEndTimeGiven
           if (((options['time'] != null) && (options['time'] !== '')) && ((beginTime != null) || (endTime != null))) {
+            if ((options['time'] != null) && (options['time'] !== '')) {
+              url += '&sortby=' + options['time'] + '%20ASC'
+            }
             beginAndEndTimeGiven = (beginTime != null) && (endTime != null)
             url += '&filter='
             if (beginAndEndTimeGiven) {
               url += '%3CAnd%3E'
             }
             if (beginTime != null) {
-              beginTimeMoment = moment(beginTime).format('YYYY-MM-DD HH:mm:ss')
+              beginTimeMoment = moment(beginTime).utc().format('YYYY-MM-DD HH:mm:ss')
               if (beginTimeMoment.length > 0) {
                 url += '%3CPropertyIsGreaterThanOrEqualTo%3E%3CPropertyName%3E' + options['time'] + '%3C/PropertyName%3E%3CFunction%20name=%22dateParse%22%3E%3CLiteral%3Eyyyy-MM-dd HH:mm:ss%3C/Literal%3E%3CLiteral%3E' + beginTimeMoment + '%3C/Literal%3E%3C/Function%3E%3C/PropertyIsGreaterThanOrEqualTo%3E'
               }
             }
             if (endTime != null) {
-              endTimeMoment = moment(endTime).format('YYYY-MM-DD HH:mm:ss')
+              endTimeMoment = moment(endTime).utc().format('YYYY-MM-DD HH:mm:ss')
               if (endTimeMoment.length > 0) {
                 url += '%3CPropertyIsLessThanOrEqualTo%3E%3CPropertyName%3E' + options['time'] + '%3C/PropertyName%3E%3CFunction%20name=%22dateParse%22%3E%3CLiteral%3Eyyyy-MM-dd HH:mm:ss%3C/Literal%3E%3CLiteral%3E' + endTimeMoment + '%3C/Literal%3E%3C/Function%3E%3C/PropertyIsLessThanOrEqualTo%3E'
               }

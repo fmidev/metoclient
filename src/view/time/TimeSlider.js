@@ -249,6 +249,8 @@ export default class TimeSlider {
               case "24h":
                 step = 7
           }
+
+          e.target.classList.add(TimeSlider.TIMESTEP_BUTTON_CLASS)
           const value = this.container_.getElementsByClassName(TimeSlider.BEGIN_TIME_CLASS)[0].value
           this.timeConfig_.modifiedResolutionTime = constants.AVAILABLE_TIMESTEPS[step]
           this.instance_.setTimeStep(this.timeConfig_.modifiedResolutionTime)
@@ -313,6 +315,50 @@ export default class TimeSlider {
       }]
     })
     postButton.appendChild(timeStepMenu)
+
+    function modifyOffset() {
+      let newPoint, newPlace, siblings, k, width, sibling, outputTag, timestamp, hours, minutes, day, month;
+      if (this.offsetWidth == 0) { width = 466 }
+      else { width = (this.offsetWidth - 16) }
+      newPoint = (this.value - this.getAttribute("min")) / (this.getAttribute("max") - this.getAttribute("min"));
+      newPlace = width * newPoint - 56;
+      siblings = this.parentNode.childNodes;
+      for (var i = 0; i < siblings.length; i++) {
+        sibling = siblings[i];
+        if (sibling.id == this.id) { k = true; }
+        if ((k == true) && (sibling.nodeName == "OUTPUT")) {
+            outputTag = sibling;
+        }
+      }
+      timestamp = new Date(self.timeConfig_.firstDataPointTime + (self.timeConfig_.resolutionTime * this.value));
+      day = timestamp.getDate()
+      month = timestamp.getMonth() + 1
+      hours = "0" + timestamp.getHours()
+      hours = hours.substr(-2)
+      minutes = "0" + timestamp.getMinutes()
+      minutes = minutes.substr(-2)
+      outputTag.style.left       = newPlace + "px";
+      outputTag.innerHTML        = day + "." + month + ". " + hours + ":" + minutes;
+    }
+
+    function modifyInputs() {
+      var inputs = timeStepMenu.getElementsByTagName("input");
+      for (var i = 0; i < inputs.length; i++) {
+        if (inputs[i].getAttribute("type") == "range") {
+          inputs[i].onchange = modifyOffset;
+          inputs[i].oninput = modifyOffset;
+          if ("fireEvent" in inputs[i]) {
+            inputs[i].fireEvent("oninput");
+          } else {
+            var evt = document.createEvent("HTMLEvents");
+            evt.initEvent("change", false, true);
+            inputs[i].dispatchEvent(evt);
+          }
+        }
+      }
+    }
+
+    modifyInputs();
 
     return postTools
   }
@@ -832,5 +878,7 @@ TimeSlider.MENU_CLASS = 'fmi-metoclient-timeslider-menu'
 TimeSlider.BEGIN_TIME_CLASS = 'fmi-metoclient-timeslider-begintime'
 TimeSlider.END_TIME_CLASS = 'fmi-metoclient-timeslider-endtime'
 TimeSlider.TIMESTEP_CLASS = 'fmi-metoclient-timeslider-timestep'
+TimeSlider.TIMESTEP_BUTTON_CLASS = 'fmi-metoclient-timeslider-timestep-button'
+TimeSlider.TIMESTEP_BUTTON_ACTIVE_CLASS = 'fmi-metoclient-timeslider-timestep-active-button'
 TimeSlider.BACKWARDS = -1
 TimeSlider.FORWARDS = 1

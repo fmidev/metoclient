@@ -129,9 +129,11 @@ export const createMenu = (options) => {
  */
 export const createTimeMenu = (options) => {
   let ul = document.createElement('ul')
+  let form
   let li
   let a
   let title
+  let output
   ul.classList.add('metoclient-menu')
   if (options.id != null) {
     ul.classList.add(options.id)
@@ -151,12 +153,14 @@ export const createTimeMenu = (options) => {
       }
       else if(item.type == "range"){
         li = document.createElement('li')
+        form = document.createElement('form')
         title = document.createElement('a')
         title.innerHTML = item.title
         a = document.createElement('input')
         a.setAttribute("type", "range")
         a.setAttribute("min", "0")
         a.setAttribute("max", item.size - 1)
+        output = document.createElement('output')
         if (item.id == 'fmi-metoclient-timeslider-timestep') {
           for(let i = 0 ; i < 8 ; i++) {
             if(item.resolutionTime === AVAILABLE_TIMESTEPS[i]){
@@ -164,16 +168,24 @@ export const createTimeMenu = (options) => {
             }
           }
         } else if (item.id == 'fmi-metoclient-timeslider-begintime'){
-
-//        if (item.id == 'fmi-metoclient-timeslider-begintime'){
+          output.setAttribute("for", "begin")
+          output.setAttribute("onforminput", "value = begin.valueAsNumber;")
           a.setAttribute("value", Math.floor(item.beginPlace))
+          a.setAttribute("name", "begin")
+          form.setAttribute("id", "beginForm")
         } else if (item.id == 'fmi-metoclient-timeslider-endtime'){
+          output.setAttribute("for", "end")
+          output.setAttribute("onforminput", "value = end.valueAsNumber;")
           a.setAttribute("value", Math.ceil(item.endPlace))
+          a.setAttribute("name", "end")
+          form.setAttribute("id", "endForm")
         }
         a.classList.add(item.id)
         a.href = '#'
         li.appendChild(title)
-        li.appendChild(a)
+        li.appendChild(form)
+        form.appendChild(a)
+        form.appendChild(output)
         if (typeof item.callback === 'function') {
           li.addEventListener('click', item.callback)
         }
@@ -191,6 +203,9 @@ export const createTimeMenu = (options) => {
             button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 60000) + "min"
           }
           button.classList.add('fmi-metoclient-timeslider-timestep-button')
+          if (item.resolutionTime == AVAILABLE_TIMESTEPS[i]) {
+            button.classList.add('fmi-metoclient-timeslider-timestep-active-button')
+          }
           button.addEventListener('click', item.callback)
           li.appendChild(button)
         }
@@ -198,7 +213,6 @@ export const createTimeMenu = (options) => {
       } else{
         console.log("Unsupported")
       }
-
     })
   }
   return ul

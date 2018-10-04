@@ -76,7 +76,7 @@ export default class TimeController {
      * @private
      */
     this.views_ = []
-  };
+  }
 
   /**
    * Produces a time model and views.
@@ -95,6 +95,7 @@ export default class TimeController {
     }
     this.animationTimeUserListener_ = (animationTime) => {
       self.setAnimationTime(animationTime)
+      self.updateAnimationBackupTime()
     }
     this.animationPlayListener_ = (animationPlay) => {
       if (animationPlay) {
@@ -139,7 +140,7 @@ export default class TimeController {
     this.model_.variableEvents.addListener('animationTime', this.animationTimeTimerListener_)
 
     this.createTimer()
-  };
+  }
 
   /**
    * Creates a time slider for each view.
@@ -153,7 +154,7 @@ export default class TimeController {
     for (i = 0; i < numViews; i++) {
       this.views_[i].createTimeSlider(this.model_.getAnimationTimes())
     }
-  };
+  }
 
   /**
    * Updates time slider in each view.
@@ -168,7 +169,7 @@ export default class TimeController {
     for (i = 0; i < numViews; i++) {
       this.views_[i].setAnimationTime(animationTime)
     }
-  };
+  }
 
   /**
    * Updates time steps.
@@ -181,6 +182,9 @@ export default class TimeController {
     let empty = true
     if (numIntervalItems.length === 0) {
       return
+    }
+    if (this.getAnimationBackupTime() == null) {
+      this.updateAnimationBackupTime()
     }
     // Remove empty time steps from start and end if not every step is empty
     numIntervals = numIntervalItems.length
@@ -233,7 +237,7 @@ export default class TimeController {
    */
   getCreationTime () {
     return this.model_.getCreationTime()
-  };
+  }
 
   /**
    * Gets current real-world time.
@@ -241,7 +245,7 @@ export default class TimeController {
    */
   getCurrentTime () {
     return this.model_.getCurrentTime()
-  };
+  }
 
   /**
    * Gets animation time.
@@ -249,7 +253,7 @@ export default class TimeController {
    */
   getAnimationTime () {
     return this.model_.getAnimationTime()
-  };
+  }
 
   /**
    * Gets animation begin time.
@@ -257,7 +261,7 @@ export default class TimeController {
    */
   getAnimationBeginTime () {
     return this.model_.getAnimationBeginTime()
-  };
+  }
 
   /**
    * Gets animation end time.
@@ -265,7 +269,7 @@ export default class TimeController {
    */
   getAnimationEndTime () {
     return this.model_.getAnimationEndTime()
-  };
+  }
 
   /**
    * Gets animation resolution time.
@@ -273,7 +277,7 @@ export default class TimeController {
    */
   getAnimationResolutionTime () {
     return this.model_.getAnimationResolutionTime()
-  };
+  }
 
   /**
    * Gets number of animation time intervals.
@@ -281,7 +285,7 @@ export default class TimeController {
    */
   getAnimationNumIntervals () {
     return this.model_.getAnimationNumIntervals()
-  };
+  }
 
   /**
    * Refreshes current real-world time.
@@ -308,7 +312,7 @@ export default class TimeController {
         view.setCallbacks(callbacks)
       })
     }
-  };
+  }
 
   /**
    * Starts to play animation.
@@ -318,7 +322,7 @@ export default class TimeController {
     this.views_.forEach(view => {
       view.setAnimationPlay(true)
     })
-  };
+  }
 
   /**
    * Pauses animation.
@@ -328,7 +332,7 @@ export default class TimeController {
     this.views_.forEach(view => {
       view.setAnimationPlay(false)
     })
-  };
+  }
 
   /**
    * Stops (pauses and rewinds) animation.
@@ -338,21 +342,21 @@ export default class TimeController {
     this.views_.forEach(view => {
       view.setAnimationPlay(false)
     })
-  };
+  }
 
   /**
    * Moves to previous time frame.
    */
   previous () {
     this.model_.previous()
-  };
+  }
 
   /**
    * Moves to next time frame.
    */
   next () {
     this.model_.next()
-  };
+  }
 
   /**
    * Moves to given time frame.
@@ -360,7 +364,8 @@ export default class TimeController {
    */
   setAnimationTime (time) {
     this.model_.setAnimationTime(time)
-  };
+    this.updateAnimationBackupTime()
+  }
 
   /**
    * Sets animations frame rate.
@@ -368,7 +373,7 @@ export default class TimeController {
    */
   setFrameRate (frameRate) {
     this.model_.setFrameRate(frameRate)
-  };
+  }
 
   /**
    * Sets animation grid time.
@@ -376,7 +381,7 @@ export default class TimeController {
    */
   setGridTime (gridTime) {
     this.model_.setGridTime(gridTime)
-  };
+  }
 
   /**
    * Sets animation begin time.
@@ -384,7 +389,7 @@ export default class TimeController {
    */
   setBeginTime (beginTime) {
     this.model_.setBeginTime(beginTime)
-  };
+  }
 
   /**
    * Sets animation end time.
@@ -392,7 +397,7 @@ export default class TimeController {
    */
   setEndTime (endTime) {
     this.model_.setEndTime(endTime)
-  };
+  }
 
   /**
    * Sets animation time step.
@@ -400,7 +405,7 @@ export default class TimeController {
    */
   setTimeStep (timeStep) {
     this.model_.setResolutionTime(timeStep)
-  };
+  }
 
   /**
    * Sets time zone.
@@ -410,7 +415,7 @@ export default class TimeController {
     this.views_.forEach(view => {
       view.setTimeZone(timeZone)
     })
-  };
+  }
 
   /**
    * Sets time zone.
@@ -420,7 +425,7 @@ export default class TimeController {
     this.views_.forEach(view => {
       view.setTimeZoneLabel(timeZoneLabel)
     })
-  };
+  }
 
   /**
    * Sets time grid offset from midnight.
@@ -428,14 +433,14 @@ export default class TimeController {
    */
   setDayStartOffset (gridTimeOffset) {
     this.model_.setDayStartOffset(gridTimeOffset)
-  };
+  }
 
   /**
    * Produces a new timer definition.
    */
   createTimer () {
     this.model_.createTimer()
-  };
+  }
 
   /**
    * Destroys current time model and views.
@@ -449,7 +454,7 @@ export default class TimeController {
       this.views_[i].destroyTimeSlider()
     }
     this.model_.destroyTimer()
-  };
+  }
 
   /**
    * Gets animation time moments.
@@ -457,5 +462,28 @@ export default class TimeController {
    */
   getAnimationTimes () {
     return this.model_.getAnimationTimes()
-  };
+  }
+
+  /**
+   * Gets animation backup time.
+   * @returns {number} Animation backup time.
+   */
+  getAnimationBackupTime () {
+    return this.model_.getAnimationBackupTime()
+  }
+
+  /**
+   * Updates animation backup time.
+   * @param time {number} Timestamp of animation backup time.
+   */
+  updateAnimationBackupTime () {
+    this.model_.updateAnimationBackupTime()
+  }
+
+  /**
+   * Updates animation backup time.
+   */
+  resetAnimationBackupTime () {
+    this.model_.resetAnimationBackupTime()
+  }
 }

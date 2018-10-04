@@ -42,6 +42,7 @@ export default class Time {
     this.waitUntilLoaded_ = (this.config_['waitUntilLoaded'] != null) ? this.config_['waitUntilLoaded'] : false
     this.refreshStarted_ = false
     this.continuePlay_ = false
+    this.animationBackupTime_ = null
   };
 
   /**
@@ -147,6 +148,7 @@ export default class Time {
       let animationTimeIndex = 0
       if ((currentTime - self.animationLastRefreshed_ > self.refreshInterval_) && (currentTime - self.timeCreatedAt_ > 0.5 * self.refreshInterval_)) {
         if (self.play_) {
+          self.updateAnimationBackupTime()
           self.pause()
           self.continuePlay_ = true
         }
@@ -160,6 +162,7 @@ export default class Time {
           animationTimeIndex = self.animationTimeIndex_ + 1
         }
         self.setAnimationTime(self.animationTimes_[animationTimeIndex])
+        self.updateAnimationBackupTime()
         setTimeout(run, timeDelay)
       } else if (self.animationTime_ < self.animationBeginTime_) {
         self.setAnimationTime(self.animationBeginTime_)
@@ -326,6 +329,7 @@ export default class Time {
       newTime = this.animationTimes_[this.animationTimes_.length - 1]
     }
     this.setAnimationTime(newTime)
+    this.updateAnimationBackupTime()
   };
 
   /**
@@ -343,6 +347,7 @@ export default class Time {
       newTime = this.animationTimes_[0]
     }
     this.setAnimationTime(newTime)
+    this.updateAnimationBackupTime()
   };
 
   /**
@@ -465,6 +470,29 @@ export default class Time {
    */
   getAnimationTimes () {
     return this.animationTimes_
+  }
+
+  /**
+   * Gets animation backup time.
+   * @returns {number} Animation backup time.
+   */
+  getAnimationBackupTime () {
+    return this.animationBackupTime_
+  }
+
+  /**
+   * Updates animation backup time.
+   * @param time {number} Timestamp of animation backup time.
+   */
+  updateAnimationBackupTime () {
+    this.animationBackupTime_ = this.getAnimationTime()
+  }
+
+  /**
+   * Updates animation backup time.
+   */
+  resetAnimationBackupTime () {
+    this.animationBackupTime_ = null
   }
 
   /**

@@ -279,7 +279,11 @@ export class MetOClient {
       }
       mapCallbacks = callbacks
       mapCallbacks['ready'] = () => {
-        self.setTime(currentAnimationTime)
+        let backupTime = self.timeController_.getAnimationBackupTime()
+        if (backupTime != null) {
+          self.setTime(backupTime)
+          self.timeController_.resetAnimationBackupTime()
+        }
         if (typeof userReadyCallback === 'function') {
           userReadyCallback()
         }

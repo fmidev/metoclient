@@ -58,15 +58,14 @@ export default class MapProducer {
    */
   layerFactory (options, extent, projection, beginTime, endTime) {
     let style
-    let extraStyles = [
-      {
-        'name': 'styleHover',
+    let extraStyles = {
+      'styleHover': {
         'data': null
-      }, {
-        'name': 'styleSelected',
+      },
+      'styleSelected': {
         'data': null
       }
-    ]
+    }
     let i
     let z
     let featureProducer
@@ -76,6 +75,7 @@ export default class MapProducer {
     let animation
     let layerBeginTime = beginTime
     let layerEndTime = endTime
+    let timePropertyName
     if (options['sourceOptions'] !== undefined) {
       sourceKey += 'Options'
     }
@@ -132,18 +132,20 @@ export default class MapProducer {
         z = {
           'value': 0
         }
+        timePropertyName = options['source']['time']
         options['source'] = source
+        source.set('timePropertyName', timePropertyName)
         featureProducer = new FeatureProducer()
         if (Array.isArray(options['style'])) {
           if (!(options['style'] instanceof OlStyleStyle)) {
             options['style'] = featureProducer.styleFactory(options['style'], z)
           }
         }
-        extraStyles.forEach((extraStyle) => {
-          if ((Array.isArray(options[extraStyle['name']])) && (!(options[extraStyle['name']][i] instanceof OlStyleStyle))) {
-            style = featureProducer.styleFactory(options[extraStyle['name']], z)
+        Object.keys(extraStyles).forEach((styleName) => {
+          if ((Array.isArray(options[styleName])) && (!(options[styleName][i] instanceof OlStyleStyle))) {
+            style = featureProducer.styleFactory(options[styleName], z)
             if (style != null) {
-              extraStyle['data'] = style
+              extraStyles[styleName]['data'] = style
             }
           }
         })

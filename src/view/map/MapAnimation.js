@@ -94,6 +94,8 @@ export default class MapAnimation {
     this.updateRequestResolution = 50
     /** @const */
     this.layerResolution = 60 * 1000
+    /** @const */
+    this.hitTolerance = 0
   };
 }
 Ol.inherits(MapAnimation, OlObject)
@@ -246,7 +248,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
       feature.set('layerId', layerId)
       features.push(feature)
     }, {
-      'hitTolerance': 8
+      'hitTolerance': self.hitTolerance
     })
     features.sort(function (a, b) {
       const layerIdProperty = 'layerId'
@@ -549,7 +551,7 @@ MapAnimation.prototype.updateStorage = function () {
 
 /**
  * Parses time values from capabilities string.
- * @param {Object} layer Layer configuration.
+ * @param {Object} layerAnimation Layer configuration.
  * @param {string} values Capabilities time definitions.
  */
 MapAnimation.prototype.parseCapabTimes = function (layerAnimation, values) {
@@ -723,13 +725,47 @@ MapAnimation.prototype.defineSelect = function () {
   const config = this.get('config')
   const callbacks = this.get('callbacks')
   let select
-  let selectedFeatures = new OlCollection()
+  let selectedFeatures = {}
   let extraStyles
   let mappings = {
     'styleHover': {
       'condition': 'pointerMove',
       'select': 'hover',
-      'deselect': 'unhover'
+      'deselect': 'unhover',
+      'multi': false,
+      'onAdd': (feature) => {
+        if (!Array.isArray(selectedFeatures['styleSelected'])) {
+          return
+        }
+        let isSelected = false
+        let id = feature.getId()
+        if (id == null) {
+          return
+        }
+        selectedFeatures['styleSelected'].forEach((selectedFeature) => {
+          if (selectedFeature.getId() === id) {
+            selectedFeature.setStyle(extraStyles['styleHover']['data'])
+            isSelected = true
+          }
+        })
+        if (!isSelected) {
+          feature.setStyle(null)
+        }
+      },
+      'onRemove': (feature) => {
+        if (!Array.isArray(selectedFeatures['styleSelected'])) {
+          return
+        }
+        let id = feature.getId()
+        if (id == null) {
+          return
+        }
+        selectedFeatures['styleSelected'].forEach((selectedFeature) => {
+          if (selectedFeature.getId() === id) {
+            selectedFeature.setStyle(extraStyles['styleSelected']['data'])
+          }
+        })
+      }
     },
     'styleSelected': {
       'condition': function (event) {
@@ -741,33 +777,44 @@ MapAnimation.prototype.defineSelect = function () {
         return false
       },
       'select': 'selected',
-      'deselect': 'deselected'
+      'deselect': 'deselected',
+      'multi': false,
+      'onAdd': (feature) => {
+        feature.setStyle(extraStyles['styleSelected']['data'])
+      },
+      'onRemove': (feature) => {
+        feature.setStyle(null)
+      }
     }
   }
   this.getLayersByGroup(config['featureGroupName']).forEach(layer => {
     let style
     extraStyles = layer.get('extraStyles')
     if (extraStyles != null) {
-      extraStyles.forEach((extraStyle) => {
-        style = extraStyle['data']
+      Object.keys(extraStyles).forEach((styleName) => {
+        style = extraStyles[styleName]['data']
         if (style != null) {
           select = new OlInteractionSelect({
-            'condition': typeof mappings[extraStyle['name']]['condition'] === 'function' ? mappings[extraStyle['name']]['condition'] : olEventsCondition[mappings[extraStyle['name']]['condition']],
+            'condition': typeof mappings[styleName]['condition'] === 'function' ? mappings[styleName]['condition'] : olEventsCondition[mappings[styleName]['condition']],
             'layers': [layer],
-            'style': style
+            'style': style,
+            'multi': mappings[styleName]['multi'],
+            'hitTolerance': self.hitTolerance
           })
-          select.set('type', mappings[extraStyle['name']]['select'])
+          select.set('type', mappings[styleName]['select'])
           map.addInteraction(select)
           self.activeInteractions.push(select)
-          selectedFeatures = select.getFeatures()
-          selectedFeatures.on('add', function (event) {
-            if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['select']] === 'function')) {
-              callbacks[mappings[extraStyle['name']]['select']](event['element'])
+          selectedFeatures[styleName] = select.getFeatures()
+          selectedFeatures[styleName].on('add', function (event) {
+            mappings[styleName]['onAdd'](event.element)
+            if ((callbacks != null) && (typeof callbacks[mappings[styleName]['select']] === 'function')) {
+              callbacks[mappings[styleName]['select']](event['element'])
             }
           })
-          selectedFeatures.on('remove', function (event) {
-            if ((callbacks != null) && (typeof callbacks[mappings[extraStyle['name']]['deselect']] === 'function')) {
-              callbacks[mappings[extraStyle['name']]['deselect']](event['element'])
+          selectedFeatures[styleName].on('remove', function (event) {
+            mappings[styleName]['onRemove'](event.element)
+            if ((callbacks != null) && (typeof callbacks[mappings[styleName]['deselect']] === 'function')) {
+              callbacks[mappings[styleName]['deselect']](event['element'])
             }
           })
         }
@@ -775,7 +822,7 @@ MapAnimation.prototype.defineSelect = function () {
     }
     layer.getSource().getFeatures().forEach(feature => {
       if (feature.get('selected')) {
-        selectedFeatures.push(feature)
+        selectedFeatures['styleSelected'].push(feature)
       }
     })
   })
@@ -977,7 +1024,6 @@ MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
   let layerGroup
   const numLayerGroups = layerGroups.getLength()
   const config = this.get('config')
-  const callbacks = this.get('callbacks')
   const overlayGroupName = config['overlayGroupName']
   let i
   if (overlayGroupName == null) {
@@ -1000,9 +1046,6 @@ MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
   if (config['showMarker']) {
     this.get('marker').setCoordinates(this.get('map').getView().getCenter())
     this.dispatchEvent('markerMoved')
-  }
-  if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
-    callbacks['ready']()
   }
 }
 
@@ -1053,6 +1096,11 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   let visible = false
   let i
   let animation
+  let source
+  let timePropertyName
+  let animationUpdatedTime = -1
+  let animationTime
+  let title
   if (layers === undefined) {
     return layerData
   }
@@ -1069,43 +1117,37 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
       }
       layer = this.createLayer(template)
       animation = layer.get('animation')
+      title = layer.get('title')
       if ((layerType === this.layerTypes['features']) && (animation != null) && (!animation['static'])) {
-        layer.getSource().on('addfeature', (event) => {
+        source = layer.getSource()
+        timePropertyName = source.get('timePropertyName')
+        source.on('addfeature', (event) => {
           let newFeature = event['feature']
           if (newFeature == null) {
             return
           }
           newFeature.setStyle(new OlStyleStyle({}))
-          let featureTime = newFeature.get('time')
+          newFeature.set('layerTitle', title)
+          let featureTime = newFeature.get(timePropertyName)
           if (featureTime == null) {
             return
           }
           let timestamp = moment(featureTime).utc().valueOf()
-          let featureEndTime = newFeature.get('endtime')
-          let endTimestamp = (featureEndTime != null) ? moment(featureEndTime).utc().valueOf() : Number.POSITIVE_INFINITY
           let vectorSource = event['target']
           let featureTimes = vectorSource.get('featureTimes')
-          let numFeatureTimes
-          let newIndex
-          let i
           if (featureTimes == null) {
             featureTimes = []
           }
-          numFeatureTimes = featureTimes.length
-          newIndex = 0
-          for (i = 0; i < numFeatureTimes; i++) {
-            if (timestamp >= featureTimes[i]) {
-              break
-            }
-            newIndex++
-          }
-          featureTimes.splice(newIndex, 0, {
-            time: timestamp,
-            endtime: endTimestamp,
-            feature: newFeature
+          featureTimes.push({
+            'time': timestamp,
+            'feature': newFeature
           })
           vectorSource.set('featureTimes', featureTimes)
-          self.updateFeatureAnimation()
+          animationTime = self.get('animationTime')
+          if ((timestamp > animationTime) && (animationTime > animationUpdatedTime)) {
+            self.updateFeatureAnimation()
+            animationUpdatedTime = animationTime
+          }
         })
       }
       layerData.push(layer)
@@ -1447,6 +1489,18 @@ MapAnimation.prototype.getFirstAnimationTime = function () {
   return intervals[0]['beginTime']
 }
 
+MapAnimation.prototype.getLastAnimationTime = function () {
+  const key = this.latestLoadId
+  if (key == null) {
+    return null
+  }
+  const intervals = this.numIntervalItems[key]
+  if ((intervals == null) || (intervals.length === 0)) {
+    return null
+  }
+  return intervals[intervals.length - 1]['endTime']
+}
+
 MapAnimation.prototype.getPreviousAnimationTime = function (animationTime) {
   let i
   const key = this.latestLoadId
@@ -1493,6 +1547,7 @@ MapAnimation.prototype.getNextAnimationTime = function (animationTime) {
 
 MapAnimation.prototype.updateFeatureAnimation = function () {
   let animationTime = /** @type {number} */ (this.get('animationTime'))
+  let lastAnimationTime = this.getLastAnimationTime()
   let previousAnimationTime = this.getPreviousAnimationTime(animationTime)
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
@@ -1512,7 +1567,7 @@ MapAnimation.prototype.updateFeatureAnimation = function () {
       return
     }
     featureTimes.forEach((featureTime, index) => {
-      if (((previousAnimationTime < featureTime['time']) && (featureTime['time'] <= animationTime)) || ((featureTime['time'] <= animationTime) && (previousAnimationTime < featureTime['endtime']))) {
+      if (((previousAnimationTime === lastAnimationTime) || (previousAnimationTime < featureTime['time'])) && (featureTime['time'] <= animationTime)) {
         featureTime['feature'].setStyle(null)
       } else {
         featureTime['feature'].setStyle(new OlStyleStyle({}))

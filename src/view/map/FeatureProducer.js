@@ -59,6 +59,7 @@ export default class FeatureProducer {
       } else {
         newFeature = feature
       }
+      newFeature.setId(features.length + '_' + Date.now())
       if (feature['style'] != null) {
         feature['style'] = this.styleFactory(feature['style'], z)
         newFeature.setStyle(feature['style'])

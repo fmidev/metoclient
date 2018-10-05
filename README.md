@@ -126,7 +126,7 @@ In static build, OpenLayers 4 functionality is also available to the extent that
 ### Building
 
 * npm install
-* npm run build-all
+* npm run build
 
 ### Running tests
 

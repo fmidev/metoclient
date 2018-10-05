@@ -129,7 +129,7 @@ export class MetOClient {
      * @private
      */
     this.mapController_ = new MapController(this.config_['map'], this.timeController_.getCreationTime())
-  };
+  }
 
   /**
    * Restructure configuration for class implementation.
@@ -224,7 +224,7 @@ export class MetOClient {
       }
     })
     return config
-  };
+  }
 
   /**
    * Static getter for an utility function floorTime.
@@ -233,7 +233,7 @@ export class MetOClient {
    */
   static get floorTime () {
     return utils['floorTime']
-  };
+  }
 
   /**
    * Static getter for an utility function createMenu.
@@ -242,7 +242,7 @@ export class MetOClient {
    */
   static get createMenu () {
     return utils['createMenu']
-  };
+  }
 
   /**
    * Static getter for an utility function transformCoordinates.
@@ -251,7 +251,7 @@ export class MetOClient {
    */
   static get transformCoordinates () {
     return utils['transformCoordinates']
-  };
+  }
 
   /**
    * Produces a new time model and views.
@@ -259,27 +259,46 @@ export class MetOClient {
    */
   createTime (callbacks) {
     this.timeController_.createTime(callbacks)
-  };
+  }
 
   /**
    * Produces a new map model and view.
    * @param {Object=} callbacks Callback functions for map events.
    */
   createMap (callbacks) {
-    let mapCallbacks = null
-    if (callbacks != null) {
+    let self = this
+    let currentAnimationTime = this.timeController_.getAnimationTime()
+    let mapCallbacks
+    let userReadyCallback
+    if (callbacks !== null) {
+      if (typeof callbacks === 'undefined') {
+        callbacks = {}
+      }
+      if (typeof callbacks['ready'] === 'function') {
+        userReadyCallback = callbacks['ready'].bind()
+      }
       mapCallbacks = callbacks
+      mapCallbacks['ready'] = () => {
+        let backupTime = self.timeController_.getAnimationBackupTime()
+        if (backupTime != null) {
+          self.setTime(backupTime)
+          self.timeController_.resetAnimationBackupTime()
+        }
+        if (typeof userReadyCallback === 'function') {
+          userReadyCallback()
+        }
+      }
     }
     this.mapController_.createMap(
       this.timeController_.getCurrentTime(),
-      this.timeController_.getAnimationTime(),
+      currentAnimationTime,
       this.timeController_.getAnimationBeginTime(),
       this.timeController_.getAnimationEndTime(),
       this.timeController_.getAnimationResolutionTime(),
       this.timeController_.getAnimationNumIntervals(),
       mapCallbacks
     )
-  };
+  }
 
   /**
    * Gets a default configuration.
@@ -393,7 +412,7 @@ export class MetOClient {
       },
       'disableTouch': false
     }
-  };
+  }
 
   /**
    * Initializes DOM element containers.
@@ -479,7 +498,7 @@ export class MetOClient {
 
     // Debug div for mobile devices
     // jQuery(divElement).attr('id','fmi-debug-div').width('320px').height('200px').css({'background-color':'#EEEEEE', 'position':'absolute', 'right': '0px'}).appendTo(animatorContainer);
-  };
+  }
 
   /**
    * Sets animation begin time.
@@ -489,7 +508,7 @@ export class MetOClient {
   setTimeBegin (beginTime) {
     this.timeController_.setBeginTime(beginTime)
     this.refresh()
-  };
+  }
 
   /**
    * Sets animation end time.
@@ -499,7 +518,7 @@ export class MetOClient {
   setTimeEnd (endTime) {
     this.timeController_.setEndTime(endTime)
     this.refresh()
-  };
+  }
 
   /**
    * Sets animation time step.
@@ -509,7 +528,7 @@ export class MetOClient {
   setTimeStep (timeStep) {
     this.timeController_.setTimeStep(timeStep)
     this.refresh()
-  };
+  }
 
   /**
    * Updates animation.
@@ -546,8 +565,11 @@ export class MetOClient {
     if ((callbacks != null) && (callbacks['refreshed'] != null)) {
       this.refreshCallback_ = callbacks['refreshed']
     }
+    if (typeof callbacks === 'undefined') {
+      callbacks = null
+    }
     this.refresh(callbacks)
-  };
+  }
 
   /**
    * Destroys animation.
@@ -556,7 +578,7 @@ export class MetOClient {
   destroyAnimation () {
     this.mapController_.destroyAnimation()
     this.timeController_.destroyTime()
-  };
+  }
 
   /**
    * Sets animation speed.
@@ -565,7 +587,7 @@ export class MetOClient {
    */
   setFrameRate (frameRate) {
     this.timeController_.setFrameRate(frameRate)
-  };
+  }
 
   /**
    * Sets animation speed.
@@ -575,7 +597,7 @@ export class MetOClient {
    */
   setTimeRate (frameRate) {
     this.timeController_.setFrameRate(frameRate)
-  };
+  }
 
   /**
    * Sets animation time zone.
@@ -585,7 +607,7 @@ export class MetOClient {
   setTimeZone (timeZone) {
     this.timeController_.setTimeZone(timeZone)
     this.createTimeSlider()
-  };
+  }
 
   /**
    * Sets time zone label.
@@ -595,7 +617,7 @@ export class MetOClient {
   setTimeZoneLabel (timeZoneLabel) {
     this.timeController_.setTimeZoneLabel(timeZoneLabel)
     this.createTimeSlider()
-  };
+  }
 
   /**
    * Refreshes animation data.
@@ -605,7 +627,7 @@ export class MetOClient {
   refresh (callbacks) {
     this.timeController_.refreshTime(callbacks)
     this.createMap(callbacks)
-  };
+  }
 
   /**
    * Starts to play animation.
@@ -613,7 +635,7 @@ export class MetOClient {
    */
   play () {
     this.timeController_.play()
-  };
+  }
 
   /**
    * Pauses animation.
@@ -621,7 +643,7 @@ export class MetOClient {
    */
   pause () {
     this.timeController_.pause()
-  };
+  }
 
   /**
    * Stops (pauses and rewinds) animation.
@@ -629,7 +651,7 @@ export class MetOClient {
    */
   stop () {
     this.timeController_.stop()
-  };
+  }
 
   /**
    * Moves to previous time frame.
@@ -637,7 +659,7 @@ export class MetOClient {
    */
   previous () {
     this.timeController_.previous()
-  };
+  }
 
   /**
    * Sets map zoom level.
@@ -646,7 +668,7 @@ export class MetOClient {
    */
   setZoom (level) {
     this.mapController_.setZoom(level)
-  };
+  }
 
   /**
    * Sets map center.
@@ -656,7 +678,7 @@ export class MetOClient {
    */
   setCenter (x, y) {
     this.mapController_.setCenter([x, y])
-  };
+  }
 
   /**
    * Sets map rotation.
@@ -665,7 +687,7 @@ export class MetOClient {
    */
   setRotation (angle) {
     this.mapController_.setRotation(angle)
-  };
+  }
 
   /**
    * Gets the animation map.
@@ -674,7 +696,7 @@ export class MetOClient {
    */
   getMap () {
     return this.mapController_.getMap()
-  };
+  }
 
   /**
    * Gets current time as a timestamp.
@@ -683,7 +705,7 @@ export class MetOClient {
    */
   getTime () {
     return this.timeController_.getAnimationTime()
-  };
+  }
 
   /**
    * Sets current time frame.
@@ -692,7 +714,7 @@ export class MetOClient {
    */
   setTime (animationTime) {
     this.timeController_.setAnimationTime(animationTime)
-  };
+  }
 
   /**
    * Adds features to vector layer.
@@ -703,7 +725,7 @@ export class MetOClient {
    */
   addFeatures (layerTitle, projection, featureOptions) {
     this.mapController_.addFeatures(layerTitle, projection, featureOptions)
-  };
+  }
 
   /**
    * Removes all features from a vector layer.
@@ -712,7 +734,7 @@ export class MetOClient {
    */
   clearFeatures (layerTitle) {
     this.mapController_.clearFeatures(layerTitle)
-  };
+  }
 
   /**
    * Gets vector layer features.
@@ -722,7 +744,7 @@ export class MetOClient {
    */
   getFeatures (layerTitle) {
     return this.mapController_.getFeatures(layerTitle)
-  };
+  }
 
   /**
    * Gets vector layer features at given location.
@@ -735,7 +757,7 @@ export class MetOClient {
    */
   getFeaturesAt (layerTitle, x, y, tolerance) {
     return this.mapController_.getFeaturesAt(layerTitle, [x, y], tolerance)
-  };
+  }
 
   /**
    * Shows a popup window on the map.
@@ -747,7 +769,7 @@ export class MetOClient {
    */
   showPopup (content, x, y, append) {
     this.mapController_.showPopup(content, [x, y], append)
-  };
+  }
 
   /**
    * Hides popup window on the map.
@@ -755,7 +777,7 @@ export class MetOClient {
    */
   hidePopup () {
     this.mapController_.hidePopup()
-  };
+  }
 
   /**
    * Gets a map layer.
@@ -765,7 +787,7 @@ export class MetOClient {
    */
   getLayer (layerTitle) {
     return this.mapController_.getLayer(layerTitle)
-  };
+  }
 
   /**
    * Request a map view update.
@@ -773,7 +795,7 @@ export class MetOClient {
    */
   requestViewUpdate () {
     this.mapController_.requestViewUpdate()
-  };
+  }
 
   /**
    * Sets layer visibility.
@@ -783,7 +805,7 @@ export class MetOClient {
    */
   setLayerVisible (layerTitle, visibility) {
     this.mapController_.setLayerVisible(layerTitle, visibility)
-  };
+  }
 
   /**
    * Sets map interactions.
@@ -792,7 +814,7 @@ export class MetOClient {
    */
   setInteractions (interactionOptions) {
     this.mapController_.setInteractions(interactionOptions)
-  };
+  }
 
   /**
    * Enables or disables static map controls.
@@ -801,7 +823,7 @@ export class MetOClient {
    */
   setStaticControls (staticControls) {
     this.mapController_.setStaticControls(staticControls)
-  };
+  }
 
   /**
    * Returns static map controls status.
@@ -810,7 +832,7 @@ export class MetOClient {
    */
   getStaticControls () {
     return this.mapController_.getStaticControls()
-  };
+  }
 
   /**
    * Sets callback functions.
@@ -818,11 +840,25 @@ export class MetOClient {
    * @export
    */
   setCallbacks (callbacks) {
-    if ((callbacks != null) && (callbacks['refreshed'] != null)) {
-      this.refreshCallback_ = callbacks['refreshed']
+    let self = this
+    let currentAnimationTime = this.timeController_.getAnimationTime()
+    let userReadyCallback
+    if (callbacks != null) {
+      if (callbacks['refreshed'] != null) {
+        this.refreshCallback_ = callbacks['refreshed']
+      }
+      if (callbacks['ready'] != null) {
+        userReadyCallback = callbacks['ready'].bind()
+        callbacks['ready'] = () => {
+          self.setTime(currentAnimationTime)
+          if (typeof userReadyCallback === 'function') {
+            userReadyCallback()
+          }
+        }
+      }
     }
     this.mapController_.setCallbacks(callbacks)
-  };
+  }
 
   /**
    * Sets time grid offset from midnight.
@@ -831,7 +867,7 @@ export class MetOClient {
    */
   setDayStartOffset (gridTimeOffset) {
     this.timeController_.setDayStartOffset(gridTimeOffset)
-  };
+  }
 
   /**
    * Sets the capabilities data corresponding to a given url.
@@ -840,7 +876,7 @@ export class MetOClient {
    */
   setCapabilities (capabilities) {
     this.mapController_.setCapabilities(capabilities)
-  };
+  }
 
   /**
    * Destructor.
@@ -850,7 +886,7 @@ export class MetOClient {
     this.destroyAnimation()
     this.mapController_ = null
     this.timeController_ = null
-  };
+  }
 
   /**
    * Produces a new animation.
@@ -884,13 +920,16 @@ export class MetOClient {
       self.timeController_.updateTimeSteps(numIntervalItems)
     }
     this.mapController_.variableEvents.addListener('numIntervalItems', this.numIntervalItemsListener_)
-    if ((callbacks != null) && (callbacks['refreshed'] != null)) {
+    if (callbacks == null) {
+      callbacks = {}
+    }
+    if (callbacks['refreshed'] != null) {
       this.refreshCallback_ = callbacks['refreshed']
     }
     this.createTime(callbacks)
     this.createMap(callbacks)
     return this
-  };
+  }
 
   /**
    * Refreshes the map.
@@ -898,7 +937,7 @@ export class MetOClient {
    */
   refreshMap () {
     this.mapController_.refreshMap()
-  };
+  }
 
   /**
    * Creates a time slider for each view.
@@ -906,7 +945,7 @@ export class MetOClient {
    */
   createTimeSlider () {
     this.timeController_.createTimeSlider()
-  };
+  }
 
   /**
    * Selects a vector feature.
@@ -915,7 +954,7 @@ export class MetOClient {
    */
   selectFeature (feature) {
     this.mapController_.selectFeature(feature)
-  };
+  }
 
   /**
    * Gets animation time moments.
@@ -924,5 +963,5 @@ export class MetOClient {
    */
   getAnimationTimes () {
     return this.timeController_.getAnimationTimes()
-  };
+  }
 }

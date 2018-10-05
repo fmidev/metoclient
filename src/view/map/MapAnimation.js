@@ -732,7 +732,7 @@ MapAnimation.prototype.defineSelect = function () {
       'condition': 'pointerMove',
       'select': 'hover',
       'deselect': 'unhover',
-      'multi': true,
+      'multi': false,
       'onAdd': (feature) => {
         if (!Array.isArray(selectedFeatures['styleSelected'])) {
           return

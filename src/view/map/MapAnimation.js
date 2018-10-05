@@ -1100,6 +1100,7 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   let timePropertyName
   let animationUpdatedTime = -1
   let animationTime
+  let title
   if (layers === undefined) {
     return layerData
   }
@@ -1116,6 +1117,7 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
       }
       layer = this.createLayer(template)
       animation = layer.get('animation')
+      title = layer.get('title')
       if ((layerType === this.layerTypes['features']) && (animation != null) && (!animation['static'])) {
         source = layer.getSource()
         timePropertyName = source.get('timePropertyName')
@@ -1125,6 +1127,7 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
             return
           }
           newFeature.setStyle(new OlStyleStyle({}))
+          newFeature.set('layerTitle', title)
           let featureTime = newFeature.get(timePropertyName)
           if (featureTime == null) {
             return

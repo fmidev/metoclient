@@ -1,234 +1,328 @@
-div.fmi-metoclient-timeslider {
-    position: absolute;
-    bottom: 0;
-    height: 90px;
-    width: 100%;
-    z-index: 150;
+ul.metoclient-menu {
+  white-space: nowrap;
+  list-style: none;
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  top: 35px;
+  left: -90px;
+  padding: 0;
+  background-color: #fff;
+  text-align: left;
+  width: 140px;
+  -webkit-transition: all .3s;
+  -moz-transition: all .3s;
+  -o-transition: all .3s;
+  transition: all .3s;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  -moz-box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  box-shadow: 0 0 15px 0 rgba(0, 0, 0, 0.2);
+}
+
+ul.metoclient-menu a {
+  margin: 0;
+  text-align: center;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  color: #4a4a4a;
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  background-color: #fff;
+  padding: 7px 8px 5px 16px;
+  display: block;
+  -webkit-transition: background-color .1s;
+  -moz-transition: background-color .1s;
+  -o-transition: background-color .1s;
+  transition: background-color .1s;
+}
+
+ul.metoclient-menu li {
+  margin: 0;
+  padding: 0;
+}
+
+ul.metoclient-menu.visible-menu {
+  top: 40px;
+  opacity: 1;
+  padding: 5px 0;
+  background: #fff;
+  visibility: visible;
+}
+
+ul.metoclient-menu:before {
+  content: '';
+  display: block;
+  border: 10px solid transparent;
+  border-bottom-color: #fff;
+  position: absolute;
+  top: -20px;
+  left: 100%;
+  margin-left: -35px;
+}
+
+ul.metoclient-menu > li {
+  position: relative;
+}
+
+ul.metoclient-menu a:hover {
+  color: #60b3e1;
+}
+
+ul.metoclient-menu-fullscreen {
+  left: -130px;
+  width: 180px;
+}
+
+div.fmi-metoclient-timeslider:not(.rotated) {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  z-index: 20;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 div.fmi-metoclient-timeslider-clickable-container {
-    position: absolute;
-    bottom: 30px;
-    height: 55px;
-    width: 100%;
-    cursor: pointer;
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
 }
 
 div.fmi-metoclient-timeslider-pre-margin {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 55px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 100%;
 }
 
 div.fmi-metoclient-timeslider-pre-tools {
-    position: absolute;
-    left: 55px;
-    top: 0;
-    height: 100%;
-    width: 55px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 60px;
+  height: 100%;
 }
 
 div.fmi-metoclient-timeslider-play-button {
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 55px;
-    width: 55px;
-    background-image: url('../img/play.png');
-    background-color: #585858;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 60px;
+  height: 60px;
+  background-image: url('./play.svg');
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 div.fmi-metoclient-timeslider-play-button:hover {
-    background-color: #686868;
+  background-color: #60B3E1;
 }
 
 div.fmi-metoclient-timeslider-play-button.playing {
-    background-image: url('../img/pause.png');
+  background-image: url('./pause.svg');
 }
 
 div.fmi-metoclient-timeslider-frames-container {
-    position: absolute;
-    left: 110px;
-    right: 55px;
-    top: 0;
-    height: 100%;
-    display: flex;
+  position: absolute;
+  left: 65px;
+  right: 65px;
+  top: 0;
+  height: 100%;
+  display: flex;
 }
 
 div.fmi-metoclient-timeslider-frame {
-    position: relative;
+  position: relative;
 }
 
 div.fmi-metoclient-timeslider-frame.history {
-    background-color: #b2d8ea;
+  background-color: transparent;
 }
 
 div.fmi-metoclient-timeslider-frame.future {
-    background-color: #d7b13e;
+  background-color: transparent;
 }
 
 div.fmi-metoclient-timeslider-indicator {
-    box-sizing: border-box;
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: 12px;
-    pointer-events: none;
-    background-color: #585858;
-    border-right: 1px solid #fff;
+  box-sizing: border-box;
+  position: absolute;
+  left: 0;
+  bottom: 35px;
+  width: 100%;
+  height: 4px;
+  pointer-events: none;
+  background-color: #585858;
+}
+
+div.fmi-metoclient-timeslider-indicator.first {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+div.fmi-metoclient-timeslider-indicator.last {
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
 }
 
 div.fmi-metoclient-timeslider-indicator[data-status='working'] {
-    background-color: #b2d8ea;
+  background-color: #BDBDBD;
 }
 
-div.fmi-metoclient-timeslider-indicator[data-status='success'] {
-    background-color: #94bf77;
+.history > div.fmi-metoclient-timeslider-indicator[data-status='success'] {
+  background-color: #8ED141;
+}
+
+.future > div.fmi-metoclient-timeslider-indicator[data-status='success'] {
+  background-color: #74B6E6;
 }
 
 div.fmi-metoclient-timeslider-indicator[data-status='error'] {
-    background-color: #9a2500;
+  background-color: #9A2500;
 }
 
 div.fmi-metoclient-timeslider-frame-tick {
-    box-sizing: border-box;
-    position: absolute;
-    left: 0;
-    bottom: 12px;
-    width: 100%;
-    height: 12px;
-    pointer-events: none;
-    background-color: transparent;
-    border-right: 1px solid #fff;
+  display: none;
 }
 
 div.fmi-metoclient-timeslider-frame-text-wrapper {
-    display: inline-block;
-    box-sizing: border-box;
-    position: absolute;
-    right: 0;
-    bottom: 32px;
-    transform: translateX(50%);
-    height: 12px;
-    font-family: Roboto, Arial, Helvetica, sans-serif;
-    font-size: 15px;
-    text-align:center;
-    z-index: 160;
-    pointer-events: none;
-    background-color: transparent;
-}
-
-span.fmi-metoclient-timeslider-frame-text {
-    white-space: nowrap;
-    padding-left: 3px;
-    padding-right: 3px;
+  box-sizing: border-box;
+  position: absolute;
+  left: calc(50% - 16px);
+  bottom: 15px;
+  width: 100%;
+  height: 12px;
+  text-align: center;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  color: #fff;
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  z-index: 21;
+  pointer-events: none;
+  background-color: transparent;
 }
 
 div.fmi-metoclient-timeslider-post-tools {
-    height: 0;
-    width: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 60px;
 }
 
 div.fmi-metoclient-timeslider-step-button {
-    height: 0;
-    width: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 60px;
+  height: 60px;
+  background-image: url('./time-steps.svg');
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 div.fmi-metoclient-timeslider-step-button:hover {
-    background-color: #686868;
+  background-color: #60B3E1;
 }
 
 div.fmi-metoclient-timeslider-post-margin {
-    position: absolute;
-    right: 0;
-    top: 0;
-    height: 100%;
-    width: 55px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 0;
+  width: 0;
 }
 
 div.fmi-metoclient-timeslider-pointer {
-    box-sizing: border-box;
-    position: absolute;
-    right: -30px;
-    bottom: -30px;
-    width: 60px;
-    height: 30px;
-    box-shadow: 0 0 3px #fff;
-    background-color: #585858;
-    z-index: 200;
+  box-sizing: border-box;
+  position: absolute;
+  left: calc(50% - 25px);
+  top: -25px;
+  width: 50px;
+  height: 25px;
+  border-radius: 2px;
+  border: 1px solid #000;
+  background-color: #fff;
+  z-index: 31;
 }
 
 div.fmi-metoclient-timeslider-pointer-wrapper {
-    box-sizing: border-box;
-    position: relative;
+  box-sizing: border-box;
+  position: relative;
 }
 
 div.fmi-metoclient-timeslider-pointer-wrapper:after, div.fmi-metoclient-timeslider-pointer-wrapper:before {
-    bottom: 100%;
-    left: 50%;
-    border: solid transparent;
-    content: " ";
-    height: 0;
-    width: 0;
-    position: absolute;
-    pointer-events: none;
+  box-sizing: border-box;
+  top: 100%;
+  left: 50%;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
 }
 
 div.fmi-metoclient-timeslider-pointer-wrapper:after {
-    border-color: rgba(88, 88, 88, 0);
-    border-bottom-color: #585858;
-    border-width: 12px;
-    margin-left: -12px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 10px solid #fff;
+  margin-left: -5px;
 }
 
 div.fmi-metoclient-timeslider-pointer-wrapper:before {
-    border-color: rgba(255, 255, 255, 0);
-    border-bottom-color: #bbb;
-    border-width: 13px;
-    margin-left: -13px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 11px solid #000;
+  margin-left: -6px;
 }
 
 div.fmi-metoclient-timeslider-pointer-handle {
-    display: none;
+  box-sizing: border-box;
+  border-radius: 50%;
+  position: absolute;
+  right: 15px;
+  bottom: -33px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #000;
+  background-color: #fff;
 }
 
 span.fmi-metoclient-timeslider-pointer-text {
-    box-sizing: border-box;
-    color: #d7b13e;
-    display: table;
-    margin: 0 auto;
-    line-height: 33px;
-    vertical-align: middle;
-    letter-spacing: 0.2px;
-    font-family: Roboto, Arial, Helvetica, sans-serif;
-    font-size: 15px;
+  box-sizing: border-box;
+  color: #000;
+  display: table;
+  margin: 0 auto;
+  line-height: 23px;
+  vertical-align: middle;
+  letter-spacing: 0.2px;
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+  font-size: 15px;
 }
 
 div.fmi-metoclient-timeslider-drag-listener {
-    width: 100%;
-    height: 100vh;
-    user-select: none;
-}
-
-div.fmi-metoclient-timeslider-timezone {
-    position: absolute;
-    right: 55px;
-    top: 0;
-    padding: 1px;
+  width: 100%;
+  height: 100vh;
 }
 
 ul.fmi-metoclient-timeslider-menu {
-    top: -169px;
+    top: -172px;
     left: -440px;
     width: 500px;
     z-index: 30;
 }
 
 ul.fmi-metoclient-timeslider-menu.visible-menu {
-    top: -184px;
+position: absolute;
+    top: -187px;
     background-color: rgba(255,255,255,0.7);
 }
 
@@ -249,7 +343,7 @@ ul.fmi-metoclient-timeslider-menu:before {
     border-bottom-color: transparent;
 }
 
-/* TimeStep + BeginTime and EndTime sliders */
+/* TimeStep, BeginTime and EndTime sliders */
 button.fmi-metoclient-timeslider-timestep-button {
     width: 12.5%;
     color: #000;

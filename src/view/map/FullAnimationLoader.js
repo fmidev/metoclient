@@ -356,6 +356,7 @@ FullAnimationLoader.prototype.initListeners = function () {
       let layerVisibility
       let layerGroupTitle
       let anyVisible = false
+      const callbacks = self.get('callbacks')
       if (/** @type {number} */ (self.get('updateRequested')) > updateRequested) {
         return
       }
@@ -409,6 +410,9 @@ FullAnimationLoader.prototype.initListeners = function () {
           self.get('marker').setCoordinates(map.getView().getCenter())
           self.dispatchEvent('markerMoved')
         }
+      }
+      if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
+        callbacks['ready']()
       }
     }, self.updateRequestResolution)
   })

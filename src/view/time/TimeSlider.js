@@ -490,12 +490,12 @@ export default class TimeSlider {
     }
 
     this.frames_.forEach((frame, index, frames) => {
-      let nextIndex
+      if (index === frames.length - 1) {
+        return
+      }
       let tickText
       let textWrapperElement
       let textElement
-      let clientRect
-      let localTimeStep
 
       clearFrame(frame)
 
@@ -512,12 +512,18 @@ export default class TimeSlider {
       textWrapperElement.appendChild(textElement)
 
       frame.element.appendChild(textWrapperElement)
+    })
 
-      nextIndex = index + 1
+    // Separate loops to prevent accessing textElement width before it is available
+    this.frames_.forEach((frame, index, frames) => {
+      let clientRect
+      let localTimeStep
+      let textElement
+      let nextIndex = index + 1
       if (nextIndex === frames.length) {
         return
       }
-
+      textElement = frame.element.querySelector('span.' + TimeSlider.FRAME_TEXT_CLASS)
       clientRect = textElement.getBoundingClientRect()
 
       if (maxTextWidth < clientRect['width']) {

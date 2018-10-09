@@ -191,6 +191,7 @@ export class MetOClient {
       'defaultAnimationTime',
       'endTime',
       'endTimeDelay',
+      'timeLimitsForced',
       'frameRate',
       'gridTime',
       'gridTimeOffset',
@@ -354,6 +355,7 @@ export class MetOClient {
           'defaultAnimationTime': Date.now(),
           'endTime': Date.now(),
           'endTimeDelay': 0,
+          'timeLimitsForced': false,
           'frameRate': 500,
           'gridTimeOffset': 0,
           'refreshInterval': 15 * 60 * 1000,
@@ -539,6 +541,9 @@ export class MetOClient {
   updateAnimation (options, callbacks) {
     if (options['gridTime'] != null) {
       this.timeController_.setGridTime(options['gridTime'])
+    }
+    if (options['timeLimitsForced'] != null) {
+      this.timeController_.setTimeLimitsForced(options['timeLimitsForced'])
     }
     if (options['beginTime'] != null) {
       this.timeController_.setBeginTime(options['beginTime'])

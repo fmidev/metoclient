@@ -21,6 +21,7 @@ export default class Time {
     this.animationLastRefreshed_ = 0
     this.beginTime_ = this.config_['beginTime']
     this.endTime_ = this.config_['endTime']
+    this.timeLimitsForced_ = this.config_['timeLimitsForced']
     this.defaultTime_ = this.config_['defaultAnimationTime']
     this.endTimeDelay_ = this.config_['endTimeDelay']
     this.frameRate_ = this.config_['frameRate']
@@ -43,7 +44,7 @@ export default class Time {
     this.refreshStarted_ = false
     this.continuePlay_ = false
     this.animationBackupTime_ = null
-  };
+  }
 
   /**
    * Defines a new timer.
@@ -115,7 +116,7 @@ export default class Time {
       this.refreshStarted_ = true
       this.handleRefresh_()
     }
-  };
+  }
 
   /**
    * Performs periodic refreshing.
@@ -168,7 +169,7 @@ export default class Time {
         self.setAnimationTime(self.animationBeginTime_)
       }
     }, 0)
-  };
+  }
 
   /**
    * Sets animation time.
@@ -193,7 +194,7 @@ export default class Time {
       this.animationTimeIndex_ = animationTimeIndex
       this.variableEvents.emitEvent('animationTime', [this.getAnimationTime()])
     }
-  };
+  }
 
   /**
    * Gets animation time.
@@ -201,7 +202,7 @@ export default class Time {
    */
   getAnimationTime () {
     return Math.min(this.animationTime_, this.animationEndTime_)
-  };
+  }
 
   /**
    * Gets animation begin time.
@@ -209,7 +210,7 @@ export default class Time {
    */
   getAnimationBeginTime () {
     return this.animationBeginTime_
-  };
+  }
 
   /**
    * Gets animation end time.
@@ -217,7 +218,7 @@ export default class Time {
    */
   getAnimationEndTime () {
     return this.animationEndTime_
-  };
+  }
 
   /**
    * Sets the last animation refresh time.
@@ -230,7 +231,7 @@ export default class Time {
     if (this.refreshInterval_ > waitTimeForNewImages) {
       this.animationLastRefreshed_ += waitTimeForNewImages
     }
-  };
+  }
 
   /**
    * Gets animation resolution time.
@@ -238,7 +239,7 @@ export default class Time {
    */
   getAnimationResolutionTime () {
     return this.animationResolutionTime_
-  };
+  }
 
   /**
    * Checks if autostart is currently waiting loading to be finished.
@@ -246,7 +247,7 @@ export default class Time {
    */
   isWaitingAutoStart () {
     return this.config_['autoStart'] && this.waitUntilLoaded_
-  };
+  }
 
   /**
    * Gets the number of animation intervals.
@@ -254,7 +255,7 @@ export default class Time {
    */
   getAnimationNumIntervals () {
     return this.animationNumIntervals_
-  };
+  }
 
   /**
    * Gets the real-world creation time.
@@ -262,7 +263,7 @@ export default class Time {
    */
   getCreationTime () {
     return this.timeCreatedAt_
-  };
+  }
 
   /**
    * Gets the current real-world time.
@@ -270,7 +271,7 @@ export default class Time {
    */
   getCurrentTime () {
     return this.currentTime_
-  };
+  }
 
   /**
    * Gets refresh interval.
@@ -278,7 +279,7 @@ export default class Time {
    */
   getRefreshInterval () {
     return this.refreshInterval_
-  };
+  }
 
   /**
    * Sets the current real-world time.
@@ -286,7 +287,7 @@ export default class Time {
    */
   setCurrentTime (currentTime) {
     this.currentTime_ = currentTime
-  };
+  }
 
   /**
    * Starts to play animation.
@@ -297,14 +298,14 @@ export default class Time {
       this.play_ = true
       this.handleTimer_()
     }
-  };
+  }
 
   /**
    * Pauses animation.
    */
   pause () {
     this.play_ = false
-  };
+  }
 
   /**
    * Stops (pauses and rewinds) animation.
@@ -312,7 +313,7 @@ export default class Time {
   stop () {
     this.play_ = false
     this.setAnimationTime(this.animationBeginTime_)
-  };
+  }
 
   /**
    * Moves to previous time frame.
@@ -330,7 +331,7 @@ export default class Time {
     }
     this.setAnimationTime(newTime)
     this.updateAnimationBackupTime()
-  };
+  }
 
   /**
    * Moves to next time frame.
@@ -348,7 +349,7 @@ export default class Time {
     }
     this.setAnimationTime(newTime)
     this.updateAnimationBackupTime()
-  };
+  }
 
   /**
    * Changes animation time.
@@ -361,7 +362,7 @@ export default class Time {
       this.setAnimationTime(this.animationBeginTime_)
     }
     this.createTimer()
-  };
+  }
 
   /**
    * Sets animations frame rate.
@@ -370,7 +371,7 @@ export default class Time {
   setFrameRate (frameRate) {
     this.frameRate_ = frameRate
     this.play_ = false
-  };
+  }
 
   /**
    * Sets animation grid time.
@@ -379,7 +380,7 @@ export default class Time {
   setGridTime (gridTime) {
     this.animationGridTime_ = gridTime
     this.createTimer()
-  };
+  }
 
   /**
    * Sets animation begin time.
@@ -389,7 +390,7 @@ export default class Time {
     this.beginTime_ = beginTime
     this.initBeginTime_ = 0
     this.createTimer()
-  };
+  }
 
   /**
    * Sets animation end time.
@@ -399,7 +400,24 @@ export default class Time {
     this.endTime_ = endTime
     this.initEndTime_ = 0
     this.createTimer()
-  };
+  }
+
+  /**
+   * Sets time limits forced.
+   * @param {boolean} timeLimitsForced Time limits forced.
+   */
+  setTimeLimitsForced (timeLimitsForced) {
+    this.timeLimitsForced_ = timeLimitsForced
+    this.createTimer()
+  }
+
+  /**
+   * Gets time limits forced.
+   * @returns {boolean} Time limits forced.
+   */
+  getTimeLimitsForced () {
+    return this.timeLimitsForced_
+  }
 
   /**
    * Sets animation resolution time.
@@ -408,7 +426,7 @@ export default class Time {
   setResolutionTime (resolutionTime) {
     this.animationResolutionTime_ = resolutionTime
     this.createTimer()
-  };
+  }
 
   /**
    * Sets animation default time.
@@ -416,7 +434,7 @@ export default class Time {
    */
   setDefaultTime (defaultTime) {
     this.defaultTime_ = defaultTime
-  };
+  }
 
   /**
    * Sets time grid offset from midnight.
@@ -425,7 +443,7 @@ export default class Time {
   setDayStartOffset (gridTimeOffset) {
     this.animationGridTimeOffset_ = gridTimeOffset
     this.createTimer()
-  };
+  }
 
   /**
    * Sets animation time moments.
@@ -502,5 +520,5 @@ export default class Time {
     this.play_ = false
     this.variableEvents.removeAllListeners()
     this.actionEvents.removeAllListeners()
-  };
+  }
 }

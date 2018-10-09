@@ -373,10 +373,11 @@ export default class TimeSlider {
           return
         }
         textElement = frame.element.querySelector('span.' + TimeSlider.FRAME_TEXT_CLASS)
-        clientRect = textElement.getBoundingClientRect()
-
-        if (maxTextWidth < clientRect['width']) {
-          maxTextWidth = clientRect['width']
+        if (textElement != null) {
+          clientRect = textElement.getBoundingClientRect()
+          if (maxTextWidth < clientRect['width']) {
+            maxTextWidth = clientRect['width']
+          }
         }
 
         localTimeStep = frames[nextIndex]['endTime'] - frame['endTime']

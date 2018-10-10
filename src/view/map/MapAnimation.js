@@ -508,6 +508,106 @@ MapAnimation.prototype.initMouseInteractions = function () {
 }
 
 /**
+ * Handles update requests.
+ * @param {number} updateRequested Time when update requested.
+ * @param {boolean=} disableTimeSlider Disables the time slider when loading layers.
+ */
+MapAnimation.prototype.handleUpdateRequest = function (updateRequested, disableTimeSlider = false) {
+  let self = this
+  let anyVisible = false
+  let asyncLoadCount
+  let asyncLoadQueue
+  let currentVisibility
+  let extent
+  let featureGroupName
+  let groupNames
+  let layerGroupTitle
+  let layerVisibility
+  let loadId
+  let map = this.get('map')
+  let overlayGroupName
+  let selectedFeature
+  let layerTitle
+  const callbacks = this.get('callbacks')
+  if (/** @type {number} */ (this.get('updateRequested')) > updateRequested) {
+    return
+  }
+  extent = this.calculateExtent(true)
+  this.updateStorage()
+  featureGroupName = this.get('config')['featureGroupName']
+  selectedFeature = this.getSelectedFeature()
+  if (this.reloadNeeded(extent)) {
+    loadId = Date.now()
+    if (this.loadId < loadId) {
+      this.loadId = loadId
+    } else {
+      this.loadId++
+      loadId = this.loadId
+    }
+    this.latestLoadId = this.loadId
+    asyncLoadQueue = {}
+    asyncLoadQueue[loadId] = []
+    this.asyncLoadQueue = asyncLoadQueue
+    asyncLoadCount = {}
+    asyncLoadCount[loadId] = 0
+    this.asyncLoadCount = asyncLoadCount
+    this.numIntervalItems = []
+    if (disableTimeSlider) {
+      // Todo: toteuta tämä LayerSwitcherissä funktiona
+      Array.from(document.querySelectorAll('.layer-switcher input')).forEach((layerSwitcher) => {
+        layerSwitcher.disabled = true
+      })
+    }
+    this.actionEvents.emitEvent('reload')
+    this.loadOverlayGroup(extent, loadId)
+    layerVisibility = map.get('layerVisibility')
+    this.getLayersByGroup(featureGroupName).forEach(layer => {
+      layerTitle = layer.get('title')
+      if (layerTitle == null) {
+        return
+      }
+      currentVisibility = layerVisibility[layerTitle]
+      if (currentVisibility !== undefined) {
+        layer.setVisible(currentVisibility)
+        if ((!currentVisibility) && (selectedFeature != null) && (layerTitle === selectedFeature.get('layerTitle'))) {
+          self.selectFeature(null)
+        }
+      }
+    })
+  } else {
+    overlayGroupName = this.get('config')['overlayGroupName']
+    groupNames = [overlayGroupName, featureGroupName]
+    layerVisibility = map.get('layerVisibility')
+    groupNames.forEach(groupName => {
+      this.getLayersByGroup(groupName).forEach(layer => {
+        layerTitle = layer.get('title')
+        currentVisibility = layerVisibility[layerTitle]
+        if (currentVisibility !== undefined) {
+          layer.setVisible(currentVisibility)
+        }
+        if (layerGroupTitle === overlayGroupName) {
+          if (currentVisibility) {
+            anyVisible = currentVisibility
+          }
+        } else if ((!currentVisibility) && (selectedFeature != null) && (layerTitle === selectedFeature.get('layerTitle'))) {
+          this.selectFeature(null)
+        }
+      })
+    })
+    if (!anyVisible) {
+      this.actionEvents.emitEvent('reload')
+    }
+    if (this.get('config')['showMarker']) {
+      this.get('marker').setCoordinates(map.getView().getCenter())
+      this.dispatchEvent('markerMoved')
+    }
+  }
+  if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
+    callbacks['ready']()
+  }
+}
+
+/**
  * Performs bidirectional data exchange with local storage.
  */
 MapAnimation.prototype.updateStorage = function () {
@@ -2181,8 +2281,31 @@ MapAnimation.prototype.selectFeature = function (feature) {
     interaction = interactions[i]
     if (interaction.get('type') === 'selected') {
       interaction.getFeatures().clear()
-      interaction.getFeatures().push(feature)
+      if (feature != null) {
+        interaction.getFeatures().push(feature)
+      }
       break
     }
   }
+}
+
+MapAnimation.prototype.getSelectedFeature = function () {
+  let features
+  let interactions = this.activeInteractions
+  if (interactions == null) {
+    return
+  }
+  let numInteraction = interactions.length
+  let interaction
+  let i
+  for (i = 0; i < numInteraction; i++) {
+    interaction = interactions[i]
+    if (interaction.get('type') === 'selected') {
+      features = interaction.getFeatures()
+      if ((features != null) && (features.getLength() > 0)) {
+        return features.item(0)
+      }
+    }
+  }
+  return null
 }

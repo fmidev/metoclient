@@ -213,7 +213,6 @@ LazyAnimationLoader.prototype.initMap = function () {
   })
   map.set('layerVisibility', layerVisibility)
   map.on('moveend', () => {
-    self.loadId = -1
     self.set('updateRequested', Date.now())
   })
   map.on('change:layerVisibility', () => {
@@ -341,77 +340,7 @@ LazyAnimationLoader.prototype.initListeners = function () {
   })
 
   this.on('change:updateRequested', function (e) {
-    const updateRequested = /** @type {number} */ (this.get('updateRequested'))
-    const self = this
-
-    setTimeout(() => {
-      let loadId
-      let asyncLoadCount
-      let asyncLoadQueue
-      let extent
-      let overlayGroupName
-      let featureGroupName
-      let groupNames
-      let map
-      let currentVisibility
-      let layerVisibility
-      let layerGroupTitle
-      let anyVisible = false
-      const callbacks = self.get('callbacks')
-      if (/** @type {number} */ (self.get('updateRequested')) > updateRequested) {
-        return
-      }
-      extent = self.calculateExtent(true)
-      self.updateStorage()
-      if (self.reloadNeeded(extent)) {
-        loadId = Date.now()
-        if (self.loadId < loadId) {
-          self.loadId = loadId
-        } else {
-          self.loadId++
-          loadId = self.loadId
-        }
-        self.latestLoadId = self.loadId
-        asyncLoadQueue = {}
-        asyncLoadQueue[loadId] = []
-        self.asyncLoadQueue = asyncLoadQueue
-        asyncLoadCount = {}
-        asyncLoadCount[loadId] = 0
-        self.asyncLoadCount = asyncLoadCount
-        self.numIntervalItems = []
-        self.actionEvents.emitEvent('reload')
-        self.loadOverlayGroup(extent, loadId)
-      } else {
-        overlayGroupName = self.get('config')['overlayGroupName']
-        featureGroupName = self.get('config')['featureGroupName']
-        groupNames = [overlayGroupName, featureGroupName]
-        map = self.get('map')
-        layerVisibility = map.get('layerVisibility')
-        groupNames.forEach(groupName => {
-          this.getLayersByGroup(groupName).forEach(layer => {
-            currentVisibility = layerVisibility[layer.get('title')]
-            if (currentVisibility !== undefined) {
-              layer.setVisible(currentVisibility)
-            }
-            if (layerGroupTitle === overlayGroupName) {
-              if (currentVisibility) {
-                anyVisible = currentVisibility
-              }
-            }
-          })
-        })
-        if (!anyVisible) {
-          self.actionEvents.emitEvent('reload')
-        }
-        if (self.get('config')['showMarker']) {
-          self.get('marker').setCoordinates(map.getView().getCenter())
-          self.dispatchEvent('markerMoved')
-        }
-      }
-      if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
-        callbacks['ready']()
-      }
-    }, self.updateRequestResolution)
+    setTimeout(this.handleUpdateRequest(this.get('updateRequested'), false), this.updateRequestResolution)
   })
 
   this.on('updateLoadQueue', e => {
@@ -730,6 +659,9 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
       callbacks['loadError'](target.getParams())
     }
   }
+  if (this.numIntervalItems[loadId] == null) {
+    return
+  }
 
   currentTime = Date.now()
   for (i = iMin; i <= iMax; i++) {
@@ -845,7 +777,7 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   newLayers[1].set('id', ++self.nextLayerId)
   mapLayers.push(newLayers[0])
   mapLayers.push(newLayers[1])
-  if (this.numIntervalItems[loadId].length > 2) {
+  if ((this.numIntervalItems[loadId] != null) && (this.numIntervalItems[loadId].length > 2)) {
     this.numIntervalItems[loadId][0]['beginTime'] = 2 * this.numIntervalItems[loadId][0]['endTime'] - this.numIntervalItems[loadId][1]['endTime']
   }
 }

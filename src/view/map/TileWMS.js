@@ -18,9 +18,9 @@ export default class TileWMS extends OlSourceTileWMS {
           options['params']['CRS'] = options['projection']
         }
       } else {
-          if ((options['params']['SRS'] == null) && (options['params']['srs'] == null) && (options['params']['Srs'] == null)) {
-              options['params']['SRS'] = options['projection']
-          }
+        if ((options['params']['SRS'] == null) && (options['params']['srs'] == null) && (options['params']['Srs'] == null)) {
+          options['params']['SRS'] = options['projection']
+        }
       }
     }
     super(options)

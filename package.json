@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "4.12.15",
+  "version": "4.13.2",
   "private": false,
   "description": "Map animation library",
   "main": "src/MetOClient.js",
@@ -30,6 +30,7 @@
     "extend": "^3.0.1",
     "fast-isnumeric": "^1.1.1",
     "good-listener": "^1.2.2",
+    "localforage": "^1.7.2",
     "moment": "^2.19.1",
     "moment-timezone": "^0.5.13",
     "mouse-wheel": "^1.2.0",

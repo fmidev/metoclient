@@ -16,6 +16,7 @@ import * as constants from '../../constants'
 import OlLayerImage from 'ol/layer/image'
 import OlLayerVector from 'ol/layer/vector'
 import OlStyleStyle from 'ol/style/style'
+import { loadFunction } from './LayerLoader'
 
 export default class MapProducer {
   /**
@@ -35,16 +36,21 @@ export default class MapProducer {
     let typeLwr = type.toLowerCase()
     switch (typeLwr) {
       case 'tilewms':
+        options['tileLoadFunction'] = loadFunction
         return new TileWMS(options)
       case 'imagewms':
+        options['imageLoadFunction'] = loadFunction
         return new ImageWMS(options)
       case 'wmts':
+        options['tileLoadFunction'] = loadFunction
         return new WMTS(options)
       case 'vector':
         return new Vector(options, projection, beginTime, endTime)
       case 'stamen':
+        options['tileLoadFunction'] = loadFunction
         return new Stamen(options)
       case 'osm':
+        options['tileLoadFunction'] = loadFunction
         return new OSM(options)
     }
   }

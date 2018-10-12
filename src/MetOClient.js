@@ -12,6 +12,7 @@ import MapController from './controller/MapController'
 import { tz } from 'moment-timezone'
 import extend from 'extend'
 import isNumeric from 'fast-isnumeric'
+import localforage from 'localforage'
 
 export class MetOClient {
   /**
@@ -24,6 +25,7 @@ export class MetOClient {
     let project
     let mapPostId
     let animationResolutionTime
+    let instanceId = 'metoclient' + Date.now()
     let newConfig = {
       'project': '',
       'map': {
@@ -121,6 +123,15 @@ export class MetOClient {
       this.config_['map']['view']['layersTooltip'] = this.config_['localization'][locale]['layersTooltip']
       this.config_['time']['view']['locale'] = this.config_['localization']['locale']
     }
+
+    localforage.config({
+      name: instanceId,
+      storeName: instanceId
+    })
+    if ((!localforage.supports(localforage.INDEXEDDB)) && (!localforage.supports(localforage.WEBSQL)) && (!localforage.supports(localforage.LOCALSTORAGE))) {
+      config['view']['mapLoader'] = 'all'
+    }
+
     /**
      * @private
      */
@@ -191,6 +202,7 @@ export class MetOClient {
       'defaultAnimationTime',
       'endTime',
       'endTimeDelay',
+      'timeLimitsForced',
       'frameRate',
       'gridTime',
       'gridTimeOffset',
@@ -354,6 +366,7 @@ export class MetOClient {
           'defaultAnimationTime': Date.now(),
           'endTime': Date.now(),
           'endTimeDelay': 0,
+          'timeLimitsForced': false,
           'frameRate': 500,
           'gridTimeOffset': 0,
           'refreshInterval': 15 * 60 * 1000,
@@ -539,6 +552,9 @@ export class MetOClient {
   updateAnimation (options, callbacks) {
     if (options['gridTime'] != null) {
       this.timeController_.setGridTime(options['gridTime'])
+    }
+    if (options['timeLimitsForced'] != null) {
+      this.timeController_.setTimeLimitsForced(options['timeLimitsForced'])
     }
     if (options['beginTime'] != null) {
       this.timeController_.setBeginTime(options['beginTime'])

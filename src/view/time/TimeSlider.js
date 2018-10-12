@@ -360,6 +360,7 @@ export default class TimeSlider {
       textWrapperElement.appendChild(textElement)
 
       frame.element.appendChild(textWrapperElement)
+      frame.element.style.display = 'none'
     })
 
     // Separate loops to prevent accessing textElement width before it is available
@@ -368,12 +369,12 @@ export default class TimeSlider {
       let localTimeStep
       let textElement
       let nextIndex = index + 1
+      frame.element.style.display = ''
       if (nextIndex === frames.length) {
         return
       }
       textElement = frame.element.querySelector('span.' + TimeSlider.FRAME_TEXT_CLASS)
       clientRect = textElement.getBoundingClientRect()
-
       if (maxTextWidth < clientRect['width']) {
         maxTextWidth = clientRect['width']
       }

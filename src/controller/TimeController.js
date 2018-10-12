@@ -187,32 +187,34 @@ export default class TimeController {
       this.updateAnimationBackupTime()
     }
     // Remove empty time steps from start and end if not every step is empty
-    numIntervals = numIntervalItems.length
-    for (i = 0; i < numIntervals; i++) {
-      if ((numIntervalItems[i].toBeLoaded == null) || (numIntervalItems[i].toBeLoaded > 0)) {
-        empty = false
-        break
-      }
-    }
-    if (!empty) {
-      i = 0
-      while (i < numIntervalItems.length) {
+    if (!this.model_.getTimeLimitsForced()) {
+      numIntervals = numIntervalItems.length
+      for (i = 0; i < numIntervals; i++) {
         if ((numIntervalItems[i].toBeLoaded == null) || (numIntervalItems[i].toBeLoaded > 0)) {
+          empty = false
           break
         }
-        numIntervalItems.shift()
-        i++
       }
-      i = numIntervalItems.length - 1
-      while (i >= 0) {
-        if ((numIntervalItems[i].toBeLoaded == null) || (numIntervalItems[i].toBeLoaded > 0)) {
-          break
+      if (!empty) {
+        i = 0
+        while (i < numIntervalItems.length) {
+          if ((numIntervalItems[i].toBeLoaded == null) || (numIntervalItems[i].toBeLoaded > 0)) {
+            break
+          }
+          numIntervalItems.shift()
+          i++
         }
-        numIntervalItems.pop()
-        i--
+        i = numIntervalItems.length - 1
+        while (i >= 0) {
+          if ((numIntervalItems[i].toBeLoaded == null) || (numIntervalItems[i].toBeLoaded > 0)) {
+            break
+          }
+          numIntervalItems.pop()
+          i--
+        }
       }
+      numIntervals = numIntervalItems.length
     }
-    numIntervals = numIntervalItems.length
     this.model_.setAnimationTimes(numIntervalItems.reduce((animationTimes, intervalItem) => {
       animationTimes.push(intervalItem['endTime'])
       return animationTimes
@@ -397,6 +399,14 @@ export default class TimeController {
    */
   setEndTime (endTime) {
     this.model_.setEndTime(endTime)
+  }
+
+  /**
+   * Sets time limits forced.
+   * @param {boolean} timeLimitsForced Time limits forced.
+   */
+  setTimeLimitsForced (timeLimitsForced) {
+    this.model_.setTimeLimitsForced(timeLimitsForced)
   }
 
   /**

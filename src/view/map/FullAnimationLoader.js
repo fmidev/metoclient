@@ -779,19 +779,21 @@ FullAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
       mapLayers.push(mapLayer)
     }
   }
-  if (this.numIntervalItems[loadId].length > 2) {
-    this.numIntervalItems[loadId][0]['beginTime'] = 2 * this.numIntervalItems[loadId][0]['endTime'] - this.numIntervalItems[loadId][1]['endTime']
-  }
-  if (this.numIntervalItems[loadId].length > 0) {
-    endTime = this.numIntervalItems[loadId][this.numIntervalItems[loadId].length - 1]['endTime']
-    if ((this.get('animationResolutionTime') == null) && (absEndTime != null) && (endTime < absEndTime)) {
-      this.numIntervalItems[loadId].push({
-        'beginTime': endTime,
-        'endTime': absEndTime,
-        'status': '',
-        'loaded': 0,
-        'toBeLoaded': 0
-      })
+  if (this.numIntervalItems[loadId] != null) {
+    if (this.numIntervalItems[loadId].length > 2) {
+      this.numIntervalItems[loadId][0]['beginTime'] = 2 * this.numIntervalItems[loadId][0]['endTime'] - this.numIntervalItems[loadId][1]['endTime']
+    }
+    if (this.numIntervalItems[loadId].length > 0) {
+      endTime = this.numIntervalItems[loadId][this.numIntervalItems[loadId].length - 1]['endTime']
+      if ((this.get('animationResolutionTime') == null) && (absEndTime != null) && (endTime < absEndTime)) {
+        this.numIntervalItems[loadId].push({
+          'beginTime': endTime,
+          'endTime': absEndTime,
+          'status': '',
+          'loaded': 0,
+          'toBeLoaded': 0
+        })
+      }
     }
   }
 }

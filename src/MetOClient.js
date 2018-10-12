@@ -12,6 +12,7 @@ import MapController from './controller/MapController'
 import { tz } from 'moment-timezone'
 import extend from 'extend'
 import isNumeric from 'fast-isnumeric'
+import localforage from 'localforage'
 
 export class MetOClient {
   /**
@@ -24,6 +25,7 @@ export class MetOClient {
     let project
     let mapPostId
     let animationResolutionTime
+    let instanceId = 'metoclient' + Date.now()
     let newConfig = {
       'project': '',
       'map': {
@@ -121,6 +123,15 @@ export class MetOClient {
       this.config_['map']['view']['layersTooltip'] = this.config_['localization'][locale]['layersTooltip']
       this.config_['time']['view']['locale'] = this.config_['localization']['locale']
     }
+
+    localforage.config({
+      name: instanceId,
+      storeName: instanceId
+    })
+    if ((!localforage.supports(localforage.INDEXEDDB)) && (!localforage.supports(localforage.WEBSQL)) && (!localforage.supports(localforage.LOCALSTORAGE))) {
+      config['view']['mapLoader'] = 'all'
+    }
+
     /**
      * @private
      */

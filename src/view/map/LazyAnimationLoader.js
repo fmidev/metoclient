@@ -213,7 +213,6 @@ LazyAnimationLoader.prototype.initMap = function () {
   })
   map.set('layerVisibility', layerVisibility)
   map.on('moveend', () => {
-    self.loadId = -1
     self.set('updateRequested', Date.now())
   })
   map.on('change:layerVisibility', () => {
@@ -660,6 +659,9 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
       callbacks['loadError'](target.getParams())
     }
   }
+  if (this.numIntervalItems[loadId] == null) {
+    return
+  }
 
   currentTime = Date.now()
   for (i = iMin; i <= iMax; i++) {
@@ -775,7 +777,7 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   newLayers[1].set('id', ++self.nextLayerId)
   mapLayers.push(newLayers[0])
   mapLayers.push(newLayers[1])
-  if (this.numIntervalItems[loadId].length > 2) {
+  if ((this.numIntervalItems[loadId] != null) && (this.numIntervalItems[loadId].length > 2)) {
     this.numIntervalItems[loadId][0]['beginTime'] = 2 * this.numIntervalItems[loadId][0]['endTime'] - this.numIntervalItems[loadId][1]['endTime']
   }
 }

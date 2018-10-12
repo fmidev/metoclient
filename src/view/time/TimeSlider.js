@@ -360,94 +360,92 @@ export default class TimeSlider {
       textWrapperElement.appendChild(textElement)
 
       frame.element.appendChild(textWrapperElement)
+      frame.element.style.display = 'none'
     })
 
     // Separate loops to prevent accessing textElement width before it is available
-    setTimeout(() => {
-      this.frames_.forEach((frame, index, frames) => {
-        let clientRect
-        let localTimeStep
-        let textElement
-        let nextIndex = index + 1
-        if (nextIndex === frames.length) {
-          return
-        }
-        textElement = frame.element.querySelector('span.' + TimeSlider.FRAME_TEXT_CLASS)
-        if (textElement != null) {
-          clientRect = textElement.getBoundingClientRect()
-          if (maxTextWidth < clientRect['width']) {
-            maxTextWidth = clientRect['width']
-          }
-        }
-
-        localTimeStep = frames[nextIndex]['endTime'] - frame['endTime']
-        if (timeStep == null) {
-          useTimeStep = true
-          timeStep = localTimeStep
-        } else if ((useTimeStep) && (localTimeStep !== timeStep)) {
-          useTimeStep = false
-        }
-      })
-      // Prevent common tick asynchrony
-      if (useTimeStep) {
-        timeStep *= 2
+    this.frames_.forEach((frame, index, frames) => {
+      let clientRect
+      let localTimeStep
+      let textElement
+      let nextIndex = index + 1
+      frame.element.style.display = ''
+      if (nextIndex === frames.length) {
+        return
+      }
+      textElement = frame.element.querySelector('span.' + TimeSlider.FRAME_TEXT_CLASS)
+      clientRect = textElement.getBoundingClientRect()
+      if (maxTextWidth < clientRect['width']) {
+        maxTextWidth = clientRect['width']
       }
 
-      newTextWidth = Math.round(maxTextWidth) + 'px'
-      Array.from(document.getElementsByClassName(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)).forEach(element => {
-        element.style.width = newTextWidth
-      })
-
-      let createTick = (frame, index, rect, endTime) => {
-        self.previousTickTextTop_ = rect.top
-        self.previousTickTextRight_ = rect.right
-        self.previousTickTextBottom_ = rect.bottom
-        self.previousTickTextLeft_ = rect.left
-        self.previousTickValue_ = endTime
-        self.previousTickIndex_ = index
-        tick = document.createElement('div')
-        tick.classList.add(TimeSlider.FRAME_TICK_CLASS)
-        tick.classList.add(TimeSlider.HIDDEN_CLASS)
-        frame.element.appendChild(tick)
+      localTimeStep = frames[nextIndex]['endTime'] - frame['endTime']
+      if (timeStep == null) {
+        useTimeStep = true
+        timeStep = localTimeStep
+      } else if ((useTimeStep) && (localTimeStep !== timeStep)) {
+        useTimeStep = false
       }
+    })
+    // Prevent common tick asynchrony
+    if (useTimeStep) {
+      timeStep *= 2
+    }
 
-      playButton = Array.from(document.getElementsByClassName(TimeSlider.PLAY_BUTTON_CLASS))
-      if (playButton.length > 0) {
-        playButton = playButton[0].getBoundingClientRect()
+    newTextWidth = Math.round(maxTextWidth) + 'px'
+    Array.from(document.getElementsByClassName(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)).forEach(element => {
+      element.style.width = newTextWidth
+    })
+
+    let createTick = (frame, index, rect, endTime) => {
+      self.previousTickTextTop_ = rect.top
+      self.previousTickTextRight_ = rect.right
+      self.previousTickTextBottom_ = rect.bottom
+      self.previousTickTextLeft_ = rect.left
+      self.previousTickValue_ = endTime
+      self.previousTickIndex_ = index
+      tick = document.createElement('div')
+      tick.classList.add(TimeSlider.FRAME_TICK_CLASS)
+      tick.classList.add(TimeSlider.HIDDEN_CLASS)
+      frame.element.appendChild(tick)
+    }
+
+    playButton = Array.from(document.getElementsByClassName(TimeSlider.PLAY_BUTTON_CLASS))
+    if (playButton.length > 0) {
+      playButton = playButton[0].getBoundingClientRect()
+    }
+
+    this.frames_.forEach((frame, index, frames) => {
+      let textWrapper
+      let clientRect
+      let textElementArray = Array.from(frame.element.getElementsByClassName(TimeSlider.FRAME_TEXT_WRAPPER_CLASS))
+      if (textElementArray.length === 0) {
+        return
       }
+      textWrapper = textElementArray.shift()
+      clientRect = textWrapper.getBoundingClientRect()
 
-      this.frames_.forEach((frame, index, frames) => {
-        let textWrapper
-        let clientRect
-        let textElementArray = Array.from(frame.element.getElementsByClassName(TimeSlider.FRAME_TEXT_WRAPPER_CLASS))
-        if (textElementArray.length === 0) {
-          return
-        }
-        textWrapper = textElementArray.shift()
-        clientRect = textWrapper.getBoundingClientRect()
+      // Prevent text overlapping, favor full hours
+      if ((self.previousTickTextRight_ < clientRect.left ||
+          self.previousTickTextLeft_ > clientRect.right ||
+          self.previousTickTextBottom_ < clientRect.top ||
+          self.previousTickTextTop_ > clientRect.bottom) &&
+          ((playButton.length === 0) || (playButton.right < clientRect.left ||
+          playButton.left_ > clientRect.right ||
+          playButton.bottom < clientRect.top ||
+          playButton.top > clientRect.bottom))) {
+        createTick(frame, index, clientRect, frame['endTime'])
+      } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (((((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) {
+        clearFrame(frames[self.previousTickIndex_])
+        createTick(frame, index, clientRect, frame['endTime'])
+      } else {
+        frame.element.removeChild(textWrapper)
+      }
+    })
 
-        // Prevent text overlapping, favor full hours
-        if ((self.previousTickTextRight_ < clientRect.left ||
-            self.previousTickTextLeft_ > clientRect.right ||
-            self.previousTickTextBottom_ < clientRect.top ||
-            self.previousTickTextTop_ > clientRect.bottom) &&
-            ((playButton.length === 0) || (playButton.right < clientRect.left ||
-            playButton.left_ > clientRect.right ||
-            playButton.bottom < clientRect.top ||
-            playButton.top > clientRect.bottom))) {
-          createTick(frame, index, clientRect, frame['endTime'])
-        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (((((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) {
-          clearFrame(frames[self.previousTickIndex_])
-          createTick(frame, index, clientRect, frame['endTime'])
-        } else {
-          frame.element.removeChild(textWrapper)
-        }
-      })
-
-      Array.from(document.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS)).forEach(element => {
-        element.classList.remove(TimeSlider.HIDDEN_CLASS)
-      })
-    }, 0)
+    Array.from(document.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS)).forEach(element => {
+      element.classList.remove(TimeSlider.HIDDEN_CLASS)
+    })
   }
 
   /**

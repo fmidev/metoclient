@@ -513,7 +513,6 @@ MapAnimation.prototype.initMouseInteractions = function () {
  * @param {boolean=} disableTimeSlider Disables the time slider when loading layers.
  */
 MapAnimation.prototype.handleUpdateRequest = function (updateRequested, disableTimeSlider = false) {
-  let self = this
   let anyVisible = false
   let asyncLoadCount
   let asyncLoadQueue

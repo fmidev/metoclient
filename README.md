@@ -63,6 +63,7 @@ List of API functions:
         * beginTime
         * endTime
         * layers
+        * layersChanged
         * timeStep
         * timeZone
         * timeZoneLabel

@@ -573,6 +573,8 @@ export class MetOClient {
     }
     if (options['layers'] != null) {
       this.mapController_.setLayers(options['layers'])
+    } else if (options['layersChanged'] != null) {
+      this.mapController_.updateLayers(options['layersChanged'])
     }
     this.timeController_.createTimer()
     if (options['animationTime'] != null) {

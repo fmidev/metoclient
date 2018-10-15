@@ -94,6 +94,9 @@ LazyAnimationLoader.prototype.initMap = function () {
           layerType = this.layerTypes['features']
           break
         case config['baseGroupName']:
+          if (!this.mapReloadNeeded()) {
+            continue
+          }
           layerType = this.layerTypes['map']
           break
       }
@@ -934,7 +937,6 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
       sourceClone = mapLayerClone.getSource()
       if ((source != null) && (source.get('layerTime') === animationTime)) {
         mapLayer.setOpacity(1)
-        map.renderSync()
       } else {
         if ((sourceClone != null) && (sourceClone.get('layerTime') !== animationTime)) {
           if (mapLayerClone.get('layerTimes').includes(animationTime)) {
@@ -954,7 +956,6 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
         } else {
           mapLayer.setOpacity(0)
           mapLayerClone.setOpacity(1)
-          map.renderSync()
           mapLayer.set('active', false)
           mapLayerClone.set('active', true)
           if ((source != null) && (source.get('layerTime') !== nextAnimationTime) && (mapLayer.get('layerTimes').includes(nextAnimationTime))) {

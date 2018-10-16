@@ -18,7 +18,6 @@ import sv from 'moment/locale/sv'
 import uk from 'moment/locale/uk'
 
 export default class TimeSlider {
-
   /**
    * Creates an instance of TimeSlider.
    * @param {any} config
@@ -50,6 +49,7 @@ export default class TimeSlider {
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY
     this.previousTickTextBottom_ = Number.NEGATIVE_INFINITY
     this.previousTickTextLeft_ = Number.POSITIVE_INFINITY
+    this.previousTickValue_ = null
     this.previousTickIndex_ = -1
     this.mouseListeners_ = []
     this.dragging_ = false
@@ -324,7 +324,7 @@ export default class TimeSlider {
     let newTextWidth
     let useTimeStep = false
     let timeStep
-    let playButton
+    let framesContainer
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY
 
     let clearFrame = (frame) => {
@@ -338,9 +338,6 @@ export default class TimeSlider {
     }
 
     this.frames_.forEach((frame, index, frames) => {
-      if (index === frames.length - 1) {
-        return
-      }
       let tickText
       let textWrapperElement
       let textElement
@@ -410,9 +407,9 @@ export default class TimeSlider {
       frame.element.appendChild(tick)
     }
 
-    playButton = Array.from(document.getElementsByClassName(TimeSlider.PLAY_BUTTON_CLASS))
-    if (playButton.length > 0) {
-      playButton = playButton[0].getBoundingClientRect()
+    framesContainer = Array.from(document.getElementsByClassName(TimeSlider.FRAMES_CONTAINER_CLASS))
+    if (framesContainer.length > 0) {
+      framesContainer = framesContainer[0].getBoundingClientRect()
     }
 
     this.frames_.forEach((frame, index, frames) => {
@@ -430,10 +427,10 @@ export default class TimeSlider {
           self.previousTickTextLeft_ > clientRect.right ||
           self.previousTickTextBottom_ < clientRect.top ||
           self.previousTickTextTop_ > clientRect.bottom) &&
-          ((playButton.length === 0) || (playButton.right < clientRect.left ||
-          playButton.left_ > clientRect.right ||
-          playButton.bottom < clientRect.top ||
-          playButton.top > clientRect.bottom))) {
+          ((framesContainer.length === 0) || (framesContainer.left <= clientRect.left &&
+          framesContainer.right >= clientRect.right &&
+          framesContainer.top <= clientRect.top &&
+          framesContainer.bottom >= clientRect.bottom))) {
         createTick(frame, index, clientRect, frame['endTime'])
       } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (((((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) {
         clearFrame(frames[self.previousTickIndex_])
@@ -566,12 +563,12 @@ export default class TimeSlider {
         }
         time = parseInt(elementTime)
         if (time != null) {
-          numIntervals = numIntervalItems.length;
+          numIntervals = numIntervalItems.length
           for (i = 0; i < numIntervals; i++) {
-            endTime = numIntervalItems[i].endTime;
+            endTime = numIntervalItems[i].endTime
             if ((endTime != null) && (endTime === time)) {
               indicatorElement.setAttribute('data-status', numIntervalItems[i].status)
-              break;
+              break
             }
           }
         }
@@ -646,7 +643,7 @@ export default class TimeSlider {
     let currentMoment
     let format = 'HH:mm'
     const dateFormat = 'dd D.M.'
-    let useDateFormat = false;
+    let useDateFormat = false
     let beginTime = (this.frames_.length > 0) ? this.frames_[0]['endTime'] : Number.NEGATIVE_INFINITY
     if (beginTime == null) {
       return ''

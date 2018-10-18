@@ -138,6 +138,12 @@ export const createTimeMenu = (options) => {
   if (options.id != null) {
     ul.classList.add(options.id)
   }
+  let exit = document.createElement('button')
+  exit.id = 'fmi-metoclient-timeslider-menu-exit'
+  exit.addEventListener('click', () => {
+    ul.classList.remove('visible-menu')
+  })
+  ul.appendChild(exit)
   if (options.items != null) {
     options.items.forEach((item) => {
       if(item.type === 'button'){
@@ -161,13 +167,7 @@ export const createTimeMenu = (options) => {
         a.setAttribute("min", "0")
         a.setAttribute("max", item.size - 1)
         output = document.createElement('output')
-        if (item.id == 'fmi-metoclient-timeslider-timestep') {
-          for(let i = 0 ; i < 8 ; i++) {
-            if(item.resolutionTime === AVAILABLE_TIMESTEPS[i]){
-              a.setAttribute("value", i)
-            }
-          }
-        } else if (item.id == 'fmi-metoclient-timeslider-begintime'){
+        if (item.id == 'fmi-metoclient-timeslider-begintime'){
           output.setAttribute("for", "begin")
           output.setAttribute("onforminput", "value = begin.valueAsNumber;")
           a.setAttribute("value", Math.floor(item.beginPlace))

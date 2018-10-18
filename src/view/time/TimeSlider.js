@@ -315,6 +315,7 @@ export default class TimeSlider {
       }]
     })
     postButton.appendChild(timeStepMenu)
+    timeStepMenu.classList.add('visible-menu')
 
     function modifyOffset() {
       let newPoint, newPlace, siblings, k, width, sibling, outputTag, timestamp, hours, minutes, day, month;

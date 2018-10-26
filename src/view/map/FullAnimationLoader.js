@@ -83,6 +83,9 @@ FullAnimationLoader.prototype.initMap = function () {
           layerType = this.layerTypes['features']
           break
         case config['baseGroupName']:
+          if (!this.mapReloadNeeded()) {
+            continue
+          }
           layerType = this.layerTypes['map']
           break
       }

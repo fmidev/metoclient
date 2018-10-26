@@ -69,6 +69,27 @@ export default class TimeController {
     this.animationPlayListener_ = animationPlay => {
     }
     /**
+     * @function
+     * @param {number} beginTime Animation begin time.
+     * @private
+     */
+    this.beginTimeListener_ = beginTime => {
+    }
+    /**
+     * @function
+     * @param {number} endTime Animation end time.
+     * @private
+     */
+    this.endTimeListener_ = endTime => {
+    }
+    /**
+     * @function
+     * @param {number} timeStep Animation time step.
+     * @private
+     */
+    this.timeStepListener_ = timeStep => {
+    }
+    /**
      * @private
      */
     this.model_ = new Time(config['model'])
@@ -104,6 +125,19 @@ export default class TimeController {
         self.pause()
       }
     }
+    this.beginTimeListener_ = (beginTime) => {
+      self.setBeginTime(beginTime)
+      self.actionEvents.emitEvent('refresh')
+    }
+    this.endTimeListener_ = (endTime) => {
+      self.setEndTime(endTime)
+      self.actionEvents.emitEvent('refresh')
+    }
+    this.timeStepListener_ = (timeStep) => {
+      self.setTimeStep(timeStep)
+      self.actionEvents.emitEvent('refresh')
+    }
+
     containers = document.getElementsByClassName(this.config_['view']['timeSliderContainer'])
     numViews = containers.length
     if (this.config_['view']['showTimeSlider']) {
@@ -113,6 +147,9 @@ export default class TimeController {
         this.views_[i].actionEvents.addListener('next', self.nextListener_)
         this.views_[i].variableEvents.addListener('animationTime', self.animationTimeUserListener_)
         this.views_[i].variableEvents.addListener('animationPlay', self.animationPlayListener_)
+        this.views_[i].variableEvents.addListener('beginTime', self.beginTimeListener_)
+        this.views_[i].variableEvents.addListener('endTime', self.endTimeListener_)
+        this.views_[i].variableEvents.addListener('timeStep', self.timeStepListener_)
       }
     }
 
@@ -484,7 +521,6 @@ export default class TimeController {
 
   /**
    * Updates animation backup time.
-   * @param time {number} Timestamp of animation backup time.
    */
   updateAnimationBackupTime () {
     this.model_.updateAnimationBackupTime()

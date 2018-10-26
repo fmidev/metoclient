@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "4.13.2",
+  "version": "4.15.0",
   "private": false,
   "description": "Map animation library",
   "main": "src/MetOClient.js",
@@ -37,6 +37,7 @@
     "ol": "^4.3.3",
     "proj4": "^2.4.4",
     "rename-keys": "^2.0.1",
+    "shallowequal": "^1.1.0",
     "wolfy87-eventemitter": "^5.2.3"
   },
   "devDependencies": {

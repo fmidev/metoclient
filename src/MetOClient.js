@@ -121,6 +121,9 @@ export class MetOClient {
       this.config_['map']['view']['zoomInTooltip'] = this.config_['localization'][locale]['zoomInTooltip']
       this.config_['map']['view']['zoomOutTooltip'] = this.config_['localization'][locale]['zoomOutTooltip']
       this.config_['map']['view']['layersTooltip'] = this.config_['localization'][locale]['layersTooltip']
+      this.config_['time']['view']['beginTimeText'] = this.config_['localization'][locale]['beginTimeText']
+      this.config_['time']['view']['endTimeText'] = this.config_['localization'][locale]['endTimeText']
+      this.config_['time']['view']['timeStepText'] = this.config_['localization'][locale]['timeStepText']
       this.config_['time']['view']['locale'] = this.config_['localization']['locale']
     }
 
@@ -211,8 +214,15 @@ export class MetOClient {
       'waitUntilLoaded'
     ]
     let timeView = [
+      'beginTime',
+      'endTime',
+      'firstDataPointTime',
+      'lastDataPointTime',
       'locale',
+      'modifiedResolutionTime',
+      'resolutionTime',
       'showTimeSlider',
+      'showTimeSliderMenu',
       'timeSliderContainer',
       'timeZone',
       'timeZoneLabel',
@@ -255,6 +265,15 @@ export class MetOClient {
   static get createMenu () {
     return utils['createMenu']
   }
+
+  /**
+   * Static getter for an utility function createTimeMenu.
+   * @return {function} Function to generate dropdown menu used in MetOClient.
+   * @export
+   */
+  static get createTimeMenu () {
+    return utils['createTimeMenu']
+  };
 
   /**
    * Static getter for an utility function transformCoordinates.
@@ -375,6 +394,7 @@ export class MetOClient {
         'view': {
           'locale': 'en',
           'showTimeSlider': true,
+          'showTimeSliderMenu': false,
           'timeSliderContainer': 'fmi-metoclient-timeslider',
           'timeZone': tz.guess(),
           'timeZoneLabel': '',
@@ -394,7 +414,10 @@ export class MetOClient {
           'overlays': 'Sääaineistot',
           'staticOverlays': 'Merkinnät',
           'zoomInTooltip': 'Lähennä',
-          'zoomOutTooltip': 'Loitonna'
+          'zoomOutTooltip': 'Loitonna',
+          'beginTimeText': 'Aloitusaika',
+          'endTimeText': 'Lopetusaika',
+          'timeStepText': 'Aika-askeleet'
         },
         'sv': {
           'baseLayers': 'Bakgrundskartor',
@@ -407,7 +430,10 @@ export class MetOClient {
           'overlays': 'Väder data',
           'staticOverlays': 'Statisk data',
           'zoomInTooltip': 'Zooma in',
-          'zoomOutTooltip': 'Zooma ut'
+          'zoomOutTooltip': 'Zooma ut',
+          'beginTimeText': 'Starttid',
+          'endTimeText': 'Sluttid',
+          'timeStepText': 'Tidssteg'
         },
         'en': {
           'baseLayers': 'Base layers',
@@ -420,7 +446,10 @@ export class MetOClient {
           'overlays': 'Overlays',
           'staticOverlays': 'Static overlays',
           'zoomInTooltip': 'Zoom in',
-          'zoomOutTooltip': 'Zoom out'
+          'zoomOutTooltip': 'Zoom out',
+          'beginTimeText': 'Begin time',
+          'endTimeText': 'End time',
+          'timeStepText': 'Timesteps'
         }
       },
       'disableTouch': false
@@ -573,6 +602,8 @@ export class MetOClient {
     }
     if (options['layers'] != null) {
       this.mapController_.setLayers(options['layers'])
+    } else if (options['layersChanged'] != null) {
+      this.mapController_.updateLayers(options['layersChanged'])
     }
     this.timeController_.createTimer()
     if (options['animationTime'] != null) {

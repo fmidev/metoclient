@@ -37,7 +37,7 @@ export default class Map {
         this.layers_[i]['type'] = 'features'
       }
     }
-  };
+  }
 
   /**
    * Gets map layers.
@@ -45,7 +45,21 @@ export default class Map {
    */
   getLayers () {
     return this.layers_
-  };
+  }
+
+  /**
+   * Produces a full layer configuration for internal use.
+   * @param layer Layer configuration supplied by the user.
+   * @returns {Object} Full layer configuration.
+   */
+  static produceFullLayerConfig (layer) {
+    if (((layer['type'] === 'obs') || (layer['type'] === 'for')) && (layer['animation'] == null)) {
+      layer['animation'] = {}
+    } else if (layer['className'].toLowerCase() === 'vector') {
+      layer['type'] = 'features'
+    }
+    return layer
+  }
 
   /**
    * Sets map layers.
@@ -55,14 +69,20 @@ export default class Map {
     this.layers_ = []
     let layerKeys = Object.keys(layers)
     layerKeys.forEach(layerKey => {
-      if (((layers[layerKey]['type'] === 'obs') || (layers[layerKey]['type'] === 'for')) && (layers[layerKey]['animation'] == null)) {
-        layers[layerKey]['animation'] = {}
-      } else if (layers[layerKey]['className'].toLowerCase() === 'vector') {
-        layers[layerKey]['type'] = 'features'
-      }
-      this.layers_.push(layers[layerKey])
+      this.layers_.push(Map.produceFullLayerConfig(layers[layerKey]))
     })
-  };
+  }
+
+  /**
+   * Updates map layers.
+   * @param layers Map layers.
+   */
+  updateLayers (layers) {
+    let layerKeys = Object.keys(layers)
+    layerKeys.forEach(layerKey => {
+      this.layers_[layerKey] = Map.produceFullLayerConfig(layers[layerKey])
+    })
+  }
 
   /**
    * Refreshes layer models.
@@ -83,7 +103,7 @@ export default class Map {
         }
       }
     }
-  };
+  }
 
   /**
    * Loads capability data from given urls.
@@ -142,7 +162,7 @@ export default class Map {
       }))(urls[j])
     }
     return promises
-  };
+  }
 
   /**
    * Sets the capabilities data.
@@ -162,7 +182,7 @@ export default class Map {
         self.capabilities_[capability['url']] = capabilities['data']
       }
     })
-  };
+  }
 
   /**
    * Gets the capabilities data.
@@ -170,5 +190,5 @@ export default class Map {
    */
   getCapabilities () {
     return this.capabilities_
-  };
+  }
 }

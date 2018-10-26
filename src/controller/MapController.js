@@ -145,6 +145,14 @@ export default class MapController {
   };
 
   /**
+   * Updates the map layers.
+   * @param layers Map layers.
+   */
+  updateLayers (layers) {
+    this.model_.updateLayers(layers)
+  };
+
+  /**
    * Gets the animation map.
    * @return {Object} Animation map.
    */

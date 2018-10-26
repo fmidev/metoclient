@@ -9,6 +9,7 @@ import extend from 'extend'
 import isNumeric from 'fast-isnumeric'
 import { default as proj4 } from 'proj4'
 import 'core-js/fn/array/from'
+import shallowEqual from 'shallowequal'
 import moment from 'moment-timezone'
 import * as constants from '../../constants'
 import renameKeys from 'rename-keys'
@@ -55,6 +56,7 @@ export default class MapAnimation {
     this.set('config', config)
     this.set('map', null)
     this.set('layers', [])
+    this.set('mapLayers', [])
     this.set('overlayTitles', [])
     this.set('extent', [0, 0, 0, 0])
     this.set('extentByZoomLevel', null)
@@ -126,6 +128,7 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   let currentLayerTitle
   let numCurrentLayers
   let currentSource
+  let mapLayers
   let i
   let j
   let k
@@ -166,6 +169,8 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
         }
       }
     }
+    mapLayers = layers.filter(layer => layer['type'] === this.layerTypes['map'])
+    this.set('mapLayers', mapLayers)
     this.set('layers', layers)
   }
   if (currentTime != null) {
@@ -569,7 +574,7 @@ MapAnimation.prototype.handleUpdateRequest = function (updateRequested, disableT
       if (currentVisibility !== undefined) {
         layer.setVisible(currentVisibility)
         if ((!currentVisibility) && (selectedFeature != null) && (layerTitle === selectedFeature.get('layerTitle'))) {
-          self.selectFeature(null)
+          this.selectFeature(null)
         }
       }
     })
@@ -1690,6 +1695,7 @@ MapAnimation.prototype.destroyAnimation = function () {
     this.set('map', null)
   }
   this.set('layers', null)
+  this.set('mapLayers', null)
   this.set('overlayTitles', null)
   this.set('extent', null)
   this.set('marker', null)
@@ -2288,6 +2294,10 @@ MapAnimation.prototype.selectFeature = function (feature) {
   }
 }
 
+/**
+ * Gets a selected vector feature.
+ * @returns {Object} Selected feature.
+ */
 MapAnimation.prototype.getSelectedFeature = function () {
   let features
   let interactions = this.activeInteractions
@@ -2307,4 +2317,33 @@ MapAnimation.prototype.getSelectedFeature = function () {
     }
   }
   return null
+}
+
+/**
+ * Checks if reload of base map layers is needed.
+ * @returns {boolean} Base map reload needed.
+ */
+MapAnimation.prototype.mapReloadNeeded = function () {
+  let i
+  let j
+  let mapLayers = this.get('mapLayers')
+  let layers = this.get('layers')
+  if ((mapLayers == null) || (layers == null)) {
+    return true
+  }
+  let filteredLayers = layers.filter(layer => layer['type'] === this.layerTypes['map'])
+  let numMapLayers = mapLayers.length
+  if (numMapLayers !== filteredLayers.length) {
+    return true
+  }
+  loopMapLayers:
+  for (i = 0; i < numMapLayers; i++) {
+    for (j = 0; j < numMapLayers; j++) {
+      if (shallowEqual(mapLayers[i], filteredLayers[j])) {
+        continue loopMapLayers
+      }
+    }
+    return true
+  }
+  return false
 }

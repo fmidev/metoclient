@@ -7,6 +7,7 @@
 import { default as proj4 } from 'proj4'
 import { tz } from 'moment-timezone'
 import moment from 'moment-timezone'
+import { AVAILABLE_TIMESTEPS } from './constants'
 import fi from 'moment/locale/fi'
 import sv from 'moment/locale/sv'
 import uk from 'moment/locale/uk'
@@ -116,6 +117,102 @@ export const createMenu = (options) => {
         li.addEventListener('click', item.callback)
       }
       ul.appendChild(li)
+    })
+  }
+  return ul
+}
+
+/**
+ * Generate an HTML list containing ranges to control timeslider.
+ * @param {Object} options Menu data.
+ * @return {HTMLElement} Unordered list of menu items.
+ */
+export const createTimeMenu = (options) => {
+  let ul = document.createElement('ul')
+  let form
+  let li
+  let a
+  let title
+  let output
+  ul.classList.add('metoclient-menu')
+  if (options.id != null) {
+    ul.classList.add(options.id)
+  }
+  let exit = document.createElement('button')
+  exit.id = 'fmi-metoclient-timeslider-menu-exit'
+  exit.addEventListener('click', () => {
+    ul.classList.remove('visible-menu')
+  })
+  ul.appendChild(exit)
+  if (options.items != null) {
+    options.items.forEach((item) => {
+      if(item.type === 'button'){
+        li = document.createElement('li')
+        a = document.createElement('a')
+        a.href = '#'
+        a.innerHTML = item.title
+        li.appendChild(a)
+        if (typeof item.callback === 'function') {
+          li.addEventListener('click', item.callback)
+        }
+        ul.appendChild(li)
+      }
+      else if(item.type == "range"){
+        li = document.createElement('li')
+        form = document.createElement('form')
+        title = document.createElement('a')
+        title.innerHTML = item.title
+        a = document.createElement('input')
+        a.setAttribute("type", "range")
+        a.setAttribute("min", "0")
+        a.setAttribute("max", item.size - 1)
+        output = document.createElement('output')
+        if (item.id == 'fmi-metoclient-timeslider-begintime'){
+          output.setAttribute("for", "begin")
+          output.setAttribute("onforminput", "value = begin.valueAsNumber;")
+          a.setAttribute("value", Math.floor(item.beginPlace))
+          a.setAttribute("name", "begin")
+          form.setAttribute("id", "beginForm")
+        } else if (item.id == 'fmi-metoclient-timeslider-endtime'){
+          output.setAttribute("for", "end")
+          output.setAttribute("onforminput", "value = end.valueAsNumber;")
+          a.setAttribute("value", Math.ceil(item.endPlace))
+          a.setAttribute("name", "end")
+          form.setAttribute("id", "endForm")
+        }
+        a.classList.add(item.id)
+        a.href = '#'
+        li.appendChild(title)
+        li.appendChild(form)
+        form.appendChild(a)
+        form.appendChild(output)
+        if (typeof item.callback === 'function') {
+          li.addEventListener('click', item.callback)
+        }
+        ul.appendChild(li)
+      } else if (item.type == 'stepButtons') {
+        li = document.createElement('li')
+        title = document.createElement('a')
+        title.innerHTML = item.title
+        li.appendChild(title)
+        for(let i = 0 ; i < AVAILABLE_TIMESTEPS.length ; i++) {
+          let button = document.createElement('button')
+          if (i > 2){
+            button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 3600000) + "h"
+          } else {
+            button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 60000) + "min"
+          }
+          button.classList.add('fmi-metoclient-timeslider-timestep-button')
+          if (item.resolutionTime == AVAILABLE_TIMESTEPS[i]) {
+            button.classList.add('fmi-metoclient-timeslider-timestep-active-button')
+          }
+          button.addEventListener('click', item.callback)
+          li.appendChild(button)
+        }
+        ul.appendChild(li)
+      } else{
+        console.log("Unsupported")
+      }
     })
   }
   return ul

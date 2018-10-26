@@ -219,3 +219,201 @@ div.fmi-metoclient-timeslider-timezone {
     top: 0;
     padding: 1px;
 }
+
+ul.fmi-metoclient-timeslider-menu {
+    top: -169px;
+    left: -440px;
+    width: 500px;
+    z-index: 30;
+}
+
+ul.fmi-metoclient-timeslider-menu.visible-menu {
+    top: -184px;
+    background-color: rgba(255,255,255,0.7);
+}
+
+ul.fmi-metoclient-timeslider-menu a {
+    background-color: transparent;
+}
+
+ul.fmi-metoclient-timeslider-menu a:hover {
+    background-color: transparent;
+    color: black;
+}
+
+ul.fmi-metoclient-timeslider-menu:before {
+    border-top-color: #fff;
+    bottom: -20px;
+    margin-left: -40px;
+    top: auto;
+    border-bottom-color: transparent;
+}
+
+/* TimeStep + BeginTime and EndTime sliders */
+button.fmi-metoclient-timeslider-timestep-button {
+    width: 12.5%;
+    color: #000;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #000;
+    box-sizing: border-box;
+    line-height: 23px;
+    letter-spacing: 0.2px;
+    font-family: Roboto, Arial, Helvetica, sans-serif;
+    font-size: 15px;
+    background: #fff;
+}
+
+button.fmi-metoclient-timeslider-timestep-active-button {
+    background: #000;
+    color: #fff;
+}
+
+#beginForm input[type=range], #endForm input[type=range] {
+  -webkit-appearance: none;
+  width: 480px;
+  background: transparent;
+}
+
+#beginForm input[type=range]:focus, #endForm input[type=range]:focus {
+  outline: none;
+}
+
+#beginForm input[type=range]::-webkit-slider-runnable-track, #endForm input[type=range]::-webkit-slider-runnable-track {
+  width: 480px;
+  height: 6px;
+  cursor: pointer;
+  background: #000000;
+  border-radius: 1.3px;
+  border: 0.2px solid #000000;
+  margin-bottom: 9px;
+  margin-top: 3px;
+}
+
+#beginForm input[type=range]:focus::-webkit-slider-runnable-track, #endForm input[type=range]:focus::-webkit-slider-runnable-track {
+  background: #000000;
+}
+
+#beginForm input[type=range]::-moz-range-track, #endForm input[type=range]::-moz-range-track {
+  width: 480px;
+  height: 4px;
+  cursor: pointer;
+  background: #000000;
+  border-radius: 1.3px;
+  border: 0.2px solid #000000;
+}
+
+#beginForm input[type=range]::-ms-track, #endForm input[type=range]::-ms-track {
+  width: 480px;
+  height: 6px;
+  cursor: pointer;
+  background: transparent;
+  border-color: transparent;
+  border-width: 16px 0;
+  color: transparent;
+  margin-left: 10px;
+  margin-top: -16px;
+  margin-bottom: -15px;
+}
+#beginForm input[type=range]::-ms-fill-lower, #endForm input[type=range]::-ms-fill-lower {
+  background: #000000;
+  border: 0.2px solid #000000;
+  border-radius: 2.6px;
+}
+#beginForm input[type=range]:focus::-ms-fill-lower, #endForm input[type=range]:focus::-ms-fill-lower {
+  background: #000000;
+}
+#beginForm input[type=range]::-ms-fill-upper, #endForm input[type=range]::-ms-fill-upper {
+  background: #000000;
+  border: 0.2px solid #000000;
+  border-radius: 2.6px;
+}
+#beginForm input[type=range]:focus::-ms-fill-upper, #endForm input[type=range]:focus::-ms-fill-upper {
+  background: #000000;
+}
+
+#beginForm input[type=range]::-webkit-slider-thumb, #endForm input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #000;
+  background-color: #fff;
+  margin-top: -10px;
+}
+
+#beginForm input[type=range]::-moz-range-thumb, #endForm input[type=range]::-moz-range-thumb {
+  box-sizing: border-box;
+  border-radius: 50%;
+  position: absolute;
+  right: 15px;
+  bottom: -33px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #000;
+  background-color: #fff;
+}
+
+#beginForm input[type=range]::-ms-thumb, #endForm input[type=range]::-ms-thumb {
+  box-sizing: border-box;
+  border-radius: 50%;
+  position: absolute;
+  right: 15px;
+  bottom: -33px;
+  width: 18px;
+  height: 18px;
+  margin-bottom: -10px;
+  border: 1px solid #000;
+  background-color: #fff;
+}
+
+#beginForm input[type=range]::-ms-tooltip, #endForm input[type=range]::-ms-tooltip {
+  display: none;
+}
+
+#beginForm input[type=range]::-webkit-slider-thumb:hover, #endForm input[type=range]::-webkit-slider-thumb:hover {
+  background: black;
+}
+
+#beginForm input[type=range]::-moz-range-thumb:hover, #endForm input[type=range]::-moz-range-thumb:hover {
+  background: black;
+}
+
+#beginForm input[type=range]::-ms-thumb:hover, #endForm input[type=range]::-ms-thumb:hover {
+  background: black;
+}
+
+#fmi-metoclient-timeslider-menu-exit {
+  background-image: url('../img/menu-close-x.png');
+  height: 23px;
+  width: 23px;
+  margin-left: 6px;
+  float: left;
+  border-style: solid;
+  border-radius: 100%;
+}
+
+output {
+  position: absolute;
+  width: 90px;
+  text-align: center;
+  color: #000;
+  border-radius: 5px;
+  bottom: 60%;
+  left: 0;
+  border-style: solid;
+  border-width: 1px;
+  box-sizing: border-box;
+  color: #000;
+  display: table;
+  margin: 0 auto;
+  line-height: 23px;
+  vertical-align: middle;
+  letter-spacing: 0.2px;
+  font-family: Roboto, Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  top: 3px;
+  background: #fff;
+}

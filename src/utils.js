@@ -146,7 +146,7 @@ export const createTimeMenu = (options) => {
   ul.appendChild(exit)
   if (options.items != null) {
     options.items.forEach((item) => {
-      if(item.type === 'button'){
+      if (item.type === 'button') {
         li = document.createElement('li')
         a = document.createElement('a')
         a.href = '#'
@@ -156,29 +156,28 @@ export const createTimeMenu = (options) => {
           li.addEventListener('click', item.callback)
         }
         ul.appendChild(li)
-      }
-      else if(item.type == "range"){
+      } else if (item.type === 'range') {
         li = document.createElement('li')
         form = document.createElement('form')
         title = document.createElement('a')
         title.innerHTML = item.title
         a = document.createElement('input')
-        a.setAttribute("type", "range")
-        a.setAttribute("min", "0")
-        a.setAttribute("max", item.size - 1)
+        a.setAttribute('type', 'range')
+        a.setAttribute('min', '0')
+        a.setAttribute('max', item.size - 1)
         output = document.createElement('output')
-        if (item.id == 'fmi-metoclient-timeslider-begintime'){
-          output.setAttribute("for", "begin")
-          output.setAttribute("onforminput", "value = begin.valueAsNumber;")
-          a.setAttribute("value", Math.floor(item.beginPlace))
-          a.setAttribute("name", "begin")
-          form.setAttribute("id", "beginForm")
-        } else if (item.id == 'fmi-metoclient-timeslider-endtime'){
-          output.setAttribute("for", "end")
-          output.setAttribute("onforminput", "value = end.valueAsNumber;")
-          a.setAttribute("value", Math.ceil(item.endPlace))
-          a.setAttribute("name", "end")
-          form.setAttribute("id", "endForm")
+        if (item.id === 'fmi-metoclient-timeslider-begintime') {
+          output.setAttribute('for', 'begin')
+          output.setAttribute('onforminput', 'value = begin.valueAsNumber;')
+          a.setAttribute('value', Math.floor(item.beginPlace))
+          a.setAttribute('name', 'begin')
+          form.setAttribute('id', 'beginForm')
+        } else if (item.id === 'fmi-metoclient-timeslider-endtime') {
+          output.setAttribute('for', 'end')
+          output.setAttribute('onforminput', 'value = end.valueAsNumber;')
+          a.setAttribute('value', Math.ceil(item.endPlace))
+          a.setAttribute('name', 'end')
+          form.setAttribute('id', 'endForm')
         }
         a.classList.add(item.id)
         a.href = '#'
@@ -190,28 +189,28 @@ export const createTimeMenu = (options) => {
           li.addEventListener('click', item.callback)
         }
         ul.appendChild(li)
-      } else if (item.type == 'stepButtons') {
+      } else if (item.type === 'stepButtons') {
         li = document.createElement('li')
         title = document.createElement('a')
         title.innerHTML = item.title
         li.appendChild(title)
-        for(let i = 0 ; i < AVAILABLE_TIMESTEPS.length ; i++) {
+        for (let i = 0; i < AVAILABLE_TIMESTEPS.length; i++) {
           let button = document.createElement('button')
-          if (i > 2){
-            button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 3600000) + "h"
+          if (i > 2) {
+            button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 3600000) + 'h'
           } else {
-            button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 60000) + "min"
+            button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 60000) + 'min'
           }
           button.classList.add('fmi-metoclient-timeslider-timestep-button')
-          if (item.resolutionTime == AVAILABLE_TIMESTEPS[i]) {
+          if (item.resolutionTime === AVAILABLE_TIMESTEPS[i]) {
             button.classList.add('fmi-metoclient-timeslider-timestep-active-button')
           }
           button.addEventListener('click', item.callback)
           li.appendChild(button)
         }
         ul.appendChild(li)
-      } else{
-        console.log("Unsupported")
+      } else {
+        console.log('Unsupported')
       }
     })
   }
@@ -227,4 +226,4 @@ export const createTimeMenu = (options) => {
  */
 export const transformCoordinates = (fromProjection, toProjection, coordinates) => {
   return proj4(fromProjection, toProjection, coordinates)
-};
+}

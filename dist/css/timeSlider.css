@@ -306,12 +306,15 @@ button.fmi-metoclient-timeslider-timestep-active-button {
 
 #beginForm input[type=range]::-ms-track, #endForm input[type=range]::-ms-track {
   width: 480px;
-  height: 4px;
+  height: 6px;
   cursor: pointer;
   background: transparent;
   border-color: transparent;
   border-width: 16px 0;
   color: transparent;
+  margin-left: 10px;
+  margin-top: -16px;
+  margin-bottom: -15px;
 }
 #beginForm input[type=range]::-ms-fill-lower, #endForm input[type=range]::-ms-fill-lower {
   background: #000000;
@@ -359,10 +362,15 @@ button.fmi-metoclient-timeslider-timestep-active-button {
   position: absolute;
   right: 15px;
   bottom: -33px;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  margin-bottom: -10px;
   border: 1px solid #000;
   background-color: #fff;
+}
+
+#beginForm input[type=range]::-ms-tooltip, #endForm input[type=range]::-ms-tooltip {
+  display: none;
 }
 
 #beginForm input[type=range]::-webkit-slider-thumb:hover, #endForm input[type=range]::-webkit-slider-thumb:hover {

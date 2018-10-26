@@ -138,7 +138,7 @@ export class MetOClient {
     /**
      * @private
      */
-    this.timeController_ = new TimeController(this.config_['time'], this)
+    this.timeController_ = new TimeController(this.config_['time'])
     /**
      * @private
      */
@@ -202,10 +202,8 @@ export class MetOClient {
       'autoReplay',
       'autoStart',
       'beginTime',
-      'firstDataPointTime',
       'defaultAnimationTime',
       'endTime',
-      'lastDataPointTime',
       'endTimeDelay',
       'timeLimitsForced',
       'frameRate',
@@ -213,11 +211,16 @@ export class MetOClient {
       'gridTimeOffset',
       'refreshInterval',
       'resolutionTime',
-      'modifiedResolutionTime',
       'waitUntilLoaded'
     ]
     let timeView = [
+      'beginTime',
+      'endTime',
+      'firstDataPointTime',
+      'lastDataPointTime',
       'locale',
+      'modifiedResolutionTime',
+      'resolutionTime',
       'showTimeSlider',
       'showTimeSliderMenu',
       'timeSliderContainer',

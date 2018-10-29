@@ -583,18 +583,21 @@ export default class TimeSlider {
       clientRect = textWrapper.getBoundingClientRect()
 
       // Prevent text overlapping, favor full hours
-      if ((self.previousTickTextRight_ < clientRect.left ||
-          self.previousTickTextLeft_ > clientRect.right ||
-          self.previousTickTextBottom_ < clientRect.top ||
-          self.previousTickTextTop_ > clientRect.bottom) &&
-          ((framesContainer.length === 0) || (framesContainer.left <= clientRect.left &&
+      if ((framesContainer.length === 0) || (framesContainer.left <= clientRect.left &&
           framesContainer.right >= clientRect.right &&
           framesContainer.top <= clientRect.top &&
-          framesContainer.bottom >= clientRect.bottom))) {
-        createTick(frame, index, clientRect, frame['endTime'])
-      } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (((frames[self.previousTickIndex_] != null) && (((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) {
-        clearFrame(frames[self.previousTickIndex_])
-        createTick(frame, index, clientRect, frame['endTime'])
+          framesContainer.bottom >= clientRect.bottom)) {
+        if (self.previousTickTextRight_ < clientRect.left ||
+          self.previousTickTextLeft_ > clientRect.right ||
+          self.previousTickTextBottom_ < clientRect.top ||
+          self.previousTickTextTop_ > clientRect.bottom) {
+          createTick(frame, index, clientRect, frame['endTime'])
+        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (((frames[self.previousTickIndex_] != null) && (((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) {
+          clearFrame(frames[self.previousTickIndex_])
+          createTick(frame, index, clientRect, frame['endTime'])
+        } else {
+          frame.element.removeChild(textWrapper)
+        }
       } else {
         frame.element.removeChild(textWrapper)
       }

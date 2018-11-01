@@ -169,8 +169,6 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
         }
       }
     }
-    mapLayers = layers.filter(layer => layer['type'] === this.layerTypes['map'])
-    this.set('mapLayers', mapLayers)
     this.set('layers', layers)
   }
   if (currentTime != null) {
@@ -204,6 +202,8 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   this.updateStorage()
   this.parameterizeLayers(capabilities)
   this.initMap()
+  mapLayers = layers.filter(layer => layer['type'] === this.layerTypes['map'])
+  this.set('mapLayers', mapLayers)
 }
 
 /**

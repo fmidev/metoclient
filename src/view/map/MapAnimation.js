@@ -981,7 +981,6 @@ MapAnimation.prototype.initStaticInteractions = function (interactionOptions) {
   interactionOptions['pinchRotate'] = false
   interactionOptions['pinchZoom'] = false
   interactionOptions['altShiftDragRotate'] = false
-  document.getElementById(config['mapContainer']).style.pointerEvents = 'none'
 }
 
 /**

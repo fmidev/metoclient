@@ -57,6 +57,7 @@ export default class MapAnimation {
     this.set('map', null)
     this.set('layers', [])
     this.set('mapLayers', [])
+    this.set('surfaceLayers', [])
     this.set('overlayTitles', [])
     this.set('extent', [0, 0, 0, 0])
     this.set('extentByZoomLevel', null)
@@ -90,7 +91,8 @@ export default class MapAnimation {
       'overlay': 'overlay',
       'observation': 'obs',
       'forecast': 'for',
-      'features': 'features'
+      'features': 'features',
+      'surface': 'surface'
     }
     /** @const */
     this.updateRequestResolution = 50
@@ -129,6 +131,7 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   let numCurrentLayers
   let currentSource
   let mapLayers
+  let surfaceLayers
   let i
   let j
   let k
@@ -204,6 +207,8 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   this.initMap()
   mapLayers = layers.filter(layer => layer['type'] === this.layerTypes['map'])
   this.set('mapLayers', mapLayers)
+  surfaceLayers = layers.filter(layer => layer['type'] === this.layerTypes['surface'])
+  this.set('surfaceLayers', surfaceLayers)
 }
 
 /**
@@ -739,11 +744,13 @@ MapAnimation.prototype.parameterizeLayers = function (capabilities) {
     // capabilities information should be available but it is not
     if (template['type'] == null) {
       template['type'] = ''
-    } else if ([this.layerTypes['map'], this.layerTypes['overlay'], this.layerTypes['features']].includes(template['type'])) {
+    } else if ([this.layerTypes['map'], this.layerTypes['overlay'], this.layerTypes['features'], this.layerTypes['surface']].includes(template['type'])) {
       continue
     }
     if ((template['className'] != null) && (template['className'].toLowerCase() === 'vector')) {
-      template['type'] = this.layerTypes['features']
+      if (template['type'] == null) {
+        template['type'] = this.layerTypes['features']
+      }
       continue
     }
     if (template['animation'] == null) {
@@ -1035,7 +1042,10 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
   for (i = 0; i < numLayers; i++) {
     layer = layers.item(i)
     currentVisibility = layerVisibility[layer.get('title')]
-    if ((currentVisibility !== undefined) ? currentVisibility : layer.get('visible')) {
+    if (currentVisibility == null) {
+      return true
+    }
+    if (currentVisibility) {
       numSubLayers = 0
       if (typeof layer.getLayers === 'function') {
         subLayers = layer.getLayers()
@@ -2321,26 +2331,27 @@ MapAnimation.prototype.getSelectedFeature = function () {
 
 /**
  * Checks if reload of base map layers is needed.
+ * @param {string} type Layer type.
  * @returns {boolean} Base map reload needed.
  */
-MapAnimation.prototype.mapReloadNeeded = function () {
+MapAnimation.prototype.staticReloadNeeded = function (type) {
   let i
   let j
-  let mapLayers = this.get('mapLayers')
+  let staticLayers = this.get(type + 'Layers')
   let layers = this.get('layers')
-  if ((mapLayers == null) || (layers == null)) {
+  if ((staticLayers == null) || (layers == null)) {
     return true
   }
-  let filteredLayers = layers.filter(layer => layer['type'] === this.layerTypes['map'])
-  let numMapLayers = mapLayers.length
-  if (numMapLayers !== filteredLayers.length) {
+  let filteredLayers = layers.filter(layer => layer['type'] === this.layerTypes[type])
+  let numStaticLayers = staticLayers.length
+  if (numStaticLayers !== filteredLayers.length) {
     return true
   }
-  loopMapLayers:
-  for (i = 0; i < numMapLayers; i++) {
-    for (j = 0; j < numMapLayers; j++) {
-      if (shallowEqual(mapLayers[i], filteredLayers[j])) {
-        continue loopMapLayers
+  loopStaticLayers:
+  for (i = 0; i < numStaticLayers; i++) {
+    for (j = 0; j < numStaticLayers; j++) {
+      if (shallowEqual(staticLayers[i], filteredLayers[j])) {
+        continue loopStaticLayers
       }
     }
     return true

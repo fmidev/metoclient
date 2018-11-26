@@ -33,7 +33,7 @@ export default class Map {
           this.layers_[i]['animation']['originalEndTime'] = this.layers_[i]['animation']['endTime']
         }
       }
-      if (this.layers_[i]['className'].toLowerCase() === 'vector') {
+      if ((this.layers_[i]['className'].toLowerCase() === 'vector') && (this.layers_[i]['type'] == null)) {
         this.layers_[i]['type'] = 'features'
       }
     }
@@ -55,7 +55,7 @@ export default class Map {
   static produceFullLayerConfig (layer) {
     if (((layer['type'] === 'obs') || (layer['type'] === 'for')) && (layer['animation'] == null)) {
       layer['animation'] = {}
-    } else if (layer['className'].toLowerCase() === 'vector') {
+    } else if ((layer['className'].toLowerCase() === 'vector') && (layer['type'] == null)) {
       layer['type'] = 'features'
     }
     return layer
@@ -80,7 +80,10 @@ export default class Map {
   updateLayers (layers) {
     let layerKeys = Object.keys(layers)
     layerKeys.forEach(layerKey => {
-      this.layers_[layerKey] = Map.produceFullLayerConfig(layers[layerKey])
+      this.layers_ = this.layers_.filter(layer => layer.title !== layerKey)
+    })
+    layerKeys.forEach(layerKey => {
+      this.layers_.push(Map.produceFullLayerConfig(layers[layerKey]))
     })
   }
 

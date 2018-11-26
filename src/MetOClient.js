@@ -111,20 +111,21 @@ export class MetOClient {
     // Localization
     if (this.config_['localization']['locale'] != null) {
       locale = this.config_['localization']['locale']
-      this.config_['map']['view']['overlayGroupName'] = this.config_['localization'][locale]['overlays']
-      this.config_['map']['view']['staticOverlayGroupName'] = this.config_['localization'][locale]['staticOverlays']
       this.config_['map']['view']['baseGroupName'] = this.config_['localization'][locale]['baseLayers']
       this.config_['map']['view']['featureGroupName'] = this.config_['localization'][locale]['features']
-      this.config_['map']['view']['opacityTitle'] = this.config_['localization'][locale]['opacity']
+      this.config_['map']['view']['layersTooltip'] = this.config_['localization'][locale]['layersTooltip']
       this.config_['map']['view']['legendTitle'] = this.config_['localization'][locale]['legend']
       this.config_['map']['view']['noLegendText'] = this.config_['localization'][locale]['noLegend']
+      this.config_['map']['view']['opacityTitle'] = this.config_['localization'][locale]['opacity']
+      this.config_['map']['view']['overlayGroupName'] = this.config_['localization'][locale]['overlays']
+      this.config_['map']['view']['staticOverlayGroupName'] = this.config_['localization'][locale]['staticOverlays']
+      this.config_['map']['view']['surfaceGroupName'] = this.config_['localization'][locale]['surface']
       this.config_['map']['view']['zoomInTooltip'] = this.config_['localization'][locale]['zoomInTooltip']
       this.config_['map']['view']['zoomOutTooltip'] = this.config_['localization'][locale]['zoomOutTooltip']
-      this.config_['map']['view']['layersTooltip'] = this.config_['localization'][locale]['layersTooltip']
       this.config_['time']['view']['beginTimeText'] = this.config_['localization'][locale]['beginTimeText']
       this.config_['time']['view']['endTimeText'] = this.config_['localization'][locale]['endTimeText']
-      this.config_['time']['view']['timeStepText'] = this.config_['localization'][locale]['timeStepText']
       this.config_['time']['view']['locale'] = this.config_['localization']['locale']
+      this.config_['time']['view']['timeStepText'] = this.config_['localization'][locale]['timeStepText']
     }
 
     localforage.config({
@@ -196,6 +197,7 @@ export class MetOClient {
       'showMarker',
       'staticControls',
       'staticOverlayGroupName',
+      'surfaceGroupName',
       'tooltipOffset'
     ]
     let timeModel = [
@@ -374,6 +376,7 @@ export class MetOClient {
           'showMarker': false,
           'staticControls': false,
           'staticOverlayGroupName': 'Static overlays',
+          'surfaceGroupName': 'Surface',
           'tooltipOffset': [20, 0]
         }
       },
@@ -405,7 +408,9 @@ export class MetOClient {
         'locale': 'en',
         'fi': {
           'baseLayers': 'Taustakartat',
+          'beginTimeText': 'Aloitusaika',
           'browserNotSupported': 'Tämä selain ei ole tuettu.',
+          'endTimeText': 'Lopetusaika',
           'features': 'Kohteet',
           'layersTooltip': 'Karttatasot',
           'legend': 'Selite',
@@ -413,15 +418,16 @@ export class MetOClient {
           'opacity': 'Peittokyky',
           'overlays': 'Sääaineistot',
           'staticOverlays': 'Merkinnät',
+          'surface': 'Pintakartta',
+          'timeStepText': 'Aika-askeleet',
           'zoomInTooltip': 'Lähennä',
-          'zoomOutTooltip': 'Loitonna',
-          'beginTimeText': 'Aloitusaika',
-          'endTimeText': 'Lopetusaika',
-          'timeStepText': 'Aika-askeleet'
+          'zoomOutTooltip': 'Loitonna'
         },
         'sv': {
           'baseLayers': 'Bakgrundskartor',
+          'beginTimeText': 'Starttid',
           'browserNotSupported': 'Webbläsaren stöds inte.',
+          'endTimeText': 'Sluttid',
           'features': 'Objekter',
           'layersTooltip': 'Nivåer',
           'legend': 'Legend',
@@ -429,15 +435,16 @@ export class MetOClient {
           'opacity': 'Opacitet',
           'overlays': 'Väder data',
           'staticOverlays': 'Statisk data',
+          'surface': 'Yta',
+          'timeStepText': 'Tidssteg',
           'zoomInTooltip': 'Zooma in',
-          'zoomOutTooltip': 'Zooma ut',
-          'beginTimeText': 'Starttid',
-          'endTimeText': 'Sluttid',
-          'timeStepText': 'Tidssteg'
+          'zoomOutTooltip': 'Zooma ut'
         },
         'en': {
           'baseLayers': 'Base layers',
+          'beginTimeText': 'Begin time',
           'browserNotSupported': 'This browser is not supported.',
+          'endTimeText': 'End time',
           'features': 'Features',
           'layersTooltip': 'Layers',
           'legend': 'Legend',
@@ -445,11 +452,10 @@ export class MetOClient {
           'opacity': 'Opacity',
           'overlays': 'Overlays',
           'staticOverlays': 'Static overlays',
+          'surface': 'Surface map',
+          'timeStepText': 'Timesteps',
           'zoomInTooltip': 'Zoom in',
-          'zoomOutTooltip': 'Zoom out',
-          'beginTimeText': 'Begin time',
-          'endTimeText': 'End time',
-          'timeStepText': 'Timesteps'
+          'zoomOutTooltip': 'Zoom out'
         }
       },
       'disableTouch': false

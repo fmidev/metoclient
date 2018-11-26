@@ -82,8 +82,14 @@ FullAnimationLoader.prototype.initMap = function () {
         case config['featureGroupName']:
           layerType = this.layerTypes['features']
           break
+        case config['surfaceGroupName']:
+          if (!this.staticReloadNeeded('surface')) {
+            continue
+          }
+          layerType = this.layerTypes['surface']
+          break
         case config['baseGroupName']:
-          if (!this.mapReloadNeeded()) {
+          if (!this.staticReloadNeeded('map')) {
             continue
           }
           layerType = this.layerTypes['map']
@@ -189,6 +195,11 @@ FullAnimationLoader.prototype.initMap = function () {
         'nested': true,
         'title': config['featureGroupName'],
         'layers': self.loadStaticLayers(layerVisibility, this.layerTypes['features'])
+      }),
+      new OlLayerGroup({
+        'nested': true,
+        'title': config['surfaceGroupName'],
+        'layers': self.loadStaticLayers(layerVisibility, this.layerTypes['surface'])
       }),
       new OlLayerGroup({
         'nested': true,

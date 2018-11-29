@@ -1,6 +1,6 @@
 import localforage from 'localforage'
 
-const CACHE_TIME = 10 * 60 * 1000
+const DEFAULT_CACHE_TIME = 10 * 60 * 1000
 
 /**
  * Defines custom load function for layer tile and image loading.
@@ -8,13 +8,14 @@ const CACHE_TIME = 10 * 60 * 1000
  * @param src Layer data source.
  */
 export function loadFunction (image, src) {
+  let self = this
   localforage.getItem(src, (err, cachedData) => {
     if ((err != null) || (cachedData == null) || (cachedData.dataUrl == null) || (cachedData.expires <= Date.now())) {
       urlToDataUrl(src, function (dataUrl) {
         image.getImage().src = dataUrl
         localforage.setItem(src, {
           dataUrl: dataUrl,
-          expires: Date.now() + CACHE_TIME
+          expires: Date.now() + ((self.cacheTime != null) ? self.cacheTime : DEFAULT_CACHE_TIME)
         })
       })
     } else {
@@ -28,10 +29,10 @@ export function loadFunction (image, src) {
  * @param url Source data URL.
  * @param callback Callback to be run after a new data URL is created.
  */
-function urlToDataUrl(url, callback) {
-  var xhr = new XMLHttpRequest()
+function urlToDataUrl (url, callback) {
+  let xhr = new XMLHttpRequest()
   xhr.onload = function () {
-    var reader = new FileReader()
+    let reader = new FileReader()
     reader.onloadend = function () {
       callback(reader.result)
     }

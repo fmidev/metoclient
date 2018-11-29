@@ -23,10 +23,12 @@ export default class MapProducer {
    * Creates a new layer source object.
    * @param {string} type Source type.
    * @param options Source options.
+   * @param cacheTime Layer cache time.
    * @param projection {string} Projection.
    * @returns {Array} Source.
    */
-  sourceFactory (type, options, projection, beginTime, endTime) {
+  sourceFactory (type, options, cacheTime, projection, beginTime, endTime) {
+    this.cacheTime = cacheTime
     if (options == null) {
       options = {}
     }
@@ -36,21 +38,21 @@ export default class MapProducer {
     let typeLwr = type.toLowerCase()
     switch (typeLwr) {
       case 'tilewms':
-        options['tileLoadFunction'] = loadFunction
+        options['tileLoadFunction'] = loadFunction.bind(this)
         return new TileWMS(options)
       case 'imagewms':
-        options['imageLoadFunction'] = loadFunction
+        options['imageLoadFunction'] = loadFunction.bind(this)
         return new ImageWMS(options)
       case 'wmts':
-        options['tileLoadFunction'] = loadFunction
+        options['tileLoadFunction'] = loadFunction.bind(this)
         return new WMTS(options)
       case 'vector':
         return new Vector(options, projection, beginTime, endTime)
       case 'stamen':
-        options['tileLoadFunction'] = loadFunction
+        options['tileLoadFunction'] = loadFunction.bind(this)
         return new Stamen(options)
       case 'osm':
-        options['tileLoadFunction'] = loadFunction
+        options['tileLoadFunction'] = loadFunction.bind(this)
         return new OSM(options)
     }
   }
@@ -58,11 +60,12 @@ export default class MapProducer {
   /**
    * Creates a new layer.
    * @param options Layer options.
+   * @param cacheTime Layer cache time.
    * @param {Array} extent Extent of layer to be loaded.
    * @param projection {string} Projection.
    * @returns {Array} Layer.
    */
-  layerFactory (options, extent, projection, beginTime, endTime) {
+  layerFactory (options, cacheTime, extent, projection, beginTime, endTime) {
     let style
     let extraStyles = {
       'styleHover': {
@@ -98,7 +101,7 @@ export default class MapProducer {
         layerBeginTime = undefined
         layerEndTime = undefined
       }
-      source = this.sourceFactory(typeLwr, options[sourceKey], projection, layerBeginTime, layerEndTime)
+      source = this.sourceFactory(typeLwr, options[sourceKey], cacheTime, projection, layerBeginTime, layerEndTime)
     } else {
       source = options[sourceKey]
     }

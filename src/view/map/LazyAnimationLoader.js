@@ -359,17 +359,17 @@ LazyAnimationLoader.prototype.initListeners = function () {
 
   this.on('updateLoadQueue', e => {
     let animationGroups
-    let config
-    let maxAsyncLoadCount
     let asyncLoadItem
-    let prop
-    let layer
     let className
-    let sourceOptions
-    let source
-    let sourceProperties
-    let sourceOn
+    let config
+    let layer
     let mapProducer = new MapProducer()
+    let maxAsyncLoadCount
+    let prop
+    let source
+    let sourceOn
+    let sourceOptions
+    let sourceProperties
     const loadId = self.loadId
     if ((self.asyncLoadQueue[loadId] == null) || (self.asyncLoadQueue[loadId].length === 0)) {
       return
@@ -395,7 +395,7 @@ LazyAnimationLoader.prototype.initListeners = function () {
       if (sourceOptions == null) {
         sourceOptions = {}
       }
-      source = mapProducer.sourceFactory(className, sourceOptions)
+      source = mapProducer.sourceFactory(className, sourceOptions, config['cacheTime'])
       sourceProperties = layer.get('sourceProperties')
       if (typeof sourceProperties !== 'undefined') {
         for (prop in sourceProperties) {

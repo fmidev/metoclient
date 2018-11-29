@@ -170,6 +170,7 @@ export class MetOClient {
     let mapView = [
       'asyncLoadDelay',
       'baseGroupName',
+      'cacheTime',
       'container',
       'defaultCenterLocation',
       'defaultCenterProjection',
@@ -347,6 +348,7 @@ export class MetOClient {
         'view': {
           'asyncLoadDelay': 10,
           'baseGroupName': 'Base layers',
+          'cacheTime': 10 * 60 * 1000,
           'container': 'fmi-metoclient',
           'defaultCenterLocation': [389042, 6673664],
           'defaultCenterProjection': 'EPSG:3067',

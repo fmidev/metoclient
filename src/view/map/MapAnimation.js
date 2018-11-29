@@ -1169,12 +1169,13 @@ MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
  */
 MapAnimation.prototype.createLayer = function (options) {
   const extent = this.calculateExtent(false)
+  let config = this.get('config')
   let template
   let mapProducer = new MapProducer()
   let projection = /** @type {ol.proj.Projection|string} */ (this.get('viewProjection'))
   // Features may be too slow to extend
   template = ((options['source'] == null) || (options['source']['features'] == null)) ? options : extend(true, {}, options)
-  return mapProducer.layerFactory(template, extent, projection, this.get('animationBeginTime'), this.get('animationEndTime'))
+  return mapProducer.layerFactory(template, config['cacheTime'], extent, projection, this.get('animationBeginTime'), this.get('animationEndTime'))
 }
 
 /**

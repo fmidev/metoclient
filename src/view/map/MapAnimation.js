@@ -1794,23 +1794,33 @@ MapAnimation.prototype.getMap = function () {
 MapAnimation.prototype.getFeatures = function (layerTitle) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
+  const surfaceGroupName = config['surfaceGroupName']
   const map = this.get('map')
+  let featureLayers
+  let surfaceLayers
+  let vectorLayers
   let layers
   let layer
   let numLayers
   let i
+  let j
   if (map == null) {
     return []
   }
-  layers = this.getLayersByGroup(featureGroupName)
-  numLayers = layers.getLength()
-  for (i = 0; i < numLayers; i++) {
-    layer = layers.item(i)
-    if (!layer.get('visible')) {
-      continue
-    }
-    if (layer.get('title') === layerTitle) {
-      return layer.getSource().getFeatures()
+  featureLayers = this.getLayersByGroup(featureGroupName)
+  surfaceLayers = this.getLayersByGroup(surfaceGroupName)
+  vectorLayers = [featureLayers, surfaceLayers]
+  for (i = 0; i < 2; i++) {
+    layers = vectorLayers[i]
+    numLayers = layers.getLength()
+    for (j = 0; j < numLayers; j++) {
+      layer = layers.item(j)
+      if (!layer.get('visible')) {
+        continue
+      }
+      if (layer.get('title') === layerTitle) {
+        return layer.getSource().getFeatures()
+      }
     }
   }
   return []
@@ -1825,8 +1835,12 @@ MapAnimation.prototype.getFeatures = function (layerTitle) {
  */
 MapAnimation.prototype.getFeaturesAt = function (layerTitle, coordinate, tolerance) {
   const config = this.get('config')
-  const baseGroupName = config['featureGroupName']
+  const featureGroupName = config['featureGroupName']
+  const surfaceGroupName = config['surfaceGroupName']
   const map = this.get('map')
+  let featureLayers
+  let surfaceLayers
+  let vectorLayers
   let layers
   let layer
   let numLayers
@@ -1838,39 +1852,45 @@ MapAnimation.prototype.getFeaturesAt = function (layerTitle, coordinate, toleran
   let featuresAtCoordinate = []
   const clickedPixel = map.getPixelFromCoordinate(coordinate)
   let featurePixel
+  let i
   let j
   let k
   let l
-  layers = this.getLayersByGroup(baseGroupName)
-  numLayers = layers.getLength()
-  for (j = 0; j < numLayers; j++) {
-    layer = layers.item(j)
-    if (!layer.get('visible')) {
-      continue
-    }
-    if (layer.get('title') === layerTitle) {
-      source = layer.getSource()
-      featuresAtCoordinate = source.getFeaturesAtCoordinate(coordinate)
-      numFeaturesAtCoordinate = featuresAtCoordinate.length
-      // Point features
-      features = source.getFeatures()
-      numFeatures = features.length
-      loopFeatures:
-        for (k = 0; k < numFeatures; k++) {
-          for (l = 0; l < numFeaturesAtCoordinate; l++) {
-            if (featuresAtCoordinate[l].getId() === features[k].getId()) {
-              continue loopFeatures
+  featureLayers = this.getLayersByGroup(featureGroupName)
+  surfaceLayers = this.getLayersByGroup(surfaceGroupName)
+  vectorLayers = [featureLayers, surfaceLayers]
+  for (i = 0; i < 2; i++) {
+    layers = vectorLayers[i]
+    numLayers = layers.getLength()
+    for (j = 0; j < numLayers; j++) {
+      layer = layers.item(j)
+      if (!layer.get('visible')) {
+        continue
+      }
+      if (layer.get('title') === layerTitle) {
+        source = layer.getSource()
+        featuresAtCoordinate = source.getFeaturesAtCoordinate(coordinate)
+        numFeaturesAtCoordinate = featuresAtCoordinate.length
+        // Point features
+        features = source.getFeatures()
+        numFeatures = features.length
+        loopFeatures:
+          for (k = 0; k < numFeatures; k++) {
+            for (l = 0; l < numFeaturesAtCoordinate; l++) {
+              if (featuresAtCoordinate[l].getId() === features[k].getId()) {
+                continue loopFeatures
+              }
+            }
+            geometry = features[k].getGeometry()
+            if (geometry.getType() === 'Point') { // Todo: MultiPoint
+              featurePixel = map.getPixelFromCoordinate(geometry.getCoordinates())
+              if (Math.sqrt((featurePixel[0] - clickedPixel[0]) ** 2 + (featurePixel[1] - clickedPixel[1]) ** 2) <= tolerance) {
+                featuresAtCoordinate.push(features[k])
+              }
             }
           }
-          geometry = features[k].getGeometry()
-          if (geometry.getType() === 'Point') { // Todo: MultiPoint
-            featurePixel = map.getPixelFromCoordinate(geometry.getCoordinates())
-            if (Math.sqrt((featurePixel[0] - clickedPixel[0]) ** 2 + (featurePixel[1] - clickedPixel[1]) ** 2) <= tolerance) {
-              featuresAtCoordinate.push(features[k])
-            }
-          }
-        }
-      return featuresAtCoordinate
+        return featuresAtCoordinate
+      }
     }
   }
   return []

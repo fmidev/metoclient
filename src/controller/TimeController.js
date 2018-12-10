@@ -532,4 +532,14 @@ export default class TimeController {
   resetAnimationBackupTime () {
     this.model_.resetAnimationBackupTime()
   }
+
+  /**
+   * Sets callback functions.
+   * @param callbacks {Object} Callback functions.
+   */
+  setCallbacks (callbacks) {
+    this.views_.forEach(view => {
+      view.setCallbacks(callbacks)
+    })
+  }
 }

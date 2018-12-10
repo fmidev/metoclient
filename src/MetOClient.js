@@ -78,8 +78,6 @@ export class MetOClient {
     this.animationTimeListener_ = animationTime => {
     }
 
-    this.refreshCallback_ = null
-
     // Configuration from default values
     extend(true, newConfig, this.getDefaultConfig())
     // Configuration from newConfiguration files
@@ -144,6 +142,10 @@ export class MetOClient {
      * @private
      */
     this.mapController_ = new MapController(this.config_['map'], this.timeController_.getCreationTime())
+    /**
+     * @private
+     */
+    this.callbacks_ = {}
   }
 
   /**
@@ -617,11 +619,11 @@ export class MetOClient {
     if (options['animationTime'] != null) {
       this.timeController_.setAnimationTime(options['animationTime'])
     }
-    if ((callbacks != null) && (callbacks['refreshed'] != null)) {
-      this.refreshCallback_ = callbacks['refreshed']
+    if (callbacks != null) {
+      this.callbacks_ = callbacks
     }
-    if (typeof callbacks === 'undefined') {
-      callbacks = null
+    if (callbacks === null) {
+      callbacks = {}
     }
     this.refresh(callbacks)
   }
@@ -899,9 +901,6 @@ export class MetOClient {
     let currentAnimationTime = this.timeController_.getAnimationTime()
     let userReadyCallback
     if (callbacks != null) {
-      if (callbacks['refreshed'] != null) {
-        this.refreshCallback_ = callbacks['refreshed']
-      }
       if (callbacks['ready'] != null) {
         userReadyCallback = callbacks['ready'].bind()
         callbacks['ready'] = () => {
@@ -911,8 +910,13 @@ export class MetOClient {
           }
         }
       }
+      this.callbacks_ = callbacks
     }
-    this.mapController_.setCallbacks(callbacks)
+    if (callbacks === null) {
+      this.callbacks_ = {}
+    }
+    this.mapController_.setCallbacks(this.callbacks_)
+    this.timeController_.setCallbacks(this.callbacks_)
   }
 
   /**
@@ -961,9 +965,9 @@ export class MetOClient {
     }
     this.timeController_.actionEvents.addListener('play', this.playListener_)
     this.refreshListener_ = () => {
-      self.refresh()
-      if (typeof this.refreshCallback_ === 'function') {
-        this.refreshCallback_()
+      self.refresh(this.callbacks_)
+      if (typeof this.callbacks_['refreshed'] === 'function') {
+        this.callbacks_['refreshed']()
       }
     }
     this.timeController_.actionEvents.addListener('refresh', this.refreshListener_)
@@ -978,9 +982,7 @@ export class MetOClient {
     if (callbacks == null) {
       callbacks = {}
     }
-    if (callbacks['refreshed'] != null) {
-      this.refreshCallback_ = callbacks['refreshed']
-    }
+    this.callbacks_ = callbacks
     this.createTime(callbacks)
     this.createMap(callbacks)
     return this

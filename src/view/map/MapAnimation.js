@@ -1211,6 +1211,8 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   let i
   let animation
   let source
+  let selectedFeature
+  let selectedFeatureId
   let timePropertyName
   let animationUpdatedTime = -1
   let animationTime
@@ -1222,7 +1224,20 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   for (i = 0; i < numLayers; i++) {
     if (layers[i]['type'] === layerType) {
       // Features may be too slow to extend
-      template = (layers[i]['features'] != null) ? layers[i] : extend(true, {}, layers[i])
+      if ((layers[i]['source'] != null) && (layers[i]['source']['features'] != null)) {
+        template = layers[i]
+        selectedFeature = this.getSelectedFeature()
+        if (selectedFeature != null) {
+          selectedFeatureId = selectedFeature.get('id')
+          if (selectedFeatureId != null) {
+            template['source']['features'].forEach(feature => {
+              feature['selected'] = (feature['id'] === selectedFeature.get('id'))
+            })
+          }
+        }
+      } else {
+        template = extend(true, {}, layers[i])
+      }
       if (layerVisibility[template['title']] != null) {
         template['visible'] = layerVisibility[template['title']]
       }

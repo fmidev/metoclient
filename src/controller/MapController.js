@@ -50,8 +50,9 @@ export default class MapController {
    * @param {number=} animationResolutionTime Animation resolution time.
    * @param {number=} animationNumIntervals Number of animation time intervals.
    * @param {Object=} callbacks Callback functions for map events.
+   * @param {boolean=} useConfig Use layer configuration values.
    */
-  createMap (currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks) {
+  createMap (currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks, useConfig = false) {
     const self = this
     const capabilities = {}
     let layers
@@ -75,7 +76,7 @@ export default class MapController {
     Promise
       .all(promises.map(p => p.catch(e => e)))
       .then(values => {
-        self.view_.createAnimation(layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks)
+        self.view_.createAnimation(layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks, useConfig)
       })
       .catch(e => console.log(e))
     };

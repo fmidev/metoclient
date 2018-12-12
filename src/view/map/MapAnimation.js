@@ -115,8 +115,9 @@ Ol.inherits(MapAnimation, OlObject)
  * @param {number=} animationResolutionTime Animation end time.
  * @param {number=} animationNumIntervals Number of animation intervals.
  * @param {Object=} animationCallbacks Callback functions for map events.
+ * @param {boolean=} useConfig Use layer configuration values.
  */
-MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, animationCallbacks) {
+MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, animationCallbacks, useConfig = false) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
   let isFeatureGroup
@@ -132,6 +133,7 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   let currentSource
   let mapLayers
   let surfaceLayers
+  let layerVisibility
   let i
   let j
   let k
@@ -139,6 +141,7 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   if (layers != null) {
     numLayers = layers.length
     if (map != null) {
+      layerVisibility = map.get('layerVisibility')
       layerGroups = map.getLayers()
       numLayerGroups = layerGroups.getLength()
       for (i = 0; i < numLayerGroups; i++) {
@@ -158,8 +161,12 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
           for (k = 0; k < numLayers; k++) {
             layer = layers[k]
             if (layer['title'] === currentLayerTitle) {
-              layer['visible'] = currentLayer.getVisible()
-              layer['opacity'] = currentLayer.getOpacity()
+              if (useConfig) {
+                layerVisibility[currentLayerTitle] = layer['visible']
+              } else {
+                layer['visible'] = currentLayer.getVisible()
+                layer['opacity'] = currentLayer.getOpacity()
+              }
               if (isFeatureGroup) {
                 currentSource = currentLayer.getSource()
                 if (currentSource != null) {

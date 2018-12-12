@@ -1019,22 +1019,24 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
           mapLayersPrev = [mapLayerPrev, mapLayerPrevClone]
           sourcesPrev = mapLayersPrev.map(mapLayer => mapLayer.getSource())
           animationTimeRangePrev.forEach((animationTimeLimit, index, animationTimeLimits) => {
-            layerTimesPrev = sourcesPrev.map(sourcePrev => sourcePrev.get('layerTime'))
+            layerTimesPrev = sourcesPrev.map(sourcePrev => (sourcePrev == null) ? null : sourcePrev.get('layerTime'))
             if (!layerTimesPrev.includes(animationTimeLimit)) {
               animationTimeFormattedPrev = new Date(animationTimeLimit).toISOString()
               layerTimesPrevIndex = (layerTimesPrev[0] !== animationTimeLimits[(index + 1) % 2]) ? 0 : 1
-              sourcesPrev[layerTimesPrevIndex].set('layerTime', animationTimeLimit)
-              sourcesPrev[layerTimesPrevIndex].set('tilesLoaded', 0)
-              sourcesPrev[layerTimesPrevIndex].set('tilesLoading', 0)
-              sourcesPrev[layerTimesPrevIndex].set('hideLoading', false)
-              if (mapLayersPrev[layerTimesPrevIndex].get('className') === 'WMTS') {
-                sourcesPrev[layerTimesPrevIndex].set('timeFormatted', animationTimeFormattedPrev)
-              } else {
-                sourcesPrev[layerTimesPrevIndex].updateParams({
-                  'TIME': animationTimeFormattedPrev
-                })
+              if (sourcesPrev[layerTimesPrevIndex] != null) {
+                sourcesPrev[layerTimesPrevIndex].set('layerTime', animationTimeLimit)
+                sourcesPrev[layerTimesPrevIndex].set('tilesLoaded', 0)
+                sourcesPrev[layerTimesPrevIndex].set('tilesLoading', 0)
+                sourcesPrev[layerTimesPrevIndex].set('hideLoading', false)
+                if (mapLayersPrev[layerTimesPrevIndex].get('className') === 'WMTS') {
+                  sourcesPrev[layerTimesPrevIndex].set('timeFormatted', animationTimeFormattedPrev)
+                } else {
+                  sourcesPrev[layerTimesPrevIndex].updateParams({
+                    'TIME': animationTimeFormattedPrev
+                  })
+                }
+                sourcesPrev[layerTimesPrevIndex].refresh()
               }
-              sourcesPrev[layerTimesPrevIndex].refresh()
             }
           })
         }

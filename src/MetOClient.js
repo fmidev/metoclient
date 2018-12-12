@@ -300,8 +300,9 @@ export class MetOClient {
   /**
    * Produces a new map model and view.
    * @param {Object=} callbacks Callback functions for map events.
+   * @param {boolean=} useConfig Use layer configuration values.
    */
-  createMap (callbacks) {
+  createMap (callbacks, useConfig = false) {
     let self = this
     let currentAnimationTime = this.timeController_.getAnimationTime()
     let mapCallbacks
@@ -332,7 +333,8 @@ export class MetOClient {
       this.timeController_.getAnimationEndTime(),
       this.timeController_.getAnimationResolutionTime(),
       this.timeController_.getAnimationNumIntervals(),
-      mapCallbacks
+      mapCallbacks,
+      useConfig
     )
   }
 
@@ -625,7 +627,8 @@ export class MetOClient {
     if (callbacks === null) {
       callbacks = {}
     }
-    this.refresh(callbacks)
+    this.timeController_.refreshTime(callbacks)
+    this.createMap(callbacks, true)
   }
 
   /**

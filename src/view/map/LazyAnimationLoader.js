@@ -93,8 +93,14 @@ LazyAnimationLoader.prototype.initMap = function () {
         case config['featureGroupName']:
           layerType = this.layerTypes['features']
           break
+        case config['surfaceGroupName']:
+          if (!this.staticReloadNeeded('surface')) {
+            continue
+          }
+          layerType = this.layerTypes['surface']
+          break
         case config['baseGroupName']:
-          if (!this.mapReloadNeeded()) {
+          if (!this.staticReloadNeeded('map')) {
             continue
           }
           layerType = this.layerTypes['map']
@@ -200,6 +206,11 @@ LazyAnimationLoader.prototype.initMap = function () {
         'nested': true,
         'title': config['featureGroupName'],
         'layers': self.loadStaticLayers(layerVisibility, this.layerTypes['features'])
+      }),
+      new OlLayerGroup({
+        'nested': true,
+        'title': config['surfaceGroupName'],
+        'layers': self.loadStaticLayers(layerVisibility, this.layerTypes['surface'])
       }),
       new OlLayerGroup({
         'nested': true,
@@ -348,17 +359,17 @@ LazyAnimationLoader.prototype.initListeners = function () {
 
   this.on('updateLoadQueue', e => {
     let animationGroups
-    let config
-    let maxAsyncLoadCount
     let asyncLoadItem
-    let prop
-    let layer
     let className
-    let sourceOptions
-    let source
-    let sourceProperties
-    let sourceOn
+    let config
+    let layer
     let mapProducer = new MapProducer()
+    let maxAsyncLoadCount
+    let prop
+    let source
+    let sourceOn
+    let sourceOptions
+    let sourceProperties
     const loadId = self.loadId
     if ((self.asyncLoadQueue[loadId] == null) || (self.asyncLoadQueue[loadId].length === 0)) {
       return
@@ -384,7 +395,7 @@ LazyAnimationLoader.prototype.initListeners = function () {
       if (sourceOptions == null) {
         sourceOptions = {}
       }
-      source = mapProducer.sourceFactory(className, sourceOptions)
+      source = mapProducer.sourceFactory(className, sourceOptions, config['cacheTime'])
       sourceProperties = layer.get('sourceProperties')
       if (typeof sourceProperties !== 'undefined') {
         for (prop in sourceProperties) {
@@ -1008,22 +1019,24 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
           mapLayersPrev = [mapLayerPrev, mapLayerPrevClone]
           sourcesPrev = mapLayersPrev.map(mapLayer => mapLayer.getSource())
           animationTimeRangePrev.forEach((animationTimeLimit, index, animationTimeLimits) => {
-            layerTimesPrev = sourcesPrev.map(sourcePrev => sourcePrev.get('layerTime'))
+            layerTimesPrev = sourcesPrev.map(sourcePrev => (sourcePrev == null) ? null : sourcePrev.get('layerTime'))
             if (!layerTimesPrev.includes(animationTimeLimit)) {
               animationTimeFormattedPrev = new Date(animationTimeLimit).toISOString()
               layerTimesPrevIndex = (layerTimesPrev[0] !== animationTimeLimits[(index + 1) % 2]) ? 0 : 1
-              sourcesPrev[layerTimesPrevIndex].set('layerTime', animationTimeLimit)
-              sourcesPrev[layerTimesPrevIndex].set('tilesLoaded', 0)
-              sourcesPrev[layerTimesPrevIndex].set('tilesLoading', 0)
-              sourcesPrev[layerTimesPrevIndex].set('hideLoading', false)
-              if (mapLayersPrev[layerTimesPrevIndex].get('className') === 'WMTS') {
-                sourcesPrev[layerTimesPrevIndex].set('timeFormatted', animationTimeFormattedPrev)
-              } else {
-                sourcesPrev[layerTimesPrevIndex].updateParams({
-                  'TIME': animationTimeFormattedPrev
-                })
+              if (sourcesPrev[layerTimesPrevIndex] != null) {
+                sourcesPrev[layerTimesPrevIndex].set('layerTime', animationTimeLimit)
+                sourcesPrev[layerTimesPrevIndex].set('tilesLoaded', 0)
+                sourcesPrev[layerTimesPrevIndex].set('tilesLoading', 0)
+                sourcesPrev[layerTimesPrevIndex].set('hideLoading', false)
+                if (mapLayersPrev[layerTimesPrevIndex].get('className') === 'WMTS') {
+                  sourcesPrev[layerTimesPrevIndex].set('timeFormatted', animationTimeFormattedPrev)
+                } else {
+                  sourcesPrev[layerTimesPrevIndex].updateParams({
+                    'TIME': animationTimeFormattedPrev
+                  })
+                }
+                sourcesPrev[layerTimesPrevIndex].refresh()
               }
-              sourcesPrev[layerTimesPrevIndex].refresh()
             }
           })
         }

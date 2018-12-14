@@ -57,6 +57,7 @@ export default class MapAnimation {
     this.set('map', null)
     this.set('layers', [])
     this.set('mapLayers', [])
+    this.set('surfaceLayers', [])
     this.set('overlayTitles', [])
     this.set('extent', [0, 0, 0, 0])
     this.set('extentByZoomLevel', null)
@@ -90,7 +91,8 @@ export default class MapAnimation {
       'overlay': 'overlay',
       'observation': 'obs',
       'forecast': 'for',
-      'features': 'features'
+      'features': 'features',
+      'surface': 'surface'
     }
     /** @const */
     this.updateRequestResolution = 50
@@ -113,8 +115,9 @@ Ol.inherits(MapAnimation, OlObject)
  * @param {number=} animationResolutionTime Animation end time.
  * @param {number=} animationNumIntervals Number of animation intervals.
  * @param {Object=} animationCallbacks Callback functions for map events.
+ * @param {boolean=} useConfig Use layer configuration values.
  */
-MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, animationCallbacks) {
+MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, animationCallbacks, useConfig = false) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
   let isFeatureGroup
@@ -129,6 +132,8 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   let numCurrentLayers
   let currentSource
   let mapLayers
+  let surfaceLayers
+  let layerVisibility
   let i
   let j
   let k
@@ -136,6 +141,7 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   if (layers != null) {
     numLayers = layers.length
     if (map != null) {
+      layerVisibility = map.get('layerVisibility')
       layerGroups = map.getLayers()
       numLayerGroups = layerGroups.getLength()
       for (i = 0; i < numLayerGroups; i++) {
@@ -155,8 +161,12 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
           for (k = 0; k < numLayers; k++) {
             layer = layers[k]
             if (layer['title'] === currentLayerTitle) {
-              layer['visible'] = currentLayer.getVisible()
-              layer['opacity'] = currentLayer.getOpacity()
+              if (useConfig) {
+                layerVisibility[currentLayerTitle] = layer['visible']
+              } else {
+                layer['visible'] = currentLayer.getVisible()
+                layer['opacity'] = currentLayer.getOpacity()
+              }
               if (isFeatureGroup) {
                 currentSource = currentLayer.getSource()
                 if (currentSource != null) {
@@ -204,6 +214,8 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   this.initMap()
   mapLayers = layers.filter(layer => layer['type'] === this.layerTypes['map'])
   this.set('mapLayers', mapLayers)
+  surfaceLayers = layers.filter(layer => layer['type'] === this.layerTypes['surface'])
+  this.set('surfaceLayers', surfaceLayers)
 }
 
 /**
@@ -739,11 +751,13 @@ MapAnimation.prototype.parameterizeLayers = function (capabilities) {
     // capabilities information should be available but it is not
     if (template['type'] == null) {
       template['type'] = ''
-    } else if ([this.layerTypes['map'], this.layerTypes['overlay'], this.layerTypes['features']].includes(template['type'])) {
+    } else if ([this.layerTypes['map'], this.layerTypes['overlay'], this.layerTypes['features'], this.layerTypes['surface']].includes(template['type'])) {
       continue
     }
     if ((template['className'] != null) && (template['className'].toLowerCase() === 'vector')) {
-      template['type'] = this.layerTypes['features']
+      if (template['type'] == null) {
+        template['type'] = this.layerTypes['features']
+      }
       continue
     }
     if (template['animation'] == null) {
@@ -981,7 +995,6 @@ MapAnimation.prototype.initStaticInteractions = function (interactionOptions) {
   interactionOptions['pinchRotate'] = false
   interactionOptions['pinchZoom'] = false
   interactionOptions['altShiftDragRotate'] = false
-  document.getElementById(config['mapContainer']).style.pointerEvents = 'none'
 }
 
 /**
@@ -1035,7 +1048,10 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
   for (i = 0; i < numLayers; i++) {
     layer = layers.item(i)
     currentVisibility = layerVisibility[layer.get('title')]
-    if ((currentVisibility !== undefined) ? currentVisibility : layer.get('visible')) {
+    if (currentVisibility == null) {
+      return true
+    }
+    if (currentVisibility) {
       numSubLayers = 0
       if (typeof layer.getLayers === 'function') {
         subLayers = layer.getLayers()
@@ -1160,12 +1176,13 @@ MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
  */
 MapAnimation.prototype.createLayer = function (options) {
   const extent = this.calculateExtent(false)
+  let config = this.get('config')
   let template
   let mapProducer = new MapProducer()
   let projection = /** @type {ol.proj.Projection|string} */ (this.get('viewProjection'))
   // Features may be too slow to extend
   template = ((options['source'] == null) || (options['source']['features'] == null)) ? options : extend(true, {}, options)
-  return mapProducer.layerFactory(template, extent, projection, this.get('animationBeginTime'), this.get('animationEndTime'))
+  return mapProducer.layerFactory(template, config['cacheTime'], extent, projection, this.get('animationBeginTime'), this.get('animationEndTime'))
 }
 
 /**
@@ -1201,6 +1218,8 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   let i
   let animation
   let source
+  let selectedFeature
+  let selectedFeatureId
   let timePropertyName
   let animationUpdatedTime = -1
   let animationTime
@@ -1212,7 +1231,20 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   for (i = 0; i < numLayers; i++) {
     if (layers[i]['type'] === layerType) {
       // Features may be too slow to extend
-      template = (layers[i]['features'] != null) ? layers[i] : extend(true, {}, layers[i])
+      if ((layers[i]['source'] != null) && (layers[i]['source']['features'] != null)) {
+        template = layers[i]
+        selectedFeature = this.getSelectedFeature()
+        if (selectedFeature != null) {
+          selectedFeatureId = selectedFeature.get('id')
+          if (selectedFeatureId != null) {
+            template['source']['features'].forEach(feature => {
+              feature['selected'] = (feature['id'] === selectedFeature.get('id'))
+            })
+          }
+        }
+      } else {
+        template = extend(true, {}, layers[i])
+      }
       if (layerVisibility[template['title']] != null) {
         template['visible'] = layerVisibility[template['title']]
       }
@@ -1784,23 +1816,33 @@ MapAnimation.prototype.getMap = function () {
 MapAnimation.prototype.getFeatures = function (layerTitle) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
+  const surfaceGroupName = config['surfaceGroupName']
   const map = this.get('map')
+  let featureLayers
+  let surfaceLayers
+  let vectorLayers
   let layers
   let layer
   let numLayers
   let i
+  let j
   if (map == null) {
     return []
   }
-  layers = this.getLayersByGroup(featureGroupName)
-  numLayers = layers.getLength()
-  for (i = 0; i < numLayers; i++) {
-    layer = layers.item(i)
-    if (!layer.get('visible')) {
-      continue
-    }
-    if (layer.get('title') === layerTitle) {
-      return layer.getSource().getFeatures()
+  featureLayers = this.getLayersByGroup(featureGroupName)
+  surfaceLayers = this.getLayersByGroup(surfaceGroupName)
+  vectorLayers = [featureLayers, surfaceLayers]
+  for (i = 0; i < 2; i++) {
+    layers = vectorLayers[i]
+    numLayers = layers.getLength()
+    for (j = 0; j < numLayers; j++) {
+      layer = layers.item(j)
+      if (!layer.get('visible')) {
+        continue
+      }
+      if (layer.get('title') === layerTitle) {
+        return layer.getSource().getFeatures()
+      }
     }
   }
   return []
@@ -1815,8 +1857,12 @@ MapAnimation.prototype.getFeatures = function (layerTitle) {
  */
 MapAnimation.prototype.getFeaturesAt = function (layerTitle, coordinate, tolerance) {
   const config = this.get('config')
-  const baseGroupName = config['featureGroupName']
+  const featureGroupName = config['featureGroupName']
+  const surfaceGroupName = config['surfaceGroupName']
   const map = this.get('map')
+  let featureLayers
+  let surfaceLayers
+  let vectorLayers
   let layers
   let layer
   let numLayers
@@ -1828,39 +1874,45 @@ MapAnimation.prototype.getFeaturesAt = function (layerTitle, coordinate, toleran
   let featuresAtCoordinate = []
   const clickedPixel = map.getPixelFromCoordinate(coordinate)
   let featurePixel
+  let i
   let j
   let k
   let l
-  layers = this.getLayersByGroup(baseGroupName)
-  numLayers = layers.getLength()
-  for (j = 0; j < numLayers; j++) {
-    layer = layers.item(j)
-    if (!layer.get('visible')) {
-      continue
-    }
-    if (layer.get('title') === layerTitle) {
-      source = layer.getSource()
-      featuresAtCoordinate = source.getFeaturesAtCoordinate(coordinate)
-      numFeaturesAtCoordinate = featuresAtCoordinate.length
-      // Point features
-      features = source.getFeatures()
-      numFeatures = features.length
-      loopFeatures:
-        for (k = 0; k < numFeatures; k++) {
-          for (l = 0; l < numFeaturesAtCoordinate; l++) {
-            if (featuresAtCoordinate[l].getId() === features[k].getId()) {
-              continue loopFeatures
+  featureLayers = this.getLayersByGroup(featureGroupName)
+  surfaceLayers = this.getLayersByGroup(surfaceGroupName)
+  vectorLayers = [featureLayers, surfaceLayers]
+  for (i = 0; i < 2; i++) {
+    layers = vectorLayers[i]
+    numLayers = layers.getLength()
+    for (j = 0; j < numLayers; j++) {
+      layer = layers.item(j)
+      if (!layer.get('visible')) {
+        continue
+      }
+      if (layer.get('title') === layerTitle) {
+        source = layer.getSource()
+        featuresAtCoordinate = source.getFeaturesAtCoordinate(coordinate)
+        numFeaturesAtCoordinate = featuresAtCoordinate.length
+        // Point features
+        features = source.getFeatures()
+        numFeatures = features.length
+        loopFeatures:
+          for (k = 0; k < numFeatures; k++) {
+            for (l = 0; l < numFeaturesAtCoordinate; l++) {
+              if (featuresAtCoordinate[l].getId() === features[k].getId()) {
+                continue loopFeatures
+              }
+            }
+            geometry = features[k].getGeometry()
+            if (geometry.getType() === 'Point') { // Todo: MultiPoint
+              featurePixel = map.getPixelFromCoordinate(geometry.getCoordinates())
+              if (Math.sqrt((featurePixel[0] - clickedPixel[0]) ** 2 + (featurePixel[1] - clickedPixel[1]) ** 2) <= tolerance) {
+                featuresAtCoordinate.push(features[k])
+              }
             }
           }
-          geometry = features[k].getGeometry()
-          if (geometry.getType() === 'Point') { // Todo: MultiPoint
-            featurePixel = map.getPixelFromCoordinate(geometry.getCoordinates())
-            if (Math.sqrt((featurePixel[0] - clickedPixel[0]) ** 2 + (featurePixel[1] - clickedPixel[1]) ** 2) <= tolerance) {
-              featuresAtCoordinate.push(features[k])
-            }
-          }
-        }
-      return featuresAtCoordinate
+        return featuresAtCoordinate
+      }
     }
   }
   return []
@@ -2321,26 +2373,27 @@ MapAnimation.prototype.getSelectedFeature = function () {
 
 /**
  * Checks if reload of base map layers is needed.
+ * @param {string} type Layer type.
  * @returns {boolean} Base map reload needed.
  */
-MapAnimation.prototype.mapReloadNeeded = function () {
+MapAnimation.prototype.staticReloadNeeded = function (type) {
   let i
   let j
-  let mapLayers = this.get('mapLayers')
+  let staticLayers = this.get(type + 'Layers')
   let layers = this.get('layers')
-  if ((mapLayers == null) || (layers == null)) {
+  if ((staticLayers == null) || (layers == null)) {
     return true
   }
-  let filteredLayers = layers.filter(layer => layer['type'] === this.layerTypes['map'])
-  let numMapLayers = mapLayers.length
-  if (numMapLayers !== filteredLayers.length) {
+  let filteredLayers = layers.filter(layer => layer['type'] === this.layerTypes[type])
+  let numStaticLayers = staticLayers.length
+  if (numStaticLayers !== filteredLayers.length) {
     return true
   }
-  loopMapLayers:
-  for (i = 0; i < numMapLayers; i++) {
-    for (j = 0; j < numMapLayers; j++) {
-      if (shallowEqual(mapLayers[i], filteredLayers[j])) {
-        continue loopMapLayers
+  loopStaticLayers:
+  for (i = 0; i < numStaticLayers; i++) {
+    for (j = 0; j < numStaticLayers; j++) {
+      if (shallowEqual(staticLayers[i], filteredLayers[j])) {
+        continue loopStaticLayers
       }
     }
     return true

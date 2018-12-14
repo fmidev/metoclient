@@ -33,7 +33,7 @@ export default class Map {
           this.layers_[i]['animation']['originalEndTime'] = this.layers_[i]['animation']['endTime']
         }
       }
-      if (this.layers_[i]['className'].toLowerCase() === 'vector') {
+      if ((this.layers_[i]['className'].toLowerCase() === 'vector') && (this.layers_[i]['type'] == null)) {
         this.layers_[i]['type'] = 'features'
       }
     }
@@ -55,7 +55,7 @@ export default class Map {
   static produceFullLayerConfig (layer) {
     if (((layer['type'] === 'obs') || (layer['type'] === 'for')) && (layer['animation'] == null)) {
       layer['animation'] = {}
-    } else if (layer['className'].toLowerCase() === 'vector') {
+    } else if ((layer['className'].toLowerCase() === 'vector') && (layer['type'] == null)) {
       layer['type'] = 'features'
     }
     return layer
@@ -80,7 +80,10 @@ export default class Map {
   updateLayers (layers) {
     let layerKeys = Object.keys(layers)
     layerKeys.forEach(layerKey => {
-      this.layers_[layerKey] = Map.produceFullLayerConfig(layers[layerKey])
+      this.layers_ = this.layers_.filter(layer => layer.title !== layerKey)
+    })
+    layerKeys.forEach(layerKey => {
+      this.layers_.push(Map.produceFullLayerConfig(layers[layerKey]))
     })
   }
 
@@ -92,14 +95,24 @@ export default class Map {
   refreshLayers (currentTime, animationResolutionTime) {
     let numLayers,
       timeDiff,
+      layerTimeDiff,
       i
     if (this.layers_ != null) {
-      timeDiff = Math.floor(currentTime / animationResolutionTime) * animationResolutionTime - Math.floor(this.referenceTime_ / animationResolutionTime) * animationResolutionTime
+      if (animationResolutionTime != null) {
+        timeDiff = Math.floor(currentTime / animationResolutionTime) * animationResolutionTime - Math.floor(this.referenceTime_ / animationResolutionTime) * animationResolutionTime
+      } else {
+        timeDiff = currentTime - this.referenceTime_
+      }
       numLayers = this.layers_.length
       for (i = 0; i < numLayers; i++) {
         if (this.layers_[i]['animation'] != null) {
-          this.layers_[i]['animation']['beginTime'] = (this.layers_[i]['animation']['originalBeginTime'] == null) ? undefined : this.layers_[i]['animation']['originalBeginTime'] + timeDiff
-          this.layers_[i]['animation']['endTime'] = (this.layers_[i]['animation']['originalEndTime'] == null) ? undefined : this.layers_[i]['animation']['originalEndTime'] + timeDiff
+          if (this.layers_[i]['animation']['resolutionTime'] != null) {
+            layerTimeDiff = Math.floor(currentTime / this.layers_[i]['animation']['resolutionTime']) * this.layers_[i]['animation']['resolutionTime'] - Math.floor(this.referenceTime_ / this.layers_[i]['animation']['resolutionTime']) * this.layers_[i]['animation']['resolutionTime']
+          } else {
+            layerTimeDiff = timeDiff
+          }
+          this.layers_[i]['animation']['beginTime'] = (this.layers_[i]['animation']['originalBeginTime'] == null) ? undefined : this.layers_[i]['animation']['originalBeginTime'] + layerTimeDiff
+          this.layers_[i]['animation']['endTime'] = (this.layers_[i]['animation']['originalEndTime'] == null) ? undefined : this.layers_[i]['animation']['originalEndTime'] + layerTimeDiff
         }
       }
     }

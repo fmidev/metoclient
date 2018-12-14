@@ -5,6 +5,7 @@
  */
 
 import * as utils from '../utils'
+import * as constants from '../constants'
 import EventEmitter from 'wolfy87-eventemitter'
 import isNumeric from 'fast-isnumeric'
 
@@ -123,14 +124,11 @@ export default class Time {
    */
   handleRefresh_ () {
     let self = this
-    // Todo: default from configuration
-    let refreshInterval = (typeof this.refreshInterval_ === 'number') ? this.refreshInterval_ : 15 * 60 * 1000
+    let refreshInterval = this.refreshInterval_
     if (!self.play_) {
       this.handleTimer_()
     }
-    // Todo: default from configuration
-    // Some browsers need this limitation to prevent overflow
-    if (refreshInterval > 24 * 60 * 60 * 1000) {
+    if ((refreshInterval == null) || (typeof refreshInterval !== 'number') || (refreshInterval <= 0) || (refreshInterval > constants.MAX_REFRESH_INTERVAL)) {
       return
     }
     setTimeout(() => {

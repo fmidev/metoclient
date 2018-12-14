@@ -82,8 +82,14 @@ FullAnimationLoader.prototype.initMap = function () {
         case config['featureGroupName']:
           layerType = this.layerTypes['features']
           break
+        case config['surfaceGroupName']:
+          if (!this.staticReloadNeeded('surface')) {
+            continue
+          }
+          layerType = this.layerTypes['surface']
+          break
         case config['baseGroupName']:
-          if (!this.mapReloadNeeded()) {
+          if (!this.staticReloadNeeded('map')) {
             continue
           }
           layerType = this.layerTypes['map']
@@ -189,6 +195,11 @@ FullAnimationLoader.prototype.initMap = function () {
         'nested': true,
         'title': config['featureGroupName'],
         'layers': self.loadStaticLayers(layerVisibility, this.layerTypes['features'])
+      }),
+      new OlLayerGroup({
+        'nested': true,
+        'title': config['surfaceGroupName'],
+        'layers': self.loadStaticLayers(layerVisibility, this.layerTypes['surface'])
       }),
       new OlLayerGroup({
         'nested': true,
@@ -347,17 +358,17 @@ FullAnimationLoader.prototype.initListeners = function () {
 
   this.on('updateLoadQueue', e => {
     let animationGroups
-    let config
-    let maxAsyncLoadCount
     let asyncLoadItem
-    let prop
-    let layer
     let className
-    let sourceOptions
-    let source
-    let sourceProperties
-    let sourceOn
+    let config
+    let layer
     let mapProducer = new MapProducer()
+    let maxAsyncLoadCount
+    let prop
+    let source
+    let sourceOn
+    let sourceOptions
+    let sourceProperties
     const loadId = self.loadId
     if ((self.asyncLoadQueue[loadId] == null) || (self.asyncLoadQueue[loadId].length === 0)) {
       return
@@ -384,7 +395,7 @@ FullAnimationLoader.prototype.initListeners = function () {
       if (sourceOptions == null) {
         sourceOptions = {}
       }
-      source = mapProducer.sourceFactory(className, sourceOptions)
+      source = mapProducer.sourceFactory(className, sourceOptions, config['cacheTime'])
       sourceProperties = layer.get('sourceProperties')
       if (typeof sourceProperties !== 'undefined') {
         for (prop in sourceProperties) {

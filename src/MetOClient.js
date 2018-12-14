@@ -78,8 +78,6 @@ export class MetOClient {
     this.animationTimeListener_ = animationTime => {
     }
 
-    this.refreshCallback_ = null
-
     // Configuration from default values
     extend(true, newConfig, this.getDefaultConfig())
     // Configuration from newConfiguration files
@@ -111,20 +109,21 @@ export class MetOClient {
     // Localization
     if (this.config_['localization']['locale'] != null) {
       locale = this.config_['localization']['locale']
-      this.config_['map']['view']['overlayGroupName'] = this.config_['localization'][locale]['overlays']
-      this.config_['map']['view']['staticOverlayGroupName'] = this.config_['localization'][locale]['staticOverlays']
       this.config_['map']['view']['baseGroupName'] = this.config_['localization'][locale]['baseLayers']
       this.config_['map']['view']['featureGroupName'] = this.config_['localization'][locale]['features']
-      this.config_['map']['view']['opacityTitle'] = this.config_['localization'][locale]['opacity']
+      this.config_['map']['view']['layersTooltip'] = this.config_['localization'][locale]['layersTooltip']
       this.config_['map']['view']['legendTitle'] = this.config_['localization'][locale]['legend']
       this.config_['map']['view']['noLegendText'] = this.config_['localization'][locale]['noLegend']
+      this.config_['map']['view']['opacityTitle'] = this.config_['localization'][locale]['opacity']
+      this.config_['map']['view']['overlayGroupName'] = this.config_['localization'][locale]['overlays']
+      this.config_['map']['view']['staticOverlayGroupName'] = this.config_['localization'][locale]['staticOverlays']
+      this.config_['map']['view']['surfaceGroupName'] = this.config_['localization'][locale]['surface']
       this.config_['map']['view']['zoomInTooltip'] = this.config_['localization'][locale]['zoomInTooltip']
       this.config_['map']['view']['zoomOutTooltip'] = this.config_['localization'][locale]['zoomOutTooltip']
-      this.config_['map']['view']['layersTooltip'] = this.config_['localization'][locale]['layersTooltip']
       this.config_['time']['view']['beginTimeText'] = this.config_['localization'][locale]['beginTimeText']
       this.config_['time']['view']['endTimeText'] = this.config_['localization'][locale]['endTimeText']
-      this.config_['time']['view']['timeStepText'] = this.config_['localization'][locale]['timeStepText']
       this.config_['time']['view']['locale'] = this.config_['localization']['locale']
+      this.config_['time']['view']['timeStepText'] = this.config_['localization'][locale]['timeStepText']
     }
 
     localforage.config({
@@ -143,6 +142,10 @@ export class MetOClient {
      * @private
      */
     this.mapController_ = new MapController(this.config_['map'], this.timeController_.getCreationTime())
+    /**
+     * @private
+     */
+    this.callbacks_ = {}
   }
 
   /**
@@ -169,6 +172,7 @@ export class MetOClient {
     let mapView = [
       'asyncLoadDelay',
       'baseGroupName',
+      'cacheTime',
       'container',
       'defaultCenterLocation',
       'defaultCenterProjection',
@@ -196,6 +200,7 @@ export class MetOClient {
       'showMarker',
       'staticControls',
       'staticOverlayGroupName',
+      'surfaceGroupName',
       'tooltipOffset'
     ]
     let timeModel = [
@@ -295,8 +300,9 @@ export class MetOClient {
   /**
    * Produces a new map model and view.
    * @param {Object=} callbacks Callback functions for map events.
+   * @param {boolean=} useConfig Use layer configuration values.
    */
-  createMap (callbacks) {
+  createMap (callbacks, useConfig = false) {
     let self = this
     let currentAnimationTime = this.timeController_.getAnimationTime()
     let mapCallbacks
@@ -327,7 +333,8 @@ export class MetOClient {
       this.timeController_.getAnimationEndTime(),
       this.timeController_.getAnimationResolutionTime(),
       this.timeController_.getAnimationNumIntervals(),
-      mapCallbacks
+      mapCallbacks,
+      useConfig
     )
   }
 
@@ -345,6 +352,7 @@ export class MetOClient {
         'view': {
           'asyncLoadDelay': 10,
           'baseGroupName': 'Base layers',
+          'cacheTime': 10 * 60 * 1000,
           'container': 'fmi-metoclient',
           'defaultCenterLocation': [389042, 6673664],
           'defaultCenterProjection': 'EPSG:3067',
@@ -374,6 +382,7 @@ export class MetOClient {
           'showMarker': false,
           'staticControls': false,
           'staticOverlayGroupName': 'Static overlays',
+          'surfaceGroupName': 'Surface',
           'tooltipOffset': [20, 0]
         }
       },
@@ -405,7 +414,9 @@ export class MetOClient {
         'locale': 'en',
         'fi': {
           'baseLayers': 'Taustakartat',
+          'beginTimeText': 'Aloitusaika',
           'browserNotSupported': 'Tämä selain ei ole tuettu.',
+          'endTimeText': 'Lopetusaika',
           'features': 'Kohteet',
           'layersTooltip': 'Karttatasot',
           'legend': 'Selite',
@@ -413,15 +424,16 @@ export class MetOClient {
           'opacity': 'Peittokyky',
           'overlays': 'Sääaineistot',
           'staticOverlays': 'Merkinnät',
+          'surface': 'Pintakartta',
+          'timeStepText': 'Aika-askeleet',
           'zoomInTooltip': 'Lähennä',
-          'zoomOutTooltip': 'Loitonna',
-          'beginTimeText': 'Aloitusaika',
-          'endTimeText': 'Lopetusaika',
-          'timeStepText': 'Aika-askeleet'
+          'zoomOutTooltip': 'Loitonna'
         },
         'sv': {
           'baseLayers': 'Bakgrundskartor',
+          'beginTimeText': 'Starttid',
           'browserNotSupported': 'Webbläsaren stöds inte.',
+          'endTimeText': 'Sluttid',
           'features': 'Objekter',
           'layersTooltip': 'Nivåer',
           'legend': 'Legend',
@@ -429,15 +441,16 @@ export class MetOClient {
           'opacity': 'Opacitet',
           'overlays': 'Väder data',
           'staticOverlays': 'Statisk data',
+          'surface': 'Yta',
+          'timeStepText': 'Tidssteg',
           'zoomInTooltip': 'Zooma in',
-          'zoomOutTooltip': 'Zooma ut',
-          'beginTimeText': 'Starttid',
-          'endTimeText': 'Sluttid',
-          'timeStepText': 'Tidssteg'
+          'zoomOutTooltip': 'Zooma ut'
         },
         'en': {
           'baseLayers': 'Base layers',
+          'beginTimeText': 'Begin time',
           'browserNotSupported': 'This browser is not supported.',
+          'endTimeText': 'End time',
           'features': 'Features',
           'layersTooltip': 'Layers',
           'legend': 'Legend',
@@ -445,11 +458,10 @@ export class MetOClient {
           'opacity': 'Opacity',
           'overlays': 'Overlays',
           'staticOverlays': 'Static overlays',
+          'surface': 'Surface map',
+          'timeStepText': 'Timesteps',
           'zoomInTooltip': 'Zoom in',
-          'zoomOutTooltip': 'Zoom out',
-          'beginTimeText': 'Begin time',
-          'endTimeText': 'End time',
-          'timeStepText': 'Timesteps'
+          'zoomOutTooltip': 'Zoom out'
         }
       },
       'disableTouch': false
@@ -609,13 +621,14 @@ export class MetOClient {
     if (options['animationTime'] != null) {
       this.timeController_.setAnimationTime(options['animationTime'])
     }
-    if ((callbacks != null) && (callbacks['refreshed'] != null)) {
-      this.refreshCallback_ = callbacks['refreshed']
+    if (callbacks != null) {
+      this.callbacks_ = callbacks
     }
-    if (typeof callbacks === 'undefined') {
-      callbacks = null
+    if (callbacks === null) {
+      callbacks = {}
     }
-    this.refresh(callbacks)
+    this.timeController_.refreshTime(callbacks)
+    this.createMap(callbacks, true)
   }
 
   /**
@@ -891,9 +904,6 @@ export class MetOClient {
     let currentAnimationTime = this.timeController_.getAnimationTime()
     let userReadyCallback
     if (callbacks != null) {
-      if (callbacks['refreshed'] != null) {
-        this.refreshCallback_ = callbacks['refreshed']
-      }
       if (callbacks['ready'] != null) {
         userReadyCallback = callbacks['ready'].bind()
         callbacks['ready'] = () => {
@@ -903,8 +913,13 @@ export class MetOClient {
           }
         }
       }
+      this.callbacks_ = callbacks
     }
-    this.mapController_.setCallbacks(callbacks)
+    if (callbacks === null) {
+      this.callbacks_ = {}
+    }
+    this.mapController_.setCallbacks(this.callbacks_)
+    this.timeController_.setCallbacks(this.callbacks_)
   }
 
   /**
@@ -953,9 +968,9 @@ export class MetOClient {
     }
     this.timeController_.actionEvents.addListener('play', this.playListener_)
     this.refreshListener_ = () => {
-      self.refresh()
-      if (typeof this.refreshCallback_ === 'function') {
-        this.refreshCallback_()
+      self.refresh(this.callbacks_)
+      if (typeof this.callbacks_['refreshed'] === 'function') {
+        this.callbacks_['refreshed']()
       }
     }
     this.timeController_.actionEvents.addListener('refresh', this.refreshListener_)
@@ -970,9 +985,7 @@ export class MetOClient {
     if (callbacks == null) {
       callbacks = {}
     }
-    if (callbacks['refreshed'] != null) {
-      this.refreshCallback_ = callbacks['refreshed']
-    }
+    this.callbacks_ = callbacks
     this.createTime(callbacks)
     this.createMap(callbacks)
     return this

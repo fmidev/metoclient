@@ -73,6 +73,9 @@ export default class MapAnimation {
     this.set('updateVisibility', null)
     this.set('interactionConfig', null)
     this.set('configChanged', false)
+    this.set('selectedFeatureId', null)
+    this.set('selectedFeatureLayer', null)
+    this.set('selectedFeatureTime', null)
     this.activeInteractions = []
     this.loadedOnce = false
     this.viewOptions = {}
@@ -983,7 +986,6 @@ MapAnimation.prototype.setViewListeners = function () {
  * @param {Object} interactionOptions Default interaction options.
  */
 MapAnimation.prototype.initStaticInteractions = function (interactionOptions) {
-  const config = this.get('config')
   interactionOptions['doubleClickZoom'] = false
   interactionOptions['dragPan'] = false
   interactionOptions['dragRotate'] = false
@@ -1238,7 +1240,7 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
           selectedFeatureId = selectedFeature.get('id')
           if (selectedFeatureId != null) {
             template['source']['features'].forEach(feature => {
-              feature['selected'] = (feature['id'] === selectedFeature.get('id'))
+              feature['selected'] = (feature['id'] === selectedFeatureId)
             })
           }
         }
@@ -1258,13 +1260,20 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
         source = layer.getSource()
         timePropertyName = source.get('timePropertyName')
         source.on('addfeature', (event) => {
+          let selectedId = this.get('selectedFeatureId')
+          let selectedLayer = this.get('selectedFeatureLayer')
+          let selectedTime = this.get('selectedFeatureTime')
           let newFeature = event['feature']
           if (newFeature == null) {
             return
           }
           newFeature.setStyle(new OlStyleStyle({}))
           newFeature.set('layerTitle', title)
+          newFeature.set('timePropertyName', timePropertyName)
           let featureTime = newFeature.get(timePropertyName)
+          if (((newFeature.get('id') === selectedId) && (newFeature.get('layerTitle') === selectedLayer)) && (((selectedTime == null) || (timePropertyName == null) || (timePropertyName.length === 0)) || (featureTime === selectedTime)))  {
+            this.selectFeature(newFeature)
+          }
           if (featureTime == null) {
             return
           }

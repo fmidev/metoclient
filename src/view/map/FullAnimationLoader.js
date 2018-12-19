@@ -61,6 +61,8 @@ FullAnimationLoader.prototype.initMap = function () {
   let numLayerGroups
   let staticLayers
   let layerType
+  let selectedFeature
+  let timePropertyName
   if (target == null) {
     return
   }
@@ -69,6 +71,15 @@ FullAnimationLoader.prototype.initMap = function () {
     this.set('configChanged', false)
   }
   if (map != null) {
+    selectedFeature = this.getSelectedFeature()
+    if (selectedFeature != null) {
+      this.set('selectedFeatureId', selectedFeature.get('id'))
+      this.set('selectedFeatureLayer', selectedFeature.get('layerTitle'))
+      timePropertyName = selectedFeature.get('timePropertyName')
+      if ((timePropertyName != null) && (timePropertyName.length > 0)) {
+        this.set('selectedFeatureTime', selectedFeature.get(timePropertyName))
+      }
+    }
     layerVisibility = map.get('layerVisibility')
     this.getLayersByGroup(config['overlayGroupName']).forEach(layer => {
       layer.setLayers(new OlCollection())

@@ -25,6 +25,8 @@ export default class MapProducer {
    * @param options Source options.
    * @param cacheTime Layer cache time.
    * @param projection {string} Projection.
+   * @param beginTime {number} Begin time.
+   * @param endTime {number} End time.
    * @returns {Array} Source.
    */
   sourceFactory (type, options, cacheTime, projection, beginTime, endTime) {
@@ -38,21 +40,31 @@ export default class MapProducer {
     let typeLwr = type.toLowerCase()
     switch (typeLwr) {
       case 'tilewms':
-        options['tileLoadFunction'] = loadFunction.bind(this)
+        if (options['useStorage']) {
+          options['tileLoadFunction'] = loadFunction.bind(this)
+        }
         return new TileWMS(options)
       case 'imagewms':
-        options['imageLoadFunction'] = loadFunction.bind(this)
+        if (options['useStorage']) {
+          options['imageLoadFunction'] = loadFunction.bind(this)
+        }
         return new ImageWMS(options)
       case 'wmts':
-        options['tileLoadFunction'] = loadFunction.bind(this)
+        if (options['useStorage']) {
+          options['tileLoadFunction'] = loadFunction.bind(this)
+        }
         return new WMTS(options)
       case 'vector':
         return new Vector(options, projection, beginTime, endTime)
       case 'stamen':
-        options['tileLoadFunction'] = loadFunction.bind(this)
+        if (options['useStorage']) {
+          options['tileLoadFunction'] = loadFunction.bind(this)
+        }
         return new Stamen(options)
       case 'osm':
-        options['tileLoadFunction'] = loadFunction.bind(this)
+        if (options['useStorage']) {
+          options['tileLoadFunction'] = loadFunction.bind(this)
+        }
         return new OSM(options)
     }
   }
@@ -87,6 +99,13 @@ export default class MapProducer {
     let timePropertyName
     if (options['sourceOptions'] !== undefined) {
       sourceKey += 'Options'
+    }
+    if (options[sourceKey] != null) {
+      options[sourceKey]['useStorage'] = options['useStorage']
+    } else {
+      options[sourceKey] = {
+        'useStorage': options['useStorage']
+      }
     }
     if (!((options[sourceKey] != null) && (options[sourceKey]['addFeature'] != null))) {
       animation = options['animation']

@@ -259,7 +259,8 @@ LazyAnimationLoader.prototype.initMap = function () {
       'legendTitle': config['legendTitle'],
       'noLegendText': config['noLegendText'],
       'baseGroupName': config['baseGroupName'],
-      'opacityTitle': config['opacityTitle']
+      'opacityTitle': config['opacityTitle'],
+      'useStorage': config['useStorage']
     })
     this.set('layerSwitcher', layerSwitcher)
     map.addControl(layerSwitcher)
@@ -364,8 +365,10 @@ LazyAnimationLoader.prototype.initListeners = function () {
     }
   })
 
-  this.on('change:updateRequested', function (e) {
-    setTimeout(this.handleUpdateRequest(this.get('updateRequested'), false), this.updateRequestResolution)
+  this.on('change:updateRequested', e => {
+    setTimeout(() => {
+      this.handleUpdateRequest(this.get('updateRequested'), false)
+    }, this.updateRequestResolution)
   })
 
   this.on('updateLoadQueue', e => {
@@ -406,6 +409,7 @@ LazyAnimationLoader.prototype.initListeners = function () {
       if (sourceOptions == null) {
         sourceOptions = {}
       }
+      sourceOptions['useStorage'] = config['useStorage']
       source = mapProducer.sourceFactory(className, sourceOptions, config['cacheTime'])
       sourceProperties = layer.get('sourceProperties')
       if (typeof sourceProperties !== 'undefined') {

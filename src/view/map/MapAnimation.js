@@ -11,6 +11,7 @@ import { default as proj4 } from 'proj4'
 import 'core-js/fn/array/from'
 import shallowEqual from 'shallowequal'
 import moment from 'moment-timezone'
+import localforage from 'localforage'
 import * as constants from '../../constants'
 import renameKeys from 'rename-keys'
 import MapProducer from './MapProducer'
@@ -120,7 +121,7 @@ Ol.inherits(MapAnimation, OlObject)
  * @param {Object=} animationCallbacks Callback functions for map events.
  * @param {boolean=} useConfig Use layer configuration values.
  */
-MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, animationCallbacks, useConfig = false) {
+MapAnimation.prototype.createAnimation = async function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, animationCallbacks, useConfig = false) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
   let isFeatureGroup
@@ -212,7 +213,7 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   }
 
   this.set('viewProjection', this.get('config')['projection'])
-  this.updateStorage()
+  await this.updateStorage()
   this.parameterizeLayers(capabilities)
   this.initMap()
   mapLayers = layers.filter(layer => layer['type'] === this.layerTypes['map'])
@@ -532,7 +533,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
  * @param {number} updateRequested Time when update requested.
  * @param {boolean=} disableTimeSlider Disables the time slider when loading layers.
  */
-MapAnimation.prototype.handleUpdateRequest = function (updateRequested, disableTimeSlider = false) {
+MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, disableTimeSlider = false) {
   let anyVisible = false
   let asyncLoadCount
   let asyncLoadQueue
@@ -552,7 +553,7 @@ MapAnimation.prototype.handleUpdateRequest = function (updateRequested, disableT
     return
   }
   extent = this.calculateExtent(true)
-  this.updateStorage()
+  await this.updateStorage()
   featureGroupName = this.get('config')['featureGroupName']
   selectedFeature = this.getSelectedFeature()
   if (this.reloadNeeded(extent)) {
@@ -629,42 +630,39 @@ MapAnimation.prototype.handleUpdateRequest = function (updateRequested, disableT
 /**
  * Performs bidirectional data exchange with local storage.
  */
-MapAnimation.prototype.updateStorage = function () {
-  try {
-    if (typeof window['localStorage'] === 'undefined') {
-      return
-    }
-    const layers = this.get('layers')
-    let localStorageOpacity
-    let localStorageVisible
-    let project = this.get('config')['project']
-    let i
-    let layer
-    let numLayers = layers.length
+MapAnimation.prototype.updateStorage = async function () {
+  const config = this.get('config')
+  if (!config['useStorage']) {
+    return
+  }
+  const layers = this.get('layers')
+  let localStorageOpacity
+  let localStorageVisible
+  let project = this.get('config')['project']
+  let i
+  let layer
+  let numLayers = layers.length
 
-    for (i = 0; i < numLayers; i++) {
-      layer = layers[i]
-      if (layer['useSavedOpacity']) {
-        localStorageOpacity = this.loadLayerPropertyFromLocalStorage(layer['title'], 'opacity')
-        if (localStorageOpacity != null) {
-          layer['opacity'] = localStorageOpacity
-        }
-      }
-      if (layer['opacity'] != null) {
-        window['localStorage'].setItem(project + '-' + layer['title'] + '-opacity', layer['opacity'])
-      }
-      if (layer['useSavedVisible']) {
-        localStorageVisible = this.loadLayerPropertyFromLocalStorage(layer['title'], 'visible')
-        if (localStorageVisible != null) {
-          layer['visible'] = localStorageVisible
-        }
-      }
-      if (layer['visible'] != null) {
-        window['localStorage'].setItem(project + '-' + layer['title'] + '-visible', layer['visible'])
+  for (i = 0; i < numLayers; i++) {
+    layer = layers[i]
+    if (layer['useSavedOpacity']) {
+      localStorageOpacity = await this.loadLayerPropertyFromLocalStorage(layer['title'], 'opacity')
+      if (localStorageOpacity != null) {
+        layer['opacity'] = localStorageOpacity
       }
     }
-  } catch (e) {
-    console.log('Local storage is not supported. ' + e)
+    if (layer['opacity'] != null) {
+      await localforage.setItem(project + '-' + layer['title'] + '-opacity', layer['opacity'])
+    }
+    if (layer['useSavedVisible']) {
+      localStorageVisible = await this.loadLayerPropertyFromLocalStorage(layer['title'], 'visible')
+      if (localStorageVisible != null) {
+        layer['visible'] = localStorageVisible
+      }
+    }
+    if (layer['visible'] != null) {
+      await localforage.setItem(project + '-' + layer['title'] + '-visible', layer['visible'])
+    }
   }
 }
 
@@ -1184,6 +1182,7 @@ MapAnimation.prototype.createLayer = function (options) {
   let projection = /** @type {ol.proj.Projection|string} */ (this.get('viewProjection'))
   // Features may be too slow to extend
   template = ((options['source'] == null) || (options['source']['features'] == null)) ? options : extend(true, {}, options)
+  template['useStorage'] = config['useStorage']
   return mapProducer.layerFactory(template, config['cacheTime'], extent, projection, this.get('animationBeginTime'), this.get('animationEndTime'))
 }
 
@@ -1192,15 +1191,20 @@ MapAnimation.prototype.createLayer = function (options) {
  * @param {string} layer Layer title.
  * @param {string} property Property name.
  */
-MapAnimation.prototype.loadLayerPropertyFromLocalStorage = function (layer, property) {
-  if (typeof window['localStorage'] === 'undefined') {
+MapAnimation.prototype.loadLayerPropertyFromLocalStorage = async function (layer, property) {
+  const config = this.get('config')
+  if (!config['useStorage']) {
     return null
   }
-  let item = window['localStorage'].getItem(this.get('config')['project'] + '-' + layer + '-' + property)
-  if (item != null) {
-    item = JSON.parse(item)
+  try {
+    let item = await localforage.getItem(this.get('config')['project'] + '-' + layer + '-' + property)
+    if (item != null) {
+      item = JSON.parse(item)
+    }
+    return item
+  } catch (error) {
+    return null
   }
-  return item
 }
 
 /**
@@ -2076,11 +2080,12 @@ MapAnimation.prototype.requestViewUpdate = function () {
  * @param layerTitle {string} Layer title.
  * @param visibility {boolean} Layer visibility.
  */
-MapAnimation.prototype.setLayerVisible = function (layerTitle, visibility) {
+MapAnimation.prototype.setLayerVisible = async function (layerTitle, visibility) {
   const map = this.get('map')
   const localStorageId = this.get('config')['project'] + '-' + layerTitle + '-visible'
   const layerVisibility = map.get('layerVisibility')
   const layer = this.getLayer(layerTitle)
+  const config = this.get('config')
   let updateVisibility
   if (layerVisibility[layerTitle] == null) {
     if (this.loading) {
@@ -2090,8 +2095,12 @@ MapAnimation.prototype.setLayerVisible = function (layerTitle, visibility) {
     } else {
       layer.setVisible(visibility)
       layerVisibility[layerTitle] = visibility
-      if (typeof window['localStorage'] !== 'undefined') {
-        window['localStorage'].setItem(localStorageId, visibility)
+      try {
+        if (config['useStorage']) {
+          await localforage.setItem(localStorageId, visibility)
+        }
+      } catch (e) {
+        console.log('Storage is not supported. ' + e)
       }
       this.requestViewUpdate()
     }
@@ -2099,11 +2108,11 @@ MapAnimation.prototype.setLayerVisible = function (layerTitle, visibility) {
     layer.setVisible(visibility)
     layerVisibility[layerTitle] = visibility
     try {
-      if (typeof window['localStorage'] !== 'undefined') {
-        window['localStorage'].setItem(localStorageId, visibility)
+      if (config['useStorage']) {
+        await localforage.setItem(localStorageId, visibility)
       }
     } catch (e) {
-      console.log('Local storage is not supported. ' + e)
+      console.log('Storage is not supported. ' + e)
     }
     this.requestViewUpdate()
   }

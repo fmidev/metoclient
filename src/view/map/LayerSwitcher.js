@@ -7,6 +7,7 @@ import olControlControl from 'ol/control/control'
 import * as constants from '../../constants'
 import 'core-js/fn/array/from'
 import 'core-js/fn/number/parse-int'
+import localforage from 'localforage'
 
 /**
  * OpenLayers 4 Layer Switcher Control.
@@ -30,6 +31,7 @@ export default class OlControlLayerSwitcher {
     this.noLegendText = options['noLegendText'] ? options['noLegendText'] : 'None'
     this.baseGroupName = options['baseGroupName']
     this.opacityTitle = options['opacityTitle']
+    this.useStorage = options['useStorage']
 
     this.mapListeners = []
 
@@ -236,8 +238,8 @@ OlControlLayerSwitcher.prototype.setVisible_ = function (lyr, visible) {
   const layerVisibility = map.get('layerVisibility')
   layerVisibility[lyr.get('title')] = visible
   try {
-    if (typeof window['localStorage'] !== 'undefined') {
-      window['localStorage'].setItem(this_.project + '-' + lyr.get('title') + '-visible', visible)
+    if (this_.useStorage) {
+      localforage.setItem(this_.project + '-' + lyr.get('title') + '-visible', visible)
     }
   } catch (e) {
     console.log('Local storage is not supported. ' + e)
@@ -251,8 +253,8 @@ OlControlLayerSwitcher.prototype.setVisible_ = function (lyr, visible) {
           l.setVisible(false)
           layerVisibility[l.get('title')] = false
           try {
-            if (typeof window['localStorage'] !== 'undefined') {
-              window['localStorage'].setItem(this_.project + '-' + l.get('title') + '-visible', false)
+            if (this_.useStorage) {
+              localforage.setItem(this_.project + '-' + l.get('title') + '-visible', false)
             }
           } catch (e) {
             console.log('Local storage is not supported. ' + e)
@@ -342,17 +344,17 @@ OlControlLayerSwitcher.prototype.renderLayer_ = function (lyr, idx) {
       opacityValue.setAttribute('max', '100')
       opacityValue.setAttribute('step', '1')
       opacityValue.setAttribute('value', Math.round(100 * opacity))
-      opacityValue.onchange = function (e) {
-        let value = Math.round(this.value)
+      opacityValue.onchange = (event) => {
+        let value = Math.round(parseFloat(event.target.value))
         value = Math.max(value, 0)
         value = Math.min(value, 100)
-        this['value'] = parseFloat(value).toFixed(0)
+        this['value'] = value.toFixed(0)
         value /= 100
         lyr.set('opacity', value)
         lyr.set('defaultOpacity', value)
         try {
-          if (typeof window['localStorage'] !== 'undefined') {
-            window['localStorage'].setItem(this_.project + '-' + lyr.get('title') + '-opacity', value)
+          if (this_.useStorage) {
+            localforage.setItem(this_.project + '-' + lyr.get('title') + '-opacity', value)
           }
         } catch (e) {
           console.log('Local storage is not supported. ' + e)

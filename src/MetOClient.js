@@ -25,7 +25,7 @@ export class MetOClient {
     let project
     let mapPostId
     let animationResolutionTime
-    let instanceId = 'metoclient' + Date.now()
+    let instanceId = 'metoclient'
     let newConfig = {
       'project': '',
       'map': {
@@ -126,22 +126,14 @@ export class MetOClient {
       this.config_['time']['view']['timeStepText'] = this.config_['localization'][locale]['timeStepText']
     }
 
+    instanceId += '-' + project
     localforage.config({
       name: instanceId,
       storeName: instanceId
     })
     if ((!localforage.supports(localforage.INDEXEDDB)) && (!localforage.supports(localforage.WEBSQL)) && (!localforage.supports(localforage.LOCALSTORAGE))) {
-      config['view']['mapLoader'] = 'all'
+      this.config_['map']['view']['mapLoader'] = 'all'
     }
-
-    /**
-     * @private
-     */
-    this.timeController_ = new TimeController(this.config_['time'])
-    /**
-     * @private
-     */
-    this.mapController_ = new MapController(this.config_['map'], this.timeController_.getCreationTime())
     /**
      * @private
      */
@@ -201,7 +193,8 @@ export class MetOClient {
       'staticControls',
       'staticOverlayGroupName',
       'surfaceGroupName',
-      'tooltipOffset'
+      'tooltipOffset',
+      'useStorage'
     ]
     let timeModel = [
       'autoReplay',
@@ -383,7 +376,8 @@ export class MetOClient {
           'staticControls': false,
           'staticOverlayGroupName': 'Static overlays',
           'surfaceGroupName': 'Surface',
-          'tooltipOffset': [20, 0]
+          'tooltipOffset': [20, 0],
+          'useStorage': true
         }
       },
       'time': {
@@ -951,13 +945,38 @@ export class MetOClient {
   }
 
   /**
-   * Produces a new animation.
+   * Starts a new animation creation.
    * @param {Object=} callbacks Callback functions for map events.
    * @return {MetOClient} Owner class.
    * @export
    */
   createAnimation (callbacks) {
     let self = this
+    if ((this.config_['map']['view']['mapLoader'] === 'all') && (!this.config_['map']['view']['useStorage'])) {
+      this.produceAnimation(callbacks)
+    } else {
+      // Test storage before relying on it
+      localforage.setItem('metoclient-key', 'metoclient-value').then(function () {
+        return localforage.getItem('metoclient-key')
+      }).catch(err => {
+        self.config_['map']['view']['mapLoader'] = 'all'
+        self.config_['map']['view']['useStorage'] = false
+      }).finally(() => {
+        self.produceAnimation(callbacks)
+      })
+    }
+  }
+
+  /**
+   * Produces a new animation.
+   * @param {Object=} callbacks Callback functions for map events.
+   * @return {MetOClient} Owner class.
+   * @export
+   */
+  produceAnimation (callbacks) {
+    let self = this
+    this.timeController_ = new TimeController(this.config_['time'])
+    this.mapController_ = new MapController(this.config_['map'], this.timeController_.getCreationTime())
     utils.supportOldBrowsers()
     this.initContainers()
     this.reloadListener_ = () => {

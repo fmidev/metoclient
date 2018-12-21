@@ -541,7 +541,6 @@ MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, di
   let extent
   let featureGroupName
   let groupNames
-  let layerGroupTitle
   let layerVisibility
   let loadId
   let map = this.get('map')
@@ -605,7 +604,7 @@ MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, di
         if (currentVisibility !== undefined) {
           layer.setVisible(currentVisibility)
         }
-        if (layerGroupTitle === overlayGroupName) {
+        if (groupName === overlayGroupName) {
           if (currentVisibility) {
             anyVisible = true
           }

@@ -217,8 +217,10 @@ export default class TimeController {
     let i
     let empty = true
     if (numIntervalItems.length === 0) {
-      this.model_.setAnimationTimes([])
-      this.updateTimeLoaderVisualizations([])
+      if (this.config_['model']['resolutionTime'] == null) {
+        this.model_.setAnimationTimes([])
+        this.updateTimeLoaderVisualizations([])
+      }
       return
     }
     if (this.getAnimationBackupTime() == null) {

@@ -1,5 +1,8 @@
 .project
 
+# Temporary files
+tmp
+
 ### Node ###
 # Logs
 logs

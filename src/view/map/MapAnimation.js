@@ -607,7 +607,7 @@ MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, di
         }
         if (layerGroupTitle === overlayGroupName) {
           if (currentVisibility) {
-            anyVisible = currentVisibility
+            anyVisible = true
           }
         } else if ((!currentVisibility) && (selectedFeature != null) && (layerTitle === selectedFeature.get('layerTitle'))) {
           this.selectFeature(null)
@@ -615,6 +615,7 @@ MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, di
       })
     })
     if (!anyVisible) {
+      this.variableEvents.emitEvent('numIntervalItems', [[]])
       this.actionEvents.emitEvent('reload')
     }
     if (this.get('config')['showMarker']) {
@@ -1019,6 +1020,8 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
   let numLayers
   let config
   let containsAnimationLayers = false
+  let containsVisibleAnimationLayers = false
+  let containsChangedAnimationLayers = false
   let overlayGroupName
   let layerConfigs = this.get('layers')
   let layers
@@ -1052,6 +1055,12 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
       return true
     }
     if (currentVisibility) {
+      containsVisibleAnimationLayers = true
+    }
+    if (layer.get('visible') !== currentVisibility) {
+      containsChangedAnimationLayers = true
+    }
+    if (currentVisibility) {
       numSubLayers = 0
       if (typeof layer.getLayers === 'function') {
         subLayers = layer.getLayers()
@@ -1068,7 +1077,7 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
       }
     }
   }
-  return false
+  return containsVisibleAnimationLayers && containsChangedAnimationLayers
 }
 
 /**
@@ -1776,7 +1785,7 @@ MapAnimation.prototype.getLayersByGroup = function (groupTitle) {
       return layerGroup.getLayers()
     }
   }
-  return []
+  return new OlCollection()
 }
 
 /**

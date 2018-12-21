@@ -65,6 +65,7 @@ export default class TimeSlider {
    */
   createTimeSlider (moments) {
     if ((moments == null) || (moments.length === 0)) {
+      this.clear()
       return
     }
     this.clear()

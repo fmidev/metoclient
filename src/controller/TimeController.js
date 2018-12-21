@@ -213,11 +213,12 @@ export default class TimeController {
    * @param {Array<Object>} numIntervalItems Loader counter information for intervals.
    */
   updateTimeSteps (numIntervalItems) {
-    const numViews = this.views_.length
     let numIntervals
     let i
     let empty = true
     if (numIntervalItems.length === 0) {
+      this.model_.setAnimationTimes([])
+      this.updateTimeLoaderVisualizations([])
       return
     }
     if (this.getAnimationBackupTime() == null) {
@@ -256,9 +257,7 @@ export default class TimeController {
       animationTimes.push(intervalItem['endTime'])
       return animationTimes
     }, []))
-    for (i = 0; i < numViews; i++) {
-      this.views_[i].updateTimeLoaderVis(numIntervalItems)
-    }
+    this.updateTimeLoaderVisualizations(numIntervalItems)
     this.updateTimeSlider()
     if (this.model_.isWaitingAutoStart()) {
       for (i = 0; i < numIntervals; i++) {
@@ -541,5 +540,17 @@ export default class TimeController {
     this.views_.forEach(view => {
       view.setCallbacks(callbacks)
     })
+  }
+
+  /**
+   *  Updates time loader visualizations.
+   * @param numIntervalItems {Array} Numbers of interval items.
+   */
+  updateTimeLoaderVisualizations (numIntervalItems) {
+    let i
+    const numViews = this.views_.length
+    for (i = 0; i < numViews; i++) {
+      this.views_[i].updateTimeLoaderVis(numIntervalItems)
+    }
   }
 }

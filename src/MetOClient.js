@@ -632,10 +632,10 @@ export class MetOClient {
       this.callbacks_ = callbacks
     }
     if (callbacks === null) {
-      callbacks = {}
+      this.callbacks_ = {}
     }
-    this.timeController_.refreshTime(callbacks)
-    this.createMap(callbacks, true)
+    this.timeController_.refreshTime(this.callbacks_)
+    this.createMap(this.callbacks_, true)
   }
 
   /**

@@ -2340,6 +2340,11 @@ MapAnimation.prototype.setCallbacks = function (callbacks) {
  */
 MapAnimation.prototype.isValidLayerTime = function (layerTime, prevLayerTime, currentTime, layerOptions) {
   let config = this.get('config')
+  const absBeginTime = /** @type {number} */ (this.get('animationBeginTime'))
+  const absEndTime = /** @type {number} */ (this.get('animationEndTime'))
+  if ((layerTime < absBeginTime) || (layerTime > absEndTime)) {
+    return false
+  }
   // Ignore future observations (empty images)
   if ((layerTime >= currentTime - config['ignoreObsOffset']) && (layerOptions['type'] === this.layerTypes['observation'])) {
     return false

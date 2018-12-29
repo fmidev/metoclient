@@ -128,7 +128,7 @@ export default class Time {
     if (!self.play_) {
       this.handleTimer_()
     }
-    if ((refreshInterval == null) || (typeof refreshInterval !== 'number') || (refreshInterval <= 0) || (refreshInterval > constants.MAX_REFRESH_INTERVAL)) {
+    if (!this.isValidRefreshInterval()) {
       return
     }
     setTimeout(() => {
@@ -145,7 +145,7 @@ export default class Time {
       const currentTime = Date.now()
       let timeDelay
       let animationTimeIndex = 0
-      if ((currentTime - self.animationLastRefreshed_ > self.refreshInterval_) && (currentTime - self.timeCreatedAt_ > 0.5 * self.refreshInterval_)) {
+      if ((self.isValidRefreshInterval()) && ((currentTime - self.animationLastRefreshed_ > self.refreshInterval_) && (currentTime - self.timeCreatedAt_ > 0.5 * self.refreshInterval_))) {
         if (self.play_) {
           self.updateAnimationBackupTime()
           self.pause()
@@ -225,9 +225,12 @@ export default class Time {
   setAnimationLastRefreshed (newTime) {
     // Todo: from configuration
     const waitTimeForNewImages = 5 * 60 * 1000
-    this.animationLastRefreshed_ = newTime - newTime % this.refreshInterval_
-    if (this.refreshInterval_ > waitTimeForNewImages) {
-      this.animationLastRefreshed_ += waitTimeForNewImages
+    this.animationLastRefreshed_ = newTime
+    if (this.isValidRefreshInterval()) {
+      this.animationLastRefreshed_ -= newTime % this.refreshInterval_
+      if (this.refreshInterval_ > waitTimeForNewImages) {
+        this.animationLastRefreshed_ += waitTimeForNewImages
+      }
     }
   }
 
@@ -502,6 +505,14 @@ export default class Time {
    */
   updateAnimationBackupTime () {
     this.animationBackupTime_ = this.getAnimationTime()
+  }
+
+  /**
+   * Check the refresh interval validity.
+   */
+  isValidRefreshInterval () {
+    let refreshInterval = this.refreshInterval_
+    return ((refreshInterval != null) && (typeof refreshInterval === 'number') && (refreshInterval > 0) && (refreshInterval <= constants.MAX_REFRESH_INTERVAL))
   }
 
   /**

@@ -77,6 +77,12 @@ export class MetOClient {
      */
     this.animationTimeListener_ = animationTime => {
     }
+    /**
+     *
+     * @type {Object}
+     * @private
+     */
+    this.updateQueue_ = null
 
     // Configuration from default values
     extend(true, newConfig, this.getDefaultConfig())
@@ -585,6 +591,13 @@ export class MetOClient {
    * @export
    */
   updateAnimation (options, callbacks) {
+    if ((this.timeController_ == null) || (this.mapController_ == null)) {
+      this.updateQueue_ = {
+        options,
+        callbacks
+      }
+      return
+    }
     if (options['gridTime'] != null) {
       this.timeController_.setGridTime(options['gridTime'])
     }
@@ -975,6 +988,8 @@ export class MetOClient {
    */
   produceAnimation (callbacks) {
     let self = this
+    let updateOptions
+    let updateCallbacks
     this.timeController_ = new TimeController(this.config_['time'])
     this.mapController_ = new MapController(this.config_['map'], this.timeController_.getCreationTime())
     utils.supportOldBrowsers()
@@ -1006,7 +1021,14 @@ export class MetOClient {
     }
     this.callbacks_ = callbacks
     this.createTime(callbacks)
-    this.createMap(callbacks)
+    if (this.updateQueue_ == null) {
+      this.createMap(callbacks)
+    } else {
+      updateOptions = this.updateQueue_['options']
+      updateCallbacks = this.updateQueue_['callbacks']
+      this.updateQueue_ = null
+      this.updateAnimation(updateOptions, updateCallbacks)
+    }
     return this
   }
 

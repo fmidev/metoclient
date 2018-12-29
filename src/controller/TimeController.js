@@ -331,6 +331,10 @@ export default class TimeController {
    * Refreshes current real-world time.
    * @param {Object=} callbacks Callback functions for time events.   */
   refreshTime (callbacks) {
+    // Configuration for static view or manual refresh
+    if (!this.model_.isValidRefreshInterval()) {
+      return
+    }
     let timeShift
     const currentTime = Date.now()
     let resolutionTime = this.model_.getAnimationResolutionTime()

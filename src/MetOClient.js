@@ -591,6 +591,9 @@ export class MetOClient {
    * @export
    */
   updateAnimation (options, callbacks) {
+    if (options['frameRate'] != null) {
+      this.timeController_.setFrameRate(options['frameRate'])
+    }
     if (options['gridTime'] != null) {
       this.timeController_.setGridTime(options['gridTime'])
     }

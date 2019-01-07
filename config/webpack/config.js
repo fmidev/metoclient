@@ -27,7 +27,11 @@ module.exports = {
           ],
           plugins: [
             'webpack-named-dynamic-imports',
-            'array-includes'
+            'array-includes',
+            ['transform-runtime', {
+              'polyfill': false,
+              'regenerator': true
+            }]
           ]
         }
       }, {

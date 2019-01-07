@@ -61,6 +61,8 @@ FullAnimationLoader.prototype.initMap = function () {
   let numLayerGroups
   let staticLayers
   let layerType
+  let selectedFeature
+  let timePropertyName
   if (target == null) {
     return
   }
@@ -69,6 +71,15 @@ FullAnimationLoader.prototype.initMap = function () {
     this.set('configChanged', false)
   }
   if (map != null) {
+    selectedFeature = this.getSelectedFeature()
+    if (selectedFeature != null) {
+      this.set('selectedFeatureId', selectedFeature.get('id'))
+      this.set('selectedFeatureLayer', selectedFeature.get('layerTitle'))
+      timePropertyName = selectedFeature.get('timePropertyName')
+      if ((timePropertyName != null) && (timePropertyName.length > 0)) {
+        this.set('selectedFeatureTime', selectedFeature.get(timePropertyName))
+      }
+    }
     layerVisibility = map.get('layerVisibility')
     this.getLayersByGroup(config['overlayGroupName']).forEach(layer => {
       layer.setLayers(new OlCollection())
@@ -237,7 +248,8 @@ FullAnimationLoader.prototype.initMap = function () {
       'legendTitle': config['legendTitle'],
       'noLegendText': config['noLegendText'],
       'baseGroupName': config['baseGroupName'],
-      'opacityTitle': config['opacityTitle']
+      'opacityTitle': config['opacityTitle'],
+      'useStorage': config['useStorage']
     })
     this.set('layerSwitcher', layerSwitcher)
     map.addControl(layerSwitcher)
@@ -352,8 +364,10 @@ FullAnimationLoader.prototype.initListeners = function () {
     }
   })
 
-  this.on('change:updateRequested', function (e) {
-    setTimeout(this.handleUpdateRequest(this.get('updateRequested'), true), this.updateRequestResolution)
+  this.on('change:updateRequested', e => {
+    setTimeout(() => {
+      this.handleUpdateRequest(this.get('updateRequested'), true)
+    }, this.updateRequestResolution)
   })
 
   this.on('updateLoadQueue', e => {
@@ -395,6 +409,7 @@ FullAnimationLoader.prototype.initListeners = function () {
       if (sourceOptions == null) {
         sourceOptions = {}
       }
+      sourceOptions['useStorage'] = config['useStorage']
       source = mapProducer.sourceFactory(className, sourceOptions, config['cacheTime'])
       sourceProperties = layer.get('sourceProperties')
       if (typeof sourceProperties !== 'undefined') {

@@ -39,7 +39,7 @@ export default class MapController {
     }
     this.numIntervalItemsListener_ = () => {
     }
-  };
+  }
 
   /**
    * Produces a new map.
@@ -79,14 +79,14 @@ export default class MapController {
         self.view_.createAnimation(layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks, useConfig)
       })
       .catch(e => console.log(e))
-    };
+  }
 
   /**
    * Refreshes the animation map.
    */
   refreshMap () {
     this.view_.createAnimation()
-  };
+  }
 
   /**
    * Destroys the animation map.
@@ -95,7 +95,7 @@ export default class MapController {
     this.actionEvents.removeAllListeners()
     this.variableEvents.removeAllListeners()
     this.view_.destroyAnimation()
-  };
+  }
 
   /**
    * Sets the animation time.
@@ -103,7 +103,7 @@ export default class MapController {
    */
   setAnimationTime (animationTime) {
     this.view_.setAnimationTime(animationTime)
-  };
+  }
 
   /**
    * Gets the number of animation time intervals.
@@ -111,7 +111,7 @@ export default class MapController {
    */
   getAnimationNumIntervals () {
     return this.model_.getAnimationNumIntervals()
-  };
+  }
 
   /**
    * Sets map zoom level.
@@ -119,7 +119,7 @@ export default class MapController {
    */
   setZoom (level) {
     this.view_.setZoom(level)
-  };
+  }
 
   /**
    * Sets map center.
@@ -127,7 +127,7 @@ export default class MapController {
    */
   setCenter (coordinates) {
     this.view_.setCenter(coordinates)
-  };
+  }
 
   /**
    * Sets map rotation.
@@ -135,7 +135,7 @@ export default class MapController {
    */
   setRotation (angle) {
     this.view_.setRotation(angle)
-  };
+  }
 
   /**
    * Sets the map layers.
@@ -143,7 +143,7 @@ export default class MapController {
    */
   setLayers (layers) {
     this.model_.setLayers(layers)
-  };
+  }
 
   /**
    * Updates the map layers.
@@ -151,7 +151,7 @@ export default class MapController {
    */
   updateLayers (layers) {
     this.model_.updateLayers(layers)
-  };
+  }
 
   /**
    * Gets the animation map.
@@ -159,7 +159,7 @@ export default class MapController {
    */
   getMap () {
     return this.view_.getMap()
-  };
+  }
 
   /**
    * Gets vector layer features.
@@ -168,7 +168,7 @@ export default class MapController {
    */
   getFeatures (layerTitle) {
     return this.view_.getFeatures(layerTitle)
-  };
+  }
 
   /**
    * Gets vector layer features at given location.
@@ -179,7 +179,7 @@ export default class MapController {
    */
   getFeaturesAt (layerTitle, coordinate, tolerance) {
     return this.view_.getFeaturesAt(layerTitle, coordinate, tolerance)
-  };
+  }
 
   /**
    * Adds features to vector layer.
@@ -189,7 +189,7 @@ export default class MapController {
    */
   addFeatures (layerTitle, projection, featureOptions) {
     this.view_.addFeatures(layerTitle, projection, featureOptions)
-  };
+  }
 
   /**
    * Removes all features from a vector layer.
@@ -197,7 +197,7 @@ export default class MapController {
    */
   clearFeatures (layerTitle) {
     this.view_.clearFeatures(layerTitle)
-  };
+  }
 
   /**
    * Selects a vector feature.
@@ -205,7 +205,7 @@ export default class MapController {
    */
   selectFeature (feature) {
     this.view_.selectFeature(feature)
-  };
+  }
 
   /**
    * Shows a popup window on the map.
@@ -215,14 +215,14 @@ export default class MapController {
    */
   showPopup (content, coordinate, append) {
     this.view_.showPopup(content, coordinate, append)
-  };
+  }
 
   /**
    * Hides popup window on the map.
    */
   hidePopup () {
     this.view_.hidePopup()
-  };
+  }
 
   /**
    * Gets a map layer.
@@ -231,14 +231,14 @@ export default class MapController {
    */
   getLayer (layerTitle) {
     return this.view_.getLayer(layerTitle)
-  };
+  }
 
   /**
    * Request a map view update.
    */
   requestViewUpdate () {
     this.view_.requestViewUpdate()
-  };
+  }
 
   /**
    * Sets layer visibility.
@@ -247,7 +247,7 @@ export default class MapController {
    */
   setLayerVisible (layerTitle, visibility) {
     this.view_.setLayerVisible(layerTitle, visibility)
-  };
+  }
 
   /**
    * Sets map interactions.
@@ -255,7 +255,7 @@ export default class MapController {
    */
   setInteractions (interactionOptions) {
     this.view_.setInteractions(interactionOptions)
-  };
+  }
 
   /**
    * Enables or disables static map controls.
@@ -263,7 +263,7 @@ export default class MapController {
    */
   setStaticControls (staticControls) {
     this.view_.setStaticControls(staticControls)
-  };
+  }
 
   /**
    * Returns static map controls status.
@@ -271,7 +271,7 @@ export default class MapController {
    */
   getStaticControls () {
     return this.view_.getStaticControls()
-  };
+  }
 
   /**
    * Sets callback functions.
@@ -279,7 +279,7 @@ export default class MapController {
    */
   setCallbacks (callbacks) {
     this.view_.setCallbacks(callbacks)
-  };
+  }
 
   /**
    * Sets the capabilities data.
@@ -287,5 +287,5 @@ export default class MapController {
    */
   setCapabilities (capabilities) {
     this.model_.setCapabilities(capabilities)
-  };
+  }
 }

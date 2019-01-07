@@ -15,6 +15,7 @@ export default class Map {
    */
   constructor (config, referenceTime) {
     let numLayers = 0
+    let featureId = 0
     let i
     this.config_ = config
     this.referenceTime_ = referenceTime
@@ -35,6 +36,14 @@ export default class Map {
       }
       if ((this.layers_[i]['className'].toLowerCase() === 'vector') && (this.layers_[i]['type'] == null)) {
         this.layers_[i]['type'] = 'features'
+      }
+      if ((this.layers_[i]['type'] === 'features') && (Array.isArray(this.layers_[i]['source']['features']))) {
+        this.layers_[i]['source']['features'].forEach(feature => {
+          if (feature['id'] == null) {
+            featureId++
+            feature['id'] = Date.now().toString() + featureId.toString()
+          }
+        })
       }
     }
   }

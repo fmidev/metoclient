@@ -224,6 +224,7 @@ export class MetOClient {
       'lastDataPointTime',
       'locale',
       'modifiedResolutionTime',
+      'mouseWheelTimeStep',
       'resolutionTime',
       'showTimeSlider',
       'showTimeSliderMenu',
@@ -402,6 +403,7 @@ export class MetOClient {
         },
         'view': {
           'locale': 'en',
+          'mouseWheelTimeStep': true,
           'showTimeSlider': true,
           'showTimeSliderMenu': false,
           'timeSliderContainer': 'fmi-metoclient-timeslider',

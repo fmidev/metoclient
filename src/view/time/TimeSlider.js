@@ -113,10 +113,12 @@ export default class TimeSlider {
 
     let momentsContainer = document.createElement('div')
     momentsContainer.classList.add(TimeSlider.FRAMES_CONTAINER_CLASS)
-    this.mouseListeners_.push(listen(momentsContainer, 'wheel', event => {
-      self.step(event.deltaY)
-      event.preventDefault()
-    }))
+    if (this.config_['mouseWheelTimeStep']) {
+      this.mouseListeners_.push(listen(momentsContainer, 'wheel', event => {
+        self.step(event.deltaY)
+        event.preventDefault()
+      }))
+    }
     clickableContainer.appendChild(momentsContainer)
 
     clickableContainer.appendChild(this.createPostTools())

@@ -1012,6 +1012,9 @@ MapAnimation.prototype.isAnimationLayer = function (layer) {
  * @returns {boolean} Reload need.
  */
 MapAnimation.prototype.reloadNeeded = function (extent) {
+  if (Object.keys(this.numIntervalItems).length === 0) {
+    return true
+  }
   let map
   let layerVisibility
   let currentVisibility

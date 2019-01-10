@@ -119,6 +119,7 @@ export class MetOClient {
       this.config_['map']['view']['featureGroupName'] = this.config_['localization'][locale]['features']
       this.config_['map']['view']['layersTooltip'] = this.config_['localization'][locale]['layersTooltip']
       this.config_['map']['view']['legendTitle'] = this.config_['localization'][locale]['legend']
+      this.config_['map']['view']['locale'] = this.config_['localization']['locale']
       this.config_['map']['view']['noLegendText'] = this.config_['localization'][locale]['noLegend']
       this.config_['map']['view']['opacityTitle'] = this.config_['localization'][locale]['opacity']
       this.config_['map']['view']['overlayGroupName'] = this.config_['localization'][locale]['overlays']
@@ -184,6 +185,7 @@ export class MetOClient {
       'layerSwitcherContainer',
       'legendContainer',
       'legendLabel',
+      'locale',
       'mapContainer',
       'mapLoader',
       'markerImagePath',
@@ -369,6 +371,7 @@ export class MetOClient {
           'layerSwitcherContainer': 'fmi-metoclient-layer-switcher',
           'legendContainer': 'fmi-metoclient-legend',
           'legendLabel': 'Legend',
+          'locale': 'en',
           'mapContainer': 'fmi-metoclient-map',
           'mapLoader': 'single',
           'markerImagePath': '../img/marker.png',

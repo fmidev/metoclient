@@ -59,10 +59,10 @@ List of API functions:
         * zoom(level)
 * updateAnimation(options, callbacks)
     * possible options properties
-	* animationTime
+        * animationTime
         * beginTime
         * endTime
-	* frameTime
+        * frameRate
         * layers
         * layersChanged
         * timeStep

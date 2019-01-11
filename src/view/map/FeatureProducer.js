@@ -13,6 +13,7 @@ import OlStyleText from 'ol/style/text'
 import OlStyleCircle from 'ol/style/circle'
 import OlStyleRegularShape from 'ol/style/regularshape'
 import * as constants from '../../constants'
+import * as utils from '../../utils'
 
 /**
  * @fileoverview Map source factory.
@@ -87,37 +88,10 @@ export default class FeatureProducer {
       let name
       let value
       let filter
-      let filters
       let numFilters
       let property
       if (styleOptions['condition'] != null) {
-        filters = [
-          {
-            'name': 'equalTo',
-            'test': (a, b) => (a === b)
-          },
-          {
-            'name': 'lessThan',
-            'test': (a, b) => (a < b)
-          },
-          {
-            'name': 'lessThanOrEqualTo',
-            'test': (a, b) => (a < b)
-          },
-          {
-            'name': 'greaterThan',
-            'test': (a, b) => (a > b)
-          },
-          {
-            'name': 'greaterThanOrEqualTo',
-            'test': (a, b) => (a >= b)
-          },
-          {
-            'name': 'between',
-            'test': (a, b) => ((b[0] <= a) && (a <= b[1]))
-          }
-        ]
-        numFilters = filters.length
+        numFilters = utils['filters'].length
         if (Array.isArray(styleOptions['condition']['properties'])) {
           numProperties = styleOptions['condition']['properties'].length
           for (i = 0; i < numProperties; i++) {
@@ -127,8 +101,8 @@ export default class FeatureProducer {
               value = feature.get(name)
               if (value != null) {
                 for (j = 0; j < numFilters; j++) {
-                  filter = property[filters[j]['name']]
-                  if ((typeof filter !== 'undefined') && (!filters[j]['test'](value, filter))) {
+                  filter = property[utils['filters'][j]['name']]
+                  if ((typeof filter !== 'undefined') && (!utils['filters'][j]['test'](value, filter))) {
                     return styles
                   }
                 }

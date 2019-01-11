@@ -13,6 +13,7 @@ import shallowEqual from 'shallowequal'
 import moment from 'moment-timezone'
 import localforage from 'localforage'
 import * as constants from '../../constants'
+import * as utils from '../../utils'
 import renameKeys from 'rename-keys'
 import MapProducer from './MapProducer'
 import FeatureProducer from './FeatureProducer'
@@ -239,8 +240,30 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let layers = self.getLayersByGroup(config['featureGroupName']).getArray()
     let numLayers = layers.length
     let i
+    let j
+    let k
+    let l
+    let m
+    let property
+    let dataItem
+    let dataItems
+    let numDataItems
     let layerData
+    let layerHeader
     let coordOffset = [0, 0]
+    let numFilters
+    let style
+    let styles
+    let numStyles
+    let validCondition
+    let filter
+    let header
+    let locale
+    let layerId
+    let numFeatures
+    let propertyData
+    let numProperties
+    let coord
     for (i = 0; i < numLayers; i++) {
       layerData = layers[i].get(type + 'Data')
       if ((Array.isArray(layerData)) && (layerData.length > 0) && (layers[i].get('visible')) && (layers[i].get('opacity'))) {
@@ -257,6 +280,10 @@ MapAnimation.prototype.initMouseInteractions = function () {
         return
       }
       feature.set(type + 'Data', layerData)
+      layerHeader = layer.get(type + 'Header')
+      if (layerHeader != null) {
+        feature.set(type + 'Header', layerHeader)
+      }
       let layerId = feature.getId()
       if (layerId != null) {
         const separatorIndex = layerId.indexOf('.')
@@ -296,41 +323,96 @@ MapAnimation.prototype.initMouseInteractions = function () {
       }
       return 0
     })
-    let numFeatures = features.length
+    numFilters = utils['filters'].length
+    numFeatures = features.length
     if (numFeatures > 0) {
       let content = ''
-      for (let j = 0; j < numFeatures; j++) {
-        let properties = features[j].get(type + 'Data')
-        let numProperties = properties.length
-        let layerId = features[j].get('layerId')
+      for (j = 0; j < numFeatures; j++) {
+        header = features[j].get(type + 'Header')
+        locale = config['locale']
+        dataItems = features[j].get(type + 'Data')
+        numDataItems = dataItems.length
+        layerId = features[j].get('layerId')
         if (content.length === 0) {
           content += '<div class="fmi-metoclient-' + type + '-content">'
         }
         content += '<div class="fmi-metoclient-' + type + '-item">'
-        if (layerId.length > 0) {
+        if (header != null) {
+          content += '<b>' + header[locale] + '</b><br>'
+        } else if (layerId.length > 0) {
           content += '<b>' + layerId + '</b><br>'
         }
-        for (let i = 0; i < numProperties; i++) {
-          let property = properties[i].trim()
-          if (property === 'the_geom') {
-            let coord = features[j].getGeometry().getCoordinates()
-            if (coord != null) {
-              let coord4326 = OlProj.transform(
-                coord,
-                viewProjection,
-                'EPSG:4326'
-              )
-              content += 'coordinates: ' + coord4326[1].toFixed(3) + ' ' + coord4326[0].toFixed(3) + '<br>'
+        for (i = 0; i < numDataItems; i++) {
+          dataItem = dataItems[i]
+          if (dataItem == null) {
+            return
+          }
+          if (typeof dataItem === 'object') {
+            styles = dataItem['styles']
+            if ((styles != null) && (Array.isArray(styles))) {
+              numStyles = styles.length
+              for (k = 0; k < numStyles; k++) {
+                style = styles[k]
+                validCondition = true
+                if ((style['condition'] != null) && (style['condition']['properties'] != null) && (Array.isArray(style['condition']['properties']))) {
+                  numProperties = style['condition']['properties'].length
+                  loopProperties:
+                  for (l = 0; l < numProperties; l++) {
+                    property = style['condition']['properties'][l]
+                    if ((property['name'] != null) && (property['name'].length > 0)) {
+                      let value = features[j].get(property['name'])
+                      value = parseFloat(value)
+                      if (value != null) {
+                        for (m = 0; m < numFilters; m++) {
+                          filter = property[utils['filters'][m]['name']]
+                          if ((typeof filter !== 'undefined') && (!utils['filters'][m]['test'](value, filter))) {
+                            validCondition = false
+                            break loopProperties
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+                if (validCondition) {
+                  if (dataItem['title'] != null) {
+                    content += dataItem['title'][locale] + ': '
+                  }
+                  if (style['prefix'] != null) {
+                    content += style['prefix'] + ' '
+                  }
+                  if (style['text'] != null) {
+                    content += style['text'][locale]
+                  }
+                  if (style['postfix'] != null) {
+                    content += ' ' + style['postfix']
+                  }
+                  content += '<br>'
+                }
+              }
             }
           } else {
-            let propertyData = features[j].get(property)
-            if (propertyData != null) {
-              if (['time', 'begintime', 'endtime'].indexOf(property) >= 0) {
-                content += property + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'
-              } else if ((property === 'name') && (numProperties === 1)) {
-                content += propertyData + '<br>'
-              } else {
-                content += property + ': ' + propertyData + '<br>'
+            dataItem = dataItem.trim()
+            if (dataItem === 'the_geom') {
+              coord = features[j].getGeometry().getCoordinates()
+              if (coord != null) {
+                let coord4326 = OlProj.transform(
+                  coord,
+                  viewProjection,
+                  'EPSG:4326'
+                )
+                content += 'coordinates: ' + coord4326[1].toFixed(3) + ' ' + coord4326[0].toFixed(3) + '<br>'
+              }
+            } else {
+              propertyData = features[j].get(dataItem)
+              if (propertyData != null) {
+                if (['time', 'begintime', 'endtime'].indexOf(dataItem) >= 0) {
+                  content += dataItem + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'
+                } else if ((dataItem === 'name') && (numProperties === 1)) {
+                  content += propertyData + '<br>'
+                } else {
+                  content += dataItem + ': ' + propertyData + '<br>'
+                }
               }
             }
           }
@@ -1777,6 +1859,10 @@ MapAnimation.prototype.destroyAnimation = function () {
  * @returns {Array} Layers array.
  */
 MapAnimation.prototype.getLayersByGroup = function (groupTitle) {
+  let emptyCollection = new OlCollection()
+  if ((groupTitle == null) || (groupTitle.length === 0)) {
+    return emptyCollection
+  }
   let map = this.get('map')
   let layerGroups = (map != null) ? map.getLayers() : new OlCollection()
   let numLayerGroups = layerGroups.getLength()
@@ -1787,7 +1873,7 @@ MapAnimation.prototype.getLayersByGroup = function (groupTitle) {
       return layerGroup.getLayers()
     }
   }
-  return new OlCollection()
+  return emptyCollection
 }
 
 /**

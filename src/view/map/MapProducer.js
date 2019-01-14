@@ -177,7 +177,9 @@ export default class MapProducer {
             }
           }
         })
-        options['zIndex'] = constants.zIndex.vector + z['value']
+        if (options['zIndex'] === undefined) {
+          options['zIndex'] = constants.zIndex.vector + z['value']
+        }
         let layer = new OlLayerVector(options)
         layer.setZIndex(options['zIndex'])
         layer.set('extraStyles', extraStyles)

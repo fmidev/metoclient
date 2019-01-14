@@ -227,3 +227,33 @@ export const createTimeMenu = (options) => {
 export const transformCoordinates = (fromProjection, toProjection, coordinates) => {
   return proj4(fromProjection, toProjection, coordinates)
 }
+
+/**
+ * Defines comparison filters between two variables.
+ */
+export const filters = [
+  {
+    'name': 'equalTo',
+    'test': (a, b) => (a === b)
+  },
+  {
+    'name': 'lessThan',
+    'test': (a, b) => (a < b)
+  },
+  {
+    'name': 'lessThanOrEqualTo',
+    'test': (a, b) => (a < b)
+  },
+  {
+    'name': 'greaterThan',
+    'test': (a, b) => (a > b)
+  },
+  {
+    'name': 'greaterThanOrEqualTo',
+    'test': (a, b) => (a >= b)
+  },
+  {
+    'name': 'between',
+    'test': (a, b) => ((b[0] <= a) && (a <= b[1]))
+  }
+]

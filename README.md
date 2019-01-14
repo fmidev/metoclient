@@ -62,6 +62,7 @@ List of API functions:
         * animationTime
         * beginTime
         * endTime
+        * frameRate
         * layers
         * layersChanged
         * timeStep

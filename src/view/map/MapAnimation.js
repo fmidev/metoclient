@@ -233,6 +233,9 @@ MapAnimation.prototype.initMouseInteractions = function () {
   let handleWFSInteraction = (type, pixel) => {
     let dataShown = false
     let features = []
+    let feature
+    let value
+    let propertyValue
     let view = map.getView()
     let viewProjection = view.getProjection()
     let typeActive = false
@@ -328,11 +331,12 @@ MapAnimation.prototype.initMouseInteractions = function () {
     if (numFeatures > 0) {
       let content = ''
       for (j = 0; j < numFeatures; j++) {
-        header = features[j].get(type + 'Header')
+        feature = features[j]
+        header = feature.get(type + 'Header')
         locale = config['locale']
         dataItems = features[j].get(type + 'Data')
         numDataItems = dataItems.length
-        layerId = features[j].get('layerId')
+        layerId = feature.get('layerId')
         if (content.length === 0) {
           content += '<div class="fmi-metoclient-' + type + '-content">'
         }
@@ -347,6 +351,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
           if (dataItem == null) {
             return
           }
+          value = feature.get(dataItem['name'])
           if (typeof dataItem === 'object') {
             styles = dataItem['styles']
             if ((styles != null) && (Array.isArray(styles))) {
@@ -360,12 +365,11 @@ MapAnimation.prototype.initMouseInteractions = function () {
                   for (l = 0; l < numProperties; l++) {
                     property = style['condition']['properties'][l]
                     if ((property['name'] != null) && (property['name'].length > 0)) {
-                      let value = features[j].get(property['name'])
-                      value = parseFloat(value)
-                      if (value != null) {
+                      propertyValue = parseFloat(feature.get(property['name']))
+                      if (propertyValue != null) {
                         for (m = 0; m < numFilters; m++) {
                           filter = property[utils['filters'][m]['name']]
-                          if ((typeof filter !== 'undefined') && (!utils['filters'][m]['test'](value, filter))) {
+                          if ((typeof filter !== 'undefined') && (!utils['filters'][m]['test'](propertyValue, filter))) {
                             validCondition = false
                             break loopProperties
                           }
@@ -381,20 +385,20 @@ MapAnimation.prototype.initMouseInteractions = function () {
                   if (style['prefix'] != null) {
                     content += style['prefix'] + ' '
                   }
-                  if (style['text'] != null) {
-                    content += style['text'][locale]
-                  }
+                  content += (((style['text'] != null) && (style['text'][locale] != null)) ? style['text'][locale] : value)
                   if (style['postfix'] != null) {
                     content += ' ' + style['postfix']
                   }
                   content += '<br>'
                 }
               }
+            } else if (value !== undefined) {
+              content += ((dataItem['title'] != null) ? dataItem['title'][locale] : dataItem['name'])  + ': ' + value + '<br>'
             }
           } else {
             dataItem = dataItem.trim()
             if (dataItem === 'the_geom') {
-              coord = features[j].getGeometry().getCoordinates()
+              coord = feature.getGeometry().getCoordinates()
               if (coord != null) {
                 let coord4326 = OlProj.transform(
                   coord,
@@ -404,7 +408,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
                 content += 'coordinates: ' + coord4326[1].toFixed(3) + ' ' + coord4326[0].toFixed(3) + '<br>'
               }
             } else {
-              propertyData = features[j].get(dataItem)
+              propertyData = feature.get(dataItem)
               if (propertyData != null) {
                 if (['time', 'begintime', 'endtime'].indexOf(dataItem) >= 0) {
                   content += dataItem + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'

@@ -709,7 +709,9 @@ export class MetOClient {
    * @export
    */
   play () {
-    this.timeController_.play()
+    if (this.timeController_ != null) {
+      this.timeController_.play()
+    }
   }
 
   /**
@@ -717,7 +719,9 @@ export class MetOClient {
    * @export
    */
   pause () {
-    this.timeController_.pause()
+    if (this.timeController_ != null) {
+      this.timeController_.pause()
+    }
   }
 
   /**
@@ -725,7 +729,9 @@ export class MetOClient {
    * @export
    */
   stop () {
-    this.timeController_.stop()
+    if (this.timeController_ != null) {
+      this.timeController_.stop()
+    }
   }
 
   /**
@@ -733,7 +739,9 @@ export class MetOClient {
    * @export
    */
   previous () {
-    this.timeController_.previous()
+    if (this.timeController_ != null) {
+      this.timeController_.previous()
+    }
   }
 
   /**
@@ -742,7 +750,9 @@ export class MetOClient {
    * @export
    */
   setZoom (level) {
-    this.mapController_.setZoom(level)
+    if (this.mapController_ != null) {
+      this.mapController_.setZoom(level)
+    }
   }
 
   /**
@@ -752,7 +762,9 @@ export class MetOClient {
    * @export
    */
   setCenter (x, y) {
-    this.mapController_.setCenter([x, y])
+    if (this.mapController_ != null) {
+      this.mapController_.setCenter([x, y])
+    }
   }
 
   /**
@@ -761,7 +773,9 @@ export class MetOClient {
    * @export
    */
   setRotation (angle) {
-    this.mapController_.setRotation(angle)
+    if (this.mapController_ != null) {
+      this.mapController_.setRotation(angle)
+    }
   }
 
   /**
@@ -770,7 +784,7 @@ export class MetOClient {
    * @export
    */
   getMap () {
-    return this.mapController_.getMap()
+    return (this.mapController_ != null) ? this.mapController_.getMap() : null
   }
 
   /**
@@ -779,7 +793,7 @@ export class MetOClient {
    * @export
    */
   getTime () {
-    return this.timeController_.getAnimationTime()
+    return (this.timeController_ != null) ? this.timeController_.getAnimationTime() : null
   }
 
   /**
@@ -788,7 +802,9 @@ export class MetOClient {
    * @export
    */
   setTime (animationTime) {
-    this.timeController_.setAnimationTime(animationTime)
+    if (this.timeController_ != null) {
+      this.timeController_.setAnimationTime(animationTime)
+    }
   }
 
   /**
@@ -799,7 +815,9 @@ export class MetOClient {
    * @export
    */
   addFeatures (layerTitle, projection, featureOptions) {
-    this.mapController_.addFeatures(layerTitle, projection, featureOptions)
+    if (this.mapController_ != null) {
+      this.mapController_.addFeatures(layerTitle, projection, featureOptions)
+    }
   }
 
   /**
@@ -808,7 +826,9 @@ export class MetOClient {
    * @export
    */
   clearFeatures (layerTitle) {
-    this.mapController_.clearFeatures(layerTitle)
+    if (this.mapController_ != null) {
+      this.mapController_.clearFeatures(layerTitle)
+    }
   }
 
   /**
@@ -818,7 +838,7 @@ export class MetOClient {
    * @export
    */
   getFeatures (layerTitle) {
-    return this.mapController_.getFeatures(layerTitle)
+    return (this.mapController_ != null) ? this.mapController_.getFeatures(layerTitle) : null
   }
 
   /**
@@ -831,7 +851,7 @@ export class MetOClient {
    * @export
    */
   getFeaturesAt (layerTitle, x, y, tolerance) {
-    return this.mapController_.getFeaturesAt(layerTitle, [x, y], tolerance)
+    return (this.mapController_ != null) ? this.mapController_.getFeaturesAt(layerTitle, [x, y], tolerance) : null
   }
 
   /**
@@ -843,7 +863,9 @@ export class MetOClient {
    * @export
    */
   showPopup (content, x, y, append) {
-    this.mapController_.showPopup(content, [x, y], append)
+    if (this.mapController_ != null) {
+      this.mapController_.showPopup(content, [x, y], append)
+    }
   }
 
   /**
@@ -851,7 +873,9 @@ export class MetOClient {
    * @export
    */
   hidePopup () {
-    this.mapController_.hidePopup()
+    if (this.mapController_ != null) {
+      this.mapController_.hidePopup()
+    }
   }
 
   /**
@@ -861,7 +885,7 @@ export class MetOClient {
    * @export
    */
   getLayer (layerTitle) {
-    return this.mapController_.getLayer(layerTitle)
+    return (this.mapController_ != null) ? this.mapController_.getLayer(layerTitle) : null
   }
 
   /**
@@ -869,7 +893,9 @@ export class MetOClient {
    * @export
    */
   requestViewUpdate () {
-    this.mapController_.requestViewUpdate()
+    if (this.mapController_ != null) {
+      this.mapController_.requestViewUpdate()
+    }
   }
 
   /**
@@ -879,7 +905,9 @@ export class MetOClient {
    * @export
    */
   setLayerVisible (layerTitle, visibility) {
-    this.mapController_.setLayerVisible(layerTitle, visibility)
+    if (this.mapController_ != null) {
+      this.mapController_.setLayerVisible(layerTitle, visibility)
+    }
   }
 
   /**
@@ -888,7 +916,9 @@ export class MetOClient {
    * @export
    */
   setInteractions (interactionOptions) {
-    this.mapController_.setInteractions(interactionOptions)
+    if (this.mapController_ != null) {
+      this.mapController_.setInteractions(interactionOptions)
+    }
   }
 
   /**
@@ -897,7 +927,9 @@ export class MetOClient {
    * @export
    */
   setStaticControls (staticControls) {
-    this.mapController_.setStaticControls(staticControls)
+    if (this.mapController_ != null) {
+      this.mapController_.setStaticControls(staticControls)
+    }
   }
 
   /**
@@ -906,7 +938,7 @@ export class MetOClient {
    * @export
    */
   getStaticControls () {
-    return this.mapController_.getStaticControls()
+    return (this.mapController_ != null) ? this.mapController_.getStaticControls() : null
   }
 
   /**
@@ -943,7 +975,9 @@ export class MetOClient {
    * @export
    */
   setDayStartOffset (gridTimeOffset) {
-    this.timeController_.setDayStartOffset(gridTimeOffset)
+    if (this.timeController_ != null) {
+      this.timeController_.setDayStartOffset(gridTimeOffset)
+    }
   }
 
   /**
@@ -952,7 +986,9 @@ export class MetOClient {
    * @export
    */
   setCapabilities (capabilities) {
-    this.mapController_.setCapabilities(capabilities)
+    if (this.mapController_ != null) {
+      this.mapController_.setCapabilities(capabilities)
+    }
   }
 
   /**

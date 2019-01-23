@@ -637,7 +637,6 @@ MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, di
   if (/** @type {number} */ (this.get('updateRequested')) > updateRequested) {
     return
   }
-  extent = this.calculateExtent(true)
   await this.updateStorage()
   featureGroupName = this.get('config')['featureGroupName']
   selectedFeature = this.getSelectedFeature()
@@ -1115,7 +1114,6 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
   let layers
   let subLayers
   let numSubLayers
-  let subLayerExtent
   let i
   numLayers = layerConfigs.length
   for (i = 0; i < numLayers; i++) {
@@ -1155,12 +1153,6 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
         numSubLayers = subLayers.getLength()
       }
       if (numSubLayers === 0) {
-        return true
-      }
-      // Todo: check all items
-      subLayerExtent = subLayers.item(0).get('extent')
-      // Todo: yhtäsuuruudelle epsilon-käsittely
-      if ((subLayerExtent.length !== extent.length) || (subLayerExtent.some((v, i) => v !== extent[i]))) {
         return true
       }
     }

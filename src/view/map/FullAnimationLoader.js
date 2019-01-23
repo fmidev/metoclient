@@ -226,9 +226,6 @@ FullAnimationLoader.prototype.initMap = function () {
     view: new OlView(this.viewOptions)
   })
   map.set('layerVisibility', layerVisibility)
-  map.on('moveend', () => {
-    self.set('updateRequested', Date.now())
-  })
   map.on('change:layerVisibility', () => {
     self.set('updateRequested', Date.now())
   })
@@ -276,6 +273,7 @@ FullAnimationLoader.prototype.initMap = function () {
     olPopup.style.display = ''
   })
   this.defineSelect()
+  this.requestViewUpdate()
 }
 
 /**
@@ -750,7 +748,6 @@ FullAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
     }
 
     layerOptions = {
-      'extent': extent,
       'animation': {
         'animationTime': layerTime
       },

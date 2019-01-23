@@ -237,9 +237,6 @@ LazyAnimationLoader.prototype.initMap = function () {
     view: new OlView(this.viewOptions)
   })
   map.set('layerVisibility', layerVisibility)
-  map.on('moveend', () => {
-    self.set('updateRequested', Date.now())
-  })
   map.on('change:layerVisibility', () => {
     self.set('updateRequested', Date.now())
   })
@@ -287,6 +284,7 @@ LazyAnimationLoader.prototype.initMap = function () {
     olPopup.style.display = ''
   })
   this.defineSelect()
+  this.requestViewUpdate()
 }
 
 /**
@@ -757,7 +755,6 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   animationTimes[1] = (((animation['beginTime'] == null) || (animation['beginTime'] <= nextAnimationTime)) && ((animation['endTime'] == null) || (nextAnimationTime <= animation['endTime'])) && (this.isValidLayerTime(nextAnimationTime, animationTime, currentTime, layer))) ? nextAnimationTime : loadAnimationTime
   for (k = 0; k < 2; k++) {
     layerOptions.push({
-      'extent': extent,
       'animation': {
         'animationTime': animationTimes[k]
       },

@@ -951,14 +951,16 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
     pGrp[i] = newPGrp[i]
     mapLayerClone = mapLayer.get('clone')
     mapLayerClone.setOpacity(0)
-    if ((!mapLayer.get('layerTimes').includes(animationTime)) || ((mapLayer.get('type') === this.layerTypes['observation']) && (currentTime < animationTime))) {
+    if ((!mapLayer.get('layerTimes').includes(animationTime)) || ((mapLayer.get('type') === this.layerTypes['observation']) && (currentTime < animationTime)) || ((mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
       mapLayer.setOpacity(0)
       mapLayer.get('clone').setOpacity(0)
     } else {
       source = mapLayer.getSource()
       sourceClone = mapLayerClone.getSource()
       if ((source != null) && (source.get('layerTime') === animationTime)) {
-        mapLayer.setOpacity(1)
+        if ((mapLayer.get('type') !== this.layerTypes['forecast']) || (animationTime >= currentTime)) {
+          mapLayer.setOpacity(1)
+        }
       } else {
         if ((sourceClone != null) && (sourceClone.get('layerTime') !== animationTime)) {
           if (mapLayerClone.get('layerTimes').includes(animationTime)) {

@@ -237,9 +237,6 @@ LazyAnimationLoader.prototype.initMap = function () {
     view: new OlView(this.viewOptions)
   })
   map.set('layerVisibility', layerVisibility)
-  map.on('moveend', () => {
-    self.set('updateRequested', Date.now())
-  })
   map.on('change:layerVisibility', () => {
     self.set('updateRequested', Date.now())
   })
@@ -287,6 +284,7 @@ LazyAnimationLoader.prototype.initMap = function () {
     olPopup.style.display = ''
   })
   this.defineSelect()
+  this.requestViewUpdate()
 }
 
 /**
@@ -757,7 +755,6 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
   animationTimes[1] = (((animation['beginTime'] == null) || (animation['beginTime'] <= nextAnimationTime)) && ((animation['endTime'] == null) || (nextAnimationTime <= animation['endTime'])) && (this.isValidLayerTime(nextAnimationTime, animationTime, currentTime, layer))) ? nextAnimationTime : loadAnimationTime
   for (k = 0; k < 2; k++) {
     layerOptions.push({
-      'extent': extent,
       'animation': {
         'animationTime': animationTimes[k]
       },
@@ -954,14 +951,16 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
     pGrp[i] = newPGrp[i]
     mapLayerClone = mapLayer.get('clone')
     mapLayerClone.setOpacity(0)
-    if ((!mapLayer.get('layerTimes').includes(animationTime)) || ((mapLayer.get('type') === this.layerTypes['observation']) && (currentTime < animationTime))) {
+    if ((!mapLayer.get('layerTimes').includes(animationTime)) || ((mapLayer.get('type') === this.layerTypes['observation']) && (currentTime < animationTime)) || ((mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
       mapLayer.setOpacity(0)
       mapLayer.get('clone').setOpacity(0)
     } else {
       source = mapLayer.getSource()
       sourceClone = mapLayerClone.getSource()
       if ((source != null) && (source.get('layerTime') === animationTime)) {
-        mapLayer.setOpacity(1)
+        if ((mapLayer.get('type') !== this.layerTypes['forecast']) || (animationTime >= currentTime)) {
+          mapLayer.setOpacity(1)
+        }
       } else {
         if ((sourceClone != null) && (sourceClone.get('layerTime') !== animationTime)) {
           if (mapLayerClone.get('layerTimes').includes(animationTime)) {

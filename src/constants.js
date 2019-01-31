@@ -54,8 +54,9 @@ export const AVAILABLE_TIMESTEPS = [
  * @type {Object}
  * @const
  */
-export const zIndex = {
-  vector: 1000
+export const ZINDEX = {
+  vector: 10000,
+  overlay: 1000
 }
 
 export const DEFAULT_GRID_TIME = 60 * 60 * 1000

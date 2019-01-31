@@ -1184,7 +1184,7 @@ MapAnimation.prototype.createMarkerLayer = function () {
   })
   return new OlLayerVector({
     'source': markerSource,
-    'zIndex': 10000
+    'zIndex': constants.ZINDEX['vector']
   })
 }
 
@@ -1345,6 +1345,9 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
       }
       if ((!visible) && (template['visible'])) {
         visible = true
+      }
+      if (layerType === this.layerTypes['overlay']) {
+        template['zIndex'] = constants.ZINDEX['overlay']
       }
       layer = this.createLayer(template)
       animation = layer.get('animation')

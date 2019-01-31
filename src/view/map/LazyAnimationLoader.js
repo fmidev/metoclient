@@ -116,6 +116,12 @@ LazyAnimationLoader.prototype.initMap = function () {
           }
           layerType = this.layerTypes['map']
           break
+        case config['staticOverlayGroupName']:
+          if (!this.staticReloadNeeded('overlay')) {
+            continue
+          }
+          layerType = this.layerTypes['overlay']
+          break
       }
       if (layerType != null) {
         staticLayers = self.loadStaticLayers(layerVisibility, this.layerTypes[layerType])
@@ -225,9 +231,9 @@ LazyAnimationLoader.prototype.initMap = function () {
       }),
       new OlLayerGroup({
         'nested': true,
-        'title': '', // config['staticOverlayGroupName'],
+        'title': config['staticOverlayGroupName'],
         'layers': self.loadStaticLayers(layerVisibility, this.layerTypes['overlay']),
-        'zIndex': 1000
+        'zIndex': constants.ZINDEX['overlay']
       })
     ],
     overlays: [overlay],

@@ -178,7 +178,7 @@ export default class MapProducer {
           }
         })
         if (options['zIndex'] === undefined) {
-          options['zIndex'] = constants.zIndex.vector + z['value']
+          options['zIndex'] = constants.ZINDEX['vector'] + z['value']
         }
         let layer = new OlLayerVector(options)
         layer.setZIndex(options['zIndex'])

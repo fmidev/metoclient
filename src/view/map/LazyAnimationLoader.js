@@ -11,17 +11,6 @@ import 'core-js/fn/array/from'
 import * as constants from '../../constants'
 import LayerSwitcher from './LayerSwitcher'
 import MapProducer from './MapProducer'
-import Ol from 'ol/index'
-import OlCollection from 'ol/collection'
-import OlControlZoom from 'ol/control/zoom'
-import OlInteraction from 'ol/interaction'
-import OlLayerGroup from 'ol/layer/group'
-import OlLayerImage from 'ol/layer/image'
-import OlLayerTile from 'ol/layer/tile'
-import OlMap from 'ol/map'
-import OlOverlay from 'ol/overlay'
-import OlProj from 'ol/proj'
-import OlView from 'ol/view'
 import MapAnimation from './MapAnimation'
 
 export default class LazyAnimationLoader extends MapAnimation {
@@ -543,8 +532,10 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
     }
     filteredCapabTimes = animation['capabTimes'].reduce((capabTimes, capabTime) => {
       const numCapabTimes = capabTimes.length
-      if (((animation['resolutionTime'] != null)) && ((numCapabTimes >= 2) && (capabTimes[numCapabTimes - 1] - capabTimes[numCapabTimes - 2] < animation['resolutionTime']) && (capabTime - capabTimes[numCapabTimes - 2] < animation['resolutionTime']))) {
-        capabTimes[numCapabTimes - 1] = capabTime
+      if ((animation['resolutionTime'] != null) && (numCapabTimes >= 2) && (capabTimes[numCapabTimes - 1] - capabTimes[numCapabTimes - 2] < animation['resolutionTime']) && (capabTimes[numCapabTimes - 1] % animation['resolutionTime'] !== 0)) {
+        if ((capabTime - capabTimes[numCapabTimes - 2] >= animation['resolutionTime']) || (capabTime % animation['resolutionTime'] === 0)) {
+          capabTimes[numCapabTimes - 1] = capabTime
+        }
       } else if ((capabTime >= animation['beginTime']) && (capabTime <= animation['endTime'])) {
         capabTimes.push(capabTime)
       }

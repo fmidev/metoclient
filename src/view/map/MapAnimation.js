@@ -105,7 +105,7 @@ export default class MapAnimation {
     this.layerResolution = 60 * 1000
     /** @const */
     this.hitTolerance = 0
-  };
+  }
 }
 Ol.inherits(MapAnimation, OlObject)
 

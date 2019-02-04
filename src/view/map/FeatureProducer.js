@@ -144,7 +144,7 @@ export default class FeatureProducer {
         z['value'] = z['value'] | 1
       }
       if (styleOptions['zIndex'] === undefined) {
-        styleOptions['zIndex'] = constants.zIndex.vector + z['value'] * 10
+        styleOptions['zIndex'] = constants.ZINDEX['vector'] + z['value'] * 10
       }
       return new OlStyleStyle(styleOptions)
     }, [])

@@ -280,7 +280,7 @@ export class MetOClient {
    */
   static get createTimeMenu () {
     return utils['createTimeMenu']
-  };
+  }
 
   /**
    * Static getter for an utility function transformCoordinates.

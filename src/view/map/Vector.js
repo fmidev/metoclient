@@ -57,7 +57,7 @@ export default class Vector extends OlSourceVector {
         if (useJSON) {
           baseUrl += '&outputFormat=application%2Fjson'
         }
-        options['url'] = function (extent) {
+        options['url'] = function () {
           let url = baseUrl + '&srsname=' + projection
           let beginTimeMoment
           let endTimeMoment

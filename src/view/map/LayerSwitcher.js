@@ -66,7 +66,7 @@ export default class OlControlLayerSwitcher {
       'element': element,
       'target': options['target']
     })
-  };
+  }
 }
 
 _ol_.inherits(OlControlLayerSwitcher, olControlControl)

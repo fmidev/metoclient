@@ -393,7 +393,10 @@ MapAnimation.prototype.initMouseInteractions = function () {
                 }
               }
             } else if (value !== undefined) {
-              content += ((dataItem['title'] != null) ? dataItem['title'][locale] : dataItem['name'])  + ': ' + value + '<br>'
+              if ((dataItem['dateTimeFormat'] != null) && (dataItem['dateTimeFormat'].length > 0)) {
+                value = moment(value).format(dataItem['dateTimeFormat'])
+              }
+              content += ((dataItem['title'] != null) ? dataItem['title'][locale] : dataItem['name']) + ': ' + value + '<br>'
             }
           } else {
             dataItem = dataItem.trim()

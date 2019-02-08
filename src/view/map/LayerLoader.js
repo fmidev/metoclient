@@ -16,6 +16,22 @@ export function loadFunction (image, src) {
         localforage.setItem(src, {
           dataUrl: dataUrl,
           expires: Date.now() + ((self.cacheTime != null) ? self.cacheTime : DEFAULT_CACHE_TIME)
+        }, (err) => {
+          // Storage full? Clear layer data.
+          if (err != null) {
+            localforage
+              .keys()
+              .then(keys => {
+                let i
+                let maxKeyIndex = keys.length - 1
+                for (i = maxKeyIndex; i >= 0; i--) {
+                  // Todo: Organize items smarter and use exact way to recognize layer data
+                  if (keys[i].toLowerCase().startsWith('http')) {
+                    localforage.removeItem(keys[i])
+                  }
+                }
+              })
+          }
         })
       })
     } else {

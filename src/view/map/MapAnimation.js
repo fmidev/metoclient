@@ -253,6 +253,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let numDataItems
     let layerData
     let layerHeader
+    let layerCoordinateRow
     let coordOffset = [0, 0]
     let numFilters
     let style
@@ -261,12 +262,23 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let validCondition
     let filter
     let header
+    let coordinateRow
     let locale
     let layerId
     let numFeatures
     let propertyData
     let numProperties
     let coord
+    let coordToEPSG4326String = (coord) => {
+      if (coord != null) {
+        let coord4326 = OlProj.transform(
+          coord,
+          viewProjection,
+          'EPSG:4326'
+        )
+        return coord4326[1].toFixed(3) + ' ' + coord4326[0].toFixed(3)
+      }
+    }
     for (i = 0; i < numLayers; i++) {
       layerData = layers[i].get(type + 'Data')
       if ((Array.isArray(layerData)) && (layerData.length > 0) && (layers[i].get('visible')) && (layers[i].get('opacity'))) {
@@ -286,6 +298,10 @@ MapAnimation.prototype.initMouseInteractions = function () {
       layerHeader = layer.get(type + 'Header')
       if (layerHeader != null) {
         feature.set(type + 'Header', layerHeader)
+      }
+      layerCoordinateRow = layer.get(type + 'CoordinateRow')
+      if (layerCoordinateRow != null) {
+        feature.set(type + 'CoordinateRow', layerCoordinateRow)
       }
       let layerId = feature.getId()
       if (layerId != null) {
@@ -333,6 +349,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
       for (j = 0; j < numFeatures; j++) {
         feature = features[j]
         header = feature.get(type + 'Header')
+        coordinateRow = feature.get(type + 'CoordinateRow')
         locale = config['locale']
         dataItems = features[j].get(type + 'Data')
         numDataItems = dataItems.length
@@ -347,6 +364,12 @@ MapAnimation.prototype.initMouseInteractions = function () {
           content += '<b>' + layerId + '</b><br>'
         }
         for (i = 0; i < numDataItems; i++) {
+          if (i === coordinateRow) {
+            coord = feature.getGeometry().getCoordinates()
+            if (coord != null) {
+              content += coordToEPSG4326String(coord) + '<br>'
+            }
+          }
           dataItem = dataItems[i]
           if (dataItem == null) {
             return
@@ -393,19 +416,21 @@ MapAnimation.prototype.initMouseInteractions = function () {
                 }
               }
             } else if (value !== undefined) {
-              content += ((dataItem['title'] != null) ? dataItem['title'][locale] : dataItem['name'])  + ': ' + value + '<br>'
+              if ((dataItem['dateTimeFormat'] != null) && (dataItem['dateTimeFormat'].length > 0)) {
+                if (dataItem['timeZone'] != null) {
+                  value = moment(value).tz(dataItem['timeZone']).format(dataItem['dateTimeFormat'])
+                } else {
+                  value = moment(value).format(dataItem['dateTimeFormat'])
+                }
+              }
+              content += ((dataItem['title'] != null) ? dataItem['title'][locale] : dataItem['name']) + ': ' + value + '<br>'
             }
           } else {
             dataItem = dataItem.trim()
             if (dataItem === 'the_geom') {
               coord = feature.getGeometry().getCoordinates()
               if (coord != null) {
-                let coord4326 = OlProj.transform(
-                  coord,
-                  viewProjection,
-                  'EPSG:4326'
-                )
-                content += 'coordinates: ' + coord4326[1].toFixed(3) + ' ' + coord4326[0].toFixed(3) + '<br>'
+                content += 'coordinates: ' + coordToEPSG4326String(coord) + '<br>'
               }
             } else {
               propertyData = feature.get(dataItem)

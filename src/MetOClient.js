@@ -410,7 +410,7 @@ export class MetOClient {
           'showTimeSlider': true,
           'showTimeSliderMenu': false,
           'timeSliderContainer': 'fmi-metoclient-timeslider',
-          'timeZone': tz.guess(),
+          'timeZone': tz.guess(true),
           'timeZoneLabel': '',
           'vertical': false
         }

@@ -417,7 +417,11 @@ MapAnimation.prototype.initMouseInteractions = function () {
               }
             } else if (value !== undefined) {
               if ((dataItem['dateTimeFormat'] != null) && (dataItem['dateTimeFormat'].length > 0)) {
-                value = moment(value).format(dataItem['dateTimeFormat'])
+                if (dataItem['timeZone'] != null) {
+                  value = moment(value).tz(dataItem['timeZone']).format(dataItem['dateTimeFormat'])
+                } else {
+                  value = moment(value).format(dataItem['dateTimeFormat'])
+                }
               }
               content += ((dataItem['title'] != null) ? dataItem['title'][locale] : dataItem['name']) + ': ' + value + '<br>'
             }

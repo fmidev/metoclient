@@ -4,7 +4,7 @@
     "core-js": "2.5.3",
     "element-resize-detector": "1.1.12",
     "empty-element": "1.0.0",
-    "extend": "3.0.1",
+    "extend": "3.0.2",
     "fast-isnumeric": "1.1.1",
     "good-listener": "1.2.2",
     "localforage": "1.7.3",
@@ -28,7 +28,7 @@
     "mikkoparviainen <mikko.parviainen@fmi.fi>"
   ],
   "name": "@fmidev/metoclient",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   }

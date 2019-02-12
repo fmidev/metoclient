@@ -12,6 +12,18 @@ import * as constants from '../../constants'
 import LayerSwitcher from './LayerSwitcher'
 import MapProducer from './MapProducer'
 import MapAnimation from './MapAnimation'
+import CustomControl from './CustomControl'
+import Ol from 'ol/index'
+import OlCollection from 'ol/collection'
+import OlControlZoom from 'ol/control/zoom'
+import OlInteraction from 'ol/interaction'
+import OlLayerGroup from 'ol/layer/group'
+import OlLayerImage from 'ol/layer/image'
+import OlLayerTile from 'ol/layer/tile'
+import OlMap from 'ol/map'
+import OlOverlay from 'ol/overlay'
+import OlProj from 'ol/proj'
+import OlView from 'ol/view'
 
 export default class FullAnimationLoader extends MapAnimation {
 }
@@ -51,6 +63,8 @@ FullAnimationLoader.prototype.initMap = function () {
   let staticLayers
   let layerType
   let selectedFeature
+  let timeSlider
+  let timeSliders
   let timePropertyName
   if (target == null) {
     return
@@ -153,6 +167,14 @@ FullAnimationLoader.prototype.initMap = function () {
       'zoomOutTipLabel': config['zoomInTooltip']
     }))
     mapContainerElement.style.pointerEvents = 'auto'
+  }
+  timeSliders = document.getElementsByClassName(config['timeSliderContainer'])
+  if (timeSliders.length > 0) {
+    timeSlider = timeSliders[0]
+    controls.push(new CustomControl({
+      element: timeSlider,
+      elementClass: config['timeSliderContainer']
+    }))
   }
   interactions = OlInteraction.defaults(interactionOptions)
   popupContainer = document.getElementById(`${mapContainer}-popup`)

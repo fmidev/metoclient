@@ -201,6 +201,7 @@ export class MetOClient {
       'staticControls',
       'staticOverlayGroupName',
       'surfaceGroupName',
+      'timeSliderContainer',
       'tooltipOffset',
       'useStorage'
     ]
@@ -386,6 +387,7 @@ export class MetOClient {
           'staticControls': false,
           'staticOverlayGroupName': 'Static overlays',
           'surfaceGroupName': 'Surface',
+          'timeSliderContainer': 'fmi-metoclient-timeslider',
           'tooltipOffset': [20, 0],
           'useStorage': true
         }

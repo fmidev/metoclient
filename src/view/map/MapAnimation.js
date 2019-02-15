@@ -727,10 +727,6 @@ MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, di
       this.variableEvents.emitEvent('numIntervalItems', [[]])
       this.actionEvents.emitEvent('reload')
     }
-    if (this.get('config')['showMarker']) {
-      this.get('marker').setCoordinates(map.getView().getCenter())
-      this.dispatchEvent('markerMoved')
-    }
   }
   if ((callbacks != null) && (typeof callbacks['ready'] === 'function')) {
     callbacks['ready']()
@@ -1063,11 +1059,16 @@ MapAnimation.prototype.defineSelect = function () {
 MapAnimation.prototype.setViewListeners = function () {
   const self = this
   const callbacks = this.get('callbacks')
-  this.get('map').getView().on('propertychange', function (e) {
+  const map = this.get('map')
+  map.getView().on('propertychange', function (e) {
     let coordinates
     switch (e['key']) {
       case 'center':
         self.viewOptions['center'] = this.getCenter()
+        if (self.get('config')['showMarker']) {
+          self.get('marker').setCoordinates(map.getView().getCenter())
+          self.dispatchEvent('markerMoved')
+        }
         if ((callbacks != null) && (typeof callbacks['center'] === 'function')) {
           coordinates = this.getCenter()
           callbacks['center'](coordinates[0], coordinates[1])

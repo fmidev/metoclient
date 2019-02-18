@@ -351,6 +351,7 @@ export default class TimeController {
     this.model_.setAnimationLastRefreshed(currentTime)
     this.model_.setCurrentTime(currentTime)
     this.model_.moveAnimationTimeFrame(timeShift)
+    this.createTimeSlider()
     if (callbacks != null) {
       this.views_.forEach(view => {
         view.setCallbacks(callbacks)

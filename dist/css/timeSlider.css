@@ -1,9 +1,19 @@
-div.fmi-metoclient-timeslider {
+div.fmi-metoclient-timeslider-control {
     position: absolute;
     bottom: 0;
     height: 90px;
     width: 100%;
     z-index: 150;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+div.fmi-metoclient-timeslider-control:hover {
+    background-color: rgba(0, 0, 0, 0)
+}
+
+div.fmi-metoclient-timeslider {
+    width: 100%;
+    height: 100%;
 }
 
 div.fmi-metoclient-timeslider-clickable-container {

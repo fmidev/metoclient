@@ -358,10 +358,12 @@ MapAnimation.prototype.initMouseInteractions = function () {
           content += '<div class="fmi-metoclient-' + type + '-content">'
         }
         content += '<div class="fmi-metoclient-' + type + '-item">'
-        if (header != null) {
-          content += '<b>' + header[locale] + '</b><br>'
-        } else if (layerId.length > 0) {
-          content += '<b>' + layerId + '</b><br>'
+        if (header !== false) {
+          if (header != null) {
+            content += '<b>' + header[locale] + '</b><br>'
+          } else if (layerId.length > 0) {
+            content += '<b>' + layerId + '</b><br>'
+          }
         }
         for (i = 0; i < numDataItems; i++) {
           if (i === coordinateRow) {
@@ -423,7 +425,10 @@ MapAnimation.prototype.initMouseInteractions = function () {
                   value = moment(value).format(dataItem['dateTimeFormat'])
                 }
               }
-              content += ((dataItem['title'] != null) ? dataItem['title'][locale] : dataItem['name']) + ': ' + value + '<br>'
+              if (dataItem['title'] === false) {
+                content += ((dataItem['title'] != null) ? dataItem['title'][locale] : dataItem['name']) + ': '
+              }
+              content += value + '<br>'
             }
           } else {
             dataItem = dataItem.trim()

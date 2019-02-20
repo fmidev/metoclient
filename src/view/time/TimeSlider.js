@@ -137,10 +137,10 @@ export default class TimeSlider {
     this.container_.classList.add('noselect')
 
     this.mouseListeners_.push(listen(this.container_, 'mouseup', event => {
-      self.dragging_ = false
+      self.setDragging(false)
     }))
     this.mouseListeners_.push(listen(this.container_, 'touchend', event => {
-      self.dragging_ = false
+      self.setDragging(false)
     }))
 
     this.resizeDetector.listenTo(this.container_, function (element) {
@@ -594,7 +594,7 @@ export default class TimeSlider {
           self.previousTickTextBottom_ < clientRect.top ||
           self.previousTickTextTop_ > clientRect.bottom) {
           createTick(frame, index, clientRect, frame['endTime'])
-        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (((frames[self.previousTickIndex_] != null) && (((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) {
+        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (((frames[self.previousTickIndex_] != null) && (((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0)) || ((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) === 0) && (moment(frame['endTime']).tz(self.timeZone_).hour() % 2 === 0) && (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).hour() % 2 !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) {
           clearFrame(frames[self.previousTickIndex_])
           createTick(frame, index, clientRect, frame['endTime'])
         } else {
@@ -636,10 +636,10 @@ export default class TimeSlider {
     handle.classList.add(TimeSlider.POINTER_HANDLE_CLASS)
     pointer.appendChild(handle)
     this.mouseListeners_.push(listen(pointer, 'mousedown', e => {
-      self.dragging_ = true
+      self.setDragging(true)
     }))
     this.mouseListeners_.push(listen(pointer, 'touchstart', e => {
-      self.dragging_ = true
+      self.setDragging(true)
     }))
     this.visualPointer_ = pointer
   }
@@ -738,6 +738,18 @@ export default class TimeSlider {
           }
         }
       })
+    })
+  }
+
+  /**
+   * Enables or disables pointer dragging.
+   * @param {boolean} dragging True if pointer dragging is enabled.
+   */
+  setDragging (dragging) {
+    this.dragging_ = dragging
+    let pointerEvents = dragging ? 'auto' : 'none'
+    Array.from(document.getElementsByClassName(TimeSlider.DRAG_LISTENER_CLASS)).forEach(element => {
+      element.style.pointerEvents = pointerEvents
     })
   }
 
@@ -885,6 +897,7 @@ TimeSlider.TIMEZONE_LABEL_CLASS = 'fmi-metoclient-timeslider-timezone'
 TimeSlider.FRAME_TICK_CLASS = 'fmi-metoclient-timeslider-frame-tick'
 TimeSlider.FRAME_TEXT_WRAPPER_CLASS = 'fmi-metoclient-timeslider-frame-text-wrapper'
 TimeSlider.FRAME_TEXT_CLASS = 'fmi-metoclient-timeslider-frame-text'
+TimeSlider.DRAG_LISTENER_CLASS = 'fmi-metoclient-timeslider-drag-listener'
 TimeSlider.POINTER_CLASS = 'fmi-metoclient-timeslider-pointer'
 TimeSlider.POINTER_WRAPPER_CLASS = 'fmi-metoclient-timeslider-pointer-wrapper'
 TimeSlider.POINTER_TEXT_CLASS = 'fmi-metoclient-timeslider-pointer-text'

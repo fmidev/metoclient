@@ -16,6 +16,7 @@ export default class TimeFrame {
     this.element.dataset.time = this['endTime']
     this.dragListenerElement = document.createElement('div')
     this.dragListenerElement.classList.add('fmi-metoclient-timeslider-drag-listener')
+    this.dragListenerElement.style.pointerEvents = 'none'
     this.element.appendChild(this.dragListenerElement)
   }
 }

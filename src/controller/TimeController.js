@@ -332,25 +332,24 @@ export default class TimeController {
    * @param {Object=} callbacks Callback functions for time events.   */
   refreshTime (callbacks) {
     // Configuration for static view or manual refresh
-    if (!this.model_.isValidRefreshInterval()) {
-      return
-    }
-    let timeShift
-    const currentTime = Date.now()
-    let resolutionTime = this.model_.getAnimationResolutionTime()
-    const creationTime = this.model_.getCreationTime()
-    let animationTimes
-    this.model_.setDefaultTime(this.model_.getAnimationTime())
-    if (resolutionTime == null) {
-      animationTimes = this.model_.getAnimationTimes()
-      if ((animationTimes != null) && (animationTimes.length > 0)) {
-        resolutionTime = animationTimes[1] - animationTimes[0]
+    if (this.model_.isValidRefreshInterval()) {
+      let timeShift
+      const currentTime = Date.now()
+      let resolutionTime = this.model_.getAnimationResolutionTime()
+      const creationTime = this.model_.getCreationTime()
+      let animationTimes
+      this.model_.setDefaultTime(this.model_.getAnimationTime())
+      if (resolutionTime == null) {
+        animationTimes = this.model_.getAnimationTimes()
+        if ((animationTimes != null) && (animationTimes.length > 0)) {
+          resolutionTime = animationTimes[1] - animationTimes[0]
+        }
       }
+      timeShift = (resolutionTime != null) ? Math.floor(currentTime / resolutionTime) * resolutionTime - Math.floor(creationTime / resolutionTime) * resolutionTime : currentTime - creationTime
+      this.model_.setAnimationLastRefreshed(currentTime)
+      this.model_.setCurrentTime(currentTime)
+      this.model_.moveAnimationTimeFrame(timeShift)
     }
-    timeShift = (resolutionTime != null) ? Math.floor(currentTime / resolutionTime) * resolutionTime - Math.floor(creationTime / resolutionTime) * resolutionTime : currentTime - creationTime
-    this.model_.setAnimationLastRefreshed(currentTime)
-    this.model_.setCurrentTime(currentTime)
-    this.model_.moveAnimationTimeFrame(timeShift)
     this.createTimeSlider()
     if (callbacks != null) {
       this.views_.forEach(view => {

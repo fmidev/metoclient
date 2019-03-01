@@ -480,6 +480,30 @@ export default class TimeSlider {
    * @memberOf TimeSlider
    */
   createTicks () {
+    let step
+    let stepStart
+    let minStep
+    let maxStep = 0
+    do {
+      minStep = maxStep
+      this.configureTicks(minStep)
+      step = 0
+      stepStart = 0
+      maxStep = 0
+      this.frames_.forEach((frame, index, frames) => {
+        if (frame.element.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS).length > 0) {
+          step = frame['endTime'] - frames[stepStart]['endTime']
+          if (step > maxStep) {
+            maxStep = step
+          }
+          stepStart = index
+        }
+      })
+    } while (maxStep !== minStep)
+    this.showTicks()
+  }
+
+  configureTicks (minStep = 0) {
     let self = this
     let tick
     let maxTextWidth = 0
@@ -586,15 +610,15 @@ export default class TimeSlider {
 
       // Prevent text overlapping, favor full hours
       if ((framesContainer.length === 0) || (framesContainer.left <= clientRect.left &&
-          framesContainer.right >= clientRect.right &&
-          framesContainer.top <= clientRect.top &&
-          framesContainer.bottom >= clientRect.bottom)) {
+        framesContainer.right >= clientRect.right &&
+        framesContainer.top <= clientRect.top &&
+        framesContainer.bottom >= clientRect.bottom)) {
         if (self.previousTickTextRight_ < clientRect.left ||
           self.previousTickTextLeft_ > clientRect.right ||
           self.previousTickTextBottom_ < clientRect.top ||
           self.previousTickTextTop_ > clientRect.bottom) {
           createTick(frame, index, clientRect, frame['endTime'])
-        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (((frames[self.previousTickIndex_] != null) && (((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0)) || ((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) === 0) && (moment(frame['endTime']).tz(self.timeZone_).hour() % 2 === 0) && (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).hour() % 2 !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) {
+        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && ((((minStep > 0) && (frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((moment(frame['endTime']).tz(self.timeZone_).hour() * 60 * 60 * 1000) % minStep === 0)) || ((minStep === 0) && (((frames[self.previousTickIndex_] != null) && (((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0)) || ((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) === 0) && (moment(frame['endTime']).tz(self.timeZone_).hour() % 2 === 0) && (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).hour() % 2 !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))))) {
           clearFrame(frames[self.previousTickIndex_])
           createTick(frame, index, clientRect, frame['endTime'])
         } else {
@@ -604,7 +628,9 @@ export default class TimeSlider {
         frame.element.removeChild(textWrapper)
       }
     })
+  }
 
+  showTicks () {
     Array.from(document.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS)).forEach(element => {
       element.classList.remove(TimeSlider.HIDDEN_CLASS)
     })

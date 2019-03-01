@@ -1146,7 +1146,7 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
   let subLayers
   let numSubLayers
   let i
-  numLayers = layerConfigs.length
+  numLayers = (layerConfigs != null) ? layerConfigs.length : 0
   for (i = 0; i < numLayers; i++) {
     if (this.isAnimationLayer(layerConfigs[i])) {
       containsAnimationLayers = true

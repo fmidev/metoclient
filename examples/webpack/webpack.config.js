@@ -19,7 +19,8 @@ let config = {
           loader: 'babel-loader',
           options: {
             babelrc: false,
-            presets: ['@babel/preset-env']
+            presets: ['@babel/preset-env'],
+            plugins: ['@babel/plugin-transform-runtime']
           }
         }
       }

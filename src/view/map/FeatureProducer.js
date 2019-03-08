@@ -149,7 +149,7 @@ export default class FeatureProducer {
         styleOptions['zIndex'] = constants.ZINDEX['vector'] + z['value'] * 10
       }
       if ((typeof maxRadius === 'number') && (typeof resolutionFactor === 'number') && (styleOptions['image'] != null) && (typeof styleOptions['image']['setRadius'] === 'function')) {
-        styleOptions['image']['setRadius'](maxRadius - resolutionFactor * Math.log2(resolution))
+        styleOptions['image']['setRadius'](Math.max(1, maxRadius - resolutionFactor * Math.log2(resolution)))
       }
       return new OlStyleStyle(styleOptions)
     }, [])

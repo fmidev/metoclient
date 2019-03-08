@@ -90,6 +90,8 @@ export default class FeatureProducer {
       let filter
       let numFilters
       let property
+      let maxRadius = feature.get('maxRadius')
+      let resolutionFactor = feature.get('resolutionFactor')
       if (styleOptions['condition'] != null) {
         numFilters = utils['filters'].length
         if (Array.isArray(styleOptions['condition']['properties'])) {
@@ -145,6 +147,9 @@ export default class FeatureProducer {
       }
       if (styleOptions['zIndex'] === undefined) {
         styleOptions['zIndex'] = constants.ZINDEX['vector'] + z['value'] * 10
+      }
+      if ((typeof maxRadius === 'number') && (typeof resolutionFactor === 'number') && (styleOptions['image'] != null) && (typeof styleOptions['image']['setRadius'] === 'function')) {
+        styleOptions['image']['setRadius'](maxRadius - resolutionFactor * Math.log2(resolution))
       }
       return new OlStyleStyle(styleOptions)
     }, [])

@@ -998,7 +998,7 @@ MapAnimation.prototype.defineSelect = function () {
       }
     },
     'styleSelected': {
-      'condition': function (event) {
+      'condition': (event) => {
         if (event['type'] === 'singleclick') {
           return map.forEachFeatureAtPixel(event['pixel'], function () {
             return true

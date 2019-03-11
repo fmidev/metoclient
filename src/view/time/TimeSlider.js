@@ -500,7 +500,7 @@ export default class TimeSlider {
     ]
     let numDiscreteSteps = discreteSteps.length
     let minStep
-    let maxStep = 0
+    let nextStep = 0
     let i
     let j = 0
     let maxIter = 5
@@ -509,30 +509,30 @@ export default class TimeSlider {
         this.configureTicks()
         break
       }
-      minStep = maxStep
+      minStep = nextStep
       this.configureTicks(minStep)
       step = 0
       stepStart = 0
-      maxStep = 0
+      nextStep = (j > 0) ? minStep : Number.POSITIVE_INFINITY
       this.frames_.forEach((frame, index, frames) => {
         if (frame.element.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS).length > 0) {
           step = frame['endTime'] - frames[stepStart]['endTime']
-          if (step > maxStep) {
-            maxStep = step
+          if (((j === 0) && (step < nextStep)) || ((j === 0) && (step > nextStep))) {
+            nextStep = step
           }
           stepStart = index
         }
       })
-      if ((maxStep !== minStep) && (((maxStep < constants.ONE_HOUR) && (constants.ONE_HOUR % maxStep !== 0)) || ((maxStep < constants.ONE_DAY) && (constants.ONE_DAY % maxStep !== 0)))) {
+      if ((nextStep !== minStep) && (((nextStep < constants.ONE_HOUR) && (constants.ONE_HOUR % nextStep !== 0)) || ((nextStep < constants.ONE_DAY) && (constants.ONE_DAY % nextStep !== 0)))) {
         for (i = 0; i < numDiscreteSteps; i++) {
-          if (maxStep < discreteSteps[i]) {
-            maxStep = discreteSteps[i]
+          if (nextStep < discreteSteps[i]) {
+            nextStep = discreteSteps[i]
             break
           }
         }
       }
       j++
-    } while (maxStep !== minStep)
+    } while (nextStep !== minStep)
     this.showTicks()
   }
 
@@ -656,7 +656,7 @@ export default class TimeSlider {
           self.previousTickTextBottom_ < clientRect.top ||
           self.previousTickTextTop_ > clientRect.bottom) && ((self.previousTickIndex_ == null) || (frame['endTime'] - frames[self.previousTickIndex_]['endTime'] >= minStep))) {
           createTick(frame, index, clientRect, frame['endTime'])
-        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (((((frames[self.previousTickIndex_] != null) && (((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0)) || ((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) === 0) && (moment(frame['endTime']).tz(self.timeZone_).hour() % 2 === 0) && (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).hour() % 2 !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))))) {
+        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frames[self.previousTickIndex_] != null) && (((((minStep === 0) && (((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0)) || ((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) === 0) && (moment(frame['endTime']).tz(self.timeZone_).hour() % 2 === 0) && (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).hour() % 2 !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) || ((minStep > 0) && (((minStep >= constants.ONE_HOUR) && (moment(frames[self.previousTickIndex_]['endTime']) % constants.ONE_HOUR !== 0)) || ((moment(frames[self.previousTickIndex_]['endTime']) % constants.ONE_HOUR) % minStep !== 0) || (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).hour() % (minStep / constants.ONE_HOUR) !== 0))))) {
           clearFrame(frames[self.previousTickIndex_])
           createTick(frame, index, clientRect, frame['endTime'])
         } else {

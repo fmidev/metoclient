@@ -217,9 +217,9 @@ MapAnimation.prototype.createAnimation = async function (layers, capabilities, c
   await this.updateStorage()
   this.parameterizeLayers(capabilities)
   this.initMap()
-  mapLayers = layers.filter(layer => layer['type'] === this.layerTypes['map'])
+  mapLayers = (layers != null) ? layers.filter(layer => layer['type'] === this.layerTypes['map']) : []
   this.set('mapLayers', mapLayers)
-  surfaceLayers = layers.filter(layer => layer['type'] === this.layerTypes['surface'])
+  surfaceLayers = (layers != null) ? layers.filter(layer => layer['type'] === this.layerTypes['surface']) : []
   this.set('surfaceLayers', surfaceLayers)
 }
 
@@ -998,7 +998,7 @@ MapAnimation.prototype.defineSelect = function () {
       }
     },
     'styleSelected': {
-      'condition': function (event) {
+      'condition': (event) => {
         if (event['type'] === 'singleclick') {
           return map.forEachFeatureAtPixel(event['pixel'], function () {
             return true

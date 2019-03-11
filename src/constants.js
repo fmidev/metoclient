@@ -61,6 +61,9 @@ export const ZINDEX = {
 
 export const DEFAULT_GRID_TIME = 60 * 60 * 1000
 
-export const ONE_HOUR = 60 * 60 * 1000
+export const ONE_SECOND = 1000
+export const ONE_MINUTE = 60 * ONE_SECOND
+export const ONE_HOUR = 60 * ONE_MINUTE
+export const ONE_DAY = 24 * ONE_HOUR
 
 export const MAX_REFRESH_INTERVAL = 2147483647

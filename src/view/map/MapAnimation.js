@@ -425,7 +425,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
                   value = moment(value).format(dataItem['dateTimeFormat'])
                 }
               }
-              if (dataItem['title'] === false) {
+              if (dataItem['title'] !== false) {
                 content += ((dataItem['title'] != null) ? dataItem['title'][locale] : dataItem['name']) + ': '
               }
               content += value + '<br>'

@@ -75,7 +75,6 @@ export default class MapAnimation {
     this.set('updateVisibility', null)
     this.set('interactionConfig', null)
     this.set('configChanged', false)
-    this.set('selectedFeatureId', null)
     this.set('selectedFeatureLayer', null)
     this.set('selectedFeatureTime', null)
     this.activeInteractions = []
@@ -645,11 +644,28 @@ MapAnimation.prototype.initMouseInteractions = function () {
 }
 
 /**
+ * Checks if the given layer contains the given feature.
+ * @param layer Layer to be checked.
+ * @param feature Feature to be checked.
+ * @returns {boolean} Layer contains the given feature.
+ */
+MapAnimation.prototype.layerContainsFeature = function (layer, feature) {
+  let featureId = feature.getId()
+  let source
+  if (typeof layer['getSource'] !== 'function') {
+    return false
+  }
+  source = layer.getSource()
+  return ((featureId != null) && (typeof source['getFeatures'] === 'function') && (source.getFeatures().some(layerFeature => layerFeature.getId() === featureId)))
+}
+
+/**
  * Handles update requests.
  * @param {number} updateRequested Time when update requested.
  * @param {boolean=} disableTimeSlider Disables the time slider when loading layers.
  */
 MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, disableTimeSlider = false) {
+  let self = this
   let anyVisible = false
   let asyncLoadCount
   let asyncLoadQueue
@@ -703,8 +719,13 @@ MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, di
       currentVisibility = layerVisibility[layerTitle]
       if (currentVisibility !== undefined) {
         layer.setVisible(currentVisibility)
-        if ((!currentVisibility) && (selectedFeature != null) && (layerTitle === selectedFeature.get('layerTitle'))) {
-          this.selectFeature(null)
+        if ((selectedFeature != null) && (self.layerContainsFeature(layer, selectedFeature))) {
+          self.set('selectedFeatureLayer', selectedFeature.get('layerTitle'))
+          if (currentVisibility) {
+            self.selectFeature(selectedFeature)
+          } else {
+            selectedFeature.setStyle(new OlStyleStyle({}))
+          }
         }
       }
     })
@@ -723,8 +744,13 @@ MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, di
           if (currentVisibility) {
             anyVisible = true
           }
-        } else if ((!currentVisibility) && (selectedFeature != null) && (layerTitle === selectedFeature.get('layerTitle'))) {
-          this.selectFeature(null)
+        } else if ((selectedFeature != null) && (self.layerContainsFeature(layer, selectedFeature))) {
+          self.set('selectedFeatureLayer', selectedFeature.get('layerTitle'))
+          if (currentVisibility) {
+            self.selectFeature(selectedFeature)
+          } else {
+            selectedFeature.setStyle(new OlStyleStyle({}))
+          }
         }
       })
     })
@@ -1010,7 +1036,16 @@ MapAnimation.prototype.defineSelect = function () {
       'deselect': 'deselected',
       'multi': false,
       'onAdd': (feature) => {
-        feature.setStyle(extraStyles['styleSelected']['data'])
+        let layerTitle = feature.get('layerTitle')
+        let layer = self.getLayer(layerTitle)
+        if (layer != null) {
+          this.set('selectedFeatureLayer', layerTitle)
+        }
+        if ((layer != null) && (layer.getVisible())) {
+          feature.setStyle(extraStyles['styleSelected']['data'])
+        } else {
+          feature.setStyle(new OlStyleStyle({}))
+        }
       },
       'onRemove': (feature) => {
         feature.setStyle(null)
@@ -1051,8 +1086,10 @@ MapAnimation.prototype.defineSelect = function () {
       })
     }
     layer.getSource().getFeatures().forEach(feature => {
+      feature.set('layerTitle', layer.get('title'))
       if (feature.get('selected')) {
-        selectedFeatures['styleSelected'].push(feature)
+        self.set('selectedFeatureLayer', layer.get('title'))
+        self.selectFeature(feature)
       }
     })
   })
@@ -1387,7 +1424,8 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
         source = layer.getSource()
         timePropertyName = source.get('timePropertyName')
         source.on('addfeature', (event) => {
-          let selectedId = this.get('selectedFeatureId')
+          let selectedFeature = this.getSelectedFeature()
+          let selectedId = (selectedFeature != null) ? selectedFeature.getId() : null
           let selectedLayer = this.get('selectedFeatureLayer')
           let selectedTime = this.get('selectedFeatureTime')
           let newFeature = event['feature']
@@ -1398,7 +1436,8 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
           newFeature.set('layerTitle', title)
           newFeature.set('timePropertyName', timePropertyName)
           let featureTime = newFeature.get(timePropertyName)
-          if (((newFeature.get('id') === selectedId) && (newFeature.get('layerTitle') === selectedLayer)) && (((selectedTime == null) || (timePropertyName == null) || (timePropertyName.length === 0)) || (featureTime === selectedTime)))  {
+          if (((newFeature.get('id') === selectedId) && (newFeature.get('layerTitle') === selectedLayer)) && (((selectedTime == null) || (timePropertyName == null) || (timePropertyName.length === 0)) || (featureTime === selectedTime))) {
+            this.set('selectedFeatureLayer', title)
             this.selectFeature(newFeature)
           }
           if (featureTime == null) {
@@ -1951,9 +1990,10 @@ MapAnimation.prototype.getMap = function () {
 /**
  * Gets vector layer features.
  * @param layerTitle {string} Vector layer title.
+ * @param invisible {boolean=} Returns also invisible layers.
  * @return {Array<Object>} Features.
  */
-MapAnimation.prototype.getFeatures = function (layerTitle) {
+MapAnimation.prototype.getFeatures = function (layerTitle, invisible = false) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
   const surfaceGroupName = config['surfaceGroupName']
@@ -1977,7 +2017,7 @@ MapAnimation.prototype.getFeatures = function (layerTitle) {
     numLayers = layers.getLength()
     for (j = 0; j < numLayers; j++) {
       layer = layers.item(j)
-      if (!layer.get('visible')) {
+      if ((!invisible) && (!layer.get('visible'))) {
         continue
       }
       if (layer.get('title') === layerTitle) {

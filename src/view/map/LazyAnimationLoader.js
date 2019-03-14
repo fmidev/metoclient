@@ -87,7 +87,6 @@ LazyAnimationLoader.prototype.initMap = function () {
   if (map != null) {
     selectedFeature = this.getSelectedFeature()
     if (selectedFeature != null) {
-      this.set('selectedFeatureId', selectedFeature.get('id'))
       this.set('selectedFeatureLayer', selectedFeature.get('layerTitle'))
       timePropertyName = selectedFeature.get('timePropertyName')
       if ((timePropertyName != null) && (timePropertyName.length > 0)) {

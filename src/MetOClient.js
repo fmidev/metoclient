@@ -836,11 +836,12 @@ export class MetOClient {
   /**
    * Gets vector layer features.
    * @param layerTitle {string} Vector layer title.
+   * @param invisible {boolean=} Return also invisible layers.
    * @return {Array<Object>} Features.
    * @export
    */
-  getFeatures (layerTitle) {
-    return (this.mapController_ != null) ? this.mapController_.getFeatures(layerTitle) : null
+  getFeatures (layerTitle, invisible = false) {
+    return (this.mapController_ != null) ? this.mapController_.getFeatures(layerTitle, invisible) : null
   }
 
   /**

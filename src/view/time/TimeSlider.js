@@ -517,13 +517,13 @@ export default class TimeSlider {
       this.frames_.forEach((frame, index, frames) => {
         if (frame.element.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS).length > 0) {
           step = frame['endTime'] - frames[stepStart]['endTime']
-          if (((j === 0) && (step < nextStep)) || ((j === 0) && (step > nextStep))) {
+          if (((j === 0) && (step < nextStep)) || ((j !== 0) && (step > nextStep))) {
             nextStep = step
           }
           stepStart = index
         }
       })
-      if ((nextStep !== minStep) && (((nextStep < constants.ONE_HOUR) && (constants.ONE_HOUR % nextStep !== 0)) || ((nextStep < constants.ONE_DAY) && (constants.ONE_DAY % nextStep !== 0)))) {
+      if ((nextStep !== minStep) && (((nextStep < constants.ONE_HOUR) && (constants.ONE_HOUR % nextStep !== 0)) || ((nextStep > constants.ONE_HOUR) && (nextStep % constants.ONE_HOUR !== 0)) || ((nextStep < constants.ONE_DAY) && (constants.ONE_DAY % nextStep !== 0)))) {
         for (i = 0; i < numDiscreteSteps; i++) {
           if (nextStep < discreteSteps[i]) {
             nextStep = discreteSteps[i]

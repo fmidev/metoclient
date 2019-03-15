@@ -103,6 +103,10 @@ div.fmi-metoclient-timeslider-indicator[data-status='error'] {
     background-color: #9a2500;
 }
 
+.fmi-metoclient-timeslider-hidden {
+    display: none;
+}
+
 div.fmi-metoclient-timeslider-frame-tick {
     box-sizing: border-box;
     position: absolute;

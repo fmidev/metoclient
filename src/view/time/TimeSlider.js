@@ -515,6 +515,9 @@ export default class TimeSlider {
       stepStart = 0
       nextStep = (j > 0) ? minStep : Number.POSITIVE_INFINITY
       this.frames_.forEach((frame, index, frames) => {
+        if (index === 0) {
+          return
+        }
         if (frame.element.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS).length > 0) {
           step = frame['endTime'] - frames[stepStart]['endTime']
           if (((j === 0) && (step < nextStep)) || ((j !== 0) && (step > nextStep))) {

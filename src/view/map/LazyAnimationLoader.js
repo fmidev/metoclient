@@ -551,13 +551,15 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
     if (typeof animation['endTime'] !== 'number') {
       animation['endTime'] = Number.POSITIVE_INFINITY
     }
-    filteredCapabTimes = animation['capabTimes'].reduce((capabTimes, capabTime) => {
+    filteredCapabTimes = animation['capabTimes'].reduce((capabTimes, capabTime, index, allCapabTimes) => {
       const numCapabTimes = capabTimes.length
       if ((animation['resolutionTime'] != null) && (numCapabTimes >= 2) && (capabTimes[numCapabTimes - 1] - capabTimes[numCapabTimes - 2] < animation['resolutionTime']) && (capabTimes[numCapabTimes - 1] % animation['resolutionTime'] !== 0)) {
         if ((capabTime - capabTimes[numCapabTimes - 2] >= animation['resolutionTime']) || (capabTime % animation['resolutionTime'] === 0)) {
           capabTimes[numCapabTimes - 1] = capabTime
         }
-      } else if ((capabTime >= animation['beginTime']) && (capabTime <= animation['endTime'])) {
+      } else if ((animation['resolutionTime'] != null) && (numCapabTimes === 1) && (capabTime - capabTimes[0] < animation['resolutionTime']) && (capabTimes[0] % animation['resolutionTime'] !== 0) && (capabTime % animation['resolutionTime'] === 0)) {
+        capabTimes[0] = capabTime
+      } else if (((capabTime >= animation['beginTime']) && (capabTime <= animation['endTime'])) && ((numCapabTimes === 0) || (animation['resolutionTime'] == null) || (allCapabTimes[allCapabTimes.length - 1] - capabTimes[numCapabTimes - 1] >= animation['resolutionTime']))) {
         capabTimes.push(capabTime)
       }
       return capabTimes

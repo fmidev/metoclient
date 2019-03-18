@@ -143,7 +143,7 @@ export default class TimeSlider {
       self.setDragging(false)
     }))
 
-    this.resizeDetector.listenTo(this.container_, function (element) {
+    this.resizeDetector.listenTo(this.container_.getElementsByClassName(TimeSlider.FRAMES_CONTAINER_CLASS)[0], function (element) {
       self.createTicks()
     })
   }
@@ -496,6 +496,7 @@ export default class TimeSlider {
       4 * constants.ONE_HOUR,
       6 * constants.ONE_HOUR,
       8 * constants.ONE_HOUR,
+      12 * constants.ONE_HOUR,
       constants.ONE_DAY
     ]
     let numDiscreteSteps = discreteSteps.length
@@ -503,7 +504,7 @@ export default class TimeSlider {
     let nextStep = 0
     let i
     let j = 0
-    let maxIter = 5
+    let maxIter = 10
     do {
       if (j > maxIter) {
         this.configureTicks()
@@ -512,16 +513,15 @@ export default class TimeSlider {
       minStep = nextStep
       this.configureTicks(minStep)
       step = 0
-      stepStart = 0
+      stepStart = -1
       nextStep = (j > 0) ? minStep : Number.POSITIVE_INFINITY
       this.frames_.forEach((frame, index, frames) => {
-        if (index === 0) {
-          return
-        }
         if (frame.element.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS).length > 0) {
-          step = frame['endTime'] - frames[stepStart]['endTime']
-          if (((j === 0) && (step < nextStep)) || ((j !== 0) && (step > nextStep))) {
-            nextStep = step
+          if (stepStart >= 0) {
+            step = frame['endTime'] - frames[stepStart]['endTime']
+            if (((j === 0) && (step < nextStep)) || ((j !== 0) && (step > nextStep))) {
+              nextStep = step
+            }
           }
           stepStart = index
         }
@@ -547,6 +547,7 @@ export default class TimeSlider {
     let useTimeStep = false
     let timeStep
     let framesContainer
+    let divisibleDays = false
     this.previousTickTextTop_ = null
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY
     this.previousTickTextBottom_ = null
@@ -594,6 +595,9 @@ export default class TimeSlider {
       let textElement
       let nextIndex = index + 1
       frame.element.style.display = ''
+      if (moment(frame['endTime']).tz(self.timeZone_).startOf('day').valueOf() === frame['endTime']) {
+        divisibleDays = true
+      }
       if (nextIndex === frames.length) {
         return
       }
@@ -659,7 +663,7 @@ export default class TimeSlider {
           self.previousTickTextBottom_ < clientRect.top ||
           self.previousTickTextTop_ > clientRect.bottom) && ((self.previousTickIndex_ == null) || (frame['endTime'] - frames[self.previousTickIndex_]['endTime'] >= minStep))) {
           createTick(frame, index, clientRect, frame['endTime'])
-        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frames[self.previousTickIndex_] != null) && (((((minStep === 0) && (((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0)) || ((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) === 0) && (moment(frame['endTime']).tz(self.timeZone_).hour() % 2 === 0) && (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).hour() % 2 !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) || ((minStep > 0) && (((minStep >= constants.ONE_HOUR) && (moment(frames[self.previousTickIndex_]['endTime']) % constants.ONE_HOUR !== 0)) || ((moment(frames[self.previousTickIndex_]['endTime']) % constants.ONE_HOUR) % minStep !== 0) || (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).hour() % (minStep / constants.ONE_HOUR) !== 0))))) {
+        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frames[self.previousTickIndex_] != null) && (((((minStep === 0) && (((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (constants.ONE_HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0)) || ((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) === 0) && (moment(frame['endTime']).tz(self.timeZone_).hour() % 2 === 0) && (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).hour() % 2 !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) || ((minStep > 0) && (((minStep >= constants.ONE_HOUR) && (moment(frames[self.previousTickIndex_]['endTime']) % constants.ONE_HOUR !== 0)) || ((moment(frames[self.previousTickIndex_]['endTime']) % constants.ONE_HOUR) % minStep !== 0) || ((divisibleDays) && (moment(frames[self.previousTickIndex_]['endTime']).tz(self.timeZone_).hour() % (minStep / constants.ONE_HOUR) !== 0)))))) {
           clearFrame(frames[self.previousTickIndex_])
           createTick(frame, index, clientRect, frame['endTime'])
         } else {

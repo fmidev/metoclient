@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "4.25.3",
+  "version": "4.26.4",
   "private": false,
   "description": "Map animation library",
   "main": "src/MetOClient.js",
@@ -24,7 +24,7 @@
   "homepage": "https://github.com/fmidev/metoclient",
   "dependencies": {
     "core-js": "2.5.3",
-    "element-resize-detector": "1.1.12",
+    "element-resize-detector": "1.1.15",
     "empty-element": "1.0.0",
     "extend": "3.0.2",
     "fast-isnumeric": "1.1.1",

@@ -87,7 +87,6 @@ LazyAnimationLoader.prototype.initMap = function () {
   if (map != null) {
     selectedFeature = this.getSelectedFeature()
     if (selectedFeature != null) {
-      this.set('selectedFeatureId', selectedFeature.get('id'))
       this.set('selectedFeatureLayer', selectedFeature.get('layerTitle'))
       timePropertyName = selectedFeature.get('timePropertyName')
       if ((timePropertyName != null) && (timePropertyName.length > 0)) {
@@ -552,13 +551,15 @@ LazyAnimationLoader.prototype.loadOverlay = function (layer, mapLayers, extent, 
     if (typeof animation['endTime'] !== 'number') {
       animation['endTime'] = Number.POSITIVE_INFINITY
     }
-    filteredCapabTimes = animation['capabTimes'].reduce((capabTimes, capabTime) => {
+    filteredCapabTimes = animation['capabTimes'].reduce((capabTimes, capabTime, index, allCapabTimes) => {
       const numCapabTimes = capabTimes.length
       if ((animation['resolutionTime'] != null) && (numCapabTimes >= 2) && (capabTimes[numCapabTimes - 1] - capabTimes[numCapabTimes - 2] < animation['resolutionTime']) && (capabTimes[numCapabTimes - 1] % animation['resolutionTime'] !== 0)) {
         if ((capabTime - capabTimes[numCapabTimes - 2] >= animation['resolutionTime']) || (capabTime % animation['resolutionTime'] === 0)) {
           capabTimes[numCapabTimes - 1] = capabTime
         }
-      } else if ((capabTime >= animation['beginTime']) && (capabTime <= animation['endTime'])) {
+      } else if ((animation['resolutionTime'] != null) && (numCapabTimes === 1) && (capabTime - capabTimes[0] < animation['resolutionTime']) && (capabTimes[0] % animation['resolutionTime'] !== 0) && (capabTime % animation['resolutionTime'] === 0)) {
+        capabTimes[0] = capabTime
+      } else if (((capabTime >= animation['beginTime']) && (capabTime <= animation['endTime'])) && ((numCapabTimes === 0) || (animation['resolutionTime'] == null) || (allCapabTimes[allCapabTimes.length - 1] - capabTimes[numCapabTimes - 1] >= animation['resolutionTime']))) {
         capabTimes.push(capabTime)
       }
       return capabTimes
@@ -918,7 +919,10 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
   let animationTimesPrev
   let animationTimesLastIndexPrev
   let animationTimeRangePrev
+  let layerTime
+  let layerTimeFormatted
   let layerTimes
+  let numLayerTimes
   let layerTimesPrev
   let layerTimesPrevIndex
   let nextAnimationTime = this.getNextAnimationTime(animationTime)
@@ -970,50 +974,85 @@ LazyAnimationLoader.prototype.updateAnimation = function () {
     pGrp[i] = newPGrp[i]
     mapLayerClone = mapLayer.get('clone')
     mapLayerClone.setOpacity(0)
-    if ((!mapLayer.get('layerTimes').includes(animationTime)) || ((mapLayer.get('type') === this.layerTypes['observation']) && (currentTime < animationTime)) || ((mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
+    layerTimes = mapLayer.get('layerTimes')
+    numLayerTimes = layerTimes.length
+    if ((layerTimes[0] > animationTime) || ((2 * layerTimes[numLayerTimes - 1] - layerTimes[numLayerTimes - 2] <= animationTime)) || ((mapLayer.get('type') === this.layerTypes['observation']) && (currentTime < animationTime)) || ((mapLayer.get('type') === this.layerTypes['forecast']) && (animationTime < currentTime))) {
       mapLayer.setOpacity(0)
       mapLayer.get('clone').setOpacity(0)
     } else {
       source = mapLayer.getSource()
       sourceClone = mapLayerClone.getSource()
-      if ((source != null) && (source.get('layerTime') === animationTime)) {
+      if (mapLayer.get('layerTimes').includes(animationTime)) {
+        layerTime = animationTime
+        layerTimeFormatted = animationTimeFormatted
+      } else {
+        layerTime = null
+        for (j = 0; j < numLayerTimes; j++) {
+          if (layerTimes[j] <= animationTime) {
+            layerTime = layerTimes[j]
+          } else {
+            break
+          }
+        }
+        if (layerTime != null) {
+          layerTimeFormatted = new Date(layerTime).toISOString()
+        }
+      }
+      if ((source != null) && (source.get('layerTime') === layerTime)) {
         if ((mapLayer.get('type') !== this.layerTypes['forecast']) || (animationTime >= currentTime)) {
           mapLayer.setOpacity(1)
         }
       } else {
-        if ((sourceClone != null) && (sourceClone.get('layerTime') !== animationTime)) {
-          if (mapLayerClone.get('layerTimes').includes(animationTime)) {
-            sourceClone.set('layerTime', animationTime)
-            sourceClone.set('tilesLoaded', 0)
-            sourceClone.set('tilesLoading', 0)
-            sourceClone.set('hideLoading', false)
-            if (mapLayerClone.get('className') === 'WMTS') {
-              sourceClone.set('timeFormatted', animationTimeFormatted)
-            } else {
-              sourceClone.updateParams({
-                'TIME': animationTimeFormatted
-              })
-            }
-            sourceClone.refresh()
+        if ((sourceClone != null) && (sourceClone.get('layerTime') !== layerTime)) {
+          sourceClone.set('layerTime', layerTime)
+          sourceClone.set('tilesLoaded', 0)
+          sourceClone.set('tilesLoading', 0)
+          sourceClone.set('hideLoading', false)
+          if (mapLayerClone.get('className') === 'WMTS') {
+            sourceClone.set('timeFormatted', layerTimeFormatted)
+          } else {
+            sourceClone.updateParams({
+              'TIME': layerTimeFormatted
+            })
           }
+          sourceClone.refresh()
         } else {
           mapLayer.setOpacity(0)
           mapLayerClone.setOpacity(1)
           mapLayer.set('active', false)
           mapLayerClone.set('active', true)
-          if ((source != null) && (source.get('layerTime') !== nextAnimationTime) && (mapLayer.get('layerTimes').includes(nextAnimationTime))) {
-            source.set('layerTime', nextAnimationTime)
-            source.set('tilesLoaded', 0)
-            source.set('tilesLoading', 0)
-            source.set('hideLoading', false)
-            if (mapLayer.get('className') === 'WMTS') {
-              source.set('timeFormatted', nextAnimationTimeFormatted)
-            } else {
-              source.updateParams({
-                'TIME': nextAnimationTimeFormatted
-              })
+          if (layerTimes.includes(nextAnimationTime)) {
+            layerTime = nextAnimationTime
+            layerTimeFormatted = nextAnimationTimeFormatted
+          } else {
+            layerTime = null
+            for (j = 0; j < numLayerTimes; j++) {
+              if (layerTimes[j] <= nextAnimationTime) {
+                layerTime = layerTimes[j]
+              } else {
+                break
+              }
             }
-            source.refresh()
+            if (layerTime != null) {
+              layerTimeFormatted = new Date(layerTime).toISOString()
+            }
+          }
+          if ((source != null) && (source.get('layerTime') !== layerTime)) {
+            layerTimes = mapLayer.get('layerTimes')
+            if (layerTime != null) {
+              source.set('layerTime', layerTime)
+              source.set('tilesLoaded', 0)
+              source.set('tilesLoading', 0)
+              source.set('hideLoading', false)
+              if (mapLayer.get('className') === 'WMTS') {
+                source.set('timeFormatted', layerTimeFormatted)
+              } else {
+                source.updateParams({
+                  'TIME': layerTimeFormatted
+                })
+              }
+              source.refresh()
+            }
           }
         }
       }

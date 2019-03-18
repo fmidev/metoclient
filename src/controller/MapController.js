@@ -164,10 +164,11 @@ export default class MapController {
   /**
    * Gets vector layer features.
    * @param layerTitle {string} Vector layer title.
+   * @param invisible {boolean=} Return also invisible layers.
    * @return {Array<Object>} Features.
    */
-  getFeatures (layerTitle) {
-    return this.view_.getFeatures(layerTitle)
+  getFeatures (layerTitle, invisible = false) {
+    return this.view_.getFeatures(layerTitle, invisible)
   }
 
   /**

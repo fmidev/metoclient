@@ -1,21 +1,21 @@
 {
   "author": "FMI",
   "dependencies": {
-    "core-js": "2.5.3",
-    "element-resize-detector": "1.1.12",
+    "core-js": "2.6.5",
+    "element-resize-detector": "1.1.15",
     "empty-element": "1.0.0",
-    "extend": "3.0.1",
-    "fast-isnumeric": "1.1.1",
+    "extend": "3.0.2",
+    "fast-isnumeric": "1.1.2",
     "good-listener": "1.2.2",
-    "localforage": "1.7.2",
-    "moment": "2.22.2",
+    "localforage": "1.7.3",
+    "moment": "2.24.0",
     "moment-timezone": "0.5.13",
     "mouse-wheel": "1.2.0",
     "ol": "4.3.3",
-    "proj4": "2.4.4",
+    "proj4": "2.5.0",
     "rename-keys": "2.0.1",
     "shallowequal": "1.1.0",
-    "wolfy87-eventemitter": "5.2.3"
+    "wolfy87-eventemitter": "5.2.6"
   },
   "description": "Map animator library",
   "devDependencies": {},
@@ -25,11 +25,10 @@
   "main": "MetOClient.js",
   "maintainers": [
     "masapu <matti@pulakka.com>",
-    "vwnb <ville@vjk.fi>",
     "mikkoparviainen <mikko.parviainen@fmi.fi>"
   ],
   "name": "@fmidev/metoclient",
-  "version": "1.0.13",
+  "version": "1.0.21",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   }

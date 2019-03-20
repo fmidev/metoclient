@@ -14,6 +14,7 @@
   "scripts": {
     "build": "env-cmd ./config/webpack/env.prod webpack --progress --config config/webpack/config.js",
     "build-dev": "env-cmd ./config/webpack/env.dev webpack --progress --config config/webpack/config.js",
+    "build-without-moment": "env-cmd ./config/webpack/env.prod-without-moment webpack --progress --config config/webpack/config.js",
     "build-custom": "webpack --progress --config config/webpack/config.js",
     "test": "cross-env PHANTOMJS_EXECUTABLE=node_modules/.bin/phantomjs; $npm_package_executables_nodejs node_modules/casperjs/bin/casperjs.js test test/wms.js",
     "doc": "node_modules/.bin/del-cli ./build/jsdoc; node_modules/.bin/jsdoc -c config/jsdoc/config.json -d ./build/jsdoc",
@@ -60,7 +61,7 @@
     "eslint-plugin-standard": "3.0.1",
     "extract-text-webpack-plugin": "3.0.0",
     "fs-extra": "0.30.0",
-    "handlebars": "^4.1.1",
+    "handlebars": "4.1.1",
     "jsdoc": "3.5.3",
     "license-webpack-plugin": "1.1.1",
     "marked": "0.3.9",

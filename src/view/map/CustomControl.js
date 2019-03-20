@@ -3,10 +3,9 @@ import OlControlControl from 'ol/control/control'
 const CustomControl = (function (Control) {
   function CustomControl (opt_options) {
     let options = opt_options || {}
-    let element = document.getElementsByClassName(options['elementClass'])[0]
-    element.className = options['elementClass'] + ' ol-unselectable ol-control'
+    options['element'].className = options['elementClass'] + ' ol-unselectable ol-control'
     Control.call(this, {
-      element: element,
+      element: options['element'],
       target: options.target
     })
   }

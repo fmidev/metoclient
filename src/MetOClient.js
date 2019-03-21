@@ -896,7 +896,7 @@ export class MetOClient {
    * @returns {Array} Map layers.
    */
   getLayerConfigs () {
-    return (this.mapController_ != null) ? this.mapController_.getLayers() : null
+    return (this.mapController_ != null) ? this.mapController_.getLayerConfigs() : null
   }
 
   /**

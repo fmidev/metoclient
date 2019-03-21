@@ -63,6 +63,7 @@ List of API methods:
 * getFeatures(layerTitle)
 * getFeaturesAt(layerTitle,x,y,tolerance_pix)
 * getLayer(layerTitle)
+* getLayerConfigs()
 * getMap()
 * getAnimationTimes()
 * getStaticControls()

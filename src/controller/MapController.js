@@ -235,6 +235,14 @@ export default class MapController {
   }
 
   /**
+   * Gets map layers.
+   * @returns {Array} Map layers.
+   */
+  getLayerConfigs() {
+    return this.model_.getLayers()
+  }
+
+  /**
    * Request a map view update.
    */
   requestViewUpdate () {

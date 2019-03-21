@@ -77,6 +77,7 @@ List of API functions:
 * getFeatures(layerTitle, invisible)
 * getFeaturesAt(layerTitle, x, y, tolerance_pix)
 * getLayer(layerTitle)
+* getLayerConfigs()
 * getMap()
 * getAnimationTimes()
 * getStaticControls()

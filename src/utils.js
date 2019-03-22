@@ -196,7 +196,7 @@ export const createTimeMenu = (options) => {
         li.appendChild(title)
         for (let i = 0; i < AVAILABLE_TIMESTEPS.length; i++) {
           let button = document.createElement('button')
-          if (i > 2) {
+          if (i > 3) {
             button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 3600000) + 'h'
           } else {
             button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 60000) + 'min'

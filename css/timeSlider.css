@@ -260,7 +260,7 @@ ul.fmi-metoclient-timeslider-menu:before {
 
 /* TimeStep + BeginTime and EndTime sliders */
 button.fmi-metoclient-timeslider-timestep-button {
-    width: 12.5%;
+    width: 11.11111%;
     color: #000;
     border-radius: 5px;
     border-style: solid;

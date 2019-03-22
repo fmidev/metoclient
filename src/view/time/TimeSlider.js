@@ -235,26 +235,29 @@ export default class TimeSlider {
             case '5min':
               step = 0
               break
-            case '15min':
+            case '10min':
               step = 1
               break
-            case '30min':
+            case '15min':
               step = 2
               break
-            case '1h':
+            case '30min':
               step = 3
               break
-            case '3h':
+            case '1h':
               step = 4
               break
-            case '6h':
+            case '3h':
               step = 5
               break
-            case '12h':
+            case '6h':
               step = 6
               break
-            case '24h':
+            case '12h':
               step = 7
+              break
+            case '24h':
+              step = 8
           }
 
           e.target.classList.add(TimeSlider.TIMESTEP_BUTTON_CLASS)

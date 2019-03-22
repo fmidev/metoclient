@@ -244,8 +244,10 @@ OlControlLayerSwitcher.prototype.setVisible_ = function (lyr, visible) {
   } catch (e) {
     console.log('Local storage is not supported. ' + e)
   }
-  if (lyr.get('type') === 'map') {
+  if (['map', 'overlay', 'surface'].includes(lyr.get('type'))) {
     lyr.setVisible(visible)
+  }
+  if (lyr.get('type') === 'map') {
     if (visible) {
       // Hide all other base layers regardless of grouping
       OlControlLayerSwitcher.forEachRecursive(map, (l, idx, a) => {

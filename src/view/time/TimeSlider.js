@@ -717,16 +717,53 @@ export default class TimeSlider {
 
   /**
    * Sets an animation time.
-   * @param {string} animationTime Animation time.
+   * @param {number} animationTime Animation time.
    */
   setAnimationTime (animationTime) {
-    this.animationTime_ = animationTime
-    this.updatePointer(animationTime)
+    if (animationTime === this.animationTime_) {
+      this.updatePointer(animationTime)
+      return
+    }
+    let numFrames = this.frames_.length
+    let i
+    let currentIndex
+    let nextIndex
+    let updateAllowed = true
+    if (this.animationPlay_) {
+      for (i = 0; i < numFrames; i++) {
+        if (this.animationTime_ <= this.frames_[i]['endTime']) {
+          currentIndex = i
+          break
+        }
+      }
+      if (currentIndex == null) {
+        currentIndex = numFrames - 1
+      }
+      nextIndex = (currentIndex + 1) % numFrames
+      Array.from(this.frames_[currentIndex].element.getElementsByClassName(TimeSlider.INDICATOR_CLASS)).forEach(indicatorElement => {
+        if (indicatorElement.getAttribute('data-status') === TimeSlider.DATA_STATUS_WORKING) {
+          updateAllowed = false
+        }
+      })
+      if (updateAllowed) {
+        Array.from(this.frames_[nextIndex].element.getElementsByClassName(TimeSlider.INDICATOR_CLASS)).forEach(indicatorElement => {
+          if (indicatorElement.getAttribute('data-status') === TimeSlider.DATA_STATUS_WORKING) {
+            updateAllowed = false
+          }
+        })
+      }
+    }
+    if (updateAllowed) {
+      this.animationTime_ = animationTime
+      this.updatePointer(animationTime)
+    } else {
+      this.variableEvents.emitEvent('animationTime', [this.animationTime_])
+    }
   }
 
   /**
    * Updates pointer text and location on the time slider.
-   * @param animationTime Time value.
+   * @param {number} animationTime Time value.
    */
   updatePointer (animationTime) {
     if (this.visualPointer_ == null) {
@@ -981,5 +1018,6 @@ TimeSlider.END_TIME_CLASS = 'fmi-metoclient-timeslider-endtime'
 TimeSlider.TIMESTEP_CLASS = 'fmi-metoclient-timeslider-timestep'
 TimeSlider.TIMESTEP_BUTTON_CLASS = 'fmi-metoclient-timeslider-timestep-button'
 TimeSlider.TIMESTEP_BUTTON_ACTIVE_CLASS = 'fmi-metoclient-timeslider-timestep-active-button'
+TimeSlider.DATA_STATUS_WORKING = 'working'
 TimeSlider.BACKWARDS = -1
 TimeSlider.FORWARDS = 1

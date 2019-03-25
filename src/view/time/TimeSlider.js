@@ -508,13 +508,14 @@ export default class TimeSlider {
     let i
     let j = 0
     let maxIter = 10
+    let timeStepsUsed = true
     do {
       if (j > maxIter) {
         this.configureTicks()
         break
       }
       minStep = nextStep
-      this.configureTicks(minStep)
+      timeStepsUsed = this.configureTicks(minStep)
       step = 0
       stepStart = -1
       nextStep = (j > 0) ? minStep : Number.POSITIVE_INFINITY
@@ -538,7 +539,7 @@ export default class TimeSlider {
         }
       }
       j++
-    } while (nextStep !== minStep)
+    } while ((timeStepsUsed) && (nextStep !== minStep))
     this.showTicks()
   }
 
@@ -676,6 +677,7 @@ export default class TimeSlider {
         frame.element.removeChild(textWrapper)
       }
     })
+    return useTimeStep
   }
 
   showTicks () {

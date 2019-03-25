@@ -6,6 +6,7 @@ const LicenseWebpackPlugin = require('license-webpack-plugin').LicenseWebpackPlu
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const PACKAGE = require('../../package.json')
 const banner = PACKAGE.name + ' - ' + PACKAGE.version + ' | ' + PACKAGE.author + ' ' + new Date().getFullYear() + ' | ' + PACKAGE.license + ' | ' + PACKAGE.homepage
+const externals = (process.env.METOCLIENT_EXTERNALS !== undefined) ? JSON.parse(process.env.METOCLIENT_EXTERNALS) : {}
 
 module.exports = {
   entry: path.resolve(__dirname, '../../src/MetOClient.js'),
@@ -14,7 +15,7 @@ module.exports = {
     libraryTarget: 'umd',
     filename: './dist/metoclient' + process.env.METOCLIENT_OUTPUT_POSTFIX + '.min.js'
   },
-  externals: {},
+  externals: externals,
   module: {
     rules: [{
       test: /.js$/,

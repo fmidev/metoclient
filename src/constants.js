@@ -40,6 +40,7 @@ export const LOADING_STATUS = {
 
 export const AVAILABLE_TIMESTEPS = [
   300000,
+  600000,
   900000,
   1800000,
   3600000,

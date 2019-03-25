@@ -1,4 +1,4 @@
-div.fmi-metoclient-timeslider-control {
+div.fmi-metoclient-timeslider {
     position: absolute;
     bottom: 0;
     height: 90px;
@@ -7,13 +7,8 @@ div.fmi-metoclient-timeslider-control {
     background-color: rgba(0, 0, 0, 0);
 }
 
-div.fmi-metoclient-timeslider-control:hover {
+div.fmi-metoclient-timeslider:hover {
     background-color: rgba(0, 0, 0, 0)
-}
-
-div.fmi-metoclient-timeslider {
-    width: 100%;
-    height: 100%;
 }
 
 div.fmi-metoclient-timeslider-clickable-container {
@@ -265,7 +260,7 @@ ul.fmi-metoclient-timeslider-menu:before {
 
 /* TimeStep + BeginTime and EndTime sliders */
 button.fmi-metoclient-timeslider-timestep-button {
-    width: 12.5%;
+    width: 11.11111%;
     color: #000;
     border-radius: 5px;
     border-style: solid;

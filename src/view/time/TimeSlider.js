@@ -235,26 +235,29 @@ export default class TimeSlider {
             case '5min':
               step = 0
               break
-            case '15min':
+            case '10min':
               step = 1
               break
-            case '30min':
+            case '15min':
               step = 2
               break
-            case '1h':
+            case '30min':
               step = 3
               break
-            case '3h':
+            case '1h':
               step = 4
               break
-            case '6h':
+            case '3h':
               step = 5
               break
-            case '12h':
+            case '6h':
               step = 6
               break
-            case '24h':
+            case '12h':
               step = 7
+              break
+            case '24h':
+              step = 8
           }
 
           e.target.classList.add(TimeSlider.TIMESTEP_BUTTON_CLASS)
@@ -262,8 +265,8 @@ export default class TimeSlider {
           this.config_.modifiedResolutionTime = constants.AVAILABLE_TIMESTEPS[step]
           this.variableEvents.emitEvent('timeStep', [this.config_.modifiedResolutionTime])
           if ((this.config_.firstDataPointTime % this.config_.modifiedResolutionTime) % this.resolutionTime_ === 0) {
-            if (this.config_.modifiedResolutionTime > constants.AVAILABLE_TIMESTEPS[3]) {
-              this.beginTime_ = Math.ceil((this.config_.firstDataPointTime + (this.resolutionTime_ * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3]
+            if (this.config_.modifiedResolutionTime > constants.AVAILABLE_TIMESTEPS[4]) {
+              this.beginTime_ = Math.ceil((this.config_.firstDataPointTime + (this.resolutionTime_ * value)) / constants.AVAILABLE_TIMESTEPS[4]) * constants.AVAILABLE_TIMESTEPS[4]
               this.variableEvents.emitEvent('beginTime', [this.beginTime_])
             }
             this.beginTime_ = Math.ceil((this.config_.firstDataPointTime + (this.resolutionTime_ * value)) / this.config_.modifiedResolutionTime) * this.config_.modifiedResolutionTime
@@ -285,8 +288,8 @@ export default class TimeSlider {
           const value = this.container_.getElementsByClassName(TimeSlider.BEGIN_TIME_CLASS)[0].value
           this.variableEvents.emitEvent('timeStep', [this.config_.modifiedResolutionTime])
           if ((this.config_.firstDataPointTime % this.config_.modifiedResolutionTime) % this.resolutionTime_ === 0) {
-            if (this.config_.modifiedResolutionTime > constants.AVAILABLE_TIMESTEPS[3]) {
-              this.beginTime_ = Math.ceil((this.config_.firstDataPointTime + (this.resolutionTime_ * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3]
+            if (this.config_.modifiedResolutionTime > constants.AVAILABLE_TIMESTEPS[4]) {
+              this.beginTime_ = Math.ceil((this.config_.firstDataPointTime + (this.resolutionTime_ * value)) / constants.AVAILABLE_TIMESTEPS[4]) * constants.AVAILABLE_TIMESTEPS[4]
               this.variableEvents.emitEvent('beginTime', [this.beginTime_])
             }
             this.beginTime_ = Math.ceil((this.config_.firstDataPointTime + (this.resolutionTime_ * value)) / this.config_.modifiedResolutionTime) * this.config_.modifiedResolutionTime
@@ -308,8 +311,8 @@ export default class TimeSlider {
           const value = this.container_.getElementsByClassName(TimeSlider.END_TIME_CLASS)[0].value
           this.variableEvents.emitEvent('timeStep', [this.config_.modifiedResolutionTime])
           if ((this.config_.firstDataPointTime % this.config_.modifiedResolutionTime) % this.resolutionTime_ === 0) {
-            if (this.config_.modifiedResolutionTime > constants.AVAILABLE_TIMESTEPS[3]) {
-              this.endTime_ = Math.ceil((this.config_.firstDataPointTime + (this.resolutionTime_ * value)) / constants.AVAILABLE_TIMESTEPS[3]) * constants.AVAILABLE_TIMESTEPS[3]
+            if (this.config_.modifiedResolutionTime > constants.AVAILABLE_TIMESTEPS[4]) {
+              this.endTime_ = Math.ceil((this.config_.firstDataPointTime + (this.resolutionTime_ * value)) / constants.AVAILABLE_TIMESTEPS[4]) * constants.AVAILABLE_TIMESTEPS[4]
               this.variableEvents.emitEvent('endTime', [this.endTime_])
             }
             this.endTime_ = Math.ceil((this.config_.firstDataPointTime + (this.resolutionTime_ * value)) / this.config_.modifiedResolutionTime) * this.config_.modifiedResolutionTime
@@ -505,13 +508,14 @@ export default class TimeSlider {
     let i
     let j = 0
     let maxIter = 10
+    let timeStepsUsed = true
     do {
       if (j > maxIter) {
         this.configureTicks()
         break
       }
       minStep = nextStep
-      this.configureTicks(minStep)
+      timeStepsUsed = this.configureTicks(minStep)
       step = 0
       stepStart = -1
       nextStep = (j > 0) ? minStep : Number.POSITIVE_INFINITY
@@ -535,7 +539,7 @@ export default class TimeSlider {
         }
       }
       j++
-    } while (nextStep !== minStep)
+    } while ((timeStepsUsed) && (nextStep !== minStep))
     this.showTicks()
   }
 
@@ -673,6 +677,7 @@ export default class TimeSlider {
         frame.element.removeChild(textWrapper)
       }
     })
+    return useTimeStep
   }
 
   showTicks () {
@@ -717,16 +722,53 @@ export default class TimeSlider {
 
   /**
    * Sets an animation time.
-   * @param {string} animationTime Animation time.
+   * @param {number} animationTime Animation time.
    */
   setAnimationTime (animationTime) {
-    this.animationTime_ = animationTime
-    this.updatePointer(animationTime)
+    if (animationTime === this.animationTime_) {
+      this.updatePointer(animationTime)
+      return
+    }
+    let numFrames = this.frames_.length
+    let i
+    let currentIndex
+    let nextIndex
+    let updateAllowed = true
+    if (this.animationPlay_) {
+      for (i = 0; i < numFrames; i++) {
+        if (this.animationTime_ <= this.frames_[i]['endTime']) {
+          currentIndex = i
+          break
+        }
+      }
+      if (currentIndex == null) {
+        currentIndex = numFrames - 1
+      }
+      nextIndex = (currentIndex + 1) % numFrames
+      Array.from(this.frames_[currentIndex].element.getElementsByClassName(TimeSlider.INDICATOR_CLASS)).forEach(indicatorElement => {
+        if (indicatorElement.getAttribute('data-status') === TimeSlider.DATA_STATUS_WORKING) {
+          updateAllowed = false
+        }
+      })
+      if (updateAllowed) {
+        Array.from(this.frames_[nextIndex].element.getElementsByClassName(TimeSlider.INDICATOR_CLASS)).forEach(indicatorElement => {
+          if (indicatorElement.getAttribute('data-status') === TimeSlider.DATA_STATUS_WORKING) {
+            updateAllowed = false
+          }
+        })
+      }
+    }
+    if (updateAllowed) {
+      this.animationTime_ = animationTime
+      this.updatePointer(animationTime)
+    } else {
+      this.variableEvents.emitEvent('animationTime', [this.animationTime_])
+    }
   }
 
   /**
    * Updates pointer text and location on the time slider.
-   * @param animationTime Time value.
+   * @param {number} animationTime Time value.
    */
   updatePointer (animationTime) {
     if (this.visualPointer_ == null) {
@@ -981,5 +1023,6 @@ TimeSlider.END_TIME_CLASS = 'fmi-metoclient-timeslider-endtime'
 TimeSlider.TIMESTEP_CLASS = 'fmi-metoclient-timeslider-timestep'
 TimeSlider.TIMESTEP_BUTTON_CLASS = 'fmi-metoclient-timeslider-timestep-button'
 TimeSlider.TIMESTEP_BUTTON_ACTIVE_CLASS = 'fmi-metoclient-timeslider-timestep-active-button'
+TimeSlider.DATA_STATUS_WORKING = 'working'
 TimeSlider.BACKWARDS = -1
 TimeSlider.FORWARDS = 1

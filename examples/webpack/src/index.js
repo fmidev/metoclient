@@ -1,4 +1,4 @@
-import { MetOClient } from 'metoclient'
+import { MetOClient } from '@fmidev/metoclient'
 import OlStyleStyle from 'ol/style/style'
 import OlStyleIcon from 'ol/style/icon'
 

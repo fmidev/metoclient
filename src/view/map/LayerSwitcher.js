@@ -235,7 +235,19 @@ OlControlLayerSwitcher.prototype.ensureTopVisibleBaseLayerShown_ = function () {
 OlControlLayerSwitcher.prototype.setVisible_ = function (lyr, visible) {
   const this_ = this
   const map = this.getMap()
+  const layerGroups = map.getLayers()
   const layerVisibility = map.get('layerVisibility')
+  layerGroups.forEach(layerGroup => {
+    if ((layerGroup.get('title') != null) && layerGroup.get('nested')) {
+      layerGroup.getLayers().forEach(layer => {
+        let title = layer.get('title')
+        let input = document.querySelector('div.ol-control.layer-switcher input[data-title="' + title + '"]')
+        if (input != null) {
+          layerVisibility[title] = input.checked
+        }
+      })
+    }
+  })
   layerVisibility[lyr.get('title')] = visible
   try {
     if (this_.useStorage) {
@@ -322,6 +334,7 @@ OlControlLayerSwitcher.prototype.renderLayer_ = function (lyr, idx) {
     }
     input['id'] = lyrId
     input['checked'] = lyr.get('visible')
+    input.dataset.title = lyrTitle
     input.onchange = ({target}) => {
       this_.setVisible_(lyr, target['checked'])
     }

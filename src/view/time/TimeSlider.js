@@ -552,6 +552,8 @@ export default class TimeSlider {
     let timeStep
     let framesContainer
     let divisibleDays = false
+    let containsDST = false
+    let containsNonDST = false
     this.previousTickTextTop_ = null
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY
     this.previousTickTextBottom_ = null
@@ -612,6 +614,11 @@ export default class TimeSlider {
       }
 
       localTimeStep = frames[nextIndex]['endTime'] - frame['endTime']
+      if ((moment(frame['endTime']).tz(self.timeZone_).isDST()) && (localTimeStep < constants.ONE_DAY)) {
+        containsDST = true
+      } else {
+        containsNonDST = true
+      }
       if (timeStep == null) {
         useTimeStep = true
         timeStep = localTimeStep
@@ -619,6 +626,9 @@ export default class TimeSlider {
         useTimeStep = false
       }
     })
+    if ((containsDST) && (containsNonDST)) {
+      useTimeStep = false
+    }
     // Prevent common tick asynchrony
     if (useTimeStep) {
       timeStep *= 2

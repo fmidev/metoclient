@@ -21,8 +21,7 @@ export default class OlControlLayerSwitcher {
   constructor (optOptions) {
     const options = optOptions || {}
 
-    const tipLabel = options['tipLabel']
-      ? options['tipLabel'] : 'Layers'
+    const tipLabel = options['tipLabel'] ? options['tipLabel'] : 'Layers'
 
     this.project = options['project'] ? options['project'] : ''
     this.showLegend = options['showLegend'] ? options['showLegend'] : false
@@ -177,6 +176,13 @@ OlControlLayerSwitcher.prototype.renderLegends_ = function (legendInfo, elm) {
     const figures = document.querySelectorAll(`div.${this_.legendContainer} > figure`)
     figures.forEach((figure) => {
       figure.style.display = 'none'
+      try {
+        if (this_.useStorage) {
+          localforage.setItem(this_.project + '-' + figure.innerText + '-legendVisible', false)
+        }
+      } catch (e) {
+        console.log('Local storage is not supported. ' + e)
+      }
     })
     if (parseInt(newValue, 10) < 0) {
       return
@@ -184,6 +190,13 @@ OlControlLayerSwitcher.prototype.renderLegends_ = function (legendInfo, elm) {
     figures.forEach((figure) => {
       if (figure.classList.contains(`${constants.LEGEND_FIGURE_CLASS_PREFIX}${newValue}`)) {
         figure.style.display = ''
+        try {
+          if (this_.useStorage) {
+            localforage.setItem(this_.project + '-' + figure.innerText + '-legendVisible', true)
+          }
+        } catch (e) {
+          console.log('Local storage is not supported. ' + e)
+        }
       }
     })
   }

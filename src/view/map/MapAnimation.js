@@ -775,6 +775,7 @@ MapAnimation.prototype.updateStorage = async function () {
   const layers = this.get('layers')
   let localStorageOpacity
   let localStorageVisible
+  let localStorageLegendVisible
   let project = this.get('config')['project']
   let i
   let layer
@@ -799,6 +800,15 @@ MapAnimation.prototype.updateStorage = async function () {
     }
     if (layer['visible'] != null) {
       await localforage.setItem(project + '-' + layer['title'] + '-visible', layer['visible'])
+    }
+    if ((layer['animation'] != null) && (layer['animation']['useSavedLegendVisible'])) {
+      localStorageLegendVisible = await this.loadLayerPropertyFromLocalStorage(layer['title'], 'legendVisible')
+      if (localStorageLegendVisible != null) {
+        layer['animation']['legendVisible'] = localStorageLegendVisible
+      }
+    }
+    if ((layer['animation'] != null) && (layer['animation']['legendVisible'] != null)) {
+      await localforage.setItem(project + '-' + layer['title'] + '-legendVisible', layer['animation']['legendVisible'])
     }
   }
 }

@@ -24,8 +24,6 @@ export default class TimeSlider {
    * @param {any} config
    * @param {any} container
    * @param {Object=} callbacks Callback functions for time events.
-   *
-   * @memberOf TimeSlider
    */
   constructor (config, container, callbacks) {
     this.container_ = container
@@ -83,11 +81,8 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   * @param {any} direction
-   *
-   * @memberOf TimeSlider
+   * Triggers a movement to the next or previous time moment
+   * @param {number} direction Forward or backward direction
    */
   step (direction) {
     if (direction > 0) {
@@ -98,10 +93,7 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   *
-   * @memberOf TimeSlider
+   * Creates container elements and appropriate listeners.
    */
   createContainers () {
     let self = this
@@ -149,11 +141,8 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   * @returns
-   *
-   * @memberOf TimeSlider
+   * Creates functional margin area before the actual time slider.
+   * @returns {HTMLElement} Margin element.
    */
   createPreMargin () {
     let self = this
@@ -166,11 +155,8 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   * @returns
-   *
-   * @memberOf TimeSlider
+   * Creates an element for UI tools located in the slider before the first time step
+   * @returns {HTMLElement} An element for UI tools.
    */
   createPreTools () {
     let self = this
@@ -193,11 +179,8 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   * @returns
-   *
-   * @memberOf TimeSlider
+   * Creates an element for UI tools located in the slider after the last time step.
+   * @returns {HTMLElement} An element for UI tools.
    */
   createPostTools () {
     let self = this
@@ -336,7 +319,7 @@ export default class TimeSlider {
       newPoint = (this.value - this.getAttribute('min')) / (this.getAttribute('max') - this.getAttribute('min'))
       newPlace = width * newPoint - 56
       siblings = this.parentNode.childNodes
-      for (var i = 0; i < siblings.length; i++) {
+      for (let i = 0; i < siblings.length; i++) {
         sibling = siblings[i]
         if (sibling.id === this.id) {
           k = true
@@ -365,7 +348,7 @@ export default class TimeSlider {
           if ('fireEvent' in inputs[i]) {
             inputs[i].fireEvent('oninput')
           } else {
-            var evt = document.createEvent('HTMLEvents')
+            let evt = document.createEvent('HTMLEvents')
             evt.initEvent('change', false, true)
             inputs[i].dispatchEvent(evt)
           }
@@ -377,11 +360,8 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   * @returns
-   *
-   * @memberOf TimeSlider
+   * Creates an element for time zone label.
+   * @returns {HTMLElement} Time zone label.
    */
   createTimeZoneLabel () {
     let timezoneLabel = document.createElement('div')
@@ -391,11 +371,8 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   * @param {any} moments
-   *
-   * @memberOf TimeSlider
+   * Creates time frames and provides the frames container with frame elements.
+   * @param {Array} moments Time values for the slider.
    */
   createFrames (moments) {
     let i
@@ -426,15 +403,12 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   * @param {any} beginTime
-   * @param {any} endTime
-   * @param {any} type
-   * @param {any} weight
-   * @returns
-   *
-   * @memberOf TimeSlider
+   * Creates a single time frame and corresponding element listeners.
+   * @param {number} beginTime Begin time.
+   * @param {number} endTime End time.
+   * @param {string} type Frame type for observation or forecast.
+   * @param {number} weight Weight corresponding time frame length.
+   * @returns {Object} Time frame.
    */
   createFrame (beginTime, endTime, type, weight) {
     let self = this
@@ -458,10 +432,7 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   *
-   * @memberOf TimeSlider
+   * Creates elements for status visualizations of data loading.
    */
   createIndicators () {
     this.frames_.forEach((frame, index, array) => {
@@ -477,10 +448,7 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   *
-   * @memberOf TimeSlider
+   * Creates a visually reasonable tick distribution.
    */
   createTicks () {
     let step
@@ -543,6 +511,11 @@ export default class TimeSlider {
     this.showTicks()
   }
 
+  /**
+   * Performs a new iteration for tick distribution optimization.
+   * @param {number=} minStep Minimum allowed time step.
+   * @returns {boolean} Information if using default time step is suitable for the current data.
+   */
   configureTicks (minStep = 0) {
     let self = this
     let tick
@@ -690,6 +663,9 @@ export default class TimeSlider {
     return useTimeStep
   }
 
+  /**
+   * Shows currently visible slider ticks.
+   */
   showTicks () {
     Array.from(document.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS)).forEach(element => {
       element.classList.remove(TimeSlider.HIDDEN_CLASS)
@@ -697,10 +673,7 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   *
-   * @memberOf TimeSlider
+   * Creates a pointer for indicating current time in the slider.
    */
   createPointer () {
     let self = this
@@ -983,10 +956,7 @@ export default class TimeSlider {
   }
 
   /**
-   *
-   *
-   *
-   * @memberOf TimeSlider
+   * Clears time slider configurations.
    */
   clear () {
     this.mouseListeners_.forEach(mouseListener => {

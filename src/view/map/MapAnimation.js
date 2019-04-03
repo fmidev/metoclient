@@ -2490,7 +2490,6 @@ MapAnimation.prototype.setCallbacks = function (callbacks) {
 
 /**
  * Checks if animation time is valid for a given layer.
- *
  * @param {number} layerTime Layer time value to be checked.
  * @param {number} prevLayerTime Previous time value.
  * @param {number} currentTime Current time.

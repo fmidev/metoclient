@@ -138,7 +138,6 @@ export default class MapProducer {
           'opacity': options['opacity'],
           'editOpacity': options['editOpacity'],
           'zIndex': options['zIndex'],
-          'popupDataFMI': options['popupDataFMI'],
           'className': typeLwr,
           'source': source
         })
@@ -152,7 +151,6 @@ export default class MapProducer {
           'opacity': options['opacity'],
           'editOpacity': options['editOpacity'],
           'zIndex': options['zIndex'],
-          'popupDataFMI': options['popupDataFMI'],
           'className': typeLwr,
           'source': source
         })

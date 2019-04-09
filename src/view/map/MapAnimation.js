@@ -223,6 +223,177 @@ MapAnimation.prototype.createAnimation = async function (layers, capabilities, c
 }
 
 /**
+ * Creates popup header.
+ * @param header Popup header data.
+ * @param type Popup type.
+ * @returns {string} Popup header.
+ */
+MapAnimation.prototype.createPopupHeader = function (header, type) {
+  let config = this.get('config')
+  let content = '<div class="fmi-metoclient-' + type + '-item">'
+  let locale = config['locale']
+  if (header !== false) {
+    if ((header != null) && (typeof header === 'object')) {
+      content += '<b>' + header[locale] + '</b><br>'
+    } else if ((typeof header === 'string') && (header.length > 0)) {
+      content += '<b>' + header + '</b><br>'
+    }
+  }
+  return content
+}
+
+/**
+ * Creates popup item.
+ * @param layout Popup layout definitions.
+ * @param properties Popup properties.
+ * @returns {string} Popup item.
+ */
+MapAnimation.prototype.createPopupItem = function (layout, properties) {
+  let value = properties[layout['name']]
+  let config = this.get('config')
+  let content = ''
+  let filter
+  let k
+  let l
+  let locale = config['locale']
+  let m
+  let numFilters = utils['filters'].length
+  let numProperties
+  let numStyles
+  let property
+  let propertyValue
+  let style
+  let styles = layout['styles']
+  let validCondition
+
+  if ((styles != null) && (Array.isArray(styles))) {
+    numStyles = styles.length
+    for (k = 0; k < numStyles; k++) {
+      style = styles[k]
+      validCondition = true
+      if ((style['condition'] != null) && (style['condition']['properties'] != null) && (Array.isArray(style['condition']['properties']))) {
+        numProperties = style['condition']['properties'].length
+        loopProperties:
+          for (l = 0; l < numProperties; l++) {
+            property = style['condition']['properties'][l]
+            if ((property['name'] != null) && (property['name'].length > 0)) {
+              propertyValue = parseFloat(properties[property['name']])
+              if (propertyValue != null) {
+                for (m = 0; m < numFilters; m++) {
+                  filter = property[utils['filters'][m]['name']]
+                  if ((typeof filter !== 'undefined') && (!utils['filters'][m]['test'](propertyValue, filter))) {
+                    validCondition = false
+                    break loopProperties
+                  }
+                }
+              }
+            }
+          }
+      }
+      if (validCondition) {
+        if (layout['title'] != null) {
+          content += layout['title'][locale] + ': '
+        }
+        if (style['prefix'] != null) {
+          content += style['prefix'] + ' '
+        }
+        content += (((style['text'] != null) && (style['text'][locale] != null)) ? style['text'][locale] : value)
+        if (style['postfix'] != null) {
+          content += ' ' + style['postfix']
+        }
+        content += '<br>'
+      }
+    }
+  } else if (value !== undefined) {
+    if ((layout['dateTimeFormat'] != null) && (layout['dateTimeFormat'].length > 0)) {
+      if (layout['timeZone'] != null) {
+        value = moment(value).tz(layout['timeZone']).format(layout['dateTimeFormat'])
+      } else {
+        value = moment(value).format(layout['dateTimeFormat'])
+      }
+    }
+    if (layout['title'] !== false) {
+      content += ((layout['title'] != null) ? layout['title'][locale] : layout['name']) + ': '
+    }
+    content += value + '<br>'
+  }
+  return content
+}
+
+/**
+ * Creates popup content.
+ * @param properties Popup properties.
+ * @param type Popup type.
+ * @returns {string} Popup content.
+ */
+MapAnimation.prototype.createPopupContent = function (properties, type) {
+  let content
+  let coord
+  let coordinateRow
+  let dataItem
+  let dataItems
+  let header = properties[type + 'Header']
+  let i
+  let map = this.get('map')
+  let numDataItems
+  let propertyData
+  let view = map.getView()
+  let viewProjection = view.getProjection()
+  let coordToEPSG4326String = (coord) => {
+    if (coord != null) {
+      let coord4326 = OlProj.transform(
+        coord,
+        viewProjection,
+        'EPSG:4326'
+      )
+      return coord4326[1].toFixed(3) + ' ' + coord4326[0].toFixed(3)
+    }
+  }
+  if (header == null) {
+    header = properties['layerId']
+  }
+  coordinateRow = properties[type + 'CoordinateRow']
+  dataItems = properties[type + 'Data']
+  numDataItems = dataItems.length
+  content = this.createPopupHeader(header, type)
+  for (i = 0; i < numDataItems; i++) {
+    if (i === coordinateRow) {
+      coord = properties['geometry'].getCoordinates()
+      if (coord != null) {
+        content += coordToEPSG4326String(coord) + '<br>'
+      }
+    }
+    dataItem = dataItems[i]
+    if (dataItem == null) {
+      return
+    }
+    if (typeof dataItem === 'object') {
+      content += this.createPopupItem(dataItem, properties)
+    } else {
+      dataItem = dataItem.trim()
+      if (dataItem === 'the_geom') {
+        coord = properties['geometry'].getCoordinates()
+        if (coord != null) {
+          content += 'coordinates: ' + coordToEPSG4326String(coord) + '<br>'
+        }
+      } else {
+        propertyData = properties[dataItem]
+        if (propertyData != null) {
+          if (['time', 'begintime', 'endtime'].indexOf(dataItem) >= 0) {
+            content += dataItem + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'
+          } else if (dataItem === 'name') {
+            content += propertyData + '<br>'
+          } else {
+            content += dataItem + ': ' + propertyData + '<br>'
+          }
+        }
+      }
+    }
+  }
+  return content
+}
+
+/**
  * Inits mouse hover and click functionality.
  */
 MapAnimation.prototype.initMouseInteractions = function () {
@@ -232,52 +403,17 @@ MapAnimation.prototype.initMouseInteractions = function () {
   let handleWFSInteraction = (type, pixel) => {
     let dataShown = false
     let features = []
-    let feature
-    let value
-    let propertyValue
-    let view = map.getView()
-    let viewProjection = view.getProjection()
     let typeActive = false
     let config = self.get('config')
     let layers = self.getLayersByGroup(config['featureGroupName']).getArray()
     let numLayers = layers.length
     let i
     let j
-    let k
-    let l
-    let m
-    let property
-    let dataItem
-    let dataItems
-    let numDataItems
     let layerData
     let layerHeader
     let layerCoordinateRow
     let coordOffset = [0, 0]
-    let numFilters
-    let style
-    let styles
-    let numStyles
-    let validCondition
-    let filter
-    let header
-    let coordinateRow
-    let locale
-    let layerId
     let numFeatures
-    let propertyData
-    let numProperties
-    let coord
-    let coordToEPSG4326String = (coord) => {
-      if (coord != null) {
-        let coord4326 = OlProj.transform(
-          coord,
-          viewProjection,
-          'EPSG:4326'
-        )
-        return coord4326[1].toFixed(3) + ' ' + coord4326[0].toFixed(3)
-      }
-    }
     for (i = 0; i < numLayers; i++) {
       layerData = layers[i].get(type + 'Data')
       if ((Array.isArray(layerData)) && (layerData.length > 0) && (layers[i].get('visible')) && (layers[i].get('opacity'))) {
@@ -341,126 +477,20 @@ MapAnimation.prototype.initMouseInteractions = function () {
       }
       return 0
     })
-    numFilters = utils['filters'].length
     numFeatures = features.length
     if (numFeatures > 0) {
-      let content = ''
+      let content = '<div class="fmi-metoclient-' + type + '-content">'
       for (j = 0; j < numFeatures; j++) {
-        feature = features[j]
-        header = feature.get(type + 'Header')
-        coordinateRow = feature.get(type + 'CoordinateRow')
-        locale = config['locale']
-        dataItems = features[j].get(type + 'Data')
-        numDataItems = dataItems.length
-        layerId = feature.get('layerId')
-        if (content.length === 0) {
-          content += '<div class="fmi-metoclient-' + type + '-content">'
-        }
-        content += '<div class="fmi-metoclient-' + type + '-item">'
-        if (header !== false) {
-          if (header != null) {
-            content += '<b>' + header[locale] + '</b><br>'
-          } else if (layerId.length > 0) {
-            content += '<b>' + layerId + '</b><br>'
-          }
-        }
-        for (i = 0; i < numDataItems; i++) {
-          if (i === coordinateRow) {
-            coord = feature.getGeometry().getCoordinates()
-            if (coord != null) {
-              content += coordToEPSG4326String(coord) + '<br>'
-            }
-          }
-          dataItem = dataItems[i]
-          if (dataItem == null) {
-            return
-          }
-          value = feature.get(dataItem['name'])
-          if (typeof dataItem === 'object') {
-            styles = dataItem['styles']
-            if ((styles != null) && (Array.isArray(styles))) {
-              numStyles = styles.length
-              for (k = 0; k < numStyles; k++) {
-                style = styles[k]
-                validCondition = true
-                if ((style['condition'] != null) && (style['condition']['properties'] != null) && (Array.isArray(style['condition']['properties']))) {
-                  numProperties = style['condition']['properties'].length
-                  loopProperties:
-                  for (l = 0; l < numProperties; l++) {
-                    property = style['condition']['properties'][l]
-                    if ((property['name'] != null) && (property['name'].length > 0)) {
-                      propertyValue = parseFloat(feature.get(property['name']))
-                      if (propertyValue != null) {
-                        for (m = 0; m < numFilters; m++) {
-                          filter = property[utils['filters'][m]['name']]
-                          if ((typeof filter !== 'undefined') && (!utils['filters'][m]['test'](propertyValue, filter))) {
-                            validCondition = false
-                            break loopProperties
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-                if (validCondition) {
-                  if (dataItem['title'] != null) {
-                    content += dataItem['title'][locale] + ': '
-                  }
-                  if (style['prefix'] != null) {
-                    content += style['prefix'] + ' '
-                  }
-                  content += (((style['text'] != null) && (style['text'][locale] != null)) ? style['text'][locale] : value)
-                  if (style['postfix'] != null) {
-                    content += ' ' + style['postfix']
-                  }
-                  content += '<br>'
-                }
-              }
-            } else if (value !== undefined) {
-              if ((dataItem['dateTimeFormat'] != null) && (dataItem['dateTimeFormat'].length > 0)) {
-                if (dataItem['timeZone'] != null) {
-                  value = moment(value).tz(dataItem['timeZone']).format(dataItem['dateTimeFormat'])
-                } else {
-                  value = moment(value).format(dataItem['dateTimeFormat'])
-                }
-              }
-              if (dataItem['title'] !== false) {
-                content += ((dataItem['title'] != null) ? dataItem['title'][locale] : dataItem['name']) + ': '
-              }
-              content += value + '<br>'
-            }
-          } else {
-            dataItem = dataItem.trim()
-            if (dataItem === 'the_geom') {
-              coord = feature.getGeometry().getCoordinates()
-              if (coord != null) {
-                content += 'coordinates: ' + coordToEPSG4326String(coord) + '<br>'
-              }
-            } else {
-              propertyData = feature.get(dataItem)
-              if (propertyData != null) {
-                if (['time', 'begintime', 'endtime'].indexOf(dataItem) >= 0) {
-                  content += dataItem + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '<br>'
-                } else if ((dataItem === 'name') && (numProperties === 1)) {
-                  content += propertyData + '<br>'
-                } else {
-                  content += dataItem + ': ' + propertyData + '<br>'
-                }
-              }
-            }
-          }
-        }
+        content += self.createPopupContent(features[j].getProperties(), type)
         content += '</div>'
       }
-      if (content.length > 0) {
-        content += '</div>'
-        if (type === 'tooltip') {
-          coordOffset = config['tooltipOffset']
-        }
-        let coord = map.getCoordinateFromPixel([pixel[0] + coordOffset[0], pixel[1] + coordOffset[1]])
-        self.showPopup(content, coord, true, type)
-        dataShown = true
+      content += '</div>'
+      if (type === 'tooltip') {
+        coordOffset = config['tooltipOffset']
       }
+      let coord = map.getCoordinateFromPixel([pixel[0] + coordOffset[0], pixel[1] + coordOffset[1]])
+      self.showPopup(content, coord, true, type)
+      dataShown = pixel
     } else if (typeActive) {
       self.hidePopup()
     }
@@ -570,14 +600,20 @@ MapAnimation.prototype.initMouseInteractions = function () {
     popupShown = handleWFSInteraction('popup', evt['pixel'])
 
     let getFeatureInfoOnLoad = (req, layer) => {
-      let response
-      let properties
-      let popupText = ''
+      let i
+      let j
+      let layerCoordinateRow
+      let modifiedPopupData
+      let numPopupContentChildren
+      let numPopupData
       let popupContent
       let popupContentChild
       let popupContentChildren
-      let numPopupContentChildren
-      let i
+      let popupData
+      let popupDataItem = []
+      let popupText = ''
+      let properties = {}
+      let response
       if (req.status === 200) {
         try {
           response = JSON.parse(req.response)
@@ -591,15 +627,26 @@ MapAnimation.prototype.initMouseInteractions = function () {
           properties = response[0]
         }
         if (properties != null) {
-          let propertyNames = Object.keys(properties)
-          propertyNames.sort()
-          let popupData = layer.get('popupData')
-          popupText += propertyNames.reduce((currentText, propertyName) => {
-            if ((popupData.includes(propertyName)) && (properties[propertyName] != null)) {
-              currentText += propertyName + ': ' + properties[propertyName] + '<br>'
+          popupData = layer.get('popupData')
+          numPopupData = popupData.length
+          for (j = 0; j < numPopupData; j++) {
+            if (popupData[j]['name'] === 'gsLayerParameter') {
+              modifiedPopupData = []
+              Object.keys(properties).forEach(propertyKey => {
+                popupDataItem = extend(true, {}, popupData[0])
+                popupDataItem['name'] = propertyKey
+                modifiedPopupData.push(popupDataItem)
+              })
             }
-            return currentText
-          }, '<div class="fmi-metoclient-popup-item"><b>' + layer.get('title') + '</b><br>') + '</div>'
+          }
+          layerCoordinateRow = layer.get('popupCoordinateRow')
+          if (layerCoordinateRow != null) {
+            properties['popupCoordinateRow'] = layerCoordinateRow
+            properties['geometry'] = new OlGeomPoint(evt['coordinate'])
+          }
+          properties['popupHeader'] = layer.get('popupHeader')
+          properties['popupData'] = (modifiedPopupData != null ? modifiedPopupData : popupData)
+          popupText = self.createPopupContent(properties, 'popup')
           if (popupShown) {
             popupContent = document.getElementById(`${config['mapContainer']}-popup-content`)
             popupContentChildren = popupContent.children
@@ -614,8 +661,9 @@ MapAnimation.prototype.initMouseInteractions = function () {
               }
             }
           } else {
+            popupText = '<div class="fmi-metoclient-popup-content">' + popupText + '</div>'
             self.showPopup(popupText, evt['coordinate'], true)
-            popupShown = true
+            popupShown = evt['pixel']
           }
         }
       }

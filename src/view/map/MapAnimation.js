@@ -639,6 +639,19 @@ MapAnimation.prototype.initMouseInteractions = function () {
               })
             }
           }
+          modifiedPopupData.forEach(dataItem => {
+            if (Array.isArray(dataItem['styles'])) {
+              dataItem['styles'].forEach(style => {
+                if ((style['condition'] != null) && (Array.isArray(style['condition']['properties']))) {
+                  style['condition']['properties'].forEach(property => {
+                    if (property['name'] === 'gsLayerParameter') {
+                      property['name'] = dataItem['name']
+                    }
+                  })
+                }
+              })
+            }
+          })
           layerCoordinateRow = layer.get('popupCoordinateRow')
           if (layerCoordinateRow != null) {
             properties['popupCoordinateRow'] = layerCoordinateRow

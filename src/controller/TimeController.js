@@ -137,6 +137,14 @@ export default class TimeController {
       self.setTimeStep(timeStep)
       self.actionEvents.emitEvent('refresh')
     }
+    this.firstDataPointTimeListener_ = (dataPoint) => {
+      self.setFirstDataPointTime(dataPoint)
+      self.actionEvents.emitEvent('refresh')
+    }
+    this.lastDataPointTimeListener_ = (dataPoint) => {
+      self.setLastDataPointTime(dataPoint)
+      self.actionEvents.emitEvent('refresh')
+    }
 
     containers = document.getElementsByClassName(this.config_['view']['timeSliderContainer'])
     numViews = containers.length
@@ -150,6 +158,8 @@ export default class TimeController {
         this.views_[i].variableEvents.addListener('beginTime', self.beginTimeListener_)
         this.views_[i].variableEvents.addListener('endTime', self.endTimeListener_)
         this.views_[i].variableEvents.addListener('timeStep', self.timeStepListener_)
+        this.views_[i].variableEvents.addListener('firstDataPointTime', self.firstDataPointTimeListener_)
+        this.views_[i].variableEvents.addListener('lastDataPointTime', self.lastDataPointTimeListener_)
       }
     }
 
@@ -189,7 +199,7 @@ export default class TimeController {
       return
     }
     for (i = 0; i < numViews; i++) {
-      this.views_[i].createTimeSlider(this.model_.getAnimationTimes())
+      this.views_[i].createTimeSlider(this.model_.getAnimationTimes(), this.model_.getTimeConfiguration())
     }
   }
 
@@ -318,7 +328,6 @@ export default class TimeController {
   getAnimationResolutionTime () {
     return this.model_.getAnimationResolutionTime()
   }
-
   /**
    * Gets number of animation time intervals.
    * @returns {number} Number of animation time intervals.
@@ -441,6 +450,22 @@ export default class TimeController {
    */
   setEndTime (endTime) {
     this.model_.setEndTime(endTime)
+  }
+
+  /**
+   * Sets the time of first available datapoint
+   * @param {number} firstDataPointTime first available datapoint time
+   */
+  setFirstDataPointTime (firstDataPointTime) {
+    this.model_.setFirstDataPointTime(firstDataPointTime)
+  }
+
+  /**
+   * Sets the time of last available datapoint
+   * @param {number} lastDataPointTime last available datapoint time
+   */
+  setLastDataPointTime (lastDataPointTime) {
+    this.model_.setLastDataPointTime(lastDataPointTime)
   }
 
   /**

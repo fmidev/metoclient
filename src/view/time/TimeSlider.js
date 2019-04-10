@@ -608,7 +608,7 @@ export default class TimeSlider {
     }
 
     newTextWidth = Math.round(maxTextWidth) + 'px'
-    Array.from(document.getElementsByClassName(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)).forEach(element => {
+    Array.from(this.container_.getElementsByClassName(TimeSlider.FRAME_TEXT_WRAPPER_CLASS)).forEach(element => {
       element.style.width = newTextWidth
     })
 
@@ -625,7 +625,7 @@ export default class TimeSlider {
       frame.element.appendChild(tick)
     }
 
-    framesContainer = Array.from(document.getElementsByClassName(TimeSlider.FRAMES_CONTAINER_CLASS))
+    framesContainer = Array.from(this.container_.getElementsByClassName(TimeSlider.FRAMES_CONTAINER_CLASS))
     if (framesContainer.length > 0) {
       framesContainer = framesContainer[0].getBoundingClientRect()
     }
@@ -667,7 +667,7 @@ export default class TimeSlider {
    * Shows currently visible slider ticks.
    */
   showTicks () {
-    Array.from(document.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS)).forEach(element => {
+    Array.from(this.container_.getElementsByClassName(TimeSlider.FRAME_TICK_CLASS)).forEach(element => {
       element.classList.remove(TimeSlider.HIDDEN_CLASS)
     })
   }
@@ -844,7 +844,7 @@ export default class TimeSlider {
   setDragging (dragging) {
     this.dragging_ = dragging
     let pointerEvents = dragging ? 'auto' : 'none'
-    Array.from(document.getElementsByClassName(TimeSlider.DRAG_LISTENER_CLASS)).forEach(element => {
+    Array.from(this.container_.getElementsByClassName(TimeSlider.DRAG_LISTENER_CLASS)).forEach(element => {
       element.style.pointerEvents = pointerEvents
     })
   }

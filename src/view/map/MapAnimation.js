@@ -1443,6 +1443,7 @@ MapAnimation.prototype.loadLayerPropertyFromLocalStorage = async function (layer
  */
 MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) {
   let self = this
+  const callbacks = this.get('callbacks')
   const layers = this.get('layers')
   let numLayers
   let layer
@@ -1492,14 +1493,20 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
       animation = layer.get('animation')
       title = layer.get('title')
       if ((layerType === this.layerTypes['features']) && (animation != null) && (!animation['static'])) {
+        if ((callbacks != null) && (typeof callbacks['animationFeatures'] === 'function')) {
+          callbacks['animationFeatures']()
+        }
         source = layer.getSource()
         timePropertyName = source.get('timePropertyName')
         source.on('addfeature', (event) => {
+          let newFeature = event['feature']
+          if ((callbacks != null) && (typeof callbacks['newAnimationFeature'] === 'function')) {
+            callbacks['newAnimationFeature'](newFeature)
+          }
           let selectedFeature = this.getSelectedFeature()
           let selectedId = (selectedFeature != null) ? selectedFeature.getId() : null
           let selectedLayer = this.get('selectedFeatureLayer')
           let selectedTime = this.get('selectedFeatureTime')
-          let newFeature = event['feature']
           if (newFeature == null) {
             return
           }

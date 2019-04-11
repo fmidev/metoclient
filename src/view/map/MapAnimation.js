@@ -390,6 +390,7 @@ MapAnimation.prototype.createPopupContent = function (properties, type) {
       }
     }
   }
+  content += '</div>'
   return content
 }
 
@@ -405,6 +406,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let features = []
     let typeActive = false
     let config = self.get('config')
+    let locale = config['locale']
     let layers = self.getLayersByGroup(config['featureGroupName']).getArray()
     let numLayers = layers.length
     let i
@@ -455,6 +457,11 @@ MapAnimation.prototype.initMouseInteractions = function () {
     features.sort(function (a, b) {
       const layerIdProperty = 'layerId'
       const timeProperty = 'time'
+      const aPopupHeader = a.get('popupHeader')
+      const bPopupHeader = b.get('popupHeader')
+      if ((aPopupHeader != null) && (bPopupHeader != null) && (aPopupHeader[locale] != null) && (bPopupHeader[locale] != null) && (aPopupHeader[locale] !== bPopupHeader[locale])) {
+        return aPopupHeader[locale].localeCompare(bPopupHeader[locale])
+      }
       const aLayerId = a.get(layerIdProperty)
       const bLayerId = b.get(layerIdProperty)
       if (aLayerId !== bLayerId) {
@@ -482,7 +489,6 @@ MapAnimation.prototype.initMouseInteractions = function () {
       let content = '<div class="fmi-metoclient-' + type + '-content">'
       for (j = 0; j < numFeatures; j++) {
         content += self.createPopupContent(features[j].getProperties(), type)
-        content += '</div>'
       }
       content += '</div>'
       if (type === 'tooltip') {
@@ -611,6 +617,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
       let popupContentChildren
       let popupData
       let popupDataItem = []
+      let popupItems
       let popupText = ''
       let properties = {}
       let response
@@ -668,7 +675,9 @@ MapAnimation.prototype.initMouseInteractions = function () {
               for (i = 0; i < numPopupContentChildren; i++) {
                 popupContentChild = popupContentChildren[i]
                 if (popupContentChild.classList.contains('fmi-metoclient-popup-content')) {
-                  popupContentChild['innerHTML'] += popupText
+                  popupItems = Array.from(popupContentChild.getElementsByClassName('fmi-metoclient-popup-item')).map(item => item.outerHTML)
+                  popupItems.push(popupText)
+                  popupContentChild['innerHTML'] = popupItems.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())).join('')
                   break
                 }
               }

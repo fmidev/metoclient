@@ -61,6 +61,7 @@ export default class TimeSlider {
   /**
    * Creates a new time slider.
    * @param {Array} moments Time values for the slider.
+   * @param (Object) containing time parameters for Time slider menu.
    */
   createTimeSlider (moments, timeConfig) {
     if (timeConfig !== null) {

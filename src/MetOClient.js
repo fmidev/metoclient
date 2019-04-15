@@ -209,8 +209,10 @@ export class MetOClient {
       'autoReplay',
       'autoStart',
       'beginTime',
+      'firstDataPointTime',
       'defaultAnimationTime',
       'endTime',
+      'lastDataPointTime',
       'endTimeDelay',
       'timeLimitsForced',
       'frameRate',
@@ -231,6 +233,7 @@ export class MetOClient {
       'resolutionTime',
       'showTimeSlider',
       'showTimeSliderMenu',
+      'menuTimeSteps',
       'timeSliderContainer',
       'timeZone',
       'timeZoneLabel',
@@ -411,6 +414,16 @@ export class MetOClient {
           'mouseWheelTimeStep': true,
           'showTimeSlider': true,
           'showTimeSliderMenu': false,
+          'menuTimeSteps': [
+            ['5min', 300000],
+            ['10min', 600000],
+            ['15min', 900000],
+            ['30min', 1800000],
+            ['1h', 3600000],
+            ['3h', 10800000],
+            ['6h', 21600000],
+            ['12h', 43200000],
+            ['24h', 86400000]],
           'timeSliderContainer': 'fmi-metoclient-timeslider',
           'timeZone': tz.guess(true),
           'timeZoneLabel': '',
@@ -619,6 +632,12 @@ export class MetOClient {
     }
     if (options['endTime'] != null) {
       this.timeController_.setEndTime(options['endTime'])
+    }
+    if (options['firstDataPointTime'] != null) {
+      this.timeController_.setFirstDataPointTime(options['firstDataPointTime'])
+    }
+    if (options['lastDataPointTime'] != null) {
+      this.timeController_.setLastDataPointTime(options['lastDataPointTime'])
     }
     if (typeof options['timeStep'] !== 'undefined') {
       this.timeController_.setTimeStep(options['timeStep'])

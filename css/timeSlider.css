@@ -230,14 +230,15 @@ div.fmi-metoclient-timeslider-timezone {
 }
 
 ul.fmi-metoclient-timeslider-menu {
-    top: -169px;
-    left: -440px;
+    top: -163px;
+    left: -447px;
     width: 500px;
     z-index: 30;
 }
 
 ul.fmi-metoclient-timeslider-menu.visible-menu {
-    top: -184px;
+    position: absolute;
+    top: -178px;
     background-color: rgba(255,255,255,0.7);
 }
 
@@ -272,6 +273,8 @@ button.fmi-metoclient-timeslider-timestep-button {
     font-family: Roboto, Arial, Helvetica, sans-serif;
     font-size: 15px;
     background: #fff;
+    display: inline-block;
+    font-weight: 400;
 }
 
 button.fmi-metoclient-timeslider-timestep-active-button {

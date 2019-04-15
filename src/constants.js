@@ -38,18 +38,6 @@ export const LOADING_STATUS = {
   'error': 'error'
 }
 
-export const AVAILABLE_TIMESTEPS = [
-  300000,
-  600000,
-  900000,
-  1800000,
-  3600000,
-  10800000,
-  21600000,
-  43200000,
-  86400000
-]
-
 /**
  * Default layer z-indexes.
  * @type {Object}

@@ -38,6 +38,7 @@ List of API functions:
 
 * createAnimation(callbacks)
     * possible event functions as callbacks
+        * animationFeatures()
         * center(x, y)
         * deselected(feature)
         * hover(feature)
@@ -46,6 +47,7 @@ List of API functions:
         * loadedOnce()
         * loadError(params)
         * marker(x, y)
+        * newAnimationFeature(feature)
         * popupClosed()
         * preload()
         * ready()

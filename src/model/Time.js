@@ -22,6 +22,8 @@ export default class Time {
     this.animationLastRefreshed_ = 0
     this.beginTime_ = this.config_['beginTime']
     this.endTime_ = this.config_['endTime']
+    this.firstDataPointTime_ = this.config_['firstDataPointTime']
+    this.lastDataPointTime_ = this.config_['lastDataPointTime']
     this.timeLimitsForced_ = this.config_['timeLimitsForced']
     this.defaultTime_ = this.config_['defaultAnimationTime']
     this.endTimeDelay_ = this.config_['endTimeDelay']
@@ -404,6 +406,23 @@ export default class Time {
   }
 
   /**
+   * Sets the time of first available datapoint
+   * @param {number} firstDataPointTime first available datapoint time
+   */
+  setFirstDataPointTime (firstDataPointTime) {
+    this.firstDataPointTime_ = firstDataPointTime
+    this.createTimer()
+  }
+
+  /**
+   * Sets the time of last available datapoint
+   * @param {number} lastDataPointTime last available datapoint time
+   */
+  setLastDataPointTime (lastDataPointTime) {
+    this.lastDataPointTime_ = lastDataPointTime
+    this.createTimer()
+  }
+  /**
    * Sets time limits forced.
    * @param {boolean} timeLimitsForced Time limits forced.
    */
@@ -489,6 +508,20 @@ export default class Time {
    */
   getAnimationTimes () {
     return this.animationTimes_
+  }
+
+  /**
+   * Gets Time Configuration from Time model
+   * @returns Array of time parameters.
+   */
+  getTimeConfiguration () {
+    let config = {}
+    config.beginTime = this.beginTime_
+    config.endTime = this.endTime_
+    config.firstDataPointTime = this.firstDataPointTime_
+    config.lastDataPointTime = this.lastDataPointTime_
+    config.resolutionTime = this.animationResolutionTime_
+    return config
   }
 
   /**

@@ -12,8 +12,8 @@ import OlStyleStyle from 'ol/style/style'
 import OlStyleText from 'ol/style/text'
 import OlStyleCircle from 'ol/style/circle'
 import OlStyleRegularShape from 'ol/style/regularshape'
-import * as constants from '../../constants'
 import * as utils from '../../utils'
+import extend from 'extend'
 
 /**
  * @fileoverview Map source factory.
@@ -81,7 +81,8 @@ export default class FeatureProducer {
       return null
     }
     // Filter conditions
-    return (feature, resolution) => (Array.isArray(options) ? options : [options]).reduce((styles, styleOptions) => {
+    return (feature, resolution) => (Array.isArray(options) ? options : [options]).reduce((styles, option) => {
+      let styleOptions = extend(true, {}, option)
       let numProperties
       let i
       let j
@@ -146,7 +147,7 @@ export default class FeatureProducer {
         z['value'] = z['value'] | 1
       }
       if (styleOptions['zIndex'] === undefined) {
-        styleOptions['zIndex'] = constants.ZINDEX['vector'] + z['value'] * 10
+        styleOptions['zIndex'] = Math.sqrt(feature.getGeometry().getCoordinates().reduce((result, coord) => result + coord * coord, 0))
       }
       if ((typeof maxRadius === 'number') && (typeof resolutionFactor === 'number') && (styleOptions['image'] != null) && (typeof styleOptions['image']['setRadius'] === 'function')) {
         styleOptions['image']['setRadius'](Math.max(1, maxRadius - resolutionFactor * Math.LOG2E * Math.log(resolution)))

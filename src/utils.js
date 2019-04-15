@@ -7,7 +7,6 @@
 import { default as proj4 } from 'proj4'
 import { tz } from 'moment-timezone'
 import moment from 'moment-timezone'
-import { AVAILABLE_TIMESTEPS } from './constants'
 import fi from 'moment/locale/fi'
 import sv from 'moment/locale/sv'
 import uk from 'moment/locale/uk'
@@ -127,7 +126,7 @@ export const createMenu = (options) => {
  * @param {Object} options Menu data.
  * @return {HTMLElement} Unordered list of menu items.
  */
-export const createTimeMenu = (options) => {
+export const createTimeMenu = (menuTimeSteps, options) => {
   let ul = document.createElement('ul')
   let form
   let li
@@ -194,20 +193,16 @@ export const createTimeMenu = (options) => {
         title = document.createElement('a')
         title.innerHTML = item.title
         li.appendChild(title)
-        for (let i = 0; i < AVAILABLE_TIMESTEPS.length; i++) {
+        menuTimeSteps.forEach(function(timeStep) {
           let button = document.createElement('button')
-          if (i > 3) {
-            button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 3600000) + 'h'
-          } else {
-            button.innerHTML = (AVAILABLE_TIMESTEPS[i] / 60000) + 'min'
-          }
+          button.innerHTML = timeStep[0]
           button.classList.add('fmi-metoclient-timeslider-timestep-button')
-          if (item.resolutionTime === AVAILABLE_TIMESTEPS[i]) {
+          if (item.resolutionTime == timeStep[1]) {
             button.classList.add('fmi-metoclient-timeslider-timestep-active-button')
           }
           button.addEventListener('click', item.callback)
           li.appendChild(button)
-        }
+        })
         ul.appendChild(li)
       } else {
         console.log('Unsupported')

@@ -44,6 +44,7 @@ import OlView from 'ol/view'
 import OlSourceVector from 'ol/source/vector'
 import OlSourceWMTS from 'ol/source/wmts'
 import OlGeomPoint from 'ol/geom/point'
+import ContextMenu from './ContextMenu'
 
 export default class MapAnimation {
   /**
@@ -77,6 +78,7 @@ export default class MapAnimation {
     this.set('configChanged', false)
     this.set('selectedFeatureLayer', null)
     this.set('selectedFeatureTime', null)
+    this.contextMenu = null
     this.activeInteractions = []
     this.loadedOnce = false
     this.viewOptions = {}
@@ -1190,6 +1192,9 @@ MapAnimation.prototype.setViewListeners = function () {
         if (self.get('config')['showMarker']) {
           self.get('marker').setCoordinates(map.getView().getCenter())
           self.dispatchEvent('markerMoved')
+        }
+        if (self.contextMenu.isOpen()) {
+          self.contextMenu.close()
         }
         if ((callbacks != null) && (typeof callbacks['center'] === 'function')) {
           coordinates = this.getCenter()
@@ -2675,4 +2680,48 @@ MapAnimation.prototype.staticReloadNeeded = function (type) {
     return true
   }
   return false
+}
+
+/**
+ * Creates a context menu for the map features.
+ * @return {Object} Context menu.
+ */
+MapAnimation.prototype.createContextMenu = function () {
+  const self = this
+  this.contextMenu = new ContextMenu({
+    defaultItems: false,
+    items: []
+  })
+  this.contextMenu.on('beforeopen', function(evt) {
+    let contextMenuItems
+    const map = self.get('map')
+    let feature = map.forEachFeatureAtPixel(evt.pixel, function (ft, l) {
+      return ft
+    })
+    if (feature) {
+      contextMenuItems = feature.get('contextMenuItems')
+      if (contextMenuItems != null) {
+        self.hidePopup()
+        contextMenuItems.forEach(function(contextMenuItem) {
+          contextMenuItem.data = {
+            feature: feature
+          }
+        })
+        self.contextMenu.enable();
+        self.contextMenu.clear()
+        self.contextMenu.extend(contextMenuItems)
+      } else {
+        if (self.contextMenu.isOpen()) {
+          self.contextMenu.close()
+        }
+        self.contextMenu.disable();
+      }
+    } else {
+      if (self.contextMenu.isOpen()) {
+        self.contextMenu.close()
+      }
+      self.contextMenu.disable();
+    }
+  })
+  return this.contextMenu
 }

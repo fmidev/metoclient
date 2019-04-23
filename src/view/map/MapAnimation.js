@@ -734,9 +734,9 @@ MapAnimation.prototype.layerContainsFeature = function (layer, feature) {
 /**
  * Handles update requests.
  * @param {number} updateRequested Time when update requested.
- * @param {boolean=} disableTimeSlider Disables the time slider when loading layers.
+ * @param {boolean=} disableLayerSwitcher Disables the layer switcher when loading layers.
  */
-MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, disableTimeSlider = false) {
+MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, disableLayerSwitcher = false) {
   let self = this
   let anyVisible = false
   let asyncLoadCount
@@ -774,7 +774,7 @@ MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, di
     asyncLoadCount[loadId] = 0
     this.asyncLoadCount = asyncLoadCount
     this.numIntervalItems = []
-    if (disableTimeSlider) {
+    if (disableLayerSwitcher) {
       // Todo: toteuta tämä LayerSwitcherissä funktiona
       Array.from(document.querySelectorAll('.layer-switcher input')).forEach((layerSwitcher) => {
         layerSwitcher.disabled = true
@@ -2259,6 +2259,12 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
  * @param type {string=} Popup type.
  */
 MapAnimation.prototype.showPopup = function (content, coordinate, append, type) {
+  if (this.contextMenu.isOpen()) {
+    if (type === 'tooltip') {
+      return
+    }
+    this.contextMenu.close()
+  }
   const popupContent = document.getElementById(`${this.get('config')['mapContainer']}-popup-content`)
   let overlay = this.get('overlay')
   let overlayPosition = overlay.get('position')
@@ -2692,7 +2698,7 @@ MapAnimation.prototype.createContextMenu = function () {
     defaultItems: false,
     items: []
   })
-  this.contextMenu.on('beforeopen', function(evt) {
+  this.contextMenu.on('beforeopen', function (evt) {
     let contextMenuItems
     const map = self.get('map')
     let feature = map.forEachFeatureAtPixel(evt.pixel, function (ft, l) {
@@ -2702,25 +2708,27 @@ MapAnimation.prototype.createContextMenu = function () {
       contextMenuItems = feature.get('contextMenuItems')
       if (contextMenuItems != null) {
         self.hidePopup()
-        contextMenuItems.forEach(function(contextMenuItem) {
-          contextMenuItem.data = {
-            feature: feature
+        contextMenuItems.forEach(function (contextMenuItem) {
+          if ((contextMenuItem != null) && (typeof contextMenuItem === 'object')) {
+            contextMenuItem.data = {
+              feature: feature
+            }
           }
         })
-        self.contextMenu.enable();
+        self.contextMenu.enable()
         self.contextMenu.clear()
         self.contextMenu.extend(contextMenuItems)
       } else {
         if (self.contextMenu.isOpen()) {
           self.contextMenu.close()
         }
-        self.contextMenu.disable();
+        self.contextMenu.disable()
       }
     } else {
       if (self.contextMenu.isOpen()) {
         self.contextMenu.close()
       }
-      self.contextMenu.disable();
+      self.contextMenu.disable()
     }
   })
   return this.contextMenu

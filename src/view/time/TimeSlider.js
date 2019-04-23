@@ -29,7 +29,6 @@ export default class TimeSlider {
     this.container_ = container
     this.config_ = config
     this.callbacks_ = callbacks
-    this.paper_ = null
     this.visualPointer_ = null
     this.frameWidth_ = 0
     this.playButton_ = null

@@ -138,6 +138,7 @@ export default class MapProducer {
           'opacity': options['opacity'],
           'editOpacity': options['editOpacity'],
           'zIndex': options['zIndex'],
+          'preload': options['preload'],
           'className': typeLwr,
           'source': source
         })

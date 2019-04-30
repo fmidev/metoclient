@@ -237,7 +237,7 @@ export const filters = [
   },
   {
     'name': 'lessThanOrEqualTo',
-    'test': (a, b) => (a < b)
+    'test': (a, b) => (a <= b)
   },
   {
     'name': 'greaterThan',

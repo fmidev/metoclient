@@ -162,7 +162,7 @@ export const createTimeMenu = (menuTimeSteps, options) => {
         title.innerHTML = item.title
         a = document.createElement('input')
         a.setAttribute('type', 'range')
-        a.setAttribute('min', '1')
+        a.setAttribute('min', '0')
         a.setAttribute('max', item.size)
         output = document.createElement('output')
         if (item.id === 'fmi-metoclient-timeslider-begintime') {

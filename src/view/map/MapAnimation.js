@@ -228,11 +228,12 @@ MapAnimation.prototype.createAnimation = async function (layers, capabilities, c
  * Creates popup header.
  * @param header Popup header data.
  * @param type Popup type.
+ * @param {string} dataSource Popup data source.
  * @returns {string} Popup header.
  */
-MapAnimation.prototype.createPopupHeader = function (header, type) {
+MapAnimation.prototype.createPopupHeader = function (header, type, dataSource) {
   let config = this.get('config')
-  let content = '<div class="fmi-metoclient-' + type + '-item">'
+  let content = '<div class="fmi-metoclient-' + type + '-item fmi-metoclient-' + dataSource + '-item">'
   let locale = config['locale']
   if (header !== false) {
     if ((header != null) && (typeof header === 'object')) {
@@ -324,11 +325,12 @@ MapAnimation.prototype.createPopupItem = function (layout, properties) {
 
 /**
  * Creates popup content.
- * @param properties Popup properties.
- * @param type Popup type.
+ * @param {Object} properties Popup properties.
+ * @param {string} type Popup type.
+ * @param {string} dataSource Popup data source.
  * @returns {string} Popup content.
  */
-MapAnimation.prototype.createPopupContent = function (properties, type) {
+MapAnimation.prototype.createPopupContent = function (properties, type, dataSource) {
   let content
   let coord
   let coordinateRow
@@ -357,7 +359,7 @@ MapAnimation.prototype.createPopupContent = function (properties, type) {
   coordinateRow = properties[type + 'CoordinateRow']
   dataItems = properties[type + 'Data']
   numDataItems = dataItems.length
-  content = this.createPopupHeader(header, type)
+  content = this.createPopupHeader(header, type, dataSource)
   for (i = 0; i < numDataItems; i++) {
     if (i === coordinateRow) {
       coord = properties['geometry'].getCoordinates()
@@ -490,7 +492,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     if (numFeatures > 0) {
       let content = '<div class="fmi-metoclient-' + type + '-content">'
       for (j = 0; j < numFeatures; j++) {
-        content += self.createPopupContent(features[j].getProperties(), type)
+        content += self.createPopupContent(features[j].getProperties(), type, 'wfs')
       }
       content += '</div>'
       if (type === 'tooltip') {
@@ -500,7 +502,13 @@ MapAnimation.prototype.initMouseInteractions = function () {
       self.showPopup(content, coord, true, type)
       dataShown = pixel
     } else if (typeActive) {
-      self.hidePopup()
+      if (document.querySelectorAll(`#${config['mapContainer']}-popup-content div.fmi-metoclient-gfi-item`).length === 0) {
+        self.hidePopup()
+      } else {
+        document.querySelectorAll(`#${config['mapContainer']}-popup-content div.fmi-metoclient-wfs-item`).forEach(function (element) {
+          element.parentNode.removeChild(element)
+        })
+      }
     }
     return dataShown
   }
@@ -668,7 +676,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
           }
           properties['popupHeader'] = layer.get('popupHeader')
           properties['popupData'] = (modifiedPopupData != null ? modifiedPopupData : popupData)
-          popupText = self.createPopupContent(properties, 'popup')
+          popupText = self.createPopupContent(properties, 'popup', 'gfi')
           if (popupShown) {
             popupContent = document.getElementById(`${config['mapContainer']}-popup-content`)
             popupContentChildren = popupContent.children
@@ -2277,8 +2285,8 @@ MapAnimation.prototype.showPopup = function (content, coordinate, append, type) 
   } else {
     if (popupContent['innerHTML'] !== content) {
       popupContent['innerHTML'] = content
-      overlay.setPosition(coordinate)
     }
+    overlay.setPosition(coordinate)
   }
   if (type != null) {
     popupContent.parentElement.setAttribute('data-fmi-metoclient-popup-type', type)

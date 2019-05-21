@@ -582,7 +582,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     }
     if (hit) {
       this.getTargetElement().style.cursor = 'pointer'
-    } else if (dataFound) {
+    } else if (!dataFound) {
       this.getTargetElement().style.cursor = ''
     }
     handleWFSInteraction('tooltip', evt['pixel'])

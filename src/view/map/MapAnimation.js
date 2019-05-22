@@ -2713,7 +2713,15 @@ MapAnimation.prototype.createContextMenu = function () {
       return ft
     })
     if (feature) {
-      contextMenuItems = feature.get('contextMenuItems')
+      const config = self.get('config')
+      if (config['contextMenuInsideMap']) {
+        if (map.contextMenuItems == null) {
+          map.contextMenuItems = feature.get('contextMenuItems')
+        }
+        contextMenuItems = map.contextMenuItems
+      } else {
+        contextMenuItems = feature.get('contextMenuItems')
+      }
       if (contextMenuItems != null) {
         self.hidePopup()
         contextMenuItems.forEach(function (contextMenuItem) {

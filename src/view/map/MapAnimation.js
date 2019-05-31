@@ -1201,7 +1201,7 @@ MapAnimation.prototype.setViewListeners = function () {
           self.get('marker').setCoordinates(map.getView().getCenter())
           self.dispatchEvent('markerMoved')
         }
-        if (self.contextMenu.isOpen()) {
+        if ((self.contextMenu != null) && (self.contextMenu.isOpen())) {
           self.contextMenu.close()
         }
         if ((callbacks != null) && (typeof callbacks['center'] === 'function')) {

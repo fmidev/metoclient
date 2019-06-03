@@ -241,6 +241,7 @@ FullAnimationLoader.prototype.initMap = function () {
     interactions,
     view: new OlView(this.viewOptions)
   })
+  self.set('map', map)
   map.set('layerVisibility', layerVisibility)
   map.on('change:layerVisibility', () => {
     self.set('updateRequested', Date.now())
@@ -277,7 +278,6 @@ FullAnimationLoader.prototype.initMap = function () {
   Array.from(mapContainerElement.getElementsByClassName('ol-viewport')).forEach((olViewport) => {
     olViewport.style.touchAction = 'auto'
   })
-  self.set('map', map)
   this.initMouseInteractions()
   this.setViewListeners()
   if (!self.get('listenersInitialized')) {

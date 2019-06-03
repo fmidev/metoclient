@@ -78,6 +78,15 @@ export default class MapAnimation {
     this.set('configChanged', false)
     this.set('selectedFeatureLayer', null)
     this.set('selectedFeatureTime', null)
+    this.set('markerStyle', new OlStyleStyle({
+        'image': new OlStyleIcon(/** @type {olx.style.IconOptions} */ ({
+          'anchor': [0.5, 1],
+          'anchorXUnits': 'fraction',
+          'anchorYUnits': 'fraction',
+          'src': this.get('config')['markerImagePath']
+        }))
+      })
+    )
     this.contextMenu = null
     this.activeInteractions = []
     this.loadedOnce = false
@@ -1331,15 +1340,8 @@ MapAnimation.prototype.createMarkerLayer = function () {
   const markerFeature = new OlFeature({
     'geometry': marker
   })
-  const markerStyle = new OlStyleStyle({
-    'image': new OlStyleIcon(/** @type {olx.style.IconOptions} */ ({
-      'anchor': [0.5, 1],
-      'anchorXUnits': 'fraction',
-      'anchorYUnits': 'fraction',
-      'src': this.get('config')['markerImagePath']
-    }))
-  })
-  markerFeature.setStyle(markerStyle)
+  markerFeature.setStyle(this.get('markerStyle'))
+  this.get('map').set('marker', markerFeature)
   const markerSource = new OlSourceVector({
     'features': [markerFeature]
   })
@@ -2389,6 +2391,22 @@ MapAnimation.prototype.setLayerVisible = async function (layerTitle, visibility)
     }
     this.requestViewUpdate()
   }
+}
+
+/**
+ * Sets marker visibility.
+ * @param visibility {boolean} Marker visibility.
+ */
+MapAnimation.prototype.setMarkerVisible = function (visibility) {
+  const map = this.get('map')
+  if (map == null) {
+    return
+  }
+  const marker = map.get('marker')
+  if (marker == null) {
+    return
+  }
+  marker.setStyle(visibility ? this.get('markerStyle') : new OlStyleStyle({}))
 }
 
 /**

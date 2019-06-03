@@ -947,6 +947,17 @@ export class MetOClient {
   }
 
   /**
+   * Sets marker visibility.
+   * @param visibility {boolean} Marker visibility.
+   * @export
+   */
+  setMarkerVisible (visibility) {
+    if (this.mapController_ != null) {
+      this.mapController_.setMarkerVisible(visibility)
+    }
+  }
+
+  /**
    * Sets map interactions.
    * @param interactionOptions {Object} Interaction options.
    * @export

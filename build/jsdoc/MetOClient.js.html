@@ -34,10 +34,13 @@
 
 import './config/globalExport'
 import * as utils from './utils'
+import * as constants from './constants'
 import TimeController from './controller/TimeController'
 import MapController from './controller/MapController'
 import { tz } from 'moment-timezone'
 import extend from 'extend'
+import isNumeric from 'fast-isnumeric'
+import localforage from 'localforage'
 
 export class MetOClient {
   /**
@@ -49,6 +52,8 @@ export class MetOClient {
     let locale
     let project
     let mapPostId
+    let animationResolutionTime
+    let instanceId = 'metoclient'
     let newConfig = {
       'project': '',
       'map': {
@@ -100,13 +105,19 @@ export class MetOClient {
      */
     this.animationTimeListener_ = animationTime => {
     }
+    /**
+     *
+     * @type {Object}
+     * @private
+     */
+    this.updateQueue_ = null
 
     // Configuration from default values
     extend(true, newConfig, this.getDefaultConfig())
     // Configuration from newConfiguration files
     project = (this.config_['project'] == null) ? newConfig['project'] : this.config_['project']
-    if ((project) &amp;&amp; (window['fi']) &amp;&amp; (window['fi']['fmi']) &amp;&amp; (window['fi']['fmi']['config']) &amp;&amp; (window['fi']['fmi']['config']['metoclient'])) {
-      extend(true, newConfig, window['fi']['fmi']['config']['metoclient'][project])
+    if ((project) &amp;&amp; (window['fi']) &amp;&amp; (window['fi']['fmi']) &amp;&amp; (window['fi']['fmi']['config']) &amp;&amp; (window['fi']['fmi']['config']['metoclient']) &amp;&amp; (window['fi']['fmi']['config']['metoclient'][project])) {
+      extend(true, newConfig, this.rearrangeConfig(window['fi']['fmi']['config']['metoclient'][project]))
     }
     this.config_['map']['view']['project'] = project
 
@@ -114,6 +125,14 @@ export class MetOClient {
     this.config_ = extend(true, newConfig, this.config_)
     // The map model might be too slow to extend because of large vector data sets
     this.config_['map']['model']['layers'] = config['layers']
+
+    animationResolutionTime = Number(this.config_['time']['model']['resolutionTime'])
+    if ((!isNumeric(animationResolutionTime) || (animationResolutionTime &lt;= 0))) {
+      this.config_['time']['model']['resolutionTime'] = null
+    }
+    if (this.config_['time']['model']['gridTime'] == null) {
+      this.config_['time']['model']['gridTime'] = (this.config_['time']['model']['resolutionTime'] != null) ? this.config_['time']['model']['resolutionTime'] : constants.DEFAULT_GRID_TIME
+    }
 
     mapPostId = 0
     while (document.getElementById(`${this.config_['map']['view']['mapContainer']}-${mapPostId}`) != null) {
@@ -124,27 +143,37 @@ export class MetOClient {
     // Localization
     if (this.config_['localization']['locale'] != null) {
       locale = this.config_['localization']['locale']
-      this.config_['map']['view']['overlayGroupName'] = this.config_['localization'][locale]['overlays']
-      this.config_['map']['view']['staticOverlayGroupName'] = this.config_['localization'][locale]['staticOverlays']
       this.config_['map']['view']['baseGroupName'] = this.config_['localization'][locale]['baseLayers']
       this.config_['map']['view']['featureGroupName'] = this.config_['localization'][locale]['features']
-      this.config_['map']['view']['opacityTitle'] = this.config_['localization'][locale]['opacity']
+      this.config_['map']['view']['layersTooltip'] = this.config_['localization'][locale]['layersTooltip']
       this.config_['map']['view']['legendTitle'] = this.config_['localization'][locale]['legend']
+      this.config_['map']['view']['locale'] = this.config_['localization']['locale']
       this.config_['map']['view']['noLegendText'] = this.config_['localization'][locale]['noLegend']
+      this.config_['map']['view']['opacityTitle'] = this.config_['localization'][locale]['opacity']
+      this.config_['map']['view']['overlayGroupName'] = this.config_['localization'][locale]['overlays']
+      this.config_['map']['view']['staticOverlayGroupName'] = this.config_['localization'][locale]['staticOverlays']
+      this.config_['map']['view']['surfaceGroupName'] = this.config_['localization'][locale]['surface']
       this.config_['map']['view']['zoomInTooltip'] = this.config_['localization'][locale]['zoomInTooltip']
       this.config_['map']['view']['zoomOutTooltip'] = this.config_['localization'][locale]['zoomOutTooltip']
-      this.config_['map']['view']['layersTooltip'] = this.config_['localization'][locale]['layersTooltip']
+      this.config_['time']['view']['beginTimeText'] = this.config_['localization'][locale]['beginTimeText']
+      this.config_['time']['view']['endTimeText'] = this.config_['localization'][locale]['endTimeText']
       this.config_['time']['view']['locale'] = this.config_['localization']['locale']
+      this.config_['time']['view']['timeStepText'] = this.config_['localization'][locale]['timeStepText']
+    }
+
+    instanceId += '-' + project
+    localforage.config({
+      name: instanceId,
+      storeName: instanceId
+    })
+    if ((!localforage.supports(localforage.INDEXEDDB)) &amp;&amp; (!localforage.supports(localforage.WEBSQL)) &amp;&amp; (!localforage.supports(localforage.LOCALSTORAGE))) {
+      this.config_['map']['view']['mapLoader'] = 'all'
     }
     /**
      * @private
      */
-    this.timeController_ = new TimeController(this.config_['time'])
-    /**
-     * @private
-     */
-    this.mapController_ = new MapController(this.config_['map'], this.timeController_.getCreationTime())
-  };
+    this.callbacks_ = {}
+  }
 
   /**
    * Restructure configuration for class implementation.
@@ -152,6 +181,9 @@ export class MetOClient {
    * @returns {Object} Nested configuration.
    */
   rearrangeConfig (userConfig) {
+    if (userConfig == null) {
+      return {}
+    }
     let config = {
       'project': userConfig['project'],
       'map': {
@@ -167,7 +199,9 @@ export class MetOClient {
     let mapView = [
       'asyncLoadDelay',
       'baseGroupName',
+      'cacheTime',
       'container',
+      'contextMenuInsideMap',
       'defaultCenterLocation',
       'defaultCenterProjection',
       'defaultMaxZoom',
@@ -180,28 +214,36 @@ export class MetOClient {
       'layerSwitcherContainer',
       'legendContainer',
       'legendLabel',
+      'locale',
       'mapContainer',
+      'mapLoader',
       'markerImagePath',
       'maxAsyncLoadCount',
       'noLegendText',
       'overlayGroupName',
+      'overlayOptions',
       'projection',
       'resolutions',
       'showLayerSwitcher',
       'showLegend',
-      'showLoadProgress',
       'showMarker',
-      'spinnerContainer',
       'staticControls',
-      'staticOverlayGroupName'
+      'staticOverlayGroupName',
+      'surfaceGroupName',
+      'timeSliderContainer',
+      'tooltipOffset',
+      'useStorage'
     ]
     let timeModel = [
       'autoReplay',
       'autoStart',
       'beginTime',
+      'firstDataPointTime',
       'defaultAnimationTime',
       'endTime',
+      'lastDataPointTime',
       'endTimeDelay',
+      'timeLimitsForced',
       'frameRate',
       'gridTime',
       'gridTimeOffset',
@@ -210,8 +252,17 @@ export class MetOClient {
       'waitUntilLoaded'
     ]
     let timeView = [
+      'beginTime',
+      'endTime',
+      'firstDataPointTime',
+      'lastDataPointTime',
       'locale',
+      'modifiedResolutionTime',
+      'mouseWheelTimeStep',
+      'resolutionTime',
       'showTimeSlider',
+      'showTimeSliderMenu',
+      'menuTimeSteps',
       'timeSliderContainer',
       'timeZone',
       'timeZoneLabel',
@@ -235,7 +286,7 @@ export class MetOClient {
       }
     })
     return config
-  };
+  }
 
   /**
    * Static getter for an utility function floorTime.
@@ -244,7 +295,7 @@ export class MetOClient {
    */
   static get floorTime () {
     return utils['floorTime']
-  };
+  }
 
   /**
    * Static getter for an utility function createMenu.
@@ -253,34 +304,74 @@ export class MetOClient {
    */
   static get createMenu () {
     return utils['createMenu']
-  };
+  }
+
+  /**
+   * Static getter for an utility function createTimeMenu.
+   * @return {function} Function to generate dropdown menu used in MetOClient.
+   * @export
+   */
+  static get createTimeMenu () {
+    return utils['createTimeMenu']
+  }
+
+  /**
+   * Static getter for an utility function transformCoordinates.
+   * @return {function} Function to transform coordinates between projections.
+   * @export
+   */
+  static get transformCoordinates () {
+    return utils['transformCoordinates']
+  }
 
   /**
    * Produces a new time model and views.
+   * @param {Object=} callbacks Callback functions for time events.
    */
-  createTime () {
-    this.timeController_.createTime()
-  };
+  createTime (callbacks) {
+    this.timeController_.createTime(callbacks)
+  }
 
   /**
    * Produces a new map model and view.
    * @param {Object=} callbacks Callback functions for map events.
+   * @param {boolean=} useConfig Use layer configuration values.
    */
-  createMap (callbacks) {
-    let mapCallbacks = null
-    if (callbacks != null) {
+  createMap (callbacks, useConfig = false) {
+    let self = this
+    let currentAnimationTime = this.timeController_.getAnimationTime()
+    let mapCallbacks
+    let userReadyCallback
+    if (callbacks !== null) {
+      if (typeof callbacks === 'undefined') {
+        callbacks = {}
+      }
+      if (typeof callbacks['ready'] === 'function') {
+        userReadyCallback = callbacks['ready'].bind()
+      }
       mapCallbacks = callbacks
+      mapCallbacks['ready'] = () => {
+        let backupTime = self.timeController_.getAnimationBackupTime()
+        if (backupTime != null) {
+          self.setTime(backupTime)
+          self.timeController_.resetAnimationBackupTime()
+        }
+        if (typeof userReadyCallback === 'function') {
+          userReadyCallback()
+        }
+      }
     }
     this.mapController_.createMap(
       this.timeController_.getCurrentTime(),
-      this.timeController_.getAnimationTime(),
+      currentAnimationTime,
       this.timeController_.getAnimationBeginTime(),
       this.timeController_.getAnimationEndTime(),
       this.timeController_.getAnimationResolutionTime(),
       this.timeController_.getAnimationNumIntervals(),
-      mapCallbacks
+      mapCallbacks,
+      useConfig
     )
-  };
+  }
 
   /**
    * Gets a default configuration.
@@ -294,107 +385,141 @@ export class MetOClient {
           'layers': {}
         },
         'view': {
+          'asyncLoadDelay': 10,
+          'baseGroupName': 'Base layers',
+          'cacheTime': 10 * 60 * 1000,
           'container': 'fmi-metoclient',
-          'projection': 'EPSG:3067',
-          'defaultMinZoom': 0,
-          'defaultMaxZoom': 15,
+          'contextMenuInsideMap': false,
           'defaultCenterLocation': [389042, 6673664],
           'defaultCenterProjection': 'EPSG:3067',
+          'defaultMaxZoom': 15,
+          'defaultMinZoom': 0,
           'defaultZoomLevel': 5,
           'extent': [50199.4814, 6582464.0358, 761274.6247, 7799839.8902],
-          'mapContainer': 'fmi-metoclient-map',
-          'layerSwitcherContainer': 'fmi-metoclient-layer-switcher',
-          'legendContainer': 'fmi-metoclient-legend',
-          'spinnerContainer': 'fmi-metoclient-spinner',
-          'showLoadProgress': false,
-          'staticControls': false,
-          'overlayGroupName': 'Overlays',
-          'baseGroupName': 'Base layers',
           'featureGroupName': 'Features',
-          'staticOverlayGroupName': 'Static overlays',
-          'showLayerSwitcher': true,
-          'showLegend': true,
-          'legendLabel': 'Legend',
-          'noLegendText': 'None',
-          'maxAsyncLoadCount': 5,
-          'asyncLoadDelay': 10,
           'ignoreObsOffset': 0,
-          'showMarker': false,
-          'markerImagePath': '../img/marker.png',
           'interactions': {
             'pinchRotate': false,
             'altShiftDragRotate': false
-          }
+          },
+          'layerSwitcherContainer': 'fmi-metoclient-layer-switcher',
+          'legendContainer': 'fmi-metoclient-legend',
+          'legendLabel': 'Legend',
+          'locale': 'en',
+          'mapContainer': 'fmi-metoclient-map',
+          'mapLoader': 'single',
+          'markerImagePath': '../img/marker.png',
+          'maxAsyncLoadCount': 5,
+          'noLegendText': 'None',
+          'overlayGroupName': 'Overlays',
+          'overlayOptions': {},
+          'projection': 'EPSG:3067',
+          'showLayerSwitcher': true,
+          'showLegend': true,
+          'showMarker': false,
+          'staticControls': false,
+          'staticOverlayGroupName': 'Static overlays',
+          'surfaceGroupName': 'Surface',
+          'timeSliderContainer': 'fmi-metoclient-timeslider',
+          'tooltipOffset': [20, 0],
+          'useStorage': true
         }
       },
       'time': {
         'model': {
-          'autoStart': false,
-          'waitUntilLoaded': false,
           'autoReplay': true,
-          'refreshInterval': 15 * 60 * 1000,
-          'frameRate': 500,
-//          'resolutionTime': 60 * 60 * 1000,
-          'beginTime': new Date(),
-          'endTime': new Date(),
+          'autoStart': false,
+          'beginTime': Date.now(),
+          'defaultAnimationTime': Date.now(),
+          'endTime': Date.now(),
           'endTimeDelay': 0,
-          'defaultAnimationTime': (new Date()).getTime(),
-          'gridTime': 60 * 60 * 1000,
-          'gridTimeOffset': 0
+          'timeLimitsForced': false,
+          'frameRate': 500,
+          'gridTimeOffset': 0,
+          'refreshInterval': 15 * 60 * 1000,
+          'waitUntilLoaded': false
         },
         'view': {
-          'vertical': false,
-          'timeSliderContainer': 'fmi-metoclient-timeslider',
-          'showTimeSlider': true,
           'locale': 'en',
-          'timeZone': tz.guess(),
-          'timeZoneLabel': ''
+          'mouseWheelTimeStep': true,
+          'showTimeSlider': true,
+          'showTimeSliderMenu': false,
+          'menuTimeSteps': [
+            ['5min', 300000],
+            ['10min', 600000],
+            ['15min', 900000],
+            ['30min', 1800000],
+            ['1h', 3600000],
+            ['3h', 10800000],
+            ['6h', 21600000],
+            ['12h', 43200000],
+            ['24h', 86400000]],
+          'timeSliderContainer': 'fmi-metoclient-timeslider',
+          'timeZone': tz.guess(true),
+          'timeZoneLabel': '',
+          'vertical': false
         }
       },
       'localization': {
         'locale': 'en',
         'fi': {
-          'opacity': 'Peittokyky',
-          'overlays': 'Sääaineistot',
           'baseLayers': 'Taustakartat',
+          'beginTimeText': 'Aloitusaika',
+          'browserNotSupported': 'Tämä selain ei ole tuettu.',
+          'endTimeText': 'Lopetusaika',
           'features': 'Kohteet',
-          'staticOverlays': 'Merkinnät',
+          'layersTooltip': 'Karttatasot',
           'legend': 'Selite',
           'noLegend': 'Ei selitettä',
+          'opacity': 'Peittokyky',
+          'overlays': 'Sääaineistot',
+          'show': 'Näytä',
+          'staticOverlays': 'Merkinnät',
+          'surface': 'Pintakartta',
+          'timeStepText': 'Aika-askeleet',
           'zoomInTooltip': 'Lähennä',
-          'zoomOutTooltip': 'Loitonna',
-          'layersTooltip': 'Karttatasot',
-          'browserNotSupported': 'Tämä selain ei ole tuettu.'
+          'zoomOutTooltip': 'Loitonna'
         },
         'sv': {
-          'opacity': 'Opacitet',
-          'overlays': 'Väder data',
           'baseLayers': 'Bakgrundskartor',
+          'beginTimeText': 'Starttid',
+          'browserNotSupported': 'Webbläsaren stöds inte.',
+          'endTimeText': 'Sluttid',
           'features': 'Objekter',
-          'staticOverlays': 'Statisk data',
+          'layersTooltip': 'Nivåer',
           'legend': 'Legend',
           'noLegend': 'Ingen legend',
+          'opacity': 'Opacitet',
+          'overlays': 'Väder data',
+          'show': 'Visa',
+          'staticOverlays': 'Statisk data',
+          'surface': 'Yta',
+          'timeStepText': 'Tidssteg',
           'zoomInTooltip': 'Zooma in',
-          'zoomOutTooltip': 'Zooma ut',
-          'layersTooltip': 'Nivåer',
-          'browserNotSupported': 'Webbläsaren stöds inte.'
+          'zoomOutTooltip': 'Zooma ut'
         },
         'en': {
-          'opacity': 'Opacity',
-          'overlays': 'Overlays',
           'baseLayers': 'Base layers',
+          'beginTimeText': 'Begin time',
+          'browserNotSupported': 'This browser is not supported.',
+          'endTimeText': 'End time',
           'features': 'Features',
-          'staticOverlays': 'Static overlays',
+          'layersTooltip': 'Layers',
           'legend': 'Legend',
           'noLegend': 'None',
+          'opacity': 'Opacity',
+          'overlays': 'Overlays',
+          'show': 'Show',
+          'staticOverlays': 'Static overlays',
+          'surface': 'Surface map',
+          'timeStepText': 'Timesteps',
           'zoomInTooltip': 'Zoom in',
-          'zoomOutTooltip': 'Zoom out',
-          'layersTooltip': 'Layers',
-          'browserNotSupported': 'This browser is not supported.'
+          'zoomOutTooltip': 'Zoom out'
         }
-      }
+      },
+      'disableTouch': false
     }
-  };
+  }
 
   /**
    * Initializes DOM element containers.
@@ -403,16 +528,16 @@ export class MetOClient {
     const animatorContainerIdOrClass = this.config_['map']['view']['container']
     const mapContainerIdOrClass = this.config_['map']['view']['mapContainer']
     const legendContainerClass = this.config_['map']['view']['legendContainer']
-    const spinnerContainerClass = this.config_['map']['view']['spinnerContainer']
     const timeSliderContainerClass = this.config_['time']['view']['timeSliderContainer']
     let animatorContainers
     let animatorContainer
+    let animatorContainerId
+    let animatorContainerClass
     let mapContainer
     let popupContainer
     let popupCloser
     let popupContent
     let legendContainer
-    let spinnerContainer
     let timeSliderContainer
 
     if (!animatorContainerIdOrClass) {
@@ -431,10 +556,14 @@ export class MetOClient {
         container.classList.add(classItem)
       })
     }
-
-    animatorContainer = document.getElementById(animatorContainerIdOrClass)
+    animatorContainerId = animatorContainerIdOrClass
+    if (animatorContainerId.charAt(0) === '#') {
+      animatorContainerId = animatorContainerIdOrClass.substr(1)
+    }
+    animatorContainer = document.getElementById(animatorContainerId)
     if (animatorContainer == null) {
-      animatorContainers = document.getElementsByClassName(animatorContainerIdOrClass)
+      animatorContainerClass = animatorContainerIdOrClass.replace(/\./g, ' ')
+      animatorContainers = document.getElementsByClassName(animatorContainerClass)
       if (animatorContainers.length === 0) {
         return
       }
@@ -448,10 +577,6 @@ export class MetOClient {
     legendContainer = document.createElement('div')
     addClassListToContainer(legendContainerClass, legendContainer)
     mapContainer.appendChild(legendContainer)
-    spinnerContainer = document.createElement('div')
-    addClassListToContainer(spinnerContainerClass, spinnerContainer)
-    spinnerContainer.style.display = 'none'
-    mapContainer.appendChild(spinnerContainer)
     timeSliderContainer = document.createElement('div')
     addClassListToContainer(timeSliderContainerClass, timeSliderContainer)
     mapContainer.appendChild(timeSliderContainer)
@@ -462,19 +587,25 @@ export class MetOClient {
     popupContainer.classList.add('ol-popup')
     popupContainer.setAttribute('id', `${mapContainerIdOrClass}-popup`)
     popupContainer.style.display = 'none'
-    popupCloser = document.createElement('a')
+    popupCloser = document.createElement('div')
     popupCloser.classList.add('ol-popup-closer')
     popupCloser.setAttribute('id', `${mapContainerIdOrClass}-popup-closer`)
-    popupCloser.setAttribute('href', '#')
+    popupCloser.innerHTML = '✖'
     popupContainer.appendChild(popupCloser)
     popupContent = document.createElement('div')
     popupContent.setAttribute('id', `${mapContainerIdOrClass}-popup-content`)
     popupContainer.appendChild(popupContent)
     animatorContainer.appendChild(popupContainer)
 
+    if (!this.config_['disableTouch']) {
+      animatorContainer.addEventListener('touchmove', function (event) {
+        event.preventDefault()
+      }, false)
+    }
+
     // Debug div for mobile devices
     // jQuery(divElement).attr('id','fmi-debug-div').width('320px').height('200px').css({'background-color':'#EEEEEE', 'position':'absolute', 'right': '0px'}).appendTo(animatorContainer);
-  };
+  }
 
   /**
    * Sets animation begin time.
@@ -484,7 +615,7 @@ export class MetOClient {
   setTimeBegin (beginTime) {
     this.timeController_.setBeginTime(beginTime)
     this.refresh()
-  };
+  }
 
   /**
    * Sets animation end time.
@@ -494,7 +625,7 @@ export class MetOClient {
   setTimeEnd (endTime) {
     this.timeController_.setEndTime(endTime)
     this.refresh()
-  };
+  }
 
   /**
    * Sets animation time step.
@@ -504,7 +635,7 @@ export class MetOClient {
   setTimeStep (timeStep) {
     this.timeController_.setTimeStep(timeStep)
     this.refresh()
-  };
+  }
 
   /**
    * Updates animation.
@@ -513,13 +644,35 @@ export class MetOClient {
    * @export
    */
   updateAnimation (options, callbacks) {
+    if ((this.timeController_ == null) || (this.mapController_ == null)) {
+      this.updateQueue_ = {
+        options,
+        callbacks
+      }
+      return
+    }
+    if (options['frameRate'] != null) {
+      this.timeController_.setFrameRate(options['frameRate'])
+    }
+    if (options['gridTime'] != null) {
+      this.timeController_.setGridTime(options['gridTime'])
+    }
+    if (options['timeLimitsForced'] != null) {
+      this.timeController_.setTimeLimitsForced(options['timeLimitsForced'])
+    }
     if (options['beginTime'] != null) {
       this.timeController_.setBeginTime(options['beginTime'])
     }
     if (options['endTime'] != null) {
       this.timeController_.setEndTime(options['endTime'])
     }
-    if (options['timeStep'] != null) {
+    if (options['firstDataPointTime'] != null) {
+      this.timeController_.setFirstDataPointTime(options['firstDataPointTime'])
+    }
+    if (options['lastDataPointTime'] != null) {
+      this.timeController_.setLastDataPointTime(options['lastDataPointTime'])
+    }
+    if (typeof options['timeStep'] !== 'undefined') {
       this.timeController_.setTimeStep(options['timeStep'])
     }
     if (options['timeZone'] != null) {
@@ -530,13 +683,22 @@ export class MetOClient {
     }
     if (options['layers'] != null) {
       this.mapController_.setLayers(options['layers'])
+    } else if (options['layersChanged'] != null) {
+      this.mapController_.updateLayers(options['layersChanged'])
     }
     this.timeController_.createTimer()
     if (options['animationTime'] != null) {
       this.timeController_.setAnimationTime(options['animationTime'])
     }
-    this.refresh(callbacks)
-  };
+    if (callbacks != null) {
+      this.callbacks_ = callbacks
+    }
+    if (callbacks === null) {
+      this.callbacks_ = {}
+    }
+    this.timeController_.refreshTime(this.callbacks_)
+    this.createMap(this.callbacks_, true)
+  }
 
   /**
    * Destroys animation.
@@ -545,16 +707,26 @@ export class MetOClient {
   destroyAnimation () {
     this.mapController_.destroyAnimation()
     this.timeController_.destroyTime()
-  };
+  }
 
   /**
    * Sets animation speed.
    * @param frameRate Animation speed.
    * @export
    */
+  setFrameRate (frameRate) {
+    this.timeController_.setFrameRate(frameRate)
+  }
+
+  /**
+   * Sets animation speed.
+   * @param frameRate Animation speed.
+   * @export
+   * @deprecated
+   */
   setTimeRate (frameRate) {
     this.timeController_.setFrameRate(frameRate)
-  };
+  }
 
   /**
    * Sets animation time zone.
@@ -564,7 +736,7 @@ export class MetOClient {
   setTimeZone (timeZone) {
     this.timeController_.setTimeZone(timeZone)
     this.createTimeSlider()
-  };
+  }
 
   /**
    * Sets time zone label.
@@ -574,49 +746,57 @@ export class MetOClient {
   setTimeZoneLabel (timeZoneLabel) {
     this.timeController_.setTimeZoneLabel(timeZoneLabel)
     this.createTimeSlider()
-  };
+  }
 
   /**
    * Refreshes animation data.
-   * @param {Object=} callbacks Callback functions for map events.
+   * @param {Object=} callbacks Callback functions for map and time events.
    * @export
    */
   refresh (callbacks) {
-    this.timeController_.refreshTime()
+    this.timeController_.refreshTime(callbacks)
     this.createMap(callbacks)
-  };
+  }
 
   /**
    * Starts to play animation.
    * @export
    */
   play () {
-    this.timeController_.play()
-  };
+    if (this.timeController_ != null) {
+      this.timeController_.play()
+    }
+  }
 
   /**
    * Pauses animation.
    * @export
    */
   pause () {
-    this.timeController_.pause()
-  };
+    if (this.timeController_ != null) {
+      this.timeController_.pause()
+    }
+  }
 
   /**
    * Stops (pauses and rewinds) animation.
    * @export
    */
   stop () {
-    this.timeController_.stop()
-  };
+    if (this.timeController_ != null) {
+      this.timeController_.stop()
+    }
+  }
 
   /**
    * Moves to previous time frame.
    * @export
    */
   previous () {
-    this.timeController_.previous()
-  };
+    if (this.timeController_ != null) {
+      this.timeController_.previous()
+    }
+  }
 
   /**
    * Sets map zoom level.
@@ -624,8 +804,10 @@ export class MetOClient {
    * @export
    */
   setZoom (level) {
-    this.mapController_.setZoom(level)
-  };
+    if (this.mapController_ != null) {
+      this.mapController_.setZoom(level)
+    }
+  }
 
   /**
    * Sets map center.
@@ -634,8 +816,10 @@ export class MetOClient {
    * @export
    */
   setCenter (x, y) {
-    this.mapController_.setCenter([x, y])
-  };
+    if (this.mapController_ != null) {
+      this.mapController_.setCenter([x, y])
+    }
+  }
 
   /**
    * Sets map rotation.
@@ -643,8 +827,10 @@ export class MetOClient {
    * @export
    */
   setRotation (angle) {
-    this.mapController_.setRotation(angle)
-  };
+    if (this.mapController_ != null) {
+      this.mapController_.setRotation(angle)
+    }
+  }
 
   /**
    * Gets the animation map.
@@ -652,8 +838,8 @@ export class MetOClient {
    * @export
    */
   getMap () {
-    return this.mapController_.getMap()
-  };
+    return (this.mapController_ != null) ? this.mapController_.getMap() : null
+  }
 
   /**
    * Gets current time as a timestamp.
@@ -661,8 +847,8 @@ export class MetOClient {
    * @export
    */
   getTime () {
-    return this.timeController_.getAnimationTime()
-  };
+    return (this.timeController_ != null) ? this.timeController_.getAnimationTime() : null
+  }
 
   /**
    * Sets current time frame.
@@ -670,8 +856,10 @@ export class MetOClient {
    * @export
    */
   setTime (animationTime) {
-    this.timeController_.setAnimationTime(animationTime)
-  };
+    if (this.timeController_ != null) {
+      this.timeController_.setAnimationTime(animationTime)
+    }
+  }
 
   /**
    * Adds features to vector layer.
@@ -681,8 +869,10 @@ export class MetOClient {
    * @export
    */
   addFeatures (layerTitle, projection, featureOptions) {
-    this.mapController_.addFeatures(layerTitle, projection, featureOptions)
-  };
+    if (this.mapController_ != null) {
+      this.mapController_.addFeatures(layerTitle, projection, featureOptions)
+    }
+  }
 
   /**
    * Removes all features from a vector layer.
@@ -690,18 +880,21 @@ export class MetOClient {
    * @export
    */
   clearFeatures (layerTitle) {
-    this.mapController_.clearFeatures(layerTitle)
-  };
+    if (this.mapController_ != null) {
+      this.mapController_.clearFeatures(layerTitle)
+    }
+  }
 
   /**
    * Gets vector layer features.
    * @param layerTitle {string} Vector layer title.
+   * @param invisible {boolean=} Return also invisible layers.
    * @return {Array&lt;Object>} Features.
    * @export
    */
-  getFeatures (layerTitle) {
-    return this.mapController_.getFeatures(layerTitle)
-  };
+  getFeatures (layerTitle, invisible = false) {
+    return (this.mapController_ != null) ? this.mapController_.getFeatures(layerTitle, invisible) : null
+  }
 
   /**
    * Gets vector layer features at given location.
@@ -713,27 +906,32 @@ export class MetOClient {
    * @export
    */
   getFeaturesAt (layerTitle, x, y, tolerance) {
-    return this.mapController_.getFeaturesAt(layerTitle, [x, y], tolerance)
-  };
+    return (this.mapController_ != null) ? this.mapController_.getFeaturesAt(layerTitle, [x, y], tolerance) : null
+  }
 
   /**
    * Shows a popup window on the map.
    * @param content {string} HTML content of the popup window.
    * @param x {number} Popup X coordinate.
    * @param y {number} Popup Y coordinate.
+   * @param append {boolean=} Append content into popup, if it already exists and is located at the same coordinates.
    * @export
    */
-  showPopup (content, x, y) {
-    this.mapController_.showPopup(content, [x, y])
-  };
+  showPopup (content, x, y, append) {
+    if (this.mapController_ != null) {
+      this.mapController_.showPopup(content, [x, y], append)
+    }
+  }
 
   /**
    * Hides popup window on the map.
    * @export
    */
   hidePopup () {
-    this.mapController_.hidePopup()
-  };
+    if (this.mapController_ != null) {
+      this.mapController_.hidePopup()
+    }
+  }
 
   /**
    * Gets a map layer.
@@ -742,16 +940,27 @@ export class MetOClient {
    * @export
    */
   getLayer (layerTitle) {
-    return this.mapController_.getLayer(layerTitle)
-  };
+    return (this.mapController_ != null) ? this.mapController_.getLayer(layerTitle) : null
+  }
+
+  /**
+   * Gets map layers.
+   * @returns {Array} Map layers.
+   * @export
+   */
+  getLayerConfigs () {
+    return (this.mapController_ != null) ? this.mapController_.getLayerConfigs() : null
+  }
 
   /**
    * Request a map view update.
    * @export
    */
   requestViewUpdate () {
-    this.mapController_.requestViewUpdate()
-  };
+    if (this.mapController_ != null) {
+      this.mapController_.requestViewUpdate()
+    }
+  }
 
   /**
    * Sets layer visibility.
@@ -760,8 +969,21 @@ export class MetOClient {
    * @export
    */
   setLayerVisible (layerTitle, visibility) {
-    this.mapController_.setLayerVisible(layerTitle, visibility)
-  };
+    if (this.mapController_ != null) {
+      this.mapController_.setLayerVisible(layerTitle, visibility)
+    }
+  }
+
+  /**
+   * Sets marker visibility.
+   * @param visibility {boolean} Marker visibility.
+   * @export
+   */
+  setMarkerVisible (visibility) {
+    if (this.mapController_ != null) {
+      this.mapController_.setMarkerVisible(visibility)
+    }
+  }
 
   /**
    * Sets map interactions.
@@ -769,8 +991,10 @@ export class MetOClient {
    * @export
    */
   setInteractions (interactionOptions) {
-    this.mapController_.setInteractions(interactionOptions)
-  };
+    if (this.mapController_ != null) {
+      this.mapController_.setInteractions(interactionOptions)
+    }
+  }
 
   /**
    * Enables or disables static map controls.
@@ -778,8 +1002,10 @@ export class MetOClient {
    * @export
    */
   setStaticControls (staticControls) {
-    this.mapController_.setStaticControls(staticControls)
-  };
+    if (this.mapController_ != null) {
+      this.mapController_.setStaticControls(staticControls)
+    }
+  }
 
   /**
    * Returns static map controls status.
@@ -787,8 +1013,8 @@ export class MetOClient {
    * @export
    */
   getStaticControls () {
-    return this.mapController_.getStaticControls()
-  };
+    return (this.mapController_ != null) ? this.mapController_.getStaticControls() : null
+  }
 
   /**
    * Sets callback functions.
@@ -796,8 +1022,27 @@ export class MetOClient {
    * @export
    */
   setCallbacks (callbacks) {
-    this.mapController_.setCallbacks(callbacks)
-  };
+    let self = this
+    let currentAnimationTime = this.timeController_.getAnimationTime()
+    let userReadyCallback
+    if (callbacks != null) {
+      if (callbacks['ready'] != null) {
+        userReadyCallback = callbacks['ready'].bind()
+        callbacks['ready'] = () => {
+          self.setTime(currentAnimationTime)
+          if (typeof userReadyCallback === 'function') {
+            userReadyCallback()
+          }
+        }
+      }
+      this.callbacks_ = callbacks
+    }
+    if (callbacks === null) {
+      this.callbacks_ = {}
+    }
+    this.mapController_.setCallbacks(this.callbacks_)
+    this.timeController_.setCallbacks(this.callbacks_)
+  }
 
   /**
    * Sets time grid offset from midnight.
@@ -805,8 +1050,10 @@ export class MetOClient {
    * @export
    */
   setDayStartOffset (gridTimeOffset) {
-    this.timeController_.setDayStartOffset(gridTimeOffset)
-  };
+    if (this.timeController_ != null) {
+      this.timeController_.setDayStartOffset(gridTimeOffset)
+    }
+  }
 
   /**
    * Sets the capabilities data corresponding to a given url.
@@ -814,8 +1061,10 @@ export class MetOClient {
    * @export
    */
   setCapabilities (capabilities) {
-    this.mapController_.setCapabilities(capabilities)
-  };
+    if (this.mapController_ != null) {
+      this.mapController_.setCapabilities(capabilities)
+    }
+  }
 
   /**
    * Destructor.
@@ -825,7 +1074,30 @@ export class MetOClient {
     this.destroyAnimation()
     this.mapController_ = null
     this.timeController_ = null
-  };
+  }
+
+  /**
+   * Starts a new animation creation.
+   * @param {Object=} callbacks Callback functions for map events.
+   * @return {MetOClient} Owner class.
+   * @export
+   */
+  createAnimation (callbacks) {
+    let self = this
+    if ((this.config_['map']['view']['mapLoader'] === 'all') &amp;&amp; (!this.config_['map']['view']['useStorage'])) {
+      this.produceAnimation(callbacks)
+    } else {
+      // Test storage before relying on it
+      localforage.setItem('metoclient-key', 'metoclient-value').then(function () {
+        return localforage.getItem('metoclient-key')
+      }).catch(err => {
+        self.config_['map']['view']['mapLoader'] = 'all'
+        self.config_['map']['view']['useStorage'] = false
+      }).finally(() => {
+        self.produceAnimation(callbacks)
+      })
+    }
+  }
 
   /**
    * Produces a new animation.
@@ -833,8 +1105,12 @@ export class MetOClient {
    * @return {MetOClient} Owner class.
    * @export
    */
-  createAnimation (callbacks) {
+  produceAnimation (callbacks) {
     let self = this
+    let updateOptions
+    let updateCallbacks
+    this.timeController_ = new TimeController(this.config_['time'])
+    this.mapController_ = new MapController(this.config_['map'], this.timeController_.getCreationTime())
     utils.supportOldBrowsers()
     this.initContainers()
     this.reloadListener_ = () => {
@@ -845,7 +1121,10 @@ export class MetOClient {
     }
     this.timeController_.actionEvents.addListener('play', this.playListener_)
     this.refreshListener_ = () => {
-      self.refresh()
+      self.refresh(this.callbacks_)
+      if (typeof this.callbacks_['refreshed'] === 'function') {
+        this.callbacks_['refreshed']()
+      }
     }
     this.timeController_.actionEvents.addListener('refresh', this.refreshListener_)
     this.animationTimeListener_ = animationTime => {
@@ -856,11 +1135,21 @@ export class MetOClient {
       self.timeController_.updateTimeSteps(numIntervalItems)
     }
     this.mapController_.variableEvents.addListener('numIntervalItems', this.numIntervalItemsListener_)
-
-    this.createTime()
-    this.createMap(callbacks)
+    if (callbacks == null) {
+      callbacks = {}
+    }
+    this.callbacks_ = callbacks
+    this.createTime(callbacks)
+    if (this.updateQueue_ == null) {
+      this.createMap(callbacks)
+    } else {
+      updateOptions = this.updateQueue_['options']
+      updateCallbacks = this.updateQueue_['callbacks']
+      this.updateQueue_ = null
+      this.updateAnimation(updateOptions, updateCallbacks)
+    }
     return this
-  };
+  }
 
   /**
    * Refreshes the map.
@@ -868,7 +1157,7 @@ export class MetOClient {
    */
   refreshMap () {
     this.mapController_.refreshMap()
-  };
+  }
 
   /**
    * Creates a time slider for each view.
@@ -876,7 +1165,25 @@ export class MetOClient {
    */
   createTimeSlider () {
     this.timeController_.createTimeSlider()
-  };
+  }
+
+  /**
+   * Selects a vector feature.
+   * @param {Object} feature Feature to be selected.
+   * @export
+   */
+  selectFeature (feature) {
+    this.mapController_.selectFeature(feature)
+  }
+
+  /**
+   * Gets animation time moments.
+   * @return {Array&lt;number>} Time moments.
+   * @export
+   */
+  getAnimationTimes () {
+    return this.timeController_.getAnimationTimes()
+  }
 }
 </code></pre>
         </article>
@@ -888,13 +1195,13 @@ export class MetOClient {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MetOClient.html">MetOClient</a></li><li><a href="module.exports.html">exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addFeatures">addFeatures</a></li><li><a href="global.html#clearFeatures">clearFeatures</a></li><li><a href="global.html#createMap">createMap</a></li><li><a href="global.html#createMenu">createMenu</a></li><li><a href="global.html#createTime">createTime</a></li><li><a href="global.html#createTimer">createTimer</a></li><li><a href="global.html#createTimeSlider">createTimeSlider</a></li><li><a href="global.html#destroyAnimation">destroyAnimation</a></li><li><a href="global.html#destroyTime">destroyTime</a></li><li><a href="global.html#destroyTimer">destroyTimer</a></li><li><a href="global.html#destroyTimeSlider">destroyTimeSlider</a></li><li><a href="global.html#featureFactory">featureFactory</a></li><li><a href="global.html#floorTime">floorTime</a></li><li><a href="global.html#getAnimationBeginTime">getAnimationBeginTime</a></li><li><a href="global.html#getAnimationEndTime">getAnimationEndTime</a></li><li><a href="global.html#getAnimationNumIntervals">getAnimationNumIntervals</a></li><li><a href="global.html#getAnimationResolutionTime">getAnimationResolutionTime</a></li><li><a href="global.html#getAnimationTime">getAnimationTime</a></li><li><a href="global.html#getCapabilities">getCapabilities</a></li><li><a href="global.html#getCreationTime">getCreationTime</a></li><li><a href="global.html#getCurrentTime">getCurrentTime</a></li><li><a href="global.html#getFeatures">getFeatures</a></li><li><a href="global.html#getFeaturesAt">getFeaturesAt</a></li><li><a href="global.html#getLayer">getLayer</a></li><li><a href="global.html#getLayers">getLayers</a></li><li><a href="global.html#getMap">getMap</a></li><li><a href="global.html#getRefreshInterval">getRefreshInterval</a></li><li><a href="global.html#getStaticControls">getStaticControls</a></li><li><a href="global.html#getTickText">getTickText</a></li><li><a href="global.html#hidePopup">hidePopup</a></li><li><a href="global.html#isWaitingAutoStart">isWaitingAutoStart</a></li><li><a href="global.html#layerFactory">layerFactory</a></li><li><a href="global.html#LEGEND_CONTAINER_CLASS">LEGEND_CONTAINER_CLASS</a></li><li><a href="global.html#LEGEND_FIGURE_CLASS_PREFIX">LEGEND_FIGURE_CLASS_PREFIX</a></li><li><a href="global.html#loadCapabilities">loadCapabilities</a></li><li><a href="global.html#LOADING_STATUS">LOADING_STATUS</a></li><li><a href="global.html#MAX_TIMESTAMP">MAX_TIMESTAMP</a></li><li><a href="global.html#moveAnimationTimeFrame">moveAnimationTimeFrame</a></li><li><a href="global.html#movePointer">movePointer</a></li><li><a href="global.html#next">next</a></li><li><a href="global.html#pause">pause</a></li><li><a href="global.html#play">play</a></li><li><a href="global.html#previous">previous</a></li><li><a href="global.html#refreshLayers">refreshLayers</a></li><li><a href="global.html#refreshMap">refreshMap</a></li><li><a href="global.html#refreshTime">refreshTime</a></li><li><a href="global.html#requestViewUpdate">requestViewUpdate</a></li><li><a href="global.html#setAnimationLastRefreshed">setAnimationLastRefreshed</a></li><li><a href="global.html#setAnimationPlay">setAnimationPlay</a></li><li><a href="global.html#setAnimationTime">setAnimationTime</a></li><li><a href="global.html#setAnimationTimes">setAnimationTimes</a></li><li><a href="global.html#setBeginTime">setBeginTime</a></li><li><a href="global.html#setCallbacks">setCallbacks</a></li><li><a href="global.html#setCapabilities">setCapabilities</a></li><li><a href="global.html#setCenter">setCenter</a></li><li><a href="global.html#setCurrentTime">setCurrentTime</a></li><li><a href="global.html#setDayStartOffset">setDayStartOffset</a></li><li><a href="global.html#setEndTime">setEndTime</a></li><li><a href="global.html#setFrameRate">setFrameRate</a></li><li><a href="global.html#setInteractions">setInteractions</a></li><li><a href="global.html#setLayers">setLayers</a></li><li><a href="global.html#setLayerVisible">setLayerVisible</a></li><li><a href="global.html#setPointerText">setPointerText</a></li><li><a href="global.html#setPointerTime">setPointerTime</a></li><li><a href="global.html#setResolutionTime">setResolutionTime</a></li><li><a href="global.html#setRotation">setRotation</a></li><li><a href="global.html#setStaticControls">setStaticControls</a></li><li><a href="global.html#setTimeStep">setTimeStep</a></li><li><a href="global.html#setTimeZone">setTimeZone</a></li><li><a href="global.html#setTimeZoneLabel">setTimeZoneLabel</a></li><li><a href="global.html#setZoom">setZoom</a></li><li><a href="global.html#showPopup">showPopup</a></li><li><a href="global.html#sourceFactory">sourceFactory</a></li><li><a href="global.html#startTimer">startTimer</a></li><li><a href="global.html#stop">stop</a></li><li><a href="global.html#styleFactory">styleFactory</a></li><li><a href="global.html#supportOldBrowsers">supportOldBrowsers</a></li><li><a href="global.html#updatePointer">updatePointer</a></li><li><a href="global.html#updateTimeLoaderVis">updateTimeLoaderVis</a></li><li><a href="global.html#updateTimeSlider">updateTimeSlider</a></li><li><a href="global.html#updateTimeSteps">updateTimeSteps</a></li><li><a href="global.html#zIndex">zIndex</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Base.html">Base</a></li><li><a href="Html.html">Html</a></li><li><a href="Internal.html">Internal</a></li><li><a href="MetOClient_MetOClient.html">MetOClient</a></li><li><a href="module.exports.html">exports</a></li><li><a href="module.exports_module.exports.html">exports</a></li><li><a href="TimeFrame.module.exports.html">module.exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addFeatures">addFeatures</a></li><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clearFeatures">clearFeatures</a></li><li><a href="global.html#configureTicks">configureTicks</a></li><li><a href="global.html#createContainers">createContainers</a></li><li><a href="global.html#createFrame">createFrame</a></li><li><a href="global.html#createFrames">createFrames</a></li><li><a href="global.html#createIndicators">createIndicators</a></li><li><a href="global.html#createMap">createMap</a></li><li><a href="global.html#createMenu">createMenu</a></li><li><a href="global.html#createPointer">createPointer</a></li><li><a href="global.html#createPostTools">createPostTools</a></li><li><a href="global.html#createPreMargin">createPreMargin</a></li><li><a href="global.html#createPreTools">createPreTools</a></li><li><a href="global.html#createTicks">createTicks</a></li><li><a href="global.html#createTime">createTime</a></li><li><a href="global.html#createTimeMenu">createTimeMenu</a></li><li><a href="global.html#createTimer">createTimer</a></li><li><a href="global.html#createTimeSlider">createTimeSlider</a></li><li><a href="global.html#createTimeZoneLabel">createTimeZoneLabel</a></li><li><a href="global.html#destroyAnimation">destroyAnimation</a></li><li><a href="global.html#destroyTime">destroyTime</a></li><li><a href="global.html#destroyTimer">destroyTimer</a></li><li><a href="global.html#destroyTimeSlider">destroyTimeSlider</a></li><li><a href="global.html#featureFactory">featureFactory</a></li><li><a href="global.html#filters">filters</a></li><li><a href="global.html#floorTime">floorTime</a></li><li><a href="global.html#getAnimationBackupTime">getAnimationBackupTime</a></li><li><a href="global.html#getAnimationBeginTime">getAnimationBeginTime</a></li><li><a href="global.html#getAnimationEndTime">getAnimationEndTime</a></li><li><a href="global.html#getAnimationNumIntervals">getAnimationNumIntervals</a></li><li><a href="global.html#getAnimationResolutionTime">getAnimationResolutionTime</a></li><li><a href="global.html#getAnimationTime">getAnimationTime</a></li><li><a href="global.html#getAnimationTimes">getAnimationTimes</a></li><li><a href="global.html#getCapabilities">getCapabilities</a></li><li><a href="global.html#getCreationTime">getCreationTime</a></li><li><a href="global.html#getCurrentTime">getCurrentTime</a></li><li><a href="global.html#getFeatures">getFeatures</a></li><li><a href="global.html#getFeaturesAt">getFeaturesAt</a></li><li><a href="global.html#getLayer">getLayer</a></li><li><a href="global.html#getLayerConfigs">getLayerConfigs</a></li><li><a href="global.html#getLayers">getLayers</a></li><li><a href="global.html#getMap">getMap</a></li><li><a href="global.html#getRefreshInterval">getRefreshInterval</a></li><li><a href="global.html#getStaticControls">getStaticControls</a></li><li><a href="global.html#getTickText">getTickText</a></li><li><a href="global.html#getTimeConfiguration">getTimeConfiguration</a></li><li><a href="global.html#getTimeLimitsForced">getTimeLimitsForced</a></li><li><a href="global.html#handleRefresh_">handleRefresh_</a></li><li><a href="global.html#handleTimer_">handleTimer_</a></li><li><a href="global.html#hidePopup">hidePopup</a></li><li><a href="global.html#isValidRefreshInterval">isValidRefreshInterval</a></li><li><a href="global.html#isWaitingAutoStart">isWaitingAutoStart</a></li><li><a href="global.html#layerFactory">layerFactory</a></li><li><a href="global.html#LEGEND_CONTAINER_CLASS">LEGEND_CONTAINER_CLASS</a></li><li><a href="global.html#LEGEND_FIGURE_CLASS_PREFIX">LEGEND_FIGURE_CLASS_PREFIX</a></li><li><a href="global.html#loadCapabilities">loadCapabilities</a></li><li><a href="global.html#loadFunction">loadFunction</a></li><li><a href="global.html#LOADING_STATUS">LOADING_STATUS</a></li><li><a href="global.html#MAX_TIMESTAMP">MAX_TIMESTAMP</a></li><li><a href="global.html#moveAnimationTimeFrame">moveAnimationTimeFrame</a></li><li><a href="global.html#next">next</a></li><li><a href="global.html#pause">pause</a></li><li><a href="global.html#play">play</a></li><li><a href="global.html#previous">previous</a></li><li><a href="global.html#produceFullLayerConfig">produceFullLayerConfig</a></li><li><a href="global.html#refreshLayers">refreshLayers</a></li><li><a href="global.html#refreshMap">refreshMap</a></li><li><a href="global.html#refreshTime">refreshTime</a></li><li><a href="global.html#requestViewUpdate">requestViewUpdate</a></li><li><a href="global.html#resetAnimationBackupTime">resetAnimationBackupTime</a></li><li><a href="global.html#selectFeature">selectFeature</a></li><li><a href="global.html#setAnimationLastRefreshed">setAnimationLastRefreshed</a></li><li><a href="global.html#setAnimationPlay">setAnimationPlay</a></li><li><a href="global.html#setAnimationTime">setAnimationTime</a></li><li><a href="global.html#setAnimationTimes">setAnimationTimes</a></li><li><a href="global.html#setBeginTime">setBeginTime</a></li><li><a href="global.html#setCallbacks">setCallbacks</a></li><li><a href="global.html#setCapabilities">setCapabilities</a></li><li><a href="global.html#setCenter">setCenter</a></li><li><a href="global.html#setCurrentTime">setCurrentTime</a></li><li><a href="global.html#setDayStartOffset">setDayStartOffset</a></li><li><a href="global.html#setDefaultTime">setDefaultTime</a></li><li><a href="global.html#setDragging">setDragging</a></li><li><a href="global.html#setEndTime">setEndTime</a></li><li><a href="global.html#setFirstDataPointTime">setFirstDataPointTime</a></li><li><a href="global.html#setFrameRate">setFrameRate</a></li><li><a href="global.html#setGridTime">setGridTime</a></li><li><a href="global.html#setInteractions">setInteractions</a></li><li><a href="global.html#setLastDataPointTime">setLastDataPointTime</a></li><li><a href="global.html#setLayers">setLayers</a></li><li><a href="global.html#setLayerVisible">setLayerVisible</a></li><li><a href="global.html#setMarkerVisible">setMarkerVisible</a></li><li><a href="global.html#setResolutionTime">setResolutionTime</a></li><li><a href="global.html#setRotation">setRotation</a></li><li><a href="global.html#setStaticControls">setStaticControls</a></li><li><a href="global.html#setTimeLimitsForced">setTimeLimitsForced</a></li><li><a href="global.html#setTimeStep">setTimeStep</a></li><li><a href="global.html#setTimeZone">setTimeZone</a></li><li><a href="global.html#setTimeZoneLabel">setTimeZoneLabel</a></li><li><a href="global.html#setZoom">setZoom</a></li><li><a href="global.html#showPopup">showPopup</a></li><li><a href="global.html#showTicks">showTicks</a></li><li><a href="global.html#sourceFactory">sourceFactory</a></li><li><a href="global.html#step">step</a></li><li><a href="global.html#stop">stop</a></li><li><a href="global.html#styleFactory">styleFactory</a></li><li><a href="global.html#supportOldBrowsers">supportOldBrowsers</a></li><li><a href="global.html#transformCoordinates">transformCoordinates</a></li><li><a href="global.html#updateAnimationBackupTime">updateAnimationBackupTime</a></li><li><a href="global.html#updateLayers">updateLayers</a></li><li><a href="global.html#updatePointer">updatePointer</a></li><li><a href="global.html#updateTimeLoaderVis">updateTimeLoaderVis</a></li><li><a href="global.html#updateTimeLoaderVisualizations">updateTimeLoaderVisualizations</a></li><li><a href="global.html#updateTimeSlider">updateTimeSlider</a></li><li><a href="global.html#updateTimeSteps">updateTimeSteps</a></li><li><a href="global.html#urlToDataUrl">urlToDataUrl</a></li><li><a href="global.html#ZINDEX">ZINDEX</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Dec 15 2017 11:16:48 GMT+0200 (EET)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.2</a> on Thu Jun 06 2019 10:54:33 GMT+0300 (Eastern European Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

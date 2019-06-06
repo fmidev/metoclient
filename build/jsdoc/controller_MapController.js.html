@@ -33,8 +33,10 @@
  */
 
 import Map from '../model/Map'
-import MapAnimation from '../view/map/MapAnimation'
+import LazyAnimationLoader from '../view/map/LazyAnimationLoader'
+import FullAnimationLoader from '../view/map/FullAnimationLoader'
 import EventEmitter from 'wolfy87-eventemitter'
+import 'core-js/fn/promise'
 
 export default class MapController {
   /**
@@ -60,12 +62,12 @@ export default class MapController {
      * @type {Object}
      * @private
      */
-    this.view_ = new MapAnimation(config['view'])
+    this.view_ = (config['view']['mapLoader'] === 'all') ? new FullAnimationLoader(config['view']) : new LazyAnimationLoader(config['view'])
     this.reloadListener_ = () => {
     }
     this.numIntervalItemsListener_ = () => {
     }
-  };
+  }
 
   /**
    * Produces a new map.
@@ -76,8 +78,9 @@ export default class MapController {
    * @param {number=} animationResolutionTime Animation resolution time.
    * @param {number=} animationNumIntervals Number of animation time intervals.
    * @param {Object=} callbacks Callback functions for map events.
+   * @param {boolean=} useConfig Use layer configuration values.
    */
-  createMap (currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks) {
+  createMap (currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks, useConfig = false) {
     const self = this
     const capabilities = {}
     let layers
@@ -101,17 +104,17 @@ export default class MapController {
     Promise
       .all(promises.map(p => p.catch(e => e)))
       .then(values => {
-        self.view_.createAnimation(layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks)
+        self.view_.createAnimation(layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks, useConfig)
       })
       .catch(e => console.log(e))
-  };
+  }
 
   /**
    * Refreshes the animation map.
    */
   refreshMap () {
     this.view_.createAnimation()
-  };
+  }
 
   /**
    * Destroys the animation map.
@@ -120,7 +123,7 @@ export default class MapController {
     this.actionEvents.removeAllListeners()
     this.variableEvents.removeAllListeners()
     this.view_.destroyAnimation()
-  };
+  }
 
   /**
    * Sets the animation time.
@@ -128,7 +131,7 @@ export default class MapController {
    */
   setAnimationTime (animationTime) {
     this.view_.setAnimationTime(animationTime)
-  };
+  }
 
   /**
    * Gets the number of animation time intervals.
@@ -136,7 +139,7 @@ export default class MapController {
    */
   getAnimationNumIntervals () {
     return this.model_.getAnimationNumIntervals()
-  };
+  }
 
   /**
    * Sets map zoom level.
@@ -144,7 +147,7 @@ export default class MapController {
    */
   setZoom (level) {
     this.view_.setZoom(level)
-  };
+  }
 
   /**
    * Sets map center.
@@ -152,7 +155,7 @@ export default class MapController {
    */
   setCenter (coordinates) {
     this.view_.setCenter(coordinates)
-  };
+  }
 
   /**
    * Sets map rotation.
@@ -160,7 +163,7 @@ export default class MapController {
    */
   setRotation (angle) {
     this.view_.setRotation(angle)
-  };
+  }
 
   /**
    * Sets the map layers.
@@ -168,7 +171,15 @@ export default class MapController {
    */
   setLayers (layers) {
     this.model_.setLayers(layers)
-  };
+  }
+
+  /**
+   * Updates the map layers.
+   * @param layers Map layers.
+   */
+  updateLayers (layers) {
+    this.model_.updateLayers(layers)
+  }
 
   /**
    * Gets the animation map.
@@ -176,16 +187,17 @@ export default class MapController {
    */
   getMap () {
     return this.view_.getMap()
-  };
+  }
 
   /**
    * Gets vector layer features.
    * @param layerTitle {string} Vector layer title.
+   * @param invisible {boolean=} Return also invisible layers.
    * @return {Array&lt;Object>} Features.
    */
-  getFeatures (layerTitle) {
-    return this.view_.getFeatures(layerTitle)
-  };
+  getFeatures (layerTitle, invisible = false) {
+    return this.view_.getFeatures(layerTitle, invisible)
+  }
 
   /**
    * Gets vector layer features at given location.
@@ -196,7 +208,7 @@ export default class MapController {
    */
   getFeaturesAt (layerTitle, coordinate, tolerance) {
     return this.view_.getFeaturesAt(layerTitle, coordinate, tolerance)
-  };
+  }
 
   /**
    * Adds features to vector layer.
@@ -206,7 +218,7 @@ export default class MapController {
    */
   addFeatures (layerTitle, projection, featureOptions) {
     this.view_.addFeatures(layerTitle, projection, featureOptions)
-  };
+  }
 
   /**
    * Removes all features from a vector layer.
@@ -214,23 +226,32 @@ export default class MapController {
    */
   clearFeatures (layerTitle) {
     this.view_.clearFeatures(layerTitle)
-  };
+  }
+
+  /**
+   * Selects a vector feature.
+   * @param {Object} feature Feature to be selected.
+   */
+  selectFeature (feature) {
+    this.view_.selectFeature(feature)
+  }
 
   /**
    * Shows a popup window on the map.
    * @param content {string} HTML content of the popup window.
    * @param coordinate {Array} Popup coordinates.
+   * @param append {boolean=} Append content into popup, if it already exists and is located at the same coordinates.
    */
-  showPopup (content, coordinate) {
-    this.view_.showPopup(content, coordinate)
-  };
+  showPopup (content, coordinate, append) {
+    this.view_.showPopup(content, coordinate, append)
+  }
 
   /**
    * Hides popup window on the map.
    */
   hidePopup () {
     this.view_.hidePopup()
-  };
+  }
 
   /**
    * Gets a map layer.
@@ -239,14 +260,22 @@ export default class MapController {
    */
   getLayer (layerTitle) {
     return this.view_.getLayer(layerTitle)
-  };
+  }
+
+  /**
+   * Gets map layers.
+   * @returns {Array} Map layers.
+   */
+  getLayerConfigs() {
+    return this.model_.getLayers()
+  }
 
   /**
    * Request a map view update.
    */
   requestViewUpdate () {
     this.view_.requestViewUpdate()
-  };
+  }
 
   /**
    * Sets layer visibility.
@@ -255,7 +284,15 @@ export default class MapController {
    */
   setLayerVisible (layerTitle, visibility) {
     this.view_.setLayerVisible(layerTitle, visibility)
-  };
+  }
+
+  /**
+   * Sets marker visibility.
+   * @param visibility {boolean} Marker visibility.
+   */
+  setMarkerVisible (visibility) {
+    this.view_.setMarkerVisible(visibility)
+  }
 
   /**
    * Sets map interactions.
@@ -263,7 +300,7 @@ export default class MapController {
    */
   setInteractions (interactionOptions) {
     this.view_.setInteractions(interactionOptions)
-  };
+  }
 
   /**
    * Enables or disables static map controls.
@@ -271,7 +308,7 @@ export default class MapController {
    */
   setStaticControls (staticControls) {
     this.view_.setStaticControls(staticControls)
-  };
+  }
 
   /**
    * Returns static map controls status.
@@ -279,7 +316,7 @@ export default class MapController {
    */
   getStaticControls () {
     return this.view_.getStaticControls()
-  };
+  }
 
   /**
    * Sets callback functions.
@@ -287,7 +324,7 @@ export default class MapController {
    */
   setCallbacks (callbacks) {
     this.view_.setCallbacks(callbacks)
-  };
+  }
 
   /**
    * Sets the capabilities data.
@@ -295,7 +332,7 @@ export default class MapController {
    */
   setCapabilities (capabilities) {
     this.model_.setCapabilities(capabilities)
-  };
+  }
 }
 </code></pre>
         </article>
@@ -307,13 +344,13 @@ export default class MapController {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MetOClient.html">MetOClient</a></li><li><a href="module.exports.html">exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addFeatures">addFeatures</a></li><li><a href="global.html#clearFeatures">clearFeatures</a></li><li><a href="global.html#createMap">createMap</a></li><li><a href="global.html#createMenu">createMenu</a></li><li><a href="global.html#createTime">createTime</a></li><li><a href="global.html#createTimer">createTimer</a></li><li><a href="global.html#createTimeSlider">createTimeSlider</a></li><li><a href="global.html#destroyAnimation">destroyAnimation</a></li><li><a href="global.html#destroyTime">destroyTime</a></li><li><a href="global.html#destroyTimer">destroyTimer</a></li><li><a href="global.html#destroyTimeSlider">destroyTimeSlider</a></li><li><a href="global.html#featureFactory">featureFactory</a></li><li><a href="global.html#floorTime">floorTime</a></li><li><a href="global.html#getAnimationBeginTime">getAnimationBeginTime</a></li><li><a href="global.html#getAnimationEndTime">getAnimationEndTime</a></li><li><a href="global.html#getAnimationNumIntervals">getAnimationNumIntervals</a></li><li><a href="global.html#getAnimationResolutionTime">getAnimationResolutionTime</a></li><li><a href="global.html#getAnimationTime">getAnimationTime</a></li><li><a href="global.html#getCapabilities">getCapabilities</a></li><li><a href="global.html#getCreationTime">getCreationTime</a></li><li><a href="global.html#getCurrentTime">getCurrentTime</a></li><li><a href="global.html#getFeatures">getFeatures</a></li><li><a href="global.html#getFeaturesAt">getFeaturesAt</a></li><li><a href="global.html#getLayer">getLayer</a></li><li><a href="global.html#getLayers">getLayers</a></li><li><a href="global.html#getMap">getMap</a></li><li><a href="global.html#getRefreshInterval">getRefreshInterval</a></li><li><a href="global.html#getStaticControls">getStaticControls</a></li><li><a href="global.html#getTickText">getTickText</a></li><li><a href="global.html#hidePopup">hidePopup</a></li><li><a href="global.html#isWaitingAutoStart">isWaitingAutoStart</a></li><li><a href="global.html#layerFactory">layerFactory</a></li><li><a href="global.html#LEGEND_CONTAINER_CLASS">LEGEND_CONTAINER_CLASS</a></li><li><a href="global.html#LEGEND_FIGURE_CLASS_PREFIX">LEGEND_FIGURE_CLASS_PREFIX</a></li><li><a href="global.html#loadCapabilities">loadCapabilities</a></li><li><a href="global.html#LOADING_STATUS">LOADING_STATUS</a></li><li><a href="global.html#MAX_TIMESTAMP">MAX_TIMESTAMP</a></li><li><a href="global.html#moveAnimationTimeFrame">moveAnimationTimeFrame</a></li><li><a href="global.html#movePointer">movePointer</a></li><li><a href="global.html#next">next</a></li><li><a href="global.html#pause">pause</a></li><li><a href="global.html#play">play</a></li><li><a href="global.html#previous">previous</a></li><li><a href="global.html#refreshLayers">refreshLayers</a></li><li><a href="global.html#refreshMap">refreshMap</a></li><li><a href="global.html#refreshTime">refreshTime</a></li><li><a href="global.html#requestViewUpdate">requestViewUpdate</a></li><li><a href="global.html#setAnimationLastRefreshed">setAnimationLastRefreshed</a></li><li><a href="global.html#setAnimationPlay">setAnimationPlay</a></li><li><a href="global.html#setAnimationTime">setAnimationTime</a></li><li><a href="global.html#setAnimationTimes">setAnimationTimes</a></li><li><a href="global.html#setBeginTime">setBeginTime</a></li><li><a href="global.html#setCallbacks">setCallbacks</a></li><li><a href="global.html#setCapabilities">setCapabilities</a></li><li><a href="global.html#setCenter">setCenter</a></li><li><a href="global.html#setCurrentTime">setCurrentTime</a></li><li><a href="global.html#setDayStartOffset">setDayStartOffset</a></li><li><a href="global.html#setEndTime">setEndTime</a></li><li><a href="global.html#setFrameRate">setFrameRate</a></li><li><a href="global.html#setInteractions">setInteractions</a></li><li><a href="global.html#setLayers">setLayers</a></li><li><a href="global.html#setLayerVisible">setLayerVisible</a></li><li><a href="global.html#setPointerText">setPointerText</a></li><li><a href="global.html#setPointerTime">setPointerTime</a></li><li><a href="global.html#setResolutionTime">setResolutionTime</a></li><li><a href="global.html#setRotation">setRotation</a></li><li><a href="global.html#setStaticControls">setStaticControls</a></li><li><a href="global.html#setTimeStep">setTimeStep</a></li><li><a href="global.html#setTimeZone">setTimeZone</a></li><li><a href="global.html#setTimeZoneLabel">setTimeZoneLabel</a></li><li><a href="global.html#setZoom">setZoom</a></li><li><a href="global.html#showPopup">showPopup</a></li><li><a href="global.html#sourceFactory">sourceFactory</a></li><li><a href="global.html#startTimer">startTimer</a></li><li><a href="global.html#stop">stop</a></li><li><a href="global.html#styleFactory">styleFactory</a></li><li><a href="global.html#supportOldBrowsers">supportOldBrowsers</a></li><li><a href="global.html#updatePointer">updatePointer</a></li><li><a href="global.html#updateTimeLoaderVis">updateTimeLoaderVis</a></li><li><a href="global.html#updateTimeSlider">updateTimeSlider</a></li><li><a href="global.html#updateTimeSteps">updateTimeSteps</a></li><li><a href="global.html#zIndex">zIndex</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Base.html">Base</a></li><li><a href="Html.html">Html</a></li><li><a href="Internal.html">Internal</a></li><li><a href="MetOClient_MetOClient.html">MetOClient</a></li><li><a href="module.exports.html">exports</a></li><li><a href="module.exports_module.exports.html">exports</a></li><li><a href="TimeFrame.module.exports.html">module.exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addFeatures">addFeatures</a></li><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clearFeatures">clearFeatures</a></li><li><a href="global.html#configureTicks">configureTicks</a></li><li><a href="global.html#createContainers">createContainers</a></li><li><a href="global.html#createFrame">createFrame</a></li><li><a href="global.html#createFrames">createFrames</a></li><li><a href="global.html#createIndicators">createIndicators</a></li><li><a href="global.html#createMap">createMap</a></li><li><a href="global.html#createMenu">createMenu</a></li><li><a href="global.html#createPointer">createPointer</a></li><li><a href="global.html#createPostTools">createPostTools</a></li><li><a href="global.html#createPreMargin">createPreMargin</a></li><li><a href="global.html#createPreTools">createPreTools</a></li><li><a href="global.html#createTicks">createTicks</a></li><li><a href="global.html#createTime">createTime</a></li><li><a href="global.html#createTimeMenu">createTimeMenu</a></li><li><a href="global.html#createTimer">createTimer</a></li><li><a href="global.html#createTimeSlider">createTimeSlider</a></li><li><a href="global.html#createTimeZoneLabel">createTimeZoneLabel</a></li><li><a href="global.html#destroyAnimation">destroyAnimation</a></li><li><a href="global.html#destroyTime">destroyTime</a></li><li><a href="global.html#destroyTimer">destroyTimer</a></li><li><a href="global.html#destroyTimeSlider">destroyTimeSlider</a></li><li><a href="global.html#featureFactory">featureFactory</a></li><li><a href="global.html#filters">filters</a></li><li><a href="global.html#floorTime">floorTime</a></li><li><a href="global.html#getAnimationBackupTime">getAnimationBackupTime</a></li><li><a href="global.html#getAnimationBeginTime">getAnimationBeginTime</a></li><li><a href="global.html#getAnimationEndTime">getAnimationEndTime</a></li><li><a href="global.html#getAnimationNumIntervals">getAnimationNumIntervals</a></li><li><a href="global.html#getAnimationResolutionTime">getAnimationResolutionTime</a></li><li><a href="global.html#getAnimationTime">getAnimationTime</a></li><li><a href="global.html#getAnimationTimes">getAnimationTimes</a></li><li><a href="global.html#getCapabilities">getCapabilities</a></li><li><a href="global.html#getCreationTime">getCreationTime</a></li><li><a href="global.html#getCurrentTime">getCurrentTime</a></li><li><a href="global.html#getFeatures">getFeatures</a></li><li><a href="global.html#getFeaturesAt">getFeaturesAt</a></li><li><a href="global.html#getLayer">getLayer</a></li><li><a href="global.html#getLayerConfigs">getLayerConfigs</a></li><li><a href="global.html#getLayers">getLayers</a></li><li><a href="global.html#getMap">getMap</a></li><li><a href="global.html#getRefreshInterval">getRefreshInterval</a></li><li><a href="global.html#getStaticControls">getStaticControls</a></li><li><a href="global.html#getTickText">getTickText</a></li><li><a href="global.html#getTimeConfiguration">getTimeConfiguration</a></li><li><a href="global.html#getTimeLimitsForced">getTimeLimitsForced</a></li><li><a href="global.html#handleRefresh_">handleRefresh_</a></li><li><a href="global.html#handleTimer_">handleTimer_</a></li><li><a href="global.html#hidePopup">hidePopup</a></li><li><a href="global.html#isValidRefreshInterval">isValidRefreshInterval</a></li><li><a href="global.html#isWaitingAutoStart">isWaitingAutoStart</a></li><li><a href="global.html#layerFactory">layerFactory</a></li><li><a href="global.html#LEGEND_CONTAINER_CLASS">LEGEND_CONTAINER_CLASS</a></li><li><a href="global.html#LEGEND_FIGURE_CLASS_PREFIX">LEGEND_FIGURE_CLASS_PREFIX</a></li><li><a href="global.html#loadCapabilities">loadCapabilities</a></li><li><a href="global.html#loadFunction">loadFunction</a></li><li><a href="global.html#LOADING_STATUS">LOADING_STATUS</a></li><li><a href="global.html#MAX_TIMESTAMP">MAX_TIMESTAMP</a></li><li><a href="global.html#moveAnimationTimeFrame">moveAnimationTimeFrame</a></li><li><a href="global.html#next">next</a></li><li><a href="global.html#pause">pause</a></li><li><a href="global.html#play">play</a></li><li><a href="global.html#previous">previous</a></li><li><a href="global.html#produceFullLayerConfig">produceFullLayerConfig</a></li><li><a href="global.html#refreshLayers">refreshLayers</a></li><li><a href="global.html#refreshMap">refreshMap</a></li><li><a href="global.html#refreshTime">refreshTime</a></li><li><a href="global.html#requestViewUpdate">requestViewUpdate</a></li><li><a href="global.html#resetAnimationBackupTime">resetAnimationBackupTime</a></li><li><a href="global.html#selectFeature">selectFeature</a></li><li><a href="global.html#setAnimationLastRefreshed">setAnimationLastRefreshed</a></li><li><a href="global.html#setAnimationPlay">setAnimationPlay</a></li><li><a href="global.html#setAnimationTime">setAnimationTime</a></li><li><a href="global.html#setAnimationTimes">setAnimationTimes</a></li><li><a href="global.html#setBeginTime">setBeginTime</a></li><li><a href="global.html#setCallbacks">setCallbacks</a></li><li><a href="global.html#setCapabilities">setCapabilities</a></li><li><a href="global.html#setCenter">setCenter</a></li><li><a href="global.html#setCurrentTime">setCurrentTime</a></li><li><a href="global.html#setDayStartOffset">setDayStartOffset</a></li><li><a href="global.html#setDefaultTime">setDefaultTime</a></li><li><a href="global.html#setDragging">setDragging</a></li><li><a href="global.html#setEndTime">setEndTime</a></li><li><a href="global.html#setFirstDataPointTime">setFirstDataPointTime</a></li><li><a href="global.html#setFrameRate">setFrameRate</a></li><li><a href="global.html#setGridTime">setGridTime</a></li><li><a href="global.html#setInteractions">setInteractions</a></li><li><a href="global.html#setLastDataPointTime">setLastDataPointTime</a></li><li><a href="global.html#setLayers">setLayers</a></li><li><a href="global.html#setLayerVisible">setLayerVisible</a></li><li><a href="global.html#setMarkerVisible">setMarkerVisible</a></li><li><a href="global.html#setResolutionTime">setResolutionTime</a></li><li><a href="global.html#setRotation">setRotation</a></li><li><a href="global.html#setStaticControls">setStaticControls</a></li><li><a href="global.html#setTimeLimitsForced">setTimeLimitsForced</a></li><li><a href="global.html#setTimeStep">setTimeStep</a></li><li><a href="global.html#setTimeZone">setTimeZone</a></li><li><a href="global.html#setTimeZoneLabel">setTimeZoneLabel</a></li><li><a href="global.html#setZoom">setZoom</a></li><li><a href="global.html#showPopup">showPopup</a></li><li><a href="global.html#showTicks">showTicks</a></li><li><a href="global.html#sourceFactory">sourceFactory</a></li><li><a href="global.html#step">step</a></li><li><a href="global.html#stop">stop</a></li><li><a href="global.html#styleFactory">styleFactory</a></li><li><a href="global.html#supportOldBrowsers">supportOldBrowsers</a></li><li><a href="global.html#transformCoordinates">transformCoordinates</a></li><li><a href="global.html#updateAnimationBackupTime">updateAnimationBackupTime</a></li><li><a href="global.html#updateLayers">updateLayers</a></li><li><a href="global.html#updatePointer">updatePointer</a></li><li><a href="global.html#updateTimeLoaderVis">updateTimeLoaderVis</a></li><li><a href="global.html#updateTimeLoaderVisualizations">updateTimeLoaderVisualizations</a></li><li><a href="global.html#updateTimeSlider">updateTimeSlider</a></li><li><a href="global.html#updateTimeSteps">updateTimeSteps</a></li><li><a href="global.html#urlToDataUrl">urlToDataUrl</a></li><li><a href="global.html#ZINDEX">ZINDEX</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Dec 15 2017 11:16:48 GMT+0200 (EET)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.2</a> on Thu Jun 06 2019 10:54:33 GMT+0300 (Eastern European Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

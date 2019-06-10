@@ -26,14 +26,16 @@ List of API methods:
 
 * createAnimation(callbacks)
     * possible event functions as callbacks
-        * center(x,y)
+        * animationFeatures()
+        * center(x, y)
         * deselected(feature)
         * hover(feature)
         * init()
         * loaded()
         * loadedOnce()
         * loadError(params)
-        * marker(x,y)
+        * marker(x, y)
+        * newAnimationFeature(feature)
         * popupClosed()
         * preload()
         * ready()
@@ -50,18 +52,20 @@ List of API methods:
         * animationTime
         * beginTime
         * endTime
+        * frameRate
         * layers
+        * layersChanged
         * timeStep
         * timeZone
         * timeZoneLabel
     * callbacks, see createAnimation
-* addFeatures(layerTitle,projection,optionsArray)
+* addFeatures(layerTitle, projection, optionsArray)
 * clearFeatures(layerTitle)
 * createTimeSlider()
 * destroyAnimation()
 * destruct()
-* getFeatures(layerTitle)
-* getFeaturesAt(layerTitle,x,y,tolerance_pix)
+* getFeatures(layerTitle, invisible)
+* getFeaturesAt(layerTitle, x, y, tolerance_pix)
 * getLayer(layerTitle)
 * getLayerConfigs()
 * getMap()
@@ -84,12 +88,13 @@ List of API methods:
 * setDayStartOffset(timestamp_ms)
 * setEndTime(time)
 * setInteractions(options)
-* setLayerVisible(layerTitle,visibility)
+* setLayerVisible(layerTitle, visibility)
+* setMarkerVisible(visibility)
 * setRotation(angle)
 * setStaticControls(enabled)
 * setTime(timestamp_ms)
 * setTimeRate(rate_ms)
 * setTimeStep(timeStep)
 * setZoom(level)
-* showPopup(content,x,y,append)
+* showPopup(content, x, y, append)
 * stop()

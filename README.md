@@ -101,6 +101,7 @@ List of API functions:
 * setEndTime(time)
 * setInteractions(options)
 * setLayerVisible(layerTitle, visibility)
+* setMarkerVisible(visibility)
 * setRotation(angle)
 * setStaticControls(enabled)
 * setTime(timestamp_ms)

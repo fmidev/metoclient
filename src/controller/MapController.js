@@ -259,6 +259,14 @@ export default class MapController {
   }
 
   /**
+   * Sets marker visibility.
+   * @param visibility {boolean} Marker visibility.
+   */
+  setMarkerVisible (visibility) {
+    this.view_.setMarkerVisible(visibility)
+  }
+
+  /**
    * Sets map interactions.
    * @param interactionOptions {Object} Interaction options.
    */

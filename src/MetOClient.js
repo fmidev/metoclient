@@ -173,6 +173,7 @@ export class MetOClient {
       'baseGroupName',
       'cacheTime',
       'container',
+      'contextMenuInsideMap',
       'defaultCenterLocation',
       'defaultCenterProjection',
       'defaultMaxZoom',
@@ -360,6 +361,7 @@ export class MetOClient {
           'baseGroupName': 'Base layers',
           'cacheTime': 10 * 60 * 1000,
           'container': 'fmi-metoclient',
+          'contextMenuInsideMap': false,
           'defaultCenterLocation': [389042, 6673664],
           'defaultCenterProjection': 'EPSG:3067',
           'defaultMaxZoom': 15,
@@ -941,6 +943,17 @@ export class MetOClient {
   setLayerVisible (layerTitle, visibility) {
     if (this.mapController_ != null) {
       this.mapController_.setLayerVisible(layerTitle, visibility)
+    }
+  }
+
+  /**
+   * Sets marker visibility.
+   * @param visibility {boolean} Marker visibility.
+   * @export
+   */
+  setMarkerVisible (visibility) {
+    if (this.mapController_ != null) {
+      this.mapController_.setMarkerVisible(visibility)
     }
   }
 

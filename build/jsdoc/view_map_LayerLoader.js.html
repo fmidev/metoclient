@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: view/map/FeatureProducer.js</title>
+    <title>JSDoc: Source: view/map/LayerLoader.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: view/map/FeatureProducer.js</h1>
+    <h1 class="page-title">Source: view/map/LayerLoader.js</h1>
 
     
 
@@ -26,163 +26,65 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import OlGeomPoint from 'ol/geom/point'
-import OlGeomMultiPoint from 'ol/geom/multipoint'
-import OlGeomLineString from 'ol/geom/linestring'
-import OlGeomMultiLineString from 'ol/geom/multilinestring'
-import OlGeomPolygon from 'ol/geom/polygon'
-import OlGeomMultiPolygon from 'ol/geom/multipolygon'
-import OlFeature from 'ol/feature'
-import OlStyleFill from 'ol/style/fill'
-import OlStyleIcon from 'ol/style/icon'
-import OlStyleStroke from 'ol/style/stroke'
-import OlStyleStyle from 'ol/style/style'
-import OlStyleText from 'ol/style/text'
-import OlStyleCircle from 'ol/style/circle'
-import OlStyleRegularShape from 'ol/style/regularshape'
-import * as utils from '../../utils'
-import extend from 'extend'
+            <pre class="prettyprint source linenums"><code>import localforage from 'localforage'
+
+const DEFAULT_CACHE_TIME = 10 * 60 * 1000
 
 /**
- * @fileoverview Map source factory.
- * @author Finnish Meteorological Institute
- * @license MIT
+ * Defines custom load function for layer tile and image loading.
+ * @param image Layer image.
+ * @param src Layer data source.
  */
-export default class FeatureProducer {
-  /**
-   * Creates new features.
-   * @param options Feature options.
-   * @returns {Array} Features.
-   */
-  featureFactory (options) {
-    let newFeature
-    const features = []
-    const z = {
-      'value': 0
-    }
-    options.forEach(feature => {
-      if (feature['type'] != null) {
-        switch (feature['type'].toLowerCase()) {
-          case 'point':
-            feature['geometry'] = new OlGeomPoint(feature['geometry'])
-            break
-          case 'multipoint':
-            feature['geometry'] = new OlGeomMultiPoint(feature['geometry'])
-            break
-          case 'linestring':
-            feature['geometry'] = new OlGeomLineString(feature['geometry'])
-            break
-          case 'multilinestring':
-            feature['geometry'] = new OlGeomMultiLineString(feature['geometry'])
-            break
-          case 'polygon':
-            feature['geometry'] = new OlGeomPolygon(feature['geometry'])
-            break
-          case 'multipolygon':
-            feature['geometry'] = new OlGeomMultiPolygon(feature['geometry'])
-            break
-          default:
-            return
-        }
-        newFeature = new OlFeature(feature)
-      } else {
-        newFeature = feature
-      }
-      newFeature.setId(features.length + '_' + Date.now())
-      if (feature['style'] != null) {
-        feature['style'] = this.styleFactory(feature['style'], z)
-        newFeature.setStyle(feature['style'])
-      }
-      features.push(newFeature)
-    })
-    return features
-  }
-
-  /**
-   * Creates a feature style.
-   * @param options Style options.
-   * @param z Z-index.
-   * @returns {ol.style.Style} Feature style.
-   */
-  styleFactory (options, z) {
-    if (options == null) {
-      return null
-    }
-    // Filter conditions
-    return (feature, resolution) => (Array.isArray(options) ? options : [options]).reduce((styles, option) => {
-      let styleOptions = extend(true, {}, option)
-      let numProperties
-      let i
-      let j
-      let name
-      let value
-      let filter
-      let numFilters
-      let property
-      let maxRadius = feature.get('maxRadius')
-      let resolutionFactor = feature.get('resolutionFactor')
-      if (styleOptions['condition'] != null) {
-        numFilters = utils['filters'].length
-        if (Array.isArray(styleOptions['condition']['properties'])) {
-          numProperties = styleOptions['condition']['properties'].length
-          for (i = 0; i &lt; numProperties; i++) {
-            property = styleOptions['condition']['properties'][i]
-            name = property['name']
-            if ((name != null) &amp;&amp; (name.length > 0)) {
-              value = feature.get(name)
-              if (value != null) {
-                for (j = 0; j &lt; numFilters; j++) {
-                  filter = property[utils['filters'][j]['name']]
-                  if ((typeof filter !== 'undefined') &amp;&amp; (!utils['filters'][j]['test'](value, filter))) {
-                    return styles
+export function loadFunction (image, src) {
+  let self = this
+  localforage.getItem(src, (err, cachedData) => {
+    if ((err != null) || (cachedData == null) || (cachedData.dataUrl == null) || (cachedData.expires &lt;= Date.now())) {
+      urlToDataUrl(src, function (dataUrl) {
+        image.getImage().src = dataUrl
+        localforage.setItem(src, {
+          dataUrl: dataUrl,
+          expires: Date.now() + ((self.cacheTime != null) ? self.cacheTime : DEFAULT_CACHE_TIME)
+        }, (err) => {
+          // Storage full? Clear layer data.
+          if (err != null) {
+            localforage
+              .keys()
+              .then(keys => {
+                let i
+                let maxKeyIndex = keys.length - 1
+                for (i = maxKeyIndex; i >= 0; i--) {
+                  // Todo: Organize items smarter and use exact way to recognize layer data
+                  if (keys[i].toLowerCase().startsWith('http')) {
+                    localforage.removeItem(keys[i])
                   }
                 }
-              }
-            }
+              })
           }
-        }
-      }
-      if ((styleOptions['image'] !== undefined) &amp;&amp; (styleOptions['image']['type'] !== undefined)) {
-        if (styleOptions['image']['type'].toLowerCase() === 'icon') {
-          styleOptions['image'] = new OlStyleIcon(/** @type {olx.style.IconOptions} */ (styleOptions['image']))
-        } else if (['circle', 'regularshape'].includes(styleOptions['image']['type'].toLowerCase())) {
-          if (styleOptions['image']['stroke'] !== undefined) {
-            styleOptions['image']['stroke'] = new OlStyleStroke(styleOptions['image']['stroke'])
-          }
-          if (styleOptions['image']['fill'] !== undefined) {
-            styleOptions['image']['fill'] = new OlStyleFill(styleOptions['image']['fill'])
-          }
-          styleOptions['image'] = (styleOptions['image']['type'].toLowerCase() === 'circle') ? new OlStyleCircle(styleOptions['image']) : new OlStyleRegularShape(styleOptions['image'])
-        }
-        z['value'] = z['value'] | 8
-      }
-      if (styleOptions['text'] !== undefined) {
-        if (styleOptions['text']['fill'] !== undefined) {
-          styleOptions['text']['fill'] = new OlStyleFill(styleOptions['text']['fill'])
-        }
-        if (styleOptions['text']['stroke'] !== undefined) {
-          styleOptions['text']['stroke'] = new OlStyleStroke(styleOptions['text']['stroke'])
-        }
-        styleOptions['text'] = new OlStyleText(styleOptions['text'])
-        z['value'] = z['value'] | 4
-      }
-      if (styleOptions['stroke'] !== undefined) {
-        styleOptions['stroke'] = new OlStyleStroke((styleOptions['stroke']))
-        z['value'] = z['value'] | 2
-      }
-      if (styleOptions['fill'] !== undefined) {
-        styleOptions['fill'] = new OlStyleFill((styleOptions['fill']))
-        z['value'] = z['value'] | 1
-      }
-      if (styleOptions['zIndex'] === undefined) {
-        styleOptions['zIndex'] = Math.sqrt(feature.getGeometry().getCoordinates().reduce((result, coord) => result + coord * coord, 0))
-      }
-      if ((typeof maxRadius === 'number') &amp;&amp; (typeof resolutionFactor === 'number') &amp;&amp; (styleOptions['image'] != null) &amp;&amp; (typeof styleOptions['image']['setRadius'] === 'function')) {
-        styleOptions['image']['setRadius'](Math.max(1, maxRadius - resolutionFactor * Math.LOG2E * Math.log(resolution)))
-      }
-      return new OlStyleStyle(styleOptions)
-    }, [])
+        })
+      })
+    } else {
+      image.getImage().src = cachedData.dataUrl
+    }
+  })
+}
+
+/**
+ * Creates a data URL from source data located in a given URL.
+ * @param url Source data URL.
+ * @param callback Callback to be run after a new data URL is created.
+ */
+function urlToDataUrl (url, callback) {
+  let xhr = new XMLHttpRequest()
+  xhr.onload = function () {
+    let reader = new FileReader()
+    reader.onloadend = function () {
+      callback(reader.result)
+    }
+    reader.readAsDataURL(xhr.response)
   }
+  xhr.open('GET', url)
+  xhr.responseType = 'blob'
+  xhr.send()
 }
 </code></pre>
         </article>

@@ -33,23 +33,24 @@
  */
 
 import EventEmitter from 'wolfy87-eventemitter'
-import elementResizeDetectorMaker from 'element-resize-detector'
 import extend from 'extend'
 import isNumeric from 'fast-isnumeric'
 import { default as proj4 } from 'proj4'
+import 'core-js/fn/array/from'
+import shallowEqual from 'shallowequal'
 import moment from 'moment-timezone'
+import localforage from 'localforage'
 import * as constants from '../../constants'
+import * as utils from '../../utils'
 import renameKeys from 'rename-keys'
-import LayerSwitcher from './LayerSwitcher'
 import MapProducer from './MapProducer'
 import FeatureProducer from './FeatureProducer'
 import Ol from 'ol/index'
 import OlCollection from 'ol/collection'
-import OlControlZoom from 'ol/control/zoom'
+import olEventsCondition from 'ol/events/condition'
 import OlFeature from 'ol/feature'
 import OlFormatWMSCapabilities from 'ol/format/wmscapabilities'
 import OlFormatWMTSCapabilities from 'ol/format/wmtscapabilities'
-import OlInteraction from 'ol/interaction'
 import OlInteractionDoubleClickZoom from 'ol/interaction/doubleclickzoom'
 import OlInteractionDragPan from 'ol/interaction/dragpan'
 import OlInteractionDragRotate from 'ol/interaction/dragrotate'
@@ -60,13 +61,10 @@ import OlInteractionKeyboardZoom from 'ol/interaction/keyboardzoom'
 import OlInteractionMouseWheelZoom from 'ol/interaction/mousewheelzoom'
 import OlInteractionPinchRotate from 'ol/interaction/pinchrotate'
 import OlInteractionPinchZoom from 'ol/interaction/pinchzoom'
+import OlInteractionSelect from 'ol/interaction/select'
 import OlLayerGroup from 'ol/layer/group'
-import OlLayerImage from 'ol/layer/image'
-import OlLayerTile from 'ol/layer/tile'
 import OlLayerVector from 'ol/layer/vector'
-import OlMap from 'ol/map'
 import OlObject from 'ol/object'
-import OlOverlay from 'ol/overlay'
 import OlProj from 'ol/proj'
 import OlStyleIcon from 'ol/style/icon'
 import OlStyleStyle from 'ol/style/style'
@@ -74,6 +72,7 @@ import OlView from 'ol/view'
 import OlSourceVector from 'ol/source/vector'
 import OlSourceWMTS from 'ol/source/wmts'
 import OlGeomPoint from 'ol/geom/point'
+import ContextMenu from './ContextMenu'
 
 export default class MapAnimation {
   /**
@@ -81,7 +80,6 @@ export default class MapAnimation {
    * @constructor
    * @param config {object} Configuration for map view.
    * @extends {ol.Object}
-   * @implements {fi.fmi.metoclient.ui.animator.view.interfaces.Animation}
    */
   constructor (config) {
     // Call to the OpenLayers superclass constructor
@@ -89,6 +87,8 @@ export default class MapAnimation {
     this.set('config', config)
     this.set('map', null)
     this.set('layers', [])
+    this.set('mapLayers', [])
+    this.set('surfaceLayers', [])
     this.set('overlayTitles', [])
     this.set('extent', [0, 0, 0, 0])
     this.set('extentByZoomLevel', null)
@@ -104,6 +104,20 @@ export default class MapAnimation {
     this.set('updateVisibility', null)
     this.set('interactionConfig', null)
     this.set('configChanged', false)
+    this.set('selectedFeatureLayer', null)
+    this.set('selectedFeatureTime', null)
+    this.set('markerStyle', new OlStyleStyle({
+        'image': new OlStyleIcon(/** @type {olx.style.IconOptions} */ ({
+          'anchor': [0.5, 1],
+          'anchorXUnits': 'fraction',
+          'anchorYUnits': 'fraction',
+          'src': this.get('config')['markerImagePath']
+        }))
+      })
+    )
+    this.contextMenu = null
+    this.activeInteractions = []
+    this.loadedOnce = false
     this.viewOptions = {}
     this.asyncLoadQueue = {}
     this.asyncLoadCount = {}
@@ -120,13 +134,16 @@ export default class MapAnimation {
       'overlay': 'overlay',
       'observation': 'obs',
       'forecast': 'for',
-      'features': 'features'
+      'features': 'features',
+      'surface': 'surface'
     }
     /** @const */
     this.updateRequestResolution = 50
     /** @const */
     this.layerResolution = 60 * 1000
-  };
+    /** @const */
+    this.hitTolerance = 0
+  }
 }
 Ol.inherits(MapAnimation, OlObject)
 
@@ -140,9 +157,10 @@ Ol.inherits(MapAnimation, OlObject)
  * @param {number=} animationEndTime Animation end time.
  * @param {number=} animationResolutionTime Animation end time.
  * @param {number=} animationNumIntervals Number of animation intervals.
- * @param {Object=} callbacks Callback functions for map events.
+ * @param {Object=} animationCallbacks Callback functions for map events.
+ * @param {boolean=} useConfig Use layer configuration values.
  */
-MapAnimation.prototype.createAnimation = function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, callbacks) {
+MapAnimation.prototype.createAnimation = async function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, animationCallbacks, useConfig = false) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
   let isFeatureGroup
@@ -156,13 +174,17 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
   let currentLayerTitle
   let numCurrentLayers
   let currentSource
+  let mapLayers
+  let surfaceLayers
+  let layerVisibility
   let i
   let j
   let k
+  const map = this.get('map')
   if (layers != null) {
     numLayers = layers.length
-    const map = this.get('map')
     if (map != null) {
+      layerVisibility = map.get('layerVisibility')
       layerGroups = map.getLayers()
       numLayerGroups = layerGroups.getLength()
       for (i = 0; i &lt; numLayerGroups; i++) {
@@ -182,8 +204,12 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
           for (k = 0; k &lt; numLayers; k++) {
             layer = layers[k]
             if (layer['title'] === currentLayerTitle) {
-              layer['visible'] = currentLayer.getVisible()
-              layer['opacity'] = currentLayer.getOpacity()
+              if (useConfig) {
+                layerVisibility[currentLayerTitle] = layer['visible']
+              } else {
+                layer['visible'] = currentLayer.getVisible()
+                layer['opacity'] = currentLayer.getOpacity()
+              }
               if (isFeatureGroup) {
                 currentSource = currentLayer.getSource()
                 if (currentSource != null) {
@@ -197,7 +223,6 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
       }
     }
     this.set('layers', layers)
-    this.set('map', null)
   }
   if (currentTime != null) {
     this.set('currentTime', currentTime)
@@ -222,61 +247,692 @@ MapAnimation.prototype.createAnimation = function (layers, capabilities, current
     this.initEPSG3067Projection()
   }
 
-  if (callbacks != null) {
-    this.set('callbacks', callbacks)
+  if (animationCallbacks != null) {
+    this.set('callbacks', animationCallbacks)
   }
 
   this.set('viewProjection', this.get('config')['projection'])
-  this.updateStorage()
+  await this.updateStorage()
   this.parameterizeLayers(capabilities)
   this.initMap()
+  mapLayers = (layers != null) ? layers.filter(layer => layer['type'] === this.layerTypes['map']) : []
+  this.set('mapLayers', mapLayers)
+  surfaceLayers = (layers != null) ? layers.filter(layer => layer['type'] === this.layerTypes['surface']) : []
+  this.set('surfaceLayers', surfaceLayers)
+}
+
+/**
+ * Creates popup header.
+ * @param header Popup header data.
+ * @param type Popup type.
+ * @param {string} dataSource Popup data source.
+ * @returns {string} Popup header.
+ */
+MapAnimation.prototype.createPopupHeader = function (header, type, dataSource) {
+  let config = this.get('config')
+  let content = '&lt;div class="fmi-metoclient-' + type + '-item fmi-metoclient-' + dataSource + '-item">'
+  let locale = config['locale']
+  if (header !== false) {
+    if ((header != null) &amp;&amp; (typeof header === 'object')) {
+      content += '&lt;b>' + header[locale] + '&lt;/b>&lt;br>'
+    } else if ((typeof header === 'string') &amp;&amp; (header.length > 0)) {
+      content += '&lt;b>' + header + '&lt;/b>&lt;br>'
+    }
+  }
+  return content
+}
+
+/**
+ * Creates popup item.
+ * @param layout Popup layout definitions.
+ * @param properties Popup properties.
+ * @returns {string} Popup item.
+ */
+MapAnimation.prototype.createPopupItem = function (layout, properties) {
+  let value = properties[layout['name']]
+  let config = this.get('config')
+  let content = ''
+  let filter
+  let k
+  let l
+  let locale = config['locale']
+  let m
+  let numFilters = utils['filters'].length
+  let numProperties
+  let numStyles
+  let property
+  let propertyValue
+  let style
+  let styles = layout['styles']
+  let validCondition
+
+  if ((styles != null) &amp;&amp; (Array.isArray(styles))) {
+    numStyles = styles.length
+    for (k = 0; k &lt; numStyles; k++) {
+      style = styles[k]
+      validCondition = true
+      if ((style['condition'] != null) &amp;&amp; (style['condition']['properties'] != null) &amp;&amp; (Array.isArray(style['condition']['properties']))) {
+        numProperties = style['condition']['properties'].length
+        loopProperties:
+          for (l = 0; l &lt; numProperties; l++) {
+            property = style['condition']['properties'][l]
+            if ((property['name'] != null) &amp;&amp; (property['name'].length > 0)) {
+              propertyValue = parseFloat(properties[property['name']])
+              if (propertyValue != null) {
+                for (m = 0; m &lt; numFilters; m++) {
+                  filter = property[utils['filters'][m]['name']]
+                  if ((typeof filter !== 'undefined') &amp;&amp; (!utils['filters'][m]['test'](propertyValue, filter))) {
+                    validCondition = false
+                    break loopProperties
+                  }
+                }
+              }
+            }
+          }
+      }
+      if (validCondition) {
+        if (layout['title'] != null) {
+          content += layout['title'][locale] + ': '
+        }
+        if (style['prefix'] != null) {
+          content += style['prefix'] + ' '
+        }
+        content += (((style['text'] != null) &amp;&amp; (style['text'][locale] != null)) ? style['text'][locale] : value)
+        if (style['postfix'] != null) {
+          content += ' ' + style['postfix']
+        }
+        content += '&lt;br>'
+      }
+    }
+  } else if (value !== undefined) {
+    if ((layout['dateTimeFormat'] != null) &amp;&amp; (layout['dateTimeFormat'].length > 0)) {
+      if (layout['timeZone'] != null) {
+        value = moment(value).tz(layout['timeZone']).format(layout['dateTimeFormat'])
+      } else {
+        value = moment(value).format(layout['dateTimeFormat'])
+      }
+    }
+    if (layout['title'] !== false) {
+      content += ((layout['title'] != null) ? layout['title'][locale] : layout['name']) + ': '
+    }
+    content += value + '&lt;br>'
+  }
+  return content
+}
+
+/**
+ * Creates popup content.
+ * @param {Object} properties Popup properties.
+ * @param {string} type Popup type.
+ * @param {string} dataSource Popup data source.
+ * @returns {string} Popup content.
+ */
+MapAnimation.prototype.createPopupContent = function (properties, type, dataSource) {
+  let content
+  let coord
+  let coordinateRow
+  let dataItem
+  let dataItems
+  let header = properties[type + 'Header']
+  let i
+  let map = this.get('map')
+  let numDataItems
+  let propertyData
+  let view = map.getView()
+  let viewProjection = view.getProjection()
+  let coordToEPSG4326String = (coord) => {
+    if (coord != null) {
+      let coord4326 = OlProj.transform(
+        coord,
+        viewProjection,
+        'EPSG:4326'
+      )
+      return coord4326[1].toFixed(3) + ' ' + coord4326[0].toFixed(3)
+    }
+  }
+  if (header == null) {
+    header = properties['layerId']
+  }
+  coordinateRow = properties[type + 'CoordinateRow']
+  dataItems = properties[type + 'Data']
+  numDataItems = dataItems.length
+  content = this.createPopupHeader(header, type, dataSource)
+  for (i = 0; i &lt; numDataItems; i++) {
+    if (i === coordinateRow) {
+      coord = properties['geometry'].getCoordinates()
+      if (coord != null) {
+        content += coordToEPSG4326String(coord) + '&lt;br>'
+      }
+    }
+    dataItem = dataItems[i]
+    if (dataItem == null) {
+      return
+    }
+    if (typeof dataItem === 'object') {
+      content += this.createPopupItem(dataItem, properties)
+    } else {
+      dataItem = dataItem.trim()
+      if (dataItem === 'the_geom') {
+        coord = properties['geometry'].getCoordinates()
+        if (coord != null) {
+          content += 'coordinates: ' + coordToEPSG4326String(coord) + '&lt;br>'
+        }
+      } else {
+        propertyData = properties[dataItem]
+        if (propertyData != null) {
+          if (['time', 'begintime', 'endtime'].indexOf(dataItem) >= 0) {
+            content += dataItem + ': ' + moment(propertyData).format('HH:mm DD.MM.YYYY') + '&lt;br>'
+          } else if (dataItem === 'name') {
+            content += propertyData + '&lt;br>'
+          } else {
+            content += dataItem + ': ' + propertyData + '&lt;br>'
+          }
+        }
+      }
+    }
+  }
+  content += '&lt;/div>'
+  return content
+}
+
+/**
+ * Inits mouse hover and click functionality.
+ */
+MapAnimation.prototype.initMouseInteractions = function () {
+  let self = this
+  let map = this.get('map')
+
+  let handleWFSInteraction = (type, pixel) => {
+    let dataShown = false
+    let features = []
+    let typeActive = false
+    let config = self.get('config')
+    let locale = config['locale']
+    let layers = self.getLayersByGroup(config['featureGroupName']).getArray()
+    let numLayers = layers.length
+    let i
+    let j
+    let layerData
+    let layerHeader
+    let layerCoordinateRow
+    let coordOffset = [0, 0]
+    let numFeatures
+    for (i = 0; i &lt; numLayers; i++) {
+      layerData = layers[i].get(type + 'Data')
+      if ((Array.isArray(layerData)) &amp;&amp; (layerData.length > 0) &amp;&amp; (layers[i].get('visible')) &amp;&amp; (layers[i].get('opacity'))) {
+        typeActive = true
+        break
+      }
+    }
+    map.forEachFeatureAtPixel(pixel, function (feature, layer) {
+      if (layer == null) {
+        return
+      }
+      layerData = layer.get(type + 'Data')
+      if ((!Array.isArray(layerData)) || (layerData.length === 0)) {
+        return
+      }
+      feature.set(type + 'Data', layerData)
+      layerHeader = layer.get(type + 'Header')
+      if (layerHeader != null) {
+        feature.set(type + 'Header', layerHeader)
+      }
+      layerCoordinateRow = layer.get(type + 'CoordinateRow')
+      if (layerCoordinateRow != null) {
+        feature.set(type + 'CoordinateRow', layerCoordinateRow)
+      }
+      let layerId = feature.getId()
+      if (layerId != null) {
+        const separatorIndex = layerId.indexOf('.')
+        if (separatorIndex > 0) {
+          layerId = layerId.substr(0, separatorIndex)
+        }
+      } else {
+        layerId = ''
+      }
+      feature.set('layerId', layerId)
+      features.push(feature)
+    }, {
+      'hitTolerance': self.hitTolerance
+    })
+    features.sort(function (a, b) {
+      const layerIdProperty = 'layerId'
+      const timeProperty = 'time'
+      const aPopupHeader = a.get('popupHeader')
+      const bPopupHeader = b.get('popupHeader')
+      if ((aPopupHeader != null) &amp;&amp; (bPopupHeader != null) &amp;&amp; (aPopupHeader[locale] != null) &amp;&amp; (bPopupHeader[locale] != null) &amp;&amp; (aPopupHeader[locale] !== bPopupHeader[locale])) {
+        return aPopupHeader[locale].localeCompare(bPopupHeader[locale])
+      }
+      const aLayerId = a.get(layerIdProperty)
+      const bLayerId = b.get(layerIdProperty)
+      if (aLayerId !== bLayerId) {
+        return aLayerId.localeCompare(bLayerId)
+      }
+      let aMs = null
+      const aTime = a.get(timeProperty)
+      if (aTime != null) {
+        aMs = Date.parse(aTime)
+      }
+      if (aMs != null) {
+        let bMs = null
+        const bTime = b.get(timeProperty)
+        if (bTime != null) {
+          bMs = Date.parse(bTime)
+        }
+        if (bMs != null) {
+          return aMs - bMs
+        }
+      }
+      return 0
+    })
+    numFeatures = features.length
+    if (numFeatures > 0) {
+      let content = '&lt;div class="fmi-metoclient-' + type + '-content">'
+      for (j = 0; j &lt; numFeatures; j++) {
+        content += self.createPopupContent(features[j].getProperties(), type, 'wfs')
+      }
+      content += '&lt;/div>'
+      if (type === 'tooltip') {
+        coordOffset = config['tooltipOffset']
+      }
+      let coord = map.getCoordinateFromPixel([pixel[0] + coordOffset[0], pixel[1] + coordOffset[1]])
+      self.showPopup(content, coord, true, type)
+      dataShown = pixel
+    } else if (typeActive) {
+      if (document.querySelectorAll(`#${config['mapContainer']}-popup-content div.fmi-metoclient-gfi-item`).length === 0) {
+        self.hidePopup()
+      } else {
+        document.querySelectorAll(`#${config['mapContainer']}-popup-content div.fmi-metoclient-wfs-item`).forEach(function (element) {
+          element.parentNode.removeChild(element)
+        })
+      }
+    }
+    return dataShown
+  }
+
+  map.on('pointermove', function (evt) {
+    let map = self.get('map')
+    let groups = map.getLayers().getArray()
+    let numGroups = groups.length
+    let group
+    let layers
+    let numLayers
+    let layer
+    let subLayers
+    let numSubLayers
+    let subLayer
+    let tooltipData
+    let popupData
+    let dataFound = false
+    let hit = false
+    let className
+    let i
+    let j
+    let k
+    loopGroups: for (i = 0; i &lt; numGroups; i++) {
+      group = groups[i]
+      if (typeof group.getLayers !== 'function') {
+        continue
+      }
+      layers = group.getLayers().getArray()
+      numLayers = layers.length
+      loopLayers: for (j = 0; j &lt; numLayers; j++) {
+        layer = layers[j]
+        subLayers = (typeof layer.getLayers === 'function') ? layer.getLayers().getArray() : [layer]
+        numSubLayers = subLayers.length
+        for (k = 0; k &lt; numSubLayers; k++) {
+          subLayer = subLayers[k]
+          if ((subLayer.getVisible()) &amp;&amp; (subLayer.getOpacity() > 0)) {
+            className = subLayer.get('className')
+            if ((className != null) &amp;&amp; (className.length > 0) &amp;&amp; (['imagewms', 'tilewms', 'wmts'].includes(className.toLowerCase()))) {
+              popupData = subLayer.get('popupData')
+              if ((Array.isArray(popupData)) &amp;&amp; (popupData.length > 0)) {
+                hit = true
+                dataFound = true
+                break loopGroups
+              }
+            } else {
+              if ((className == null) || (className.length === 0)) {
+                continue
+              }
+              if (className.toLowerCase() === 'vector') {
+                tooltipData = subLayer.get('tooltipData')
+                if ((Array.isArray(tooltipData)) &amp;&amp; (tooltipData.length > 0)) {
+                  dataFound = true
+                  break loopLayers
+                }
+                popupData = subLayer.get('popupData')
+                if ((Array.isArray(popupData)) &amp;&amp; (popupData.length > 0)) {
+                  dataFound = true
+                  break loopLayers
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if (!hit) {
+      hit = this.forEachFeatureAtPixel(evt['pixel'], function (feature, layer) {
+        return ((layer != null) &amp;&amp; ((layer.get('popupData') != null) || (layer.get('tooltipData') != null)))
+      })
+    }
+    if (hit) {
+      this.getTargetElement().style.cursor = 'pointer'
+    } else if (!dataFound) {
+      this.getTargetElement().style.cursor = ''
+    }
+    handleWFSInteraction('tooltip', evt['pixel'])
+  })
+
+  map.on('singleclick', function (evt) {
+    let config = self.get('config')
+    let view = map.getView()
+    let viewResolution = /** @type {number} */ (view.getResolution())
+    let viewProjection = view.getProjection()
+    let popupShown = false
+    // WMS
+    let getPopupLayers = (layers) => {
+      return layers.getArray().reduce((popupLayers, layer) => {
+        if (layer instanceof OlLayerGroup) {
+          if ((layer.get('title') !== config['featureGroupName']) &amp;&amp; (layer.get('visible')) &amp;&amp; (layer.get('opacity'))) {
+            return popupLayers.concat(getPopupLayers(layer.getLayers()))
+          }
+        } else if ((['TileWMS', 'ImageWMS'].includes(layer.get('className'))) &amp;&amp; (layer.get('visible')) &amp;&amp; (layer.get('opacity'))) {
+          let wmsPopupData = layer.get('popupData')
+          if (wmsPopupData != null) {
+            popupLayers.push(layer)
+          }
+        }
+        return popupLayers
+      }, [])
+    }
+    let req
+    let layers = map.getLayers()
+    let popupLayers = getPopupLayers(layers)
+    popupShown = handleWFSInteraction('popup', evt['pixel'])
+
+    let getFeatureInfoOnLoad = (req, layer) => {
+      let i
+      let j
+      let layerCoordinateRow
+      let modifiedPopupData
+      let numPopupContentChildren
+      let numPopupData
+      let popupContent
+      let popupContentChild
+      let popupContentChildren
+      let popupData
+      let popupDataItem = []
+      let popupItems
+      let popupText = ''
+      let properties = {}
+      let response
+      if (req.status === 200) {
+        try {
+          response = JSON.parse(req.response)
+        } catch (e) {
+          console.log('GetFeatureInfo response error')
+          return
+        }
+        if ((response['features'] != null) &amp;&amp; (response['features'].length > 0) &amp;&amp; (response['features'][0]['properties'] != null)) {
+          properties = response['features'][0]['properties']
+        } else if ((Array.isArray(response)) &amp;&amp; (response.length > 0)) {
+          properties = response[0]
+        }
+        if (properties != null) {
+          popupData = layer.get('popupData')
+          numPopupData = popupData.length
+          for (j = 0; j &lt; numPopupData; j++) {
+            if (popupData[j]['name'] === 'gsLayerParameter') {
+              modifiedPopupData = []
+              Object.keys(properties).forEach(propertyKey => {
+                popupDataItem = extend(true, {}, popupData[0])
+                popupDataItem['name'] = propertyKey
+                modifiedPopupData.push(popupDataItem)
+              })
+            }
+          }
+          modifiedPopupData.forEach(dataItem => {
+            if (Array.isArray(dataItem['styles'])) {
+              dataItem['styles'].forEach(style => {
+                if ((style['condition'] != null) &amp;&amp; (Array.isArray(style['condition']['properties']))) {
+                  style['condition']['properties'].forEach(property => {
+                    if (property['name'] === 'gsLayerParameter') {
+                      property['name'] = dataItem['name']
+                    }
+                  })
+                }
+              })
+            }
+          })
+          layerCoordinateRow = layer.get('popupCoordinateRow')
+          if (layerCoordinateRow != null) {
+            properties['popupCoordinateRow'] = layerCoordinateRow
+            properties['geometry'] = new OlGeomPoint(evt['coordinate'])
+          }
+          properties['popupHeader'] = layer.get('popupHeader')
+          properties['popupData'] = (modifiedPopupData != null ? modifiedPopupData : popupData)
+          popupText = self.createPopupContent(properties, 'popup', 'gfi')
+          if (popupShown) {
+            popupContent = document.getElementById(`${config['mapContainer']}-popup-content`)
+            popupContentChildren = popupContent.children
+            if (popupContentChildren != null) {
+              numPopupContentChildren = popupContentChildren.length
+              for (i = 0; i &lt; numPopupContentChildren; i++) {
+                popupContentChild = popupContentChildren[i]
+                if (popupContentChild.classList.contains('fmi-metoclient-popup-content')) {
+                  popupItems = Array.from(popupContentChild.getElementsByClassName('fmi-metoclient-popup-item')).map(item => item.outerHTML)
+                  popupItems.push(popupText)
+                  popupContentChild['innerHTML'] = popupItems.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())).join('')
+                  break
+                }
+              }
+            }
+          } else {
+            popupText = '&lt;div class="fmi-metoclient-popup-content">' + popupText + '&lt;/div>'
+            self.showPopup(popupText, evt['coordinate'], true)
+            popupShown = evt['pixel']
+          }
+        }
+      }
+    }
+
+    popupLayers.forEach((layer) => {
+      let source = layer.getSource()
+      if (source == null) {
+        return
+      }
+      let url = source.getGetFeatureInfoUrl(evt['coordinate'], viewResolution, viewProjection, {
+        'INFO_FORMAT': 'application/json'
+      })
+      req = new XMLHttpRequest()
+      req.open('GET', url)
+      req.timeout = 20000
+      req.onload = (event) => {
+        getFeatureInfoOnLoad(event['target'], layer)
+      }
+      req.onerror = () => {
+        console.log('Network error')
+      }
+      req.send()
+    })
+  })
+}
+
+/**
+ * Checks if the given layer contains the given feature.
+ * @param layer Layer to be checked.
+ * @param feature Feature to be checked.
+ * @returns {boolean} Layer contains the given feature.
+ */
+MapAnimation.prototype.layerContainsFeature = function (layer, feature) {
+  let featureId = feature.getId()
+  let source
+  if (typeof layer['getSource'] !== 'function') {
+    return false
+  }
+  source = layer.getSource()
+  return ((featureId != null) &amp;&amp; (typeof source['getFeatures'] === 'function') &amp;&amp; (source.getFeatures().some(layerFeature => layerFeature.getId() === featureId)))
+}
+
+/**
+ * Handles update requests.
+ * @param {number} updateRequested Time when update requested.
+ * @param {boolean=} disableLayerSwitcher Disables the layer switcher when loading layers.
+ */
+MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, disableLayerSwitcher = false) {
+  let self = this
+  let anyVisible = false
+  let asyncLoadCount
+  let asyncLoadQueue
+  let currentVisibility
+  let extent
+  let featureGroupName
+  let groupNames
+  let layerVisibility
+  let loadId
+  let map = this.get('map')
+  let overlayGroupName
+  let selectedFeature
+  let layerTitle
+  const callbacks = this.get('callbacks')
+  if (/** @type {number} */ (this.get('updateRequested')) > updateRequested) {
+    return
+  }
+  await this.updateStorage()
+  featureGroupName = this.get('config')['featureGroupName']
+  selectedFeature = this.getSelectedFeature()
+  if (this.reloadNeeded(extent)) {
+    loadId = Date.now()
+    if (this.loadId &lt; loadId) {
+      this.loadId = loadId
+    } else {
+      this.loadId++
+      loadId = this.loadId
+    }
+    this.latestLoadId = this.loadId
+    asyncLoadQueue = {}
+    asyncLoadQueue[loadId] = []
+    this.asyncLoadQueue = asyncLoadQueue
+    asyncLoadCount = {}
+    asyncLoadCount[loadId] = 0
+    this.asyncLoadCount = asyncLoadCount
+    this.numIntervalItems = []
+    if (disableLayerSwitcher) {
+      // Todo: toteuta tämä LayerSwitcherissä funktiona
+      Array.from(document.querySelectorAll('.layer-switcher input')).forEach((layerSwitcher) => {
+        layerSwitcher.disabled = true
+      })
+    }
+    this.actionEvents.emitEvent('reload')
+    this.loadOverlayGroup(extent, loadId)
+    layerVisibility = map.get('layerVisibility')
+    this.getLayersByGroup(featureGroupName).forEach(layer => {
+      layerTitle = layer.get('title')
+      if (layerTitle == null) {
+        return
+      }
+      currentVisibility = layerVisibility[layerTitle]
+      if (currentVisibility !== undefined) {
+        layer.setVisible(currentVisibility)
+        if ((selectedFeature != null) &amp;&amp; (self.layerContainsFeature(layer, selectedFeature))) {
+          self.set('selectedFeatureLayer', selectedFeature.get('layerTitle'))
+          if (currentVisibility) {
+            self.selectFeature(selectedFeature)
+          } else {
+            selectedFeature.setStyle(new OlStyleStyle({}))
+          }
+        }
+      }
+    })
+  } else {
+    overlayGroupName = this.get('config')['overlayGroupName']
+    groupNames = [overlayGroupName, featureGroupName]
+    layerVisibility = map.get('layerVisibility')
+    groupNames.forEach(groupName => {
+      this.getLayersByGroup(groupName).forEach(layer => {
+        layerTitle = layer.get('title')
+        currentVisibility = layerVisibility[layerTitle]
+        if (currentVisibility !== undefined) {
+          layer.setVisible(currentVisibility)
+        }
+        if (groupName === overlayGroupName) {
+          if (currentVisibility) {
+            anyVisible = true
+          }
+        } else if ((selectedFeature != null) &amp;&amp; (self.layerContainsFeature(layer, selectedFeature))) {
+          self.set('selectedFeatureLayer', selectedFeature.get('layerTitle'))
+          if (currentVisibility) {
+            self.selectFeature(selectedFeature)
+          } else {
+            selectedFeature.setStyle(new OlStyleStyle({}))
+          }
+        }
+      })
+    })
+    if (!anyVisible) {
+      this.variableEvents.emitEvent('numIntervalItems', [[]])
+      this.actionEvents.emitEvent('reload')
+    }
+  }
+  if ((callbacks != null) &amp;&amp; (typeof callbacks['ready'] === 'function')) {
+    callbacks['ready']()
+  }
 }
 
 /**
  * Performs bidirectional data exchange with local storage.
  */
-MapAnimation.prototype.updateStorage = function () {
-  try {
-    if (typeof window['localStorage'] === 'undefined') {
-      return
-    }
-    const layers = this.get('layers')
-    let localStorageOpacity
-    let localStorageVisible
-    let project = this.get('config')['project']
-    let i
-    let layer
-    let numLayers = layers.length
+MapAnimation.prototype.updateStorage = async function () {
+  const config = this.get('config')
+  if (!config['useStorage']) {
+    return
+  }
+  const layers = this.get('layers')
+  let localStorageOpacity
+  let localStorageVisible
+  let localStorageLegendVisible
+  let project = this.get('config')['project']
+  let i
+  let layer
+  let numLayers = layers.length
 
-    for (i = 0; i &lt; numLayers; i++) {
-      layer = layers[i]
-      if (layer['useSavedOpacity']) {
-        localStorageOpacity = this.loadLayerPropertyFromLocalStorage(layer['title'], 'opacity')
-        if (localStorageOpacity != null) {
-          layer['opacity'] = localStorageOpacity
-        }
-      }
-      if (layer['opacity'] != null) {
-        window['localStorage'].setItem(project + '-' + layer['title'] + '-opacity', layer['opacity'])
-      }
-      if (layer['useSavedVisible']) {
-        localStorageVisible = this.loadLayerPropertyFromLocalStorage(layer['title'], 'visible')
-        if (localStorageVisible != null) {
-          layer['visible'] = localStorageVisible
-        }
-      }
-      if (layer['visible'] != null) {
-        window['localStorage'].setItem(project + '-' + layer['title'] + '-visible', layer['visible'])
+  for (i = 0; i &lt; numLayers; i++) {
+    layer = layers[i]
+    if (layer['useSavedOpacity']) {
+      localStorageOpacity = await this.loadLayerPropertyFromLocalStorage(layer['title'], 'opacity')
+      if (localStorageOpacity != null) {
+        layer['opacity'] = localStorageOpacity
       }
     }
-  } catch (e) {
-    console.log('Local storage is not supported. ' + e)
+    if (layer['opacity'] != null) {
+      await localforage.setItem(project + '-' + layer['title'] + '-opacity', layer['opacity'])
+    }
+    if (layer['useSavedVisible']) {
+      localStorageVisible = await this.loadLayerPropertyFromLocalStorage(layer['title'], 'visible')
+      if (localStorageVisible != null) {
+        layer['visible'] = localStorageVisible
+      }
+    }
+    if (layer['visible'] != null) {
+      await localforage.setItem(project + '-' + layer['title'] + '-visible', layer['visible'])
+    }
+    if ((layer['animation'] != null) &amp;&amp; (layer['animation']['useSavedLegendVisible'])) {
+      localStorageLegendVisible = await this.loadLayerPropertyFromLocalStorage(layer['title'], 'legendVisible')
+      if (localStorageLegendVisible != null) {
+        layer['animation']['legendVisible'] = localStorageLegendVisible
+      }
+    }
+    if ((layer['animation'] != null) &amp;&amp; (layer['animation']['legendVisible'] != null)) {
+      await localforage.setItem(project + '-' + layer['title'] + '-legendVisible', layer['animation']['legendVisible'])
+    }
   }
 }
 
 /**
  * Parses time values from capabilities string.
- * @param {Object} layer Layer configuration.
+ * @param {Object} layerAnimation Layer configuration.
  * @param {string} values Capabilities time definitions.
  */
 MapAnimation.prototype.parseCapabTimes = function (layerAnimation, values) {
@@ -360,11 +1016,13 @@ MapAnimation.prototype.parameterizeLayers = function (capabilities) {
     // capabilities information should be available but it is not
     if (template['type'] == null) {
       template['type'] = ''
-    } else if ([this.layerTypes['map'], this.layerTypes['overlay'], this.layerTypes['features']].includes(template['type'])) {
+    } else if ([this.layerTypes['map'], this.layerTypes['overlay'], this.layerTypes['features'], this.layerTypes['surface']].includes(template['type'])) {
       continue
     }
     if ((template['className'] != null) &amp;&amp; (template['className'].toLowerCase() === 'vector')) {
-      template['type'] = this.layerTypes['features']
+      if (template['type'] == null) {
+        template['type'] = this.layerTypes['features']
+      }
       continue
     }
     if (template['animation'] == null) {
@@ -442,219 +1100,125 @@ MapAnimation.prototype.initEPSG3067Projection = () => {
 }
 
 /**
- * Initializes map.
+ * Defines feature selection functionality and styles.
  */
-MapAnimation.prototype.initMap = function () {
-  // Create controls and interactions
-  let config = this.get('config')
+MapAnimation.prototype.defineSelect = function () {
+  let self = this
+  const map = this.get('map')
+  const config = this.get('config')
   const callbacks = this.get('callbacks')
-  const controls = new OlCollection()
-  const mapContainer = config['mapContainer']
-  const maxZoom = config['defaultMaxZoom']
-  const minZoom = config['defaultMinZoom']
-  const self = this
-  const target = document.getElementById(mapContainer)
-  const viewProjection = /** @type {string} */ (this.get('viewProjection'))
-  let i
-  let interactionConfig = this.get('interactionConfig')
-  let interactionOptions
-  let interactions
-  let layerSwitcher
-  let layerVisibility
-  let layerVisible
-  let map = this.get('map')
-  let numOverlayTitles
-  let overlay
-  let overlayTitles
-  let mapContainerElement
-  let popupCloser
-  let popupContainer
-  let view
-  let viewCenter
-  let viewZoom
-  let visible
-  if (target == null) {
-    return
-  }
-  mapContainerElement = document.getElementById(mapContainer)
-  if (map != null) {
-    layerVisibility = map.get('layerVisibility')
-    overlayTitles = this.get('overlayTitles')
-    numOverlayTitles = overlayTitles.length
-    visible = false
-    for (i = 0; i &lt; numOverlayTitles; i++) {
-      layerVisible = layerVisibility[overlayTitles[i]]
-      if ((layerVisible === undefined) || (layerVisible)) {
-        visible = true
-        break
+  let select
+  let selectedFeatures = {}
+  let extraStyles
+  let mappings = {
+    'styleHover': {
+      'condition': 'pointerMove',
+      'select': 'hover',
+      'deselect': 'unhover',
+      'multi': false,
+      'onAdd': (feature) => {
+        if (!Array.isArray(selectedFeatures['styleSelected'])) {
+          return
+        }
+        let isSelected = false
+        let id = feature.getId()
+        if (id == null) {
+          return
+        }
+        selectedFeatures['styleSelected'].forEach((selectedFeature) => {
+          if (selectedFeature.getId() === id) {
+            selectedFeature.setStyle(extraStyles['styleHover']['data'])
+            isSelected = true
+          }
+        })
+        if (!isSelected) {
+          feature.setStyle(null)
+        }
+      },
+      'onRemove': (feature) => {
+        if (!Array.isArray(selectedFeatures['styleSelected'])) {
+          return
+        }
+        let id = feature.getId()
+        if (id == null) {
+          return
+        }
+        selectedFeatures['styleSelected'].forEach((selectedFeature) => {
+          if (selectedFeature.getId() === id) {
+            selectedFeature.setStyle(extraStyles['styleSelected']['data'])
+          }
+        })
+      }
+    },
+    'styleSelected': {
+      'condition': (event) => {
+        if (event['type'] === 'singleclick') {
+          return map.forEachFeatureAtPixel(event['pixel'], function () {
+            return true
+          })
+        }
+        return false
+      },
+      'select': 'selected',
+      'deselect': 'deselected',
+      'multi': false,
+      'onAdd': (feature) => {
+        let layerTitle = feature.get('layerTitle')
+        let layer = self.getLayer(layerTitle)
+        if (layer != null) {
+          this.set('selectedFeatureLayer', layerTitle)
+        }
+        if ((layer != null) &amp;&amp; (layer.getVisible())) {
+          feature.setStyle(extraStyles['styleSelected']['data'])
+        } else {
+          feature.setStyle(new OlStyleStyle({}))
+        }
+      },
+      'onRemove': (feature) => {
+        feature.setStyle(null)
       }
     }
-    // No need to reload if nothing is visible
-    if (!visible) {
-      config = this.get('config')
-      this.getLayersByGroup(config['overlayGroupName']).forEach(layer => {
-        // Force reloading in the future
-        layer.setLayers(new OlCollection())
+  }
+  this.getLayersByGroup(config['featureGroupName']).forEach(layer => {
+    let style
+    extraStyles = layer.get('extraStyles')
+    if (extraStyles != null) {
+      Object.keys(extraStyles).forEach((styleName) => {
+        style = extraStyles[styleName]['data']
+        if (style != null) {
+          select = new OlInteractionSelect({
+            'condition': typeof mappings[styleName]['condition'] === 'function' ? mappings[styleName]['condition'] : olEventsCondition[mappings[styleName]['condition']],
+            'layers': [layer],
+            'style': style,
+            'multi': mappings[styleName]['multi'],
+            'hitTolerance': self.hitTolerance
+          })
+          select.set('type', mappings[styleName]['select'])
+          map.addInteraction(select)
+          self.activeInteractions.push(select)
+          selectedFeatures[styleName] = select.getFeatures()
+          selectedFeatures[styleName].on('add', function (event) {
+            mappings[styleName]['onAdd'](event.element)
+            if ((callbacks != null) &amp;&amp; (typeof callbacks[mappings[styleName]['select']] === 'function')) {
+              callbacks[mappings[styleName]['select']](event['element'])
+            }
+          })
+          selectedFeatures[styleName].on('remove', function (event) {
+            mappings[styleName]['onRemove'](event.element)
+            if ((callbacks != null) &amp;&amp; (typeof callbacks[mappings[styleName]['deselect']] === 'function')) {
+              callbacks[mappings[styleName]['deselect']](event['element'])
+            }
+          })
+        }
       })
-      if (this.get('configChanged')) {
-        this.set('configChanged', false)
-      } else {
-        return
-      }
     }
-    view = map.getView()
-    viewCenter = view.get('center')
-    viewZoom = view.getZoom()
-  } else {
-    viewCenter = this.viewOptions['center'] != null ? this.viewOptions['center'] : (config['defaultCenterProjection'] === viewProjection ? config['defaultCenterLocation'] : OlProj.transform(
-        config['defaultCenterLocation'],
-        config['defaultCenterProjection'],
-        viewProjection)
-    )
-    viewZoom = this.viewOptions['zoom'] != null ? this.viewOptions['zoom'] : config['defaultZoomLevel']
-    layerVisibility = {}
-    let erd = elementResizeDetectorMaker()
-    erd.listenTo(mapContainerElement, function (element) {
-      let map = self.get('map')
-      if (map != null) {
-        map.updateSize()
+    layer.getSource().getFeatures().forEach(feature => {
+      feature.set('layerTitle', layer.get('title'))
+      if (feature.get('selected')) {
+        self.set('selectedFeatureLayer', layer.get('title'))
+        self.selectFeature(feature)
       }
     })
-  }
-  popupContainer = document.getElementById(`${mapContainer}-popup`)
-  if (popupContainer != null) {
-    target.appendChild(popupContainer)
-  }
-  Array.from(target.getElementsByClassName('ol-viewport')).forEach((olContainer) => {
-    olContainer.parentNode.removeChild(olContainer)
-  })
-  Ol['ASSUME_TOUCH'] = false
-  if (interactionConfig != null) {
-    interactionOptions = extend(true, {}, interactionConfig)
-  } else {
-    interactionOptions = (config['interactions'] != null) ? config['interactions'] : {}
-    interactionConfig = extend(true, {}, interactionOptions)
-    this.set('interactionConfig', interactionConfig)
-  }
-  if (config['staticControls']) {
-    this.initStaticInteractions(interactionOptions)
-  } else {
-    controls.push(new OlControlZoom({
-      'duration': 0,
-      'zoomInTipLabel': config['zoomInTooltip'],
-      'zoomOutTipLabel': config['zoomInTooltip']
-    }))
-    mapContainerElement.style.pointerEvents = 'auto'
-  }
-  interactions = OlInteraction.defaults(interactionOptions)
-  popupContainer = document.getElementById(`${mapContainer}-popup`)
-  popupCloser = document.getElementById(`${mapContainer}-popup-closer`)
-  // Create an overlay to anchor the popup to the map.
-  overlay = new OlOverlay(/** @type {olx.OverlayOptions} */ ({
-    'element': popupContainer,
-    'autoPan': true,
-    'autoPanAnimation': {
-      'duration': 250
-    }
-  }))
-  this.set('overlay', overlay)
-  if (popupCloser != null) {
-    /**
-     * Add a click handler to hide the popup.
-     * @return {boolean} Don't follow the href.
-     */
-    popupCloser.onclick = () => {
-      overlay.setPosition(undefined)
-      popupCloser.blur()
-      if ((callbacks != null) &amp;&amp; (typeof callbacks['popupClosed'] === 'function')) {
-        callbacks['popupClosed']()
-      }
-      return false
-    }
-  }
-  this.viewOptions = {
-    'projection': viewProjection,
-    'center': viewCenter,
-    'resolutions': config['resolutions'],
-    'zoom': viewZoom,
-    'minZoom': minZoom,
-    'maxZoom': maxZoom,
-    'extent': ((config['extentByZoomLevel'] == null) || (config['extentByZoomLevel'][viewZoom] == null)) ? config['extent'] : config['extentByZoomLevel'][viewZoom]
-  }
-  map = new OlMap({
-    layers: [
-      new OlLayerGroup({
-        'nested': true,
-        'title': config['baseGroupName'],
-        'layers': self.loadStaticLayers(layerVisibility, this.layerTypes['map'])
-      }),
-      new OlLayerGroup({
-        'nested': true,
-        'title': config['overlayGroupName'],
-        'layers': []
-      }),
-      new OlLayerGroup({
-        'nested': true,
-        'title': config['featureGroupName'],
-        'layers': self.loadStaticLayers(layerVisibility, this.layerTypes['features'])
-      }),
-      new OlLayerGroup({
-        'nested': true,
-        'title': '', // config['staticOverlayGroupName'],
-        'layers': self.loadStaticLayers(layerVisibility, this.layerTypes['overlay']),
-        'zIndex': 1000
-      })
-    ],
-    overlays: [overlay],
-    target: target,
-    controls,
-    interactions,
-    view: new OlView(this.viewOptions)
-  })
-  map.set('layerVisibility', layerVisibility)
-  map.on('moveend', () => {
-    self.set('updateRequested', Date.now())
-  })
-  if (config['showMarker']) {
-    map.addLayer(this.createMarkerLayer())
-    map.on('singleclick', e => {
-      map.getView().setCenter(e['coordinate'])
-    })
-  }
-  if (config['showLayerSwitcher']) {
-    layerSwitcher = new LayerSwitcher({
-      'project': config['project'],
-      'elementId': config['layerSwitcherContainer'],
-      'tipLabel': config['layersTooltip'],
-      'showLegend': config['showLegend'],
-      'legendContainer': config['legendContainer'],
-      'legendTitle': config['legendTitle'],
-      'noLegendText': config['noLegendText'],
-      'baseGroupName': config['baseGroupName'],
-      'opacityTitle': config['opacityTitle']
-    })
-    this.set('layerSwitcher', layerSwitcher)
-    map.addControl(layerSwitcher)
-  }
-  Array.from(mapContainerElement.getElementsByClassName('ol-zoom-in')).forEach((zoomIn) => {
-    zoomIn.setAttribute('title', config['zoomInTooltip'])
-  })
-  Array.from(mapContainerElement.getElementsByClassName('ol-zoom-out')).forEach((zoomIn) => {
-    zoomIn.setAttribute('title', config['zoomOutTooltip'])
-  })
-  Array.from(mapContainerElement.getElementsByClassName('ol-viewport')).forEach((olViewport) => {
-    olViewport.style.touchAction = 'auto'
-  })
-  self.set('map', map)
-  this.setViewListeners()
-  if (!self.get('listenersInitialized')) {
-    self.initListeners()
-  }
-  if ((callbacks != null) &amp;&amp; (typeof callbacks['init'] === 'function')) {
-    callbacks['init']()
-  }
-  Array.from(mapContainerElement.getElementsByClassName('ol-popup')).forEach((olPopup) => {
-    olPopup.style.display = ''
   })
 }
 
@@ -664,11 +1228,19 @@ MapAnimation.prototype.initMap = function () {
 MapAnimation.prototype.setViewListeners = function () {
   const self = this
   const callbacks = this.get('callbacks')
-  this.get('map').getView().on('propertychange', function (e) {
+  const map = this.get('map')
+  map.getView().on('propertychange', function (e) {
     let coordinates
     switch (e['key']) {
       case 'center':
         self.viewOptions['center'] = this.getCenter()
+        if (self.get('config')['showMarker']) {
+          self.get('marker').setCoordinates(map.getView().getCenter())
+          self.dispatchEvent('markerMoved')
+        }
+        if ((self.contextMenu != null) &amp;&amp; (self.contextMenu.isOpen())) {
+          self.contextMenu.close()
+        }
         if ((callbacks != null) &amp;&amp; (typeof callbacks['center'] === 'function')) {
           coordinates = this.getCenter()
           callbacks['center'](coordinates[0], coordinates[1])
@@ -695,7 +1267,6 @@ MapAnimation.prototype.setViewListeners = function () {
  * @param {Object} interactionOptions Default interaction options.
  */
 MapAnimation.prototype.initStaticInteractions = function (interactionOptions) {
-  const config = this.get('config')
   interactionOptions['doubleClickZoom'] = false
   interactionOptions['dragPan'] = false
   interactionOptions['dragRotate'] = false
@@ -707,7 +1278,6 @@ MapAnimation.prototype.initStaticInteractions = function (interactionOptions) {
   interactionOptions['pinchRotate'] = false
   interactionOptions['pinchZoom'] = false
   interactionOptions['altShiftDragRotate'] = false
-  document.getElementById(config['mapContainer']).style.pointerEvents = 'none'
 }
 
 /**
@@ -720,240 +1290,14 @@ MapAnimation.prototype.isAnimationLayer = function (layer) {
 }
 
 /**
- * Initializes listeners utilized by the animator view.
- */
-MapAnimation.prototype.initListeners = function () {
-  const self = this
-  let layerSwitcher
-  self.set('listenersInitialized', true)
-
-  this.on('updateLoadState', function (e) {
-    const config = self.get('config')
-    let len
-    let finished = true
-    let key
-    let callbacks
-    let runLoaded = false
-    let i
-    const map = self.get('map')
-    let requestUpdate = false
-    key = self.loadId
-    len = self.numIntervalItems[key].length
-    if (len === 0) {
-      return
-    }
-    for (i = 0; i &lt; len; i++) {
-      if (self.numIntervalItems[key][i]['status'] === constants.LOADING_STATUS['ready']) {
-        continue
-      }
-      if ((self.numIntervalItems[key][i]['loaded'] >= self.numIntervalItems[key][i]['toBeLoaded']) &amp;&amp; (self.numIntervalItems[key][i]['status'] !== constants.LOADING_STATUS['error']) &amp;&amp; (self.numIntervalItems[key][i]['status'] !== constants.LOADING_STATUS['ready'])) {
-        self.numIntervalItems[key][i]['status'] = constants.LOADING_STATUS['ready']
-      }
-      finished = finished &amp;&amp; (self.numIntervalItems[key][i]['status'] === constants.LOADING_STATUS['ready'] || self.numIntervalItems[key][i]['status'] === constants.LOADING_STATUS['error'])
-    }
-    if (key !== self.loadId) {
-      return
-    }
-    self.variableEvents.emitEvent('numIntervalItems', [self.numIntervalItems[key]])
-    // Everything is loaded
-    if (finished) {
-      if (key > self.finishedId) {
-        self.loading = false
-        self.finishedId = key
-        runLoaded = true
-        // Todo: toteuta nämä funktiona LayerSwitcherissä
-        layerSwitcher = self.get('layerSwitcher')
-        if (layerSwitcher != null) {
-          layerSwitcher.setMap(self.getMap())
-          document.getElementById(config['layerSwitcherContainer']).classList.remove('disabled')
-        }
-        if (self.get('updateVisibility') !== null) {
-          map.set('layerVisibility', self.get('updateVisibility'))
-          self.set('updateVisibility', null)
-          requestUpdate = true
-        }
-      }
-      if (layerSwitcher != null) {
-        Array.from(document.querySelectorAll('.layer-switcher input:disabled')).forEach((layerSwitcher) => {
-          layerSwitcher.disabled = false
-        })
-      }
-      if (config['showLoadProgress']) {
-        // Remove spinner
-        Array.from(document.getElementsByClassName(config['spinnerContainer'])).forEach((spinner) => {
-          spinner.style.display = 'none'
-        })
-      }
-      // Todo: tee onFinished-funktio
-      // Update visibility values
-      this.getLayersByGroup(config['overlayGroupName']).forEach(overlay => {
-        if (overlay.get('opacity') === 0) {
-          overlay.set('visible', false)
-          overlay.set('opacity', overlay.get('defaultOpacity'))
-        }
-      })
-      self.updateAnimation()
-      callbacks = self.get('callbacks')
-      if ((runLoaded) &amp;&amp; (callbacks != null) &amp;&amp; (typeof callbacks['loaded'] === 'function')) {
-        callbacks['loaded']()
-      }
-      if (requestUpdate) {
-        this.set('updateRequested', Date.now())
-      }
-    }
-  })
-
-  this.on('change:updateRequested', function (e) {
-    const updateRequested = /** @type {number} */ (this.get('updateRequested'))
-    const self = this
-    self.loadId = -1
-
-    setTimeout(() => {
-      let loadId
-      let asyncLoadCount
-      let asyncLoadQueue
-      let extent
-      let overlayGroupName
-      let featureGroupName
-      let groupNames
-      let map
-      let currentVisibility
-      let layerVisibility
-      let layerGroupTitle
-      let anyVisible = false
-      if (/** @type {number} */ (self.get('updateRequested')) > updateRequested) {
-        return
-      }
-      extent = self.calculateExtent(true)
-      self.updateStorage()
-      if (self.reloadNeeded(extent)) {
-        loadId = Date.now()
-        if (self.loadId &lt; loadId) {
-          self.loadId = loadId
-        } else {
-          self.loadId++
-          loadId = self.loadId
-        }
-        self.latestLoadId = self.loadId
-        asyncLoadQueue = {}
-        asyncLoadQueue[loadId] = []
-        self.asyncLoadQueue = asyncLoadQueue
-        asyncLoadCount = {}
-        asyncLoadCount[loadId] = 0
-        self.asyncLoadCount = asyncLoadCount
-        self.numIntervalItems = []
-        // Todo: toteuta tämä LayerSwitcherissä funktiona
-        Array.from(document.querySelectorAll('.layer-switcher input')).forEach((layerSwitcher) => {
-          layerSwitcher.disabled = true
-        })
-        self.actionEvents.emitEvent('reload')
-        self.loadOverlayGroup(extent, loadId)
-      } else {
-        overlayGroupName = self.get('config')['overlayGroupName']
-        featureGroupName = self.get('config')['featureGroupName']
-        groupNames = [overlayGroupName, featureGroupName]
-        map = self.get('map')
-        layerVisibility = map.get('layerVisibility')
-        groupNames.forEach(groupName => {
-          this.getLayersByGroup(groupName).forEach(layer => {
-            currentVisibility = layerVisibility[layer.get('title')]
-            if (currentVisibility !== undefined) {
-              layer.setVisible(currentVisibility)
-            }
-            if (layerGroupTitle === overlayGroupName) {
-              if (currentVisibility) {
-                anyVisible = currentVisibility
-              }
-            }
-          })
-        })
-        if (!anyVisible) {
-          self.actionEvents.emitEvent('reload')
-        }
-        if (self.get('config')['showMarker']) {
-          self.get('marker').setCoordinates(map.getView().getCenter())
-          self.dispatchEvent('markerMoved')
-        }
-      }
-    }, self.updateRequestResolution)
-  })
-
-  this.on('updateLoadQueue', e => {
-    let animationGroups
-    let config
-    let maxAsyncLoadCount
-    let asyncLoadItem
-    let prop
-    let layer
-    let className
-    let sourceOptions
-    let source
-    let sourceProperties
-    let sourceOn
-    let mapProducer = new MapProducer()
-    const loadId = self.loadId
-    if ((self.asyncLoadQueue[loadId] == null) || (self.asyncLoadQueue[loadId].length === 0)) {
-      return
-    }
-    animationGroups = self.get('animationGroups')
-    if (!Array.isArray(animationGroups)) {
-      return
-    }
-    config = self.get('config')
-    maxAsyncLoadCount = config['maxAsyncLoadCount']
-    if (self.asyncLoadCount[loadId] &lt; maxAsyncLoadCount) {
-      asyncLoadItem = self.asyncLoadQueue[loadId].shift()
-      self.asyncLoadCount[loadId]++
-      self.dispatchEvent('updateLoadQueue')
-      // Set source
-      layer = animationGroups[asyncLoadItem['overlay']][asyncLoadItem['layer']]
-      layer.setOpacity(0)
-      className = layer.get('className')
-      sourceOptions = layer.get('sourceOptions')
-      if (sourceOptions == null) {
-        sourceOptions = {}
-      }
-      source = mapProducer.sourceFactory(className, sourceOptions)
-      sourceProperties = layer.get('sourceProperties')
-      if (typeof sourceProperties !== 'undefined') {
-        for (prop in sourceProperties) {
-          if (sourceProperties.hasOwnProperty(prop)) {
-            source.set(prop, sourceProperties[prop])
-          }
-        }
-      }
-      sourceOn = layer.get('sourceOn')
-      if (typeof sourceOn !== 'undefined') {
-        for (const event in sourceOn) {
-          if (sourceOn.hasOwnProperty(event)) {
-            source.on(event, sourceOn[event])
-          }
-        }
-      }
-      animationGroups[asyncLoadItem['overlay']][asyncLoadItem['layer']].setSource(source)
-    }
-  })
-
-  this.on('markerMoved', e => {
-    const marker = self.get('marker')
-    const callbacks = self.get('callbacks')
-    let coordinates
-    if (marker == null) {
-      return
-    }
-    coordinates = marker.getCoordinates()
-    if ((callbacks != null) &amp;&amp; (typeof callbacks['marker'] === 'function')) {
-      callbacks['marker'](coordinates[0], coordinates[1])
-    }
-  })
-}
-
-/**
  * Checks if layers need to be reloaded.
  * @param {Array} extent Extent of overlays to be loaded.
  * @returns {boolean} Reload need.
  */
 MapAnimation.prototype.reloadNeeded = function (extent) {
+  if (Object.keys(this.numIntervalItems).length === 0) {
+    return true
+  }
   let map
   let layerVisibility
   let currentVisibility
@@ -961,14 +1305,15 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
   let numLayers
   let config
   let containsAnimationLayers = false
+  let containsVisibleAnimationLayers = false
+  let containsChangedAnimationLayers = false
   let overlayGroupName
   let layerConfigs = this.get('layers')
   let layers
   let subLayers
   let numSubLayers
-  let subLayerExtent
   let i
-  numLayers = layerConfigs.length
+  numLayers = (layerConfigs != null) ? layerConfigs.length : 0
   for (i = 0; i &lt; numLayers; i++) {
     if (this.isAnimationLayer(layerConfigs[i])) {
       containsAnimationLayers = true
@@ -990,7 +1335,16 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
   for (i = 0; i &lt; numLayers; i++) {
     layer = layers.item(i)
     currentVisibility = layerVisibility[layer.get('title')]
-    if ((currentVisibility !== undefined) ? currentVisibility : layer.get('visible')) {
+    if (currentVisibility == null) {
+      return true
+    }
+    if (currentVisibility) {
+      containsVisibleAnimationLayers = true
+    }
+    if (layer.get('visible') !== currentVisibility) {
+      containsChangedAnimationLayers = true
+    }
+    if (currentVisibility) {
       numSubLayers = 0
       if (typeof layer.getLayers === 'function') {
         subLayers = layer.getLayers()
@@ -999,17 +1353,9 @@ MapAnimation.prototype.reloadNeeded = function (extent) {
       if (numSubLayers === 0) {
         return true
       }
-      subLayerExtent = subLayers.item(0).get('extent') // Todo: check all items
-      if ((subLayerExtent.length !== extent.length) ||
-        (subLayerExtent[0] > extent[0]) ||
-        (subLayerExtent[1] > extent[1]) ||
-        (subLayerExtent[2] &lt; extent[2]) ||
-        (subLayerExtent[3] &lt; extent[3])) {
-        return true
-      }
     }
   }
-  return false
+  return containsVisibleAnimationLayers &amp;&amp; containsChangedAnimationLayers
 }
 
 /**
@@ -1022,21 +1368,14 @@ MapAnimation.prototype.createMarkerLayer = function () {
   const markerFeature = new OlFeature({
     'geometry': marker
   })
-  const markerStyle = new OlStyleStyle({
-    'image': new OlStyleIcon(/** @type {olx.style.IconOptions} */ ({
-      'anchor': [0.5, 1],
-      'anchorXUnits': 'fraction',
-      'anchorYUnits': 'fraction',
-      'src': this.get('config')['markerImagePath']
-    })),
-    'zIndex': 10000
-  })
-  markerFeature.setStyle(markerStyle)
+  markerFeature.setStyle(this.get('markerStyle'))
+  this.get('map').set('marker', markerFeature)
   const markerSource = new OlSourceVector({
     'features': [markerFeature]
   })
   return new OlLayerVector({
-    'source': markerSource
+    'source': markerSource,
+    'zIndex': constants.ZINDEX['vector']
   })
 }
 
@@ -1117,12 +1456,14 @@ MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
  */
 MapAnimation.prototype.createLayer = function (options) {
   const extent = this.calculateExtent(false)
+  let config = this.get('config')
   let template
   let mapProducer = new MapProducer()
   let projection = /** @type {ol.proj.Projection|string} */ (this.get('viewProjection'))
   // Features may be too slow to extend
-  template = options['type'] === this.layerTypes['features'] ? options : extend(true, {}, options)
-  return mapProducer.layerFactory(template, extent, projection)
+  template = ((options['source'] == null) || (options['source']['features'] == null)) ? options : extend(true, {}, options)
+  template['useStorage'] = config['useStorage']
+  return mapProducer.layerFactory(template, config['cacheTime'], extent, projection, this.get('animationBeginTime'), this.get('animationEndTime'))
 }
 
 /**
@@ -1130,15 +1471,20 @@ MapAnimation.prototype.createLayer = function (options) {
  * @param {string} layer Layer title.
  * @param {string} property Property name.
  */
-MapAnimation.prototype.loadLayerPropertyFromLocalStorage = function (layer, property) {
-  if (typeof window['localStorage'] === 'undefined') {
+MapAnimation.prototype.loadLayerPropertyFromLocalStorage = async function (layer, property) {
+  const config = this.get('config')
+  if (!config['useStorage']) {
     return null
   }
-  let item = window['localStorage'].getItem(this.get('config')['project'] + '-' + layer + '-' + property)
-  if (item != null) {
-    item = JSON.parse(item)
+  try {
+    let item = await localforage.getItem(this.get('config')['project'] + '-' + layer + '-' + property)
+    if (item != null) {
+      item = JSON.parse(item)
+    }
+    return item
+  } catch (error) {
+    return null
   }
-  return item
 }
 
 /**
@@ -1148,12 +1494,23 @@ MapAnimation.prototype.loadLayerPropertyFromLocalStorage = function (layer, prop
  * @returns {Array} Base layers.
  */
 MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) {
+  let self = this
+  const callbacks = this.get('callbacks')
   const layers = this.get('layers')
   let numLayers
+  let layer
   const layerData = []
   let template
   let visible = false
   let i
+  let animation
+  let source
+  let selectedFeature
+  let selectedFeatureId
+  let timePropertyName
+  let animationUpdatedTime = -1
+  let animationTime
+  let title
   if (layers === undefined) {
     return layerData
   }
@@ -1161,391 +1518,86 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   for (i = 0; i &lt; numLayers; i++) {
     if (layers[i]['type'] === layerType) {
       // Features may be too slow to extend
-      template = (layerType === this.layerTypes['features']) ? layers[i] : extend(true, {}, layers[i])
+      if ((layers[i]['source'] != null) &amp;&amp; (layers[i]['source']['features'] != null)) {
+        template = layers[i]
+        selectedFeature = this.getSelectedFeature()
+        if (selectedFeature != null) {
+          selectedFeatureId = selectedFeature.get('id')
+          if (selectedFeatureId != null) {
+            template['source']['features'].forEach(feature => {
+              feature['selected'] = (feature['id'] === selectedFeatureId)
+            })
+          }
+        }
+      } else {
+        template = extend(true, {}, layers[i])
+      }
       if (layerVisibility[template['title']] != null) {
         template['visible'] = layerVisibility[template['title']]
       }
       if ((!visible) &amp;&amp; (template['visible'])) {
         visible = true
       }
-      layerData.push(this.createLayer(template))
+      if (layerType === this.layerTypes['overlay']) {
+        template['zIndex'] = constants.ZINDEX['overlay']
+      }
+      layer = this.createLayer(template)
+      animation = layer.get('animation')
+      title = layer.get('title')
+      if ((layerType === this.layerTypes['features']) &amp;&amp; (animation != null) &amp;&amp; (!animation['static'])) {
+        if ((callbacks != null) &amp;&amp; (typeof callbacks['animationFeatures'] === 'function')) {
+          callbacks['animationFeatures']()
+        }
+        source = layer.getSource()
+        timePropertyName = source.get('timePropertyName')
+        source.on('addfeature', (event) => {
+          let newFeature = event['feature']
+          if ((callbacks != null) &amp;&amp; (typeof callbacks['newAnimationFeature'] === 'function')) {
+            callbacks['newAnimationFeature'](newFeature)
+          }
+          let selectedFeature = this.getSelectedFeature()
+          let selectedId = (selectedFeature != null) ? selectedFeature.getId() : null
+          let selectedLayer = this.get('selectedFeatureLayer')
+          let selectedTime = this.get('selectedFeatureTime')
+          if (newFeature == null) {
+            return
+          }
+          newFeature.setStyle(new OlStyleStyle({}))
+          newFeature.set('layerTitle', title)
+          newFeature.set('timePropertyName', timePropertyName)
+          let featureTime = newFeature.get(timePropertyName)
+          if (((newFeature.get('id') === selectedId) &amp;&amp; (newFeature.get('layerTitle') === selectedLayer)) &amp;&amp; (((selectedTime == null) || (timePropertyName == null) || (timePropertyName.length === 0)) || (featureTime === selectedTime))) {
+            this.set('selectedFeatureLayer', title)
+            this.selectFeature(newFeature)
+          }
+          if (featureTime == null) {
+            return
+          }
+          let timestamp = moment(featureTime).utc().valueOf()
+          let vectorSource = event['target']
+          let featureTimes = vectorSource.get('featureTimes')
+          if (featureTimes == null) {
+            featureTimes = []
+          }
+          featureTimes.push({
+            'time': timestamp,
+            'feature': newFeature
+          })
+          vectorSource.set('featureTimes', featureTimes)
+          animationTime = self.get('animationTime')
+          if ((timestamp > animationTime) &amp;&amp; (animationTime > animationUpdatedTime)) {
+            self.updateFeatureAnimation()
+            animationUpdatedTime = animationTime
+          }
+        })
+      }
+      layerData.push(layer)
     }
   }
-  if ((!visible) &amp;&amp; (layerType === 'map') &amp;&amp; (layerData.length > 0)) {
+  if ((!visible) &amp;&amp; (layerType === this.layerTypes['map']) &amp;&amp; (layerData.length > 0)) {
     layerData[0].set('visible', true)
   }
   return layerData
-}
-
-/**
- * Loads a new data layer.
- * @param layer Layer template based on user configurations.
- * @param mapLayers Loaded data layers.
- * @param {Array} extent Extent of overlays to be loaded.
- * @param {number} loadId Identifier for loading instance.
- */
-MapAnimation.prototype.loadOverlay = function (layer, mapLayers, extent, loadId) {
-  const self = this
-  const config = self.get('config')
-  const animation = layer['animation']
-  const absBeginTime = /** @type {number} */ (this.get('animationBeginTime'))
-  const newOverlay = false
-  let layerTime
-  let layerOptions
-  let layerVisibility
-  let currentVisibility
-  let prevLayerTime = Number.NEGATIVE_INFINITY
-  let i
-  let j
-  let len
-  let numIntervalsLen
-  let iMin
-  let iMax
-  let mapLayer
-  let largest
-  let t
-  let tEnd
-  let k
-  let tAnimation
-  let tk
-  let tkEnd
-  let currentTime
-  const epsilon = this.layerResolution
-  let resolutionTime = /** @type {number} */ (self.get('animationResolutionTime'))
-  let filteredCapabTimes = []
-  let capabTimesDefined = false
-  let deltaTime
-  layerVisibility = this.get('map').get('layerVisibility')
-  currentVisibility = layerVisibility[layer['title']]
-  if (typeof currentVisibility === 'undefined') {
-    currentVisibility = layer['visible']
-  }
-  if ((typeof currentVisibility !== 'undefined') &amp;&amp; (!currentVisibility)) {
-    return
-  }
-  if (Array.isArray(animation['capabTimes'])) {
-    filteredCapabTimes = animation['capabTimes'].filter(capabTime => isNumeric(capabTime))
-    animation['capabTimes'] = filteredCapabTimes
-  }
-  if (typeof animation['capabResolutionTime'] === 'number') {
-    if (resolutionTime == null) {
-      resolutionTime = animation['capabResolutionTime']
-    }
-    animation['beginTime'] = absBeginTime + Math.floor((animation['beginTime'] - absBeginTime) / resolutionTime) * resolutionTime
-    animation['beginTime'] = animation['beginTime'] &lt;= animation['capabBeginTime'] ? animation['beginTime'] + Math.ceil((animation['capabBeginTime'] - animation['beginTime']) / animation['resolutionTime']) * animation['resolutionTime'] : animation['capabBeginTime'] + Math.ceil((animation['beginTime'] - animation['capabBeginTime']) / animation['capabResolutionTime']) * animation['capabResolutionTime']
-    if ((typeof animation['resolutionTime'] !== 'number') || (animation['resolutionTime'] &lt; animation['capabResolutionTime'])) {
-      animation['resolutionTime'] = animation['capabResolutionTime']
-    }
-    animation['beginTime'] -= Math.ceil((animation['beginTime'] - absBeginTime) / animation['resolutionTime']) * animation['resolutionTime']
-    if (!isNumeric(animation['endTime'])) {
-      animation['endTime'] = animation['capabEndTime']
-    } else if (isNumeric(animation['capabEndTime'])) {
-      animation['endTime'] = Math.min(animation['endTime'], animation['capabEndTime'])
-    }
-    iMin = 0
-    iMax = Math.ceil((animation['endTime'] - animation['beginTime']) / animation['resolutionTime'])
-    animation['endTime'] = animation['beginTime'] + iMax * animation['resolutionTime']
-  } else if (filteredCapabTimes.length > 0) {
-    if (typeof animation['resolutionTime'] !== 'number') {
-      animation['resolutionTime'] = resolutionTime
-    }
-    if (animation['resolutionTime'] != null) {
-      filteredCapabTimes = animation['capabTimes'].reduce((capabTimes, capabTime) => {
-        const numCapabTimes = capabTimes.length
-        if ((numCapabTimes >= 2) &amp;&amp; (capabTimes[numCapabTimes - 1] - capabTimes[numCapabTimes - 2] &lt; animation['resolutionTime']) &amp;&amp; (capabTime - capabTimes[numCapabTimes - 2] &lt; animation['resolutionTime'])) {
-          capabTimes[numCapabTimes - 1] = capabTime
-        } else {
-          capabTimes.push(capabTime)
-        }
-        return capabTimes
-      }, [])
-      animation['capabTimes'] = filteredCapabTimes
-    }
-    for (i = 1, len = animation['capabTimes'].length; i &lt; len; i++) {
-      if (animation['capabTimes'][i] >= animation['beginTime']) {
-        iMin = i - 1
-        animation['beginTime'] = animation['capabTimes'][iMin]
-        break
-      }
-    }
-    for (i = len - 1; i >= 0; i--) {
-      if (animation['capabTimes'][i] &lt;= animation['endTime']) {
-        iMax = i
-        break
-      }
-    }
-  } else {
-    if (typeof animation['resolutionTime'] !== 'number') {
-      animation['resolutionTime'] = resolutionTime
-    }
-    iMin = 0
-    iMax = Math.ceil((animation['endTime'] - animation['beginTime']) / animation['resolutionTime'])
-    animation['endTime'] = animation['beginTime'] + iMax * animation['resolutionTime']
-  }
-
-  const loadStart = ({target}) => {
-    let i
-    const config = self.get('config')
-    const loadId = target.get('loadId')
-    let numIntervalItemsLength
-    let layerSwitcherContainer
-    let layerTime
-    let intervalIndex
-    if (target.get('loadId') !== self.loadId) {
-      return
-    }
-    if (self.finishedId &lt; target.get('loadId')) {
-      // Todo: toteuta nämä funktioina LayerSwitcherissä
-      self.loading = true
-      layerSwitcherContainer = document.getElementById(config['layerSwitcherContainer'])
-      layerSwitcherContainer.classList.add('disabled')
-      layerSwitcherContainer.parentNode.classList.remove('shown')
-      Array.from(document.querySelectorAll('.layer-switcher input')).forEach((layerSwitcher) => {
-        layerSwitcher.disabled = true
-      })
-      if ((config['showLoadProgress'])) {
-        Array.from(document.getElementsByClassName(config['spinnerContainer'])).forEach((spinner) => {
-          spinner.style.display = ''
-        })
-      }
-    }
-    let tilesLoading = target.get('tilesLoading')
-    if (tilesLoading === undefined) {
-      tilesLoading = 0
-    }
-    tilesLoading++
-    target.set('tilesLoading', tilesLoading)
-    // Interval status
-    layerTime = target.get('layerTime')
-    intervalIndex = -1
-    numIntervalItemsLength = self.numIntervalItems[loadId].length
-    for (i = 0; i &lt; numIntervalItemsLength; i++) {
-      if (layerTime === self.numIntervalItems[loadId][i]['endTime']) {
-        intervalIndex = i
-        break
-      }
-    }
-    if (intervalIndex >= 0) {
-      if (self.numIntervalItems[loadId] === undefined) {
-        return
-      }
-      if ((self.numIntervalItems[loadId][intervalIndex]['status'] !== constants.LOADING_STATUS['loading']) &amp;&amp; (self.numIntervalItems[loadId][intervalIndex]['status'] !== constants.LOADING_STATUS['error']) &amp;&amp; (self.numIntervalItems[loadId][intervalIndex]['status'] !== constants.LOADING_STATUS['ready'])) {
-        self.numIntervalItems[loadId][intervalIndex]['status'] = constants.LOADING_STATUS['loading']
-        if (target.get('loadId') !== self.loadId) {
-          return
-        }
-        self.dispatchEvent('updateLoadState')
-      }
-    }
-  }
-  const loadEnd = ({target}) => {
-    let tilesLoaded = target.get('tilesLoaded')
-    const loadId = target.get('loadId')
-    let numIntervalItemsLength
-    let layerTime
-    let intervalIndex
-
-    if (target.get('loadId') !== self.loadId) {
-      return
-    }
-    if (tilesLoaded == null) {
-      tilesLoaded = 0
-    }
-    tilesLoaded++
-    target.set('tilesLoaded', tilesLoaded)
-    if (target.get('tilesLoading') &lt;= target.get('tilesLoaded')) {
-      if (!target.get('finished')) {
-        target.set('finished', true)
-        self.asyncLoadCount[loadId]--
-        self.dispatchEvent('updateLoadQueue')
-      }
-      // Interval status
-      layerTime = target.get('layerTime')
-      intervalIndex = -1
-      numIntervalItemsLength = self.numIntervalItems[loadId].length
-      for (i = 0; i &lt; numIntervalItemsLength; i++) {
-        if (layerTime === self.numIntervalItems[loadId][i]['endTime']) {
-          intervalIndex = i
-          break
-        }
-      }
-      if (intervalIndex >= 0) {
-        if (self.numIntervalItems[loadId] === undefined) {
-          return
-        }
-        self.numIntervalItems[loadId][intervalIndex]['loaded']++
-        self.numIntervalItems[loadId][intervalIndex]['loaded'] = Math.min(self.numIntervalItems[loadId][intervalIndex]['loaded'], self.numIntervalItems[loadId][intervalIndex]['toBeLoaded'])
-        if (target.get('loadId') !== self.loadId) {
-          return
-        }
-        self.dispatchEvent('updateLoadState')
-      }
-    }
-  }
-  const loadError = ({target}) => {
-    let tilesLoaded = target.get('tilesLoaded')
-    const callbacks = self.get('callbacks')
-    const loadId = target.get('loadId')
-    let numIntervalItemsLength
-    let layerTime
-    let intervalIndex
-
-    if (target.get('loadId') !== self.loadId) {
-      return
-    }
-    if (tilesLoaded == null) {
-      tilesLoaded = 0
-    }
-    tilesLoaded++
-    target.set('tilesLoaded', tilesLoaded)
-    if ((target.get('tilesLoading') &lt;= target.get('tilesLoaded')) &amp;&amp; (!target.get('finished'))) {
-      target.set('finished', true)
-      self.asyncLoadCount[loadId]--
-      self.dispatchEvent('updateLoadQueue')
-    }
-
-    // Interval status
-    layerTime = target.get('layerTime')
-    intervalIndex = -1
-    numIntervalItemsLength = self.numIntervalItems[loadId].length
-    for (i = 0; i &lt; numIntervalItemsLength; i++) {
-      if (layerTime === self.numIntervalItems[loadId][i]['endTime']) {
-        intervalIndex = i
-        break
-      }
-    }
-    if (intervalIndex >= 0) {
-      if (self.numIntervalItems[loadId] === undefined) {
-        return
-      }
-      if (self.numIntervalItems[loadId][intervalIndex]['status'] !== constants.LOADING_STATUS['error']) {
-        self.numIntervalItems[loadId][intervalIndex]['status'] = constants.LOADING_STATUS['error']
-        if (target.get('loadId') !== self.loadId) {
-          return
-        }
-        self.dispatchEvent('updateLoadState')
-      }
-    }
-    if ((callbacks != null) &amp;&amp; (typeof callbacks['loadError'] === 'function')) {
-      callbacks['loadError'](target.getParams())
-    }
-  }
-  currentTime = Date.now()
-  for (i = iMin; i &lt;= iMax; i++) {
-    capabTimesDefined = (Array.isArray(animation['capabTimes']) &amp;&amp; (animation['capabTimes'].length > 0))
-    layerTime = capabTimesDefined ? animation['capabTimes'][i] : animation['beginTime'] + i * animation['resolutionTime']
-    // Ignore future observations (empty images)
-    if ((layerTime >= currentTime - config['ignoreObsOffset']) &amp;&amp; (layer['type'] === self.layerTypes['observation'])) {
-      continue
-    }
-    deltaTime = capabTimesDefined ? animation['capabTimes'][Math.min(i + 1, iMax)] - animation['capabTimes'][i] : animation['resolutionTime']
-    // Ignore forecast history
-    if ((layerTime &lt;= currentTime - deltaTime) &amp;&amp; (layer['type'] === self.layerTypes['forecast'])) {
-      continue
-    }
-    // Checking maximum resolution
-    if (layerTime - prevLayerTime &lt; epsilon) {
-      continue
-    }
-    prevLayerTime = layerTime
-    numIntervalsLen = this.numIntervalItems[loadId].length
-    if (numIntervalsLen === 0) {
-      this.numIntervalItems[loadId].push({
-        'beginTime': Number.NEGATIVE_INFINITY,
-        'endTime': layerTime,
-        'status': '',
-        'loaded': 0,
-        'toBeLoaded': 1
-      })
-    } else {
-      for (j = 0; j &lt; numIntervalsLen; j++) {
-        if (layerTime === this.numIntervalItems[loadId][j]['endTime']) {
-          this.numIntervalItems[loadId][j]['toBeLoaded']++
-          break
-        } else if (layerTime &lt; this.numIntervalItems[loadId][j]['endTime']) {
-          this.numIntervalItems[loadId].splice(j, 0, {
-            'beginTime': this.numIntervalItems[loadId][j]['beginTime'],
-            'endTime': layerTime,
-            'status': '',
-            'loaded': 0,
-            'toBeLoaded': 1
-          })
-          this.numIntervalItems[loadId][j + 1]['beginTime'] = layerTime
-          break
-        } else if (j === numIntervalsLen - 1) {
-          this.numIntervalItems[loadId].push({
-            'beginTime': this.numIntervalItems[loadId][j]['endTime'],
-            'endTime': layerTime,
-            'status': '',
-            'loaded': 0,
-            'toBeLoaded': 1
-          })
-        }
-      }
-    }
-
-    layerOptions = {
-      'extent': extent,
-      'animation': {
-        'animationTime': layerTime
-      },
-      'sourceOptions': {
-        'params': {
-          'TIME': new Date(layerTime).toISOString()
-        }
-      }
-    }
-    layerOptions = /** @type {olx.layer.TileOptions} */ (extend(true, layerOptions, layer))
-    layerOptions['defaultOpacity'] = (layer['opacity'] !== undefined) ? layer['opacity'] : 1
-    layerOptions['sourceProperties'] = {
-      'loadId': loadId,
-      'layerTime': layerTime,
-      'tilesLoaded': 0,
-      'tilesLoading': 0
-    }
-    layerOptions['visible'] = true
-    // Todo: Generalize
-    if (layerOptions['className'] === 'ImageWMS') {
-      layerOptions['sourceOn'] = {
-        'imageloadstart': loadStart,
-        'imageloadend': loadEnd,
-        'imageloaderror': loadError
-      }
-      mapLayer = new OlLayerImage(layerOptions)
-    } else {
-      layerOptions['sourceOn'] = {
-        'tileloadstart': loadStart,
-        'tileloadend': loadEnd,
-        'tileloaderror': loadError
-      }
-      mapLayer = new OlLayerTile(layerOptions)
-    }
-    largest = true
-    // Add layer to an existing layer group
-    if (!newOverlay) {
-      t = layerTime
-      tEnd = animation['endTime']
-      k = 0
-      while (k &lt; mapLayers.getLength()) {
-        tAnimation = mapLayers.item(k).get('animation')
-        tk = tAnimation['animationTime']
-        tkEnd = tAnimation['endTime']
-        // When time values are identical, observation is shown, not forecast.
-        if ((t &lt; tk) || ((t === tk) &amp;&amp; (layer['type'] === this.layerTypes['forecast']) &amp;&amp; (mapLayers.item(k).get('type') === this.layerTypes['observation']))) {
-          mapLayers.insertAt(k, mapLayer)
-          largest = false
-          break
-        }
-        k++
-      }
-    }
-    if (largest) {
-      mapLayers.push(mapLayer)
-    }
-  }
-  if (this.numIntervalItems[loadId].length > 2) {
-    this.numIntervalItems[loadId][0]['beginTime'] = 2 * this.numIntervalItems[loadId][0]['endTime'] - this.numIntervalItems[loadId][1]['endTime']
-  }
 }
 
 /**
@@ -1599,7 +1651,7 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
   }
 
   this.numIntervalItems[loadId] = []
-  if (isNumeric(numIntervals)) {
+  if ((isNumeric(numIntervals)) &amp;&amp; (numIntervals > 0)) {
     for (i = 0; i &lt; numIntervals; i++) {
       this.numIntervalItems[loadId].push({
         'beginTime': animationBeginTime + (i - 1) * animationResolutionTime,
@@ -1706,14 +1758,14 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
       }
       if (newOverlay) {
         animationGroups.push(mapLayers.getArray())
-        pGrp.push(-1)
+        pGrp.push(0)
         opacity = (layer['opacity'] != null) ? layer['opacity'] : 1
         overlay = new OlLayerGroup({
           'title': title,
           'layers': mapLayers,
           'legends': layerLegend !== null ? [layerLegend] : [],
           'visible': mapLayers.getLength() > 0 ? true : layer['visible'],
-          'opacity': layer['visible'] ? opacity : 0,
+          'opacity': opacity,
           'editOpacity': layer['editOpacity']
         })
         overlay.set('defaultOpacity', opacity)
@@ -1740,67 +1792,6 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
 }
 
 /**
- * Arrange data layer loading order.
- * @param {Array} overlays Data layers to be loaded.
- * @param {number} loadId Identifier for loading instance.
- */
-MapAnimation.prototype.scheduleOverlayLoading = function (overlays, loadId) {
-  const self = this
-  const asyncLoadQueue = {}
-  const animationTime = /** @type {number} */ (this.get('animationTime'))
-  let i
-  let j
-  let k
-  let len
-  let overlay
-  let layers
-  let jMax
-  let kAnimationTime
-  let q
-  let r
-  let item
-  let asyncLoadItem
-  let layerSwitcher
-  asyncLoadQueue[loadId] = []
-  for (i = 0, len = overlays.length; i &lt; len; i++) {
-    overlay = overlays[i]
-    layers = overlay.getLayers()
-    jMax = layers.getLength()
-    loopLayers: for (j = 0; j &lt; jMax; j++) {
-      item = layers.item(j)
-      asyncLoadItem = {
-        'overlay': i,
-        'layer': j,
-        'animationTime': item.get('animation')['animationTime']
-      }
-      // Optimizing rules for loading queue location:
-      // 1. Future times before past times
-      // 2. Smaller time values before greater ones
-      const p = asyncLoadItem['animationTime'] >= animationTime
-      for (k = 0; k &lt; asyncLoadQueue[loadId].length; k++) {
-        kAnimationTime = asyncLoadQueue[loadId][k]['animationTime']
-        q = kAnimationTime >= animationTime
-        r = asyncLoadItem['animationTime'] &lt;= kAnimationTime
-        if ((p || !q) &amp;&amp; (p || r) &amp;&amp; (!q || r)) {
-          asyncLoadQueue[loadId].splice(k, 0, asyncLoadItem)
-          continue loopLayers
-        }
-      }
-      asyncLoadQueue[loadId].push(asyncLoadItem)
-    }
-  }
-  self.asyncLoadQueue = asyncLoadQueue
-  if (asyncLoadQueue[loadId].length === 0) {
-    layerSwitcher = self.get('layerSwitcher')
-    if (layerSwitcher != null) {
-      Array.from(document.querySelectorAll('.layer-switcher input:disabled')).forEach((layerSwitcher) => {
-        layerSwitcher.disabled = false
-      })
-    }
-  }
-}
-
-/**
  * Create legend urls based on layer configuration.
  * @param {Object} layer Map layer.
  * @returns {Array} Legend urls.
@@ -1814,7 +1805,7 @@ MapAnimation.prototype.getLegendUrls = layer => {
   hasLegend = layer['animation']['hasLegend']
   if (typeof hasLegend === 'string') {
     // Explicit legend URL
-    urls.push(encodeURI(hasLegend))
+    urls.push(hasLegend)
   } else {
     if (!(layer['sourceOptions'] &amp;&amp; layer['sourceOptions']['params'])) {
       return urls
@@ -1828,6 +1819,8 @@ MapAnimation.prototype.getLegendUrls = layer => {
       layerIds = params['LAYERS']
     } else if (typeof params['layers'] !== 'undefined') {
       layerIds = params['layers']
+    } else if (typeof params['Layers'] !== 'undefined') {
+      layerIds = params['Layers']
     } else {
       return urls
     }
@@ -1846,7 +1839,7 @@ MapAnimation.prototype.getLegendUrls = layer => {
       // because it was not included there yet.
       baseUrl += '&amp;'
     }
-    imageFormat = params['format'] || params['FORMAT'] || 'image/png'
+    imageFormat = params['format'] || params['FORMAT'] || params['Format'] || 'image/png'
     baseUrl += `REQUEST=GetLegendGraphic&amp;FORMAT=${encodeURIComponent(imageFormat)}&amp;LAYER=`
     // Single layer may contain multiple layer IDs.
     // Provide separate URL for each layer ID.
@@ -1867,28 +1860,25 @@ MapAnimation.prototype.getLegendUrls = layer => {
  * @param {number} defaultLegend Index of visible default legend.
  */
 MapAnimation.prototype.generateLegendFigures = function (legends, defaultLegend) {
-  let config,
-    containers,
-    img,
-    captionText,
-    createFigure
+  const config = this.get('config')
+  let containers
+  let createFigure
   // Are legends already drawn?
   if (this.get('legendsCreated')) {
     return
   }
-  config = this.get('config')
   containers = Array.from(document.getElementsByClassName(config['legendContainer']))
   containers.forEach((container) => {
     container.innerHTML = ''
     container.classList.add(constants.LEGEND_CONTAINER_CLASS)
   })
   createFigure = (legend, visible) => {
-    let caption
+    let img
+    const caption = document.createElement('figcaption')
+    const captionText = document.createTextNode(legend['title'])
     const figure = document.createElement('figure')
     figure.style.display = (visible ? '' : 'none')
     figure.classList.add(constants.LEGEND_FIGURE_CLASS_PREFIX + legend['id'].toString(10))
-    caption = document.createElement('figcaption')
-    captionText = document.createTextNode(legend['title'])
     caption.appendChild(captionText)
     figure.appendChild(caption)
     if (legend['source'] !== undefined) {
@@ -1904,9 +1894,9 @@ MapAnimation.prototype.generateLegendFigures = function (legends, defaultLegend)
       container.appendChild(figure)
     })
   }
-  for (let i = 0; i &lt; legends.length; i++) {
-    createFigure(legends[i], i === defaultLegend)
-  }
+  legends.forEach((legend, index) => {
+    createFigure(legend, index === defaultLegend)
+  })
   this.set('legendsCreated', true)
 }
 
@@ -1925,6 +1915,53 @@ MapAnimation.prototype.setAnimationTime = function (animationTime) {
     callbacks['time'](animationTime)
   }
   this.updateAnimation()
+  this.updateFeatureAnimation()
+}
+
+MapAnimation.prototype.getFirstAnimationTime = function () {
+  const key = this.latestLoadId
+  if (key == null) {
+    return null
+  }
+  const intervals = this.numIntervalItems[key]
+  if ((intervals == null) || (intervals.length === 0)) {
+    return null
+  }
+  return intervals[0]['beginTime']
+}
+
+MapAnimation.prototype.getLastAnimationTime = function () {
+  const key = this.latestLoadId
+  if (key == null) {
+    return null
+  }
+  const intervals = this.numIntervalItems[key]
+  if ((intervals == null) || (intervals.length === 0)) {
+    return null
+  }
+  return intervals[intervals.length - 1]['endTime']
+}
+
+MapAnimation.prototype.getPreviousAnimationTime = function (animationTime) {
+  let i
+  const key = this.latestLoadId
+  if (key == null) {
+    return null
+  }
+  const intervals = this.numIntervalItems[key]
+  if (intervals == null) {
+    return null
+  }
+  const lastIndex = intervals.length - 1
+  if (lastIndex &lt; 0) {
+    return null
+  }
+  for (i = lastIndex; i >= 0; i--) {
+    if (intervals[i]['endTime'] &lt; animationTime) {
+      return intervals[i]['endTime']
+    }
+  }
+  return intervals[lastIndex]['endTime']
 }
 
 MapAnimation.prototype.getNextAnimationTime = function (animationTime) {
@@ -1949,61 +1986,35 @@ MapAnimation.prototype.getNextAnimationTime = function (animationTime) {
   return intervals[0]['endTime']
 }
 
-/**
- * Updates map animation.
- */
-MapAnimation.prototype.updateAnimation = function () {
-  let i
-  let mapLayers
-  let nextPGrp
-  const newPGrp = []
-  const animationGroups = this.get('animationGroups')
-  const numGroups = animationGroups.length
-  const pGrp = this.get('pGrp')
-  const currentTime = Date.now()
-  const time = /** @type {number} */ (this.get('animationTime'))
-  let animation
-  let animationTime
-  let nextAnimationTime = this.getNextAnimationTime(time)
-  if (nextAnimationTime == null) {
+MapAnimation.prototype.updateFeatureAnimation = function () {
+  let animationTime = /** @type {number} */ (this.get('animationTime'))
+  let lastAnimationTime = this.getLastAnimationTime()
+  let previousAnimationTime = this.getPreviousAnimationTime(animationTime)
+  const config = this.get('config')
+  const featureGroupName = config['featureGroupName']
+  const map = this.get('map')
+  let layers
+  if (map == null) {
     return
   }
-  // Collect updating information
-  for (i = 0; i &lt; numGroups; i++) {
-    mapLayers = animationGroups[i]
-    // Restart from beginning
-    if ((pGrp[i] > -1) &amp;&amp; (mapLayers[pGrp[i]].get('animation')['animationTime'] > time)) {
-      nextPGrp = 0
-    } else {
-      nextPGrp = pGrp[i] + 1
+  layers = this.getLayersByGroup(featureGroupName)
+  layers.forEach((layer) => {
+    let source = layer.getSource()
+    if (source == null) {
+      return
     }
-    while ((nextPGrp &lt; mapLayers.length) &amp;&amp; (mapLayers[nextPGrp].get('animation')['animationTime'] &lt; nextAnimationTime)) {
-      nextPGrp = nextPGrp + 1
+    let featureTimes = source.get('featureTimes')
+    if (featureTimes == null) {
+      return
     }
-    newPGrp.push(nextPGrp - 1)
-  }
-  // Update
-  animationTime = /** @type {number} */ (this.get('animationTime'))
-  for (i = 0; i &lt; numGroups; i++) {
-    mapLayers = animationGroups[i]
-    if (pGrp[i] >= 0) {
-      animation = mapLayers[pGrp[i]].get('animation')
-      if (((pGrp[i] === mapLayers.length - 1) &amp;&amp; (mapLayers[pGrp[i]].get('type') === this.layerTypes['observation']) &amp;&amp; (animationTime >= this.getNextAnimationTime(animation['animationTime']))) || ((pGrp[i] === 0) &amp;&amp; (mapLayers[pGrp[i]].get('type') === this.layerTypes['forecast']) &amp;&amp; (animationTime &lt; currentTime))) {
-        // Hide previous frame
-        mapLayers[pGrp[i]].setOpacity(0)
-        continue
+    featureTimes.forEach((featureTime, index) => {
+      if (((previousAnimationTime === lastAnimationTime) || (previousAnimationTime &lt; featureTime['time'])) &amp;&amp; (featureTime['time'] &lt;= animationTime)) {
+        featureTime['feature'].setStyle(null)
+      } else {
+        featureTime['feature'].setStyle(new OlStyleStyle({}))
       }
-    }
-    if ((pGrp[i] !== newPGrp[i]) &amp;&amp; (pGrp[i] >= 0)) {
-      // Hide previous frame
-      mapLayers[pGrp[i]].setOpacity(0)
-    }
-    pGrp[i] = newPGrp[i]
-    if ((pGrp[i] >= 0) &amp;&amp; (!((pGrp[i] === 0) &amp;&amp; (mapLayers[pGrp[i]].get('type') === this.layerTypes['forecast']) &amp;&amp; (animationTime &lt; currentTime)))) {
-      // Show current frame
-      mapLayers[pGrp[i]].setOpacity(1)
-    }
-  }
+    })
+  })
 }
 
 /**
@@ -2013,24 +2024,28 @@ MapAnimation.prototype.destroyAnimation = function () {
   this.actionEvents.removeAllListeners()
   this.variableEvents.removeAllListeners()
   const config = this.get('config')
-  let elementNames = [config['container'], config['mapContainer'], config['legendContainer'], config['spinnerContainer']]
+  let elementNames = [config['legendContainer'], config['mapContainer'], config['container']]
   let map = this.get('map')
   if (map !== null) {
     map.setTarget(null)
+    map.setLayerGroup(new OlLayerGroup())
     this.set('map', null)
   }
-  this.set('map', null)
   this.set('layers', null)
+  this.set('mapLayers', null)
   this.set('overlayTitles', null)
   this.set('extent', null)
   this.set('marker', null)
   this.set('callbacks', null)
-  this.set('animationGroups', null)
+  this.set('animationGroups', [])
   this.set('legends', null)
   this.set('pGrp', null)
   this.set('layerSwitcher', null)
   elementNames.forEach((elementName) => {
-    document.getElementById(elementName).innerHTML = ''
+    let element = document.getElementById(elementName)
+    if (element != null) {
+      document.getElementById(elementName).innerHTML = ''
+    }
     Array.from(document.getElementsByClassName(elementName)).forEach((element) => {
       element.innerHTML = ''
     })
@@ -2043,6 +2058,10 @@ MapAnimation.prototype.destroyAnimation = function () {
  * @returns {Array} Layers array.
  */
 MapAnimation.prototype.getLayersByGroup = function (groupTitle) {
+  let emptyCollection = new OlCollection()
+  if ((groupTitle == null) || (groupTitle.length === 0)) {
+    return emptyCollection
+  }
   let map = this.get('map')
   let layerGroups = (map != null) ? map.getLayers() : new OlCollection()
   let numLayerGroups = layerGroups.getLength()
@@ -2053,7 +2072,7 @@ MapAnimation.prototype.getLayersByGroup = function (groupTitle) {
       return layerGroup.getLayers()
     }
   }
-  return null
+  return emptyCollection
 }
 
 /**
@@ -2101,28 +2120,39 @@ MapAnimation.prototype.getMap = function () {
 /**
  * Gets vector layer features.
  * @param layerTitle {string} Vector layer title.
+ * @param invisible {boolean=} Returns also invisible layers.
  * @return {Array&lt;Object>} Features.
  */
-MapAnimation.prototype.getFeatures = function (layerTitle) {
+MapAnimation.prototype.getFeatures = function (layerTitle, invisible = false) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
+  const surfaceGroupName = config['surfaceGroupName']
   const map = this.get('map')
+  let featureLayers
+  let surfaceLayers
+  let vectorLayers
   let layers
   let layer
   let numLayers
   let i
+  let j
   if (map == null) {
     return []
   }
-  layers = this.getLayersByGroup(featureGroupName)
-  numLayers = layers.getLength()
-  for (i = 0; i &lt; numLayers; i++) {
-    layer = layers.item(i)
-    if (!layer.get('visible')) {
-      continue
-    }
-    if (layer.get('title') === layerTitle) {
-      return layer.getSource().getFeatures()
+  featureLayers = this.getLayersByGroup(featureGroupName)
+  surfaceLayers = this.getLayersByGroup(surfaceGroupName)
+  vectorLayers = [featureLayers, surfaceLayers]
+  for (i = 0; i &lt; 2; i++) {
+    layers = vectorLayers[i]
+    numLayers = layers.getLength()
+    for (j = 0; j &lt; numLayers; j++) {
+      layer = layers.item(j)
+      if ((!invisible) &amp;&amp; (!layer.get('visible'))) {
+        continue
+      }
+      if (layer.get('title') === layerTitle) {
+        return layer.getSource().getFeatures()
+      }
     }
   }
   return []
@@ -2137,8 +2167,12 @@ MapAnimation.prototype.getFeatures = function (layerTitle) {
  */
 MapAnimation.prototype.getFeaturesAt = function (layerTitle, coordinate, tolerance) {
   const config = this.get('config')
-  const baseGroupName = config['featureGroupName']
+  const featureGroupName = config['featureGroupName']
+  const surfaceGroupName = config['surfaceGroupName']
   const map = this.get('map')
+  let featureLayers
+  let surfaceLayers
+  let vectorLayers
   let layers
   let layer
   let numLayers
@@ -2150,39 +2184,45 @@ MapAnimation.prototype.getFeaturesAt = function (layerTitle, coordinate, toleran
   let featuresAtCoordinate = []
   const clickedPixel = map.getPixelFromCoordinate(coordinate)
   let featurePixel
+  let i
   let j
   let k
   let l
-  layers = this.getLayersByGroup(baseGroupName)
-  numLayers = layers.getLength()
-  for (j = 0; j &lt; numLayers; j++) {
-    layer = layers.item(j)
-    if (!layer.get('visible')) {
-      continue
-    }
-    if (layer.get('title') === layerTitle) {
-      source = layer.getSource()
-      featuresAtCoordinate = source.getFeaturesAtCoordinate(coordinate)
-      numFeaturesAtCoordinate = featuresAtCoordinate.length
-      // Point features
-      features = source.getFeatures()
-      numFeatures = features.length
-      loopFeatures:
-        for (k = 0; k &lt; numFeatures; k++) {
-          for (l = 0; l &lt; numFeaturesAtCoordinate; l++) {
-            if (featuresAtCoordinate[l].getId() === features[k].getId()) {
-              continue loopFeatures
+  featureLayers = this.getLayersByGroup(featureGroupName)
+  surfaceLayers = this.getLayersByGroup(surfaceGroupName)
+  vectorLayers = [featureLayers, surfaceLayers]
+  for (i = 0; i &lt; 2; i++) {
+    layers = vectorLayers[i]
+    numLayers = layers.getLength()
+    for (j = 0; j &lt; numLayers; j++) {
+      layer = layers.item(j)
+      if (!layer.get('visible')) {
+        continue
+      }
+      if (layer.get('title') === layerTitle) {
+        source = layer.getSource()
+        featuresAtCoordinate = source.getFeaturesAtCoordinate(coordinate)
+        numFeaturesAtCoordinate = featuresAtCoordinate.length
+        // Point features
+        features = source.getFeatures()
+        numFeatures = features.length
+        loopFeatures:
+          for (k = 0; k &lt; numFeatures; k++) {
+            for (l = 0; l &lt; numFeaturesAtCoordinate; l++) {
+              if (featuresAtCoordinate[l].getId() === features[k].getId()) {
+                continue loopFeatures
+              }
+            }
+            geometry = features[k].getGeometry()
+            if (geometry.getType() === 'Point') { // Todo: MultiPoint
+              featurePixel = map.getPixelFromCoordinate(geometry.getCoordinates())
+              if (Math.sqrt((featurePixel[0] - clickedPixel[0]) ** 2 + (featurePixel[1] - clickedPixel[1]) ** 2) &lt;= tolerance) {
+                featuresAtCoordinate.push(features[k])
+              }
             }
           }
-          geometry = features[k].getGeometry()
-          if (geometry.getType() === 'Point') { // Todo: MultiPoint
-            featurePixel = map.getPixelFromCoordinate(geometry.getCoordinates())
-            if (Math.sqrt((featurePixel[0] - clickedPixel[0]) ** 2 + (featurePixel[1] - clickedPixel[1]) ** 2) &lt;= tolerance) {
-              featuresAtCoordinate.push(features[k])
-            }
-          }
-        }
-      return featuresAtCoordinate
+        return featuresAtCoordinate
+      }
     }
   }
   return []
@@ -2235,12 +2275,15 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
   let layer
   let numLayers
   let i
-  layers = this.getLayersByGroup(config['overlayGroupName'])
+  let source
+  layers = this.getLayersByGroup(config['featureGroupName'])
   numLayers = layers.getLength()
   for (i = 0; i &lt; numLayers; i++) {
     layer = layers.item(i)
     if (layer.get('title') === layerTitle) {
-      layer.getSource().clear()
+      source = layer.getSource()
+      source.clear()
+      source.refresh()
       return
     }
   }
@@ -2250,17 +2293,41 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
  * Shows a popup window on the map.
  * @param content {string} HTML content of the popup window.
  * @param coordinate {Array} Popup coordinates.
+ * @param append {boolean=} Append content into popup, if it already exists and is located at the same coordinates.
+ * @param type {string=} Popup type.
  */
-MapAnimation.prototype.showPopup = function (content, coordinate) {
+MapAnimation.prototype.showPopup = function (content, coordinate, append, type) {
+  if (this.contextMenu.isOpen()) {
+    if (type === 'tooltip') {
+      return
+    }
+    this.contextMenu.close()
+  }
   const popupContent = document.getElementById(`${this.get('config')['mapContainer']}-popup-content`)
-  popupContent['innerHTML'] = content
-  this.get('overlay').setPosition(coordinate)
+  let overlay = this.get('overlay')
+  let overlayPosition = overlay.get('position')
+
+  if ((append) &amp;&amp; (overlayPosition != null) &amp;&amp; (overlayPosition[0] === coordinate[0]) &amp;&amp; (overlayPosition[1] === coordinate[1])) {
+    // Todo: improve popup to have structure instead of single string
+    if (!popupContent['innerHTML'].includes(content)) {
+      popupContent['innerHTML'] += content
+    }
+  } else {
+    if (popupContent['innerHTML'] !== content) {
+      popupContent['innerHTML'] = content
+    }
+    overlay.setPosition(coordinate)
+  }
+  if (type != null) {
+    popupContent.parentElement.setAttribute('data-fmi-metoclient-popup-type', type)
+  }
 }
 
 /**
  * Hides popup window on the map.
  */
 MapAnimation.prototype.hidePopup = function () {
+  const popupContent = document.getElementById(`${this.get('config')['mapContainer']}-popup-content`)
   const mapContainer = this.get('config')['mapContainer']
   let popupCloser
   const overlay = this.get('overlay')
@@ -2271,6 +2338,8 @@ MapAnimation.prototype.hidePopup = function () {
   if (popupCloser != null) {
     popupCloser.blur()
   }
+  popupContent['innerHTML'] = ''
+  popupContent.parentElement.setAttribute('data-fmi-metoclient-popup-type', '')
 }
 
 /**
@@ -2314,11 +2383,12 @@ MapAnimation.prototype.requestViewUpdate = function () {
  * @param layerTitle {string} Layer title.
  * @param visibility {boolean} Layer visibility.
  */
-MapAnimation.prototype.setLayerVisible = function (layerTitle, visibility) {
+MapAnimation.prototype.setLayerVisible = async function (layerTitle, visibility) {
   const map = this.get('map')
   const localStorageId = this.get('config')['project'] + '-' + layerTitle + '-visible'
   const layerVisibility = map.get('layerVisibility')
   const layer = this.getLayer(layerTitle)
+  const config = this.get('config')
   let updateVisibility
   if (layerVisibility[layerTitle] == null) {
     if (this.loading) {
@@ -2328,8 +2398,12 @@ MapAnimation.prototype.setLayerVisible = function (layerTitle, visibility) {
     } else {
       layer.setVisible(visibility)
       layerVisibility[layerTitle] = visibility
-      if (typeof window['localStorage'] !== 'undefined') {
-        window['localStorage'].setItem(localStorageId, visibility)
+      try {
+        if (config['useStorage']) {
+          await localforage.setItem(localStorageId, visibility)
+        }
+      } catch (e) {
+        console.log('Storage is not supported. ' + e)
       }
       this.requestViewUpdate()
     }
@@ -2337,14 +2411,30 @@ MapAnimation.prototype.setLayerVisible = function (layerTitle, visibility) {
     layer.setVisible(visibility)
     layerVisibility[layerTitle] = visibility
     try {
-      if (typeof window['localStorage'] !== 'undefined') {
-        window['localStorage'].setItem(localStorageId, visibility)
+      if (config['useStorage']) {
+        await localforage.setItem(localStorageId, visibility)
       }
     } catch (e) {
-      console.log('Local storage is not supported. ' + e)
+      console.log('Storage is not supported. ' + e)
     }
     this.requestViewUpdate()
   }
+}
+
+/**
+ * Sets marker visibility.
+ * @param visibility {boolean} Marker visibility.
+ */
+MapAnimation.prototype.setMarkerVisible = function (visibility) {
+  const map = this.get('map')
+  if (map == null) {
+    return
+  }
+  const marker = map.get('marker')
+  if (marker == null) {
+    return
+  }
+  marker.setStyle(visibility ? this.get('markerStyle') : new OlStyleStyle({}))
 }
 
 /**
@@ -2549,6 +2639,162 @@ MapAnimation.prototype.setCallbacks = function (callbacks) {
     }
   }
 }
+
+/**
+ * Checks if animation time is valid for a given layer.
+ * @param {number} layerTime Layer time value to be checked.
+ * @param {number} prevLayerTime Previous time value.
+ * @param {number} currentTime Current time.
+ * @param layerOptions Layer template based on user configurations.
+ *
+ */
+MapAnimation.prototype.isValidLayerTime = function (layerTime, prevLayerTime, currentTime, layerOptions) {
+  let config = this.get('config')
+  const absBeginTime = /** @type {number} */ (this.get('animationBeginTime'))
+  const absEndTime = /** @type {number} */ (this.get('animationEndTime'))
+  if ((layerTime &lt; absBeginTime) || (layerTime > absEndTime)) {
+    return false
+  }
+  // Ignore future observations (empty images)
+  if ((layerTime >= currentTime - config['ignoreObsOffset']) &amp;&amp; (layerOptions['type'] === this.layerTypes['observation'])) {
+    return false
+  }
+  // Checking maximum resolution
+  return layerTime - prevLayerTime >= this.layerResolution
+}
+
+/**
+ * Selects a vector feature.
+ * @param {Object} feature Feature to be selected.
+ */
+MapAnimation.prototype.selectFeature = function (feature) {
+  let interactions = this.activeInteractions
+  if (interactions == null) {
+    return
+  }
+  let numInteraction = interactions.length
+  let interaction
+  let i
+  for (i = 0; i &lt; numInteraction; i++) {
+    interaction = interactions[i]
+    if (interaction.get('type') === 'selected') {
+      interaction.getFeatures().clear()
+      if (feature != null) {
+        interaction.getFeatures().push(feature)
+      }
+      break
+    }
+  }
+}
+
+/**
+ * Gets a selected vector feature.
+ * @returns {Object} Selected feature.
+ */
+MapAnimation.prototype.getSelectedFeature = function () {
+  let features
+  let interactions = this.activeInteractions
+  if (interactions == null) {
+    return
+  }
+  let numInteraction = interactions.length
+  let interaction
+  let i
+  for (i = 0; i &lt; numInteraction; i++) {
+    interaction = interactions[i]
+    if (interaction.get('type') === 'selected') {
+      features = interaction.getFeatures()
+      if ((features != null) &amp;&amp; (features.getLength() > 0)) {
+        return features.item(0)
+      }
+    }
+  }
+  return null
+}
+
+/**
+ * Checks if reload of base map layers is needed.
+ * @param {string} type Layer type.
+ * @returns {boolean} Base map reload needed.
+ */
+MapAnimation.prototype.staticReloadNeeded = function (type) {
+  let i
+  let j
+  let staticLayers = this.get(type + 'Layers')
+  let layers = this.get('layers')
+  if ((staticLayers == null) || (layers == null)) {
+    return true
+  }
+  let filteredLayers = layers.filter(layer => layer['type'] === this.layerTypes[type])
+  let numStaticLayers = staticLayers.length
+  if (numStaticLayers !== filteredLayers.length) {
+    return true
+  }
+  loopStaticLayers:
+  for (i = 0; i &lt; numStaticLayers; i++) {
+    for (j = 0; j &lt; numStaticLayers; j++) {
+      if (shallowEqual(staticLayers[i], filteredLayers[j])) {
+        continue loopStaticLayers
+      }
+    }
+    return true
+  }
+  return false
+}
+
+/**
+ * Creates a context menu for the map features.
+ * @return {Object} Context menu.
+ */
+MapAnimation.prototype.createContextMenu = function () {
+  const self = this
+  this.contextMenu = new ContextMenu({
+    defaultItems: false,
+    items: []
+  })
+  this.contextMenu.on('beforeopen', function (evt) {
+    let contextMenuItems
+    const map = self.get('map')
+    let feature = map.forEachFeatureAtPixel(evt.pixel, function (ft, l) {
+      return ft
+    })
+    if (feature) {
+      const config = self.get('config')
+      if (config['contextMenuInsideMap']) {
+        if (map.contextMenuItems == null) {
+          map.contextMenuItems = feature.get('contextMenuItems')
+        }
+        contextMenuItems = map.contextMenuItems
+      } else {
+        contextMenuItems = feature.get('contextMenuItems')
+      }
+      if (contextMenuItems != null) {
+        self.hidePopup()
+        contextMenuItems.forEach(function (contextMenuItem) {
+          if ((contextMenuItem != null) &amp;&amp; (typeof contextMenuItem === 'object')) {
+            contextMenuItem.data = {
+              feature: feature
+            }
+          }
+        })
+        self.contextMenu.enable()
+        self.contextMenu.clear()
+        self.contextMenu.extend(contextMenuItems)
+      } else {
+        if (self.contextMenu.isOpen()) {
+          self.contextMenu.close()
+        }
+        self.contextMenu.disable()
+      }
+    } else {
+      if (self.contextMenu.isOpen()) {
+        self.contextMenu.close()
+      }
+      self.contextMenu.disable()
+    }
+  })
+  return this.contextMenu
+}
 </code></pre>
         </article>
     </section>
@@ -2559,13 +2805,13 @@ MapAnimation.prototype.setCallbacks = function (callbacks) {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="MetOClient.html">MetOClient</a></li><li><a href="module.exports.html">exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addFeatures">addFeatures</a></li><li><a href="global.html#clearFeatures">clearFeatures</a></li><li><a href="global.html#createMap">createMap</a></li><li><a href="global.html#createMenu">createMenu</a></li><li><a href="global.html#createTime">createTime</a></li><li><a href="global.html#createTimer">createTimer</a></li><li><a href="global.html#createTimeSlider">createTimeSlider</a></li><li><a href="global.html#destroyAnimation">destroyAnimation</a></li><li><a href="global.html#destroyTime">destroyTime</a></li><li><a href="global.html#destroyTimer">destroyTimer</a></li><li><a href="global.html#destroyTimeSlider">destroyTimeSlider</a></li><li><a href="global.html#featureFactory">featureFactory</a></li><li><a href="global.html#floorTime">floorTime</a></li><li><a href="global.html#getAnimationBeginTime">getAnimationBeginTime</a></li><li><a href="global.html#getAnimationEndTime">getAnimationEndTime</a></li><li><a href="global.html#getAnimationNumIntervals">getAnimationNumIntervals</a></li><li><a href="global.html#getAnimationResolutionTime">getAnimationResolutionTime</a></li><li><a href="global.html#getAnimationTime">getAnimationTime</a></li><li><a href="global.html#getCapabilities">getCapabilities</a></li><li><a href="global.html#getCreationTime">getCreationTime</a></li><li><a href="global.html#getCurrentTime">getCurrentTime</a></li><li><a href="global.html#getFeatures">getFeatures</a></li><li><a href="global.html#getFeaturesAt">getFeaturesAt</a></li><li><a href="global.html#getLayer">getLayer</a></li><li><a href="global.html#getLayers">getLayers</a></li><li><a href="global.html#getMap">getMap</a></li><li><a href="global.html#getRefreshInterval">getRefreshInterval</a></li><li><a href="global.html#getStaticControls">getStaticControls</a></li><li><a href="global.html#getTickText">getTickText</a></li><li><a href="global.html#hidePopup">hidePopup</a></li><li><a href="global.html#isWaitingAutoStart">isWaitingAutoStart</a></li><li><a href="global.html#layerFactory">layerFactory</a></li><li><a href="global.html#LEGEND_CONTAINER_CLASS">LEGEND_CONTAINER_CLASS</a></li><li><a href="global.html#LEGEND_FIGURE_CLASS_PREFIX">LEGEND_FIGURE_CLASS_PREFIX</a></li><li><a href="global.html#loadCapabilities">loadCapabilities</a></li><li><a href="global.html#LOADING_STATUS">LOADING_STATUS</a></li><li><a href="global.html#MAX_TIMESTAMP">MAX_TIMESTAMP</a></li><li><a href="global.html#moveAnimationTimeFrame">moveAnimationTimeFrame</a></li><li><a href="global.html#movePointer">movePointer</a></li><li><a href="global.html#next">next</a></li><li><a href="global.html#pause">pause</a></li><li><a href="global.html#play">play</a></li><li><a href="global.html#previous">previous</a></li><li><a href="global.html#refreshLayers">refreshLayers</a></li><li><a href="global.html#refreshMap">refreshMap</a></li><li><a href="global.html#refreshTime">refreshTime</a></li><li><a href="global.html#requestViewUpdate">requestViewUpdate</a></li><li><a href="global.html#setAnimationLastRefreshed">setAnimationLastRefreshed</a></li><li><a href="global.html#setAnimationPlay">setAnimationPlay</a></li><li><a href="global.html#setAnimationTime">setAnimationTime</a></li><li><a href="global.html#setAnimationTimes">setAnimationTimes</a></li><li><a href="global.html#setBeginTime">setBeginTime</a></li><li><a href="global.html#setCallbacks">setCallbacks</a></li><li><a href="global.html#setCapabilities">setCapabilities</a></li><li><a href="global.html#setCenter">setCenter</a></li><li><a href="global.html#setCurrentTime">setCurrentTime</a></li><li><a href="global.html#setDayStartOffset">setDayStartOffset</a></li><li><a href="global.html#setEndTime">setEndTime</a></li><li><a href="global.html#setFrameRate">setFrameRate</a></li><li><a href="global.html#setInteractions">setInteractions</a></li><li><a href="global.html#setLayers">setLayers</a></li><li><a href="global.html#setLayerVisible">setLayerVisible</a></li><li><a href="global.html#setPointerText">setPointerText</a></li><li><a href="global.html#setPointerTime">setPointerTime</a></li><li><a href="global.html#setResolutionTime">setResolutionTime</a></li><li><a href="global.html#setRotation">setRotation</a></li><li><a href="global.html#setStaticControls">setStaticControls</a></li><li><a href="global.html#setTimeStep">setTimeStep</a></li><li><a href="global.html#setTimeZone">setTimeZone</a></li><li><a href="global.html#setTimeZoneLabel">setTimeZoneLabel</a></li><li><a href="global.html#setZoom">setZoom</a></li><li><a href="global.html#showPopup">showPopup</a></li><li><a href="global.html#sourceFactory">sourceFactory</a></li><li><a href="global.html#startTimer">startTimer</a></li><li><a href="global.html#stop">stop</a></li><li><a href="global.html#styleFactory">styleFactory</a></li><li><a href="global.html#supportOldBrowsers">supportOldBrowsers</a></li><li><a href="global.html#updatePointer">updatePointer</a></li><li><a href="global.html#updateTimeLoaderVis">updateTimeLoaderVis</a></li><li><a href="global.html#updateTimeSlider">updateTimeSlider</a></li><li><a href="global.html#updateTimeSteps">updateTimeSteps</a></li><li><a href="global.html#zIndex">zIndex</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Base.html">Base</a></li><li><a href="Html.html">Html</a></li><li><a href="Internal.html">Internal</a></li><li><a href="MetOClient_MetOClient.html">MetOClient</a></li><li><a href="module.exports.html">exports</a></li><li><a href="module.exports_module.exports.html">exports</a></li><li><a href="TimeFrame.module.exports.html">module.exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#addFeatures">addFeatures</a></li><li><a href="global.html#clear">clear</a></li><li><a href="global.html#clearFeatures">clearFeatures</a></li><li><a href="global.html#configureTicks">configureTicks</a></li><li><a href="global.html#createContainers">createContainers</a></li><li><a href="global.html#createFrame">createFrame</a></li><li><a href="global.html#createFrames">createFrames</a></li><li><a href="global.html#createIndicators">createIndicators</a></li><li><a href="global.html#createMap">createMap</a></li><li><a href="global.html#createMenu">createMenu</a></li><li><a href="global.html#createPointer">createPointer</a></li><li><a href="global.html#createPostTools">createPostTools</a></li><li><a href="global.html#createPreMargin">createPreMargin</a></li><li><a href="global.html#createPreTools">createPreTools</a></li><li><a href="global.html#createTicks">createTicks</a></li><li><a href="global.html#createTime">createTime</a></li><li><a href="global.html#createTimeMenu">createTimeMenu</a></li><li><a href="global.html#createTimer">createTimer</a></li><li><a href="global.html#createTimeSlider">createTimeSlider</a></li><li><a href="global.html#createTimeZoneLabel">createTimeZoneLabel</a></li><li><a href="global.html#destroyAnimation">destroyAnimation</a></li><li><a href="global.html#destroyTime">destroyTime</a></li><li><a href="global.html#destroyTimer">destroyTimer</a></li><li><a href="global.html#destroyTimeSlider">destroyTimeSlider</a></li><li><a href="global.html#featureFactory">featureFactory</a></li><li><a href="global.html#filters">filters</a></li><li><a href="global.html#floorTime">floorTime</a></li><li><a href="global.html#getAnimationBackupTime">getAnimationBackupTime</a></li><li><a href="global.html#getAnimationBeginTime">getAnimationBeginTime</a></li><li><a href="global.html#getAnimationEndTime">getAnimationEndTime</a></li><li><a href="global.html#getAnimationNumIntervals">getAnimationNumIntervals</a></li><li><a href="global.html#getAnimationResolutionTime">getAnimationResolutionTime</a></li><li><a href="global.html#getAnimationTime">getAnimationTime</a></li><li><a href="global.html#getAnimationTimes">getAnimationTimes</a></li><li><a href="global.html#getCapabilities">getCapabilities</a></li><li><a href="global.html#getCreationTime">getCreationTime</a></li><li><a href="global.html#getCurrentTime">getCurrentTime</a></li><li><a href="global.html#getFeatures">getFeatures</a></li><li><a href="global.html#getFeaturesAt">getFeaturesAt</a></li><li><a href="global.html#getLayer">getLayer</a></li><li><a href="global.html#getLayerConfigs">getLayerConfigs</a></li><li><a href="global.html#getLayers">getLayers</a></li><li><a href="global.html#getMap">getMap</a></li><li><a href="global.html#getRefreshInterval">getRefreshInterval</a></li><li><a href="global.html#getStaticControls">getStaticControls</a></li><li><a href="global.html#getTickText">getTickText</a></li><li><a href="global.html#getTimeConfiguration">getTimeConfiguration</a></li><li><a href="global.html#getTimeLimitsForced">getTimeLimitsForced</a></li><li><a href="global.html#handleRefresh_">handleRefresh_</a></li><li><a href="global.html#handleTimer_">handleTimer_</a></li><li><a href="global.html#hidePopup">hidePopup</a></li><li><a href="global.html#isValidRefreshInterval">isValidRefreshInterval</a></li><li><a href="global.html#isWaitingAutoStart">isWaitingAutoStart</a></li><li><a href="global.html#layerFactory">layerFactory</a></li><li><a href="global.html#LEGEND_CONTAINER_CLASS">LEGEND_CONTAINER_CLASS</a></li><li><a href="global.html#LEGEND_FIGURE_CLASS_PREFIX">LEGEND_FIGURE_CLASS_PREFIX</a></li><li><a href="global.html#loadCapabilities">loadCapabilities</a></li><li><a href="global.html#loadFunction">loadFunction</a></li><li><a href="global.html#LOADING_STATUS">LOADING_STATUS</a></li><li><a href="global.html#MAX_TIMESTAMP">MAX_TIMESTAMP</a></li><li><a href="global.html#moveAnimationTimeFrame">moveAnimationTimeFrame</a></li><li><a href="global.html#next">next</a></li><li><a href="global.html#pause">pause</a></li><li><a href="global.html#play">play</a></li><li><a href="global.html#previous">previous</a></li><li><a href="global.html#produceFullLayerConfig">produceFullLayerConfig</a></li><li><a href="global.html#refreshLayers">refreshLayers</a></li><li><a href="global.html#refreshMap">refreshMap</a></li><li><a href="global.html#refreshTime">refreshTime</a></li><li><a href="global.html#requestViewUpdate">requestViewUpdate</a></li><li><a href="global.html#resetAnimationBackupTime">resetAnimationBackupTime</a></li><li><a href="global.html#selectFeature">selectFeature</a></li><li><a href="global.html#setAnimationLastRefreshed">setAnimationLastRefreshed</a></li><li><a href="global.html#setAnimationPlay">setAnimationPlay</a></li><li><a href="global.html#setAnimationTime">setAnimationTime</a></li><li><a href="global.html#setAnimationTimes">setAnimationTimes</a></li><li><a href="global.html#setBeginTime">setBeginTime</a></li><li><a href="global.html#setCallbacks">setCallbacks</a></li><li><a href="global.html#setCapabilities">setCapabilities</a></li><li><a href="global.html#setCenter">setCenter</a></li><li><a href="global.html#setCurrentTime">setCurrentTime</a></li><li><a href="global.html#setDayStartOffset">setDayStartOffset</a></li><li><a href="global.html#setDefaultTime">setDefaultTime</a></li><li><a href="global.html#setDragging">setDragging</a></li><li><a href="global.html#setEndTime">setEndTime</a></li><li><a href="global.html#setFirstDataPointTime">setFirstDataPointTime</a></li><li><a href="global.html#setFrameRate">setFrameRate</a></li><li><a href="global.html#setGridTime">setGridTime</a></li><li><a href="global.html#setInteractions">setInteractions</a></li><li><a href="global.html#setLastDataPointTime">setLastDataPointTime</a></li><li><a href="global.html#setLayers">setLayers</a></li><li><a href="global.html#setLayerVisible">setLayerVisible</a></li><li><a href="global.html#setMarkerVisible">setMarkerVisible</a></li><li><a href="global.html#setResolutionTime">setResolutionTime</a></li><li><a href="global.html#setRotation">setRotation</a></li><li><a href="global.html#setStaticControls">setStaticControls</a></li><li><a href="global.html#setTimeLimitsForced">setTimeLimitsForced</a></li><li><a href="global.html#setTimeStep">setTimeStep</a></li><li><a href="global.html#setTimeZone">setTimeZone</a></li><li><a href="global.html#setTimeZoneLabel">setTimeZoneLabel</a></li><li><a href="global.html#setZoom">setZoom</a></li><li><a href="global.html#showPopup">showPopup</a></li><li><a href="global.html#showTicks">showTicks</a></li><li><a href="global.html#sourceFactory">sourceFactory</a></li><li><a href="global.html#step">step</a></li><li><a href="global.html#stop">stop</a></li><li><a href="global.html#styleFactory">styleFactory</a></li><li><a href="global.html#supportOldBrowsers">supportOldBrowsers</a></li><li><a href="global.html#transformCoordinates">transformCoordinates</a></li><li><a href="global.html#updateAnimationBackupTime">updateAnimationBackupTime</a></li><li><a href="global.html#updateLayers">updateLayers</a></li><li><a href="global.html#updatePointer">updatePointer</a></li><li><a href="global.html#updateTimeLoaderVis">updateTimeLoaderVis</a></li><li><a href="global.html#updateTimeLoaderVisualizations">updateTimeLoaderVisualizations</a></li><li><a href="global.html#updateTimeSlider">updateTimeSlider</a></li><li><a href="global.html#updateTimeSteps">updateTimeSteps</a></li><li><a href="global.html#urlToDataUrl">urlToDataUrl</a></li><li><a href="global.html#ZINDEX">ZINDEX</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Dec 15 2017 11:16:48 GMT+0200 (EET)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.2</a> on Thu Jun 06 2019 10:54:33 GMT+0300 (Eastern European Summer Time)
 </footer>
 
 <script> prettyPrint(); </script>

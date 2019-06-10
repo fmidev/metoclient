@@ -78,6 +78,15 @@ export default class MapAnimation {
     this.set('configChanged', false)
     this.set('selectedFeatureLayer', null)
     this.set('selectedFeatureTime', null)
+    this.set('markerStyle', new OlStyleStyle({
+        'image': new OlStyleIcon(/** @type {olx.style.IconOptions} */ ({
+          'anchor': [0.5, 1],
+          'anchorXUnits': 'fraction',
+          'anchorYUnits': 'fraction',
+          'src': this.get('config')['markerImagePath']
+        }))
+      })
+    )
     this.contextMenu = null
     this.activeInteractions = []
     this.loadedOnce = false
@@ -228,11 +237,12 @@ MapAnimation.prototype.createAnimation = async function (layers, capabilities, c
  * Creates popup header.
  * @param header Popup header data.
  * @param type Popup type.
+ * @param {string} dataSource Popup data source.
  * @returns {string} Popup header.
  */
-MapAnimation.prototype.createPopupHeader = function (header, type) {
+MapAnimation.prototype.createPopupHeader = function (header, type, dataSource) {
   let config = this.get('config')
-  let content = '<div class="fmi-metoclient-' + type + '-item">'
+  let content = '<div class="fmi-metoclient-' + type + '-item fmi-metoclient-' + dataSource + '-item">'
   let locale = config['locale']
   if (header !== false) {
     if ((header != null) && (typeof header === 'object')) {
@@ -324,11 +334,12 @@ MapAnimation.prototype.createPopupItem = function (layout, properties) {
 
 /**
  * Creates popup content.
- * @param properties Popup properties.
- * @param type Popup type.
+ * @param {Object} properties Popup properties.
+ * @param {string} type Popup type.
+ * @param {string} dataSource Popup data source.
  * @returns {string} Popup content.
  */
-MapAnimation.prototype.createPopupContent = function (properties, type) {
+MapAnimation.prototype.createPopupContent = function (properties, type, dataSource) {
   let content
   let coord
   let coordinateRow
@@ -357,7 +368,7 @@ MapAnimation.prototype.createPopupContent = function (properties, type) {
   coordinateRow = properties[type + 'CoordinateRow']
   dataItems = properties[type + 'Data']
   numDataItems = dataItems.length
-  content = this.createPopupHeader(header, type)
+  content = this.createPopupHeader(header, type, dataSource)
   for (i = 0; i < numDataItems; i++) {
     if (i === coordinateRow) {
       coord = properties['geometry'].getCoordinates()
@@ -490,7 +501,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     if (numFeatures > 0) {
       let content = '<div class="fmi-metoclient-' + type + '-content">'
       for (j = 0; j < numFeatures; j++) {
-        content += self.createPopupContent(features[j].getProperties(), type)
+        content += self.createPopupContent(features[j].getProperties(), type, 'wfs')
       }
       content += '</div>'
       if (type === 'tooltip') {
@@ -500,7 +511,13 @@ MapAnimation.prototype.initMouseInteractions = function () {
       self.showPopup(content, coord, true, type)
       dataShown = pixel
     } else if (typeActive) {
-      self.hidePopup()
+      if (document.querySelectorAll(`#${config['mapContainer']}-popup-content div.fmi-metoclient-gfi-item`).length === 0) {
+        self.hidePopup()
+      } else {
+        document.querySelectorAll(`#${config['mapContainer']}-popup-content div.fmi-metoclient-wfs-item`).forEach(function (element) {
+          element.parentNode.removeChild(element)
+        })
+      }
     }
     return dataShown
   }
@@ -574,7 +591,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
     }
     if (hit) {
       this.getTargetElement().style.cursor = 'pointer'
-    } else if (dataFound) {
+    } else if (!dataFound) {
       this.getTargetElement().style.cursor = ''
     }
     handleWFSInteraction('tooltip', evt['pixel'])
@@ -668,7 +685,7 @@ MapAnimation.prototype.initMouseInteractions = function () {
           }
           properties['popupHeader'] = layer.get('popupHeader')
           properties['popupData'] = (modifiedPopupData != null ? modifiedPopupData : popupData)
-          popupText = self.createPopupContent(properties, 'popup')
+          popupText = self.createPopupContent(properties, 'popup', 'gfi')
           if (popupShown) {
             popupContent = document.getElementById(`${config['mapContainer']}-popup-content`)
             popupContentChildren = popupContent.children
@@ -1193,7 +1210,7 @@ MapAnimation.prototype.setViewListeners = function () {
           self.get('marker').setCoordinates(map.getView().getCenter())
           self.dispatchEvent('markerMoved')
         }
-        if (self.contextMenu.isOpen()) {
+        if ((self.contextMenu != null) && (self.contextMenu.isOpen())) {
           self.contextMenu.close()
         }
         if ((callbacks != null) && (typeof callbacks['center'] === 'function')) {
@@ -1323,15 +1340,8 @@ MapAnimation.prototype.createMarkerLayer = function () {
   const markerFeature = new OlFeature({
     'geometry': marker
   })
-  const markerStyle = new OlStyleStyle({
-    'image': new OlStyleIcon(/** @type {olx.style.IconOptions} */ ({
-      'anchor': [0.5, 1],
-      'anchorXUnits': 'fraction',
-      'anchorYUnits': 'fraction',
-      'src': this.get('config')['markerImagePath']
-    }))
-  })
-  markerFeature.setStyle(markerStyle)
+  markerFeature.setStyle(this.get('markerStyle'))
+  this.get('map').set('marker', markerFeature)
   const markerSource = new OlSourceVector({
     'features': [markerFeature]
   })
@@ -2277,8 +2287,8 @@ MapAnimation.prototype.showPopup = function (content, coordinate, append, type) 
   } else {
     if (popupContent['innerHTML'] !== content) {
       popupContent['innerHTML'] = content
-      overlay.setPosition(coordinate)
     }
+    overlay.setPosition(coordinate)
   }
   if (type != null) {
     popupContent.parentElement.setAttribute('data-fmi-metoclient-popup-type', type)
@@ -2381,6 +2391,22 @@ MapAnimation.prototype.setLayerVisible = async function (layerTitle, visibility)
     }
     this.requestViewUpdate()
   }
+}
+
+/**
+ * Sets marker visibility.
+ * @param visibility {boolean} Marker visibility.
+ */
+MapAnimation.prototype.setMarkerVisible = function (visibility) {
+  const map = this.get('map')
+  if (map == null) {
+    return
+  }
+  const marker = map.get('marker')
+  if (marker == null) {
+    return
+  }
+  marker.setStyle(visibility ? this.get('markerStyle') : new OlStyleStyle({}))
 }
 
 /**
@@ -2705,7 +2731,15 @@ MapAnimation.prototype.createContextMenu = function () {
       return ft
     })
     if (feature) {
-      contextMenuItems = feature.get('contextMenuItems')
+      const config = self.get('config')
+      if (config['contextMenuInsideMap']) {
+        if (map.contextMenuItems == null) {
+          map.contextMenuItems = feature.get('contextMenuItems')
+        }
+        contextMenuItems = map.contextMenuItems
+      } else {
+        contextMenuItems = feature.get('contextMenuItems')
+      }
       if (contextMenuItems != null) {
         self.hidePopup()
         contextMenuItems.forEach(function (contextMenuItem) {

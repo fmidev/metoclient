@@ -43,6 +43,7 @@ export default class OlControlLayerSwitcher {
     const button = document.createElement('button')
     button.setAttribute('title', tipLabel)
     button.setAttribute('id', options['elementId'])
+    button.tabIndex = 20
     element.appendChild(button)
 
     this.panel = document.createElement('div')

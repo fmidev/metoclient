@@ -18,6 +18,10 @@ export default class TimeFrame {
     this.dragListenerElement.classList.add('fmi-metoclient-timeslider-drag-listener')
     this.dragListenerElement.style.pointerEvents = 'none'
     this.element.appendChild(this.dragListenerElement)
+    this.keyboardAccessibleElement = document.createElement('button')
+    this.keyboardAccessibleElement.classList.add('fmi-metoclient-timeslider-keyboard-accessible')
+    this.keyboardAccessibleElement.style.pointerEvents = 'none'
+    this.element.appendChild(this.keyboardAccessibleElement)
   }
 }
 

@@ -407,6 +407,24 @@ export default class TimeSlider {
       document.activeElement.blur()
       self.variableEvents.emitEvent('animationTime', [timeFrame['endTime']])
     }))
+    this.mouseListeners_.push(listen(timeFrame.element, 'touchmove', event => {
+      if ((!self.dragging_) || (event.changedTouches[0] === undefined)) {
+        return
+      }
+      let currentTimeFrame
+      const touchX = event.changedTouches[0].clientX
+      const numFrames = this.frames_.length
+      let rect
+      for (let i = 0; i < numFrames; i++) {
+        rect = this.frames_[i].element.getBoundingClientRect()
+        if ((rect.left <= touchX) && (touchX <= rect.right)) {
+          currentTimeFrame = this.frames_[i]
+          break;
+        }
+      }
+      document.activeElement.blur()
+      self.variableEvents.emitEvent('animationTime', [currentTimeFrame['endTime']])
+    }))
 
     return timeFrame
   }

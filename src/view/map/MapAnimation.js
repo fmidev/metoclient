@@ -2337,6 +2337,9 @@ MapAnimation.prototype.getLayer = function (layerTitle) {
   let j
   for (i = 0; i < numLayerGroups; i++) {
     layerGroup = layerGroups.item(i)
+    if (typeof layerGroup.getLayers !== 'function') {
+      continue
+    }
     layers = layerGroup.getLayers()
     numLayers = layers.getLength()
     for (j = 0; j < numLayers; j++) {

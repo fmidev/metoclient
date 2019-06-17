@@ -2729,7 +2729,9 @@ MapAnimation.prototype.staticReloadNeeded = function (type) {
  */
 MapAnimation.prototype.createContextMenu = function () {
   const self = this
+  const config = this.get('config')
   this.contextMenu = new ContextMenu({
+    width: config['contextMenuWidth'],
     defaultItems: false,
     items: []
   })

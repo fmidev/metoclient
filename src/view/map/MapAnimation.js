@@ -153,6 +153,7 @@ MapAnimation.prototype.createAnimation = async function (layers, capabilities, c
   let j
   let k
   const map = this.get('map')
+  const buttonClasses = ['ol-zoom-in', 'ol-zoom-out']
   if (layers != null) {
     numLayers = layers.length
     if (map != null) {
@@ -231,6 +232,11 @@ MapAnimation.prototype.createAnimation = async function (layers, capabilities, c
   this.set('mapLayers', mapLayers)
   surfaceLayers = (layers != null) ? layers.filter(layer => layer['type'] === this.layerTypes['surface']) : []
   this.set('surfaceLayers', surfaceLayers)
+  buttonClasses.forEach((buttonClass, index) => {
+    Array.from(document.getElementById(config['mapContainer']).getElementsByClassName(buttonClass)).forEach(button => {
+      button.tabIndex = 10 + index
+    })
+  })
 }
 
 /**
@@ -2331,6 +2337,9 @@ MapAnimation.prototype.getLayer = function (layerTitle) {
   let j
   for (i = 0; i < numLayerGroups; i++) {
     layerGroup = layerGroups.item(i)
+    if (typeof layerGroup.getLayers !== 'function') {
+      continue
+    }
     layers = layerGroup.getLayers()
     numLayers = layers.getLength()
     for (j = 0; j < numLayers; j++) {
@@ -2720,7 +2729,9 @@ MapAnimation.prototype.staticReloadNeeded = function (type) {
  */
 MapAnimation.prototype.createContextMenu = function () {
   const self = this
+  const config = this.get('config')
   this.contextMenu = new ContextMenu({
+    width: config['contextMenuWidth'],
     defaultItems: false,
     items: []
   })

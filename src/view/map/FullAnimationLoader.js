@@ -267,8 +267,8 @@ FullAnimationLoader.prototype.initMap = function () {
     })
     this.set('layerSwitcher', layerSwitcher)
     map.addControl(layerSwitcher)
-    map.addControl(this.createContextMenu());
   }
+  map.addControl(this.createContextMenu())
   Array.from(mapContainerElement.getElementsByClassName('ol-zoom-in')).forEach((zoomIn) => {
     zoomIn.setAttribute('title', config['zoomInTooltip'])
   })

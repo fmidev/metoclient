@@ -53,10 +53,6 @@ a {
     background-color: transparent
 }
 
-a:active, a:hover {
-    outline: 0
-}
-
 abbr[title] {
     border-bottom: 1px dotted
 }
@@ -155,11 +151,6 @@ button, html input[type=button], input[type=reset], input[type=submit] {
 
 button[disabled], html input[disabled] {
     cursor: default
-}
-
-button::-moz-focus-inner, input::-moz-focus-inner {
-    padding: 0;
-    border: 0
 }
 
 input {

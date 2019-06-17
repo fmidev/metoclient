@@ -111,11 +111,6 @@
     border-radius: 2px
 }
 
-.ol-control button::-moz-focus-inner {
-    border: none;
-    padding: 0
-}
-
 .ol-zoom-extent button {
     line-height: 1.4em
 }
@@ -137,8 +132,8 @@
 
 .ol-control button:focus, .ol-control button:hover {
     text-decoration: none;
-    background-color: #4c6079;
-    background-color: rgba(0, 60, 136, .7)
+    color: #d7b13e ;
+    background-color: #686868;
 }
 
 .ol-zoom .ol-zoom-in {
@@ -311,10 +306,6 @@
     pointer-events: none;
 }
 
-.layer-switcher button:focus, .layer-switcher button:hover {
-    background-color: #686868;
-}
-
 .layer-switcher ul {
     padding-left: 1em;
     list-style: none;
@@ -435,13 +426,8 @@ div.legendchooser {
 }
 
 button.ol-zoom-in, button.ol-zoom-out {
-    color: #D7B13E;
+    color: #d7b13e;
     background-color: #585858;
-}
-
-button.ol-zoom-in:focus, button.ol-zoom-in:hover, button.ol-zoom-out:focus, button.ol-zoom-out:hover {
-    color: #D7B13E ;
-    background-color: #686868;
 }
 
 div.metoclient-map {

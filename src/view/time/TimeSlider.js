@@ -75,7 +75,7 @@ export default class TimeSlider {
       return
     }
     this.clear()
-    this.createContainers()
+    this.createContainers(moments)
     this.createFrames(moments)
     this.createIndicators()
     this.createTicks()
@@ -102,8 +102,9 @@ export default class TimeSlider {
 
   /**
    * Creates container elements and appropriate listeners.
+   * @param {Array} moments Time values for the slider.
    */
-  createContainers () {
+  createContainers (moments) {
     let self = this
     let clickableContainer = document.createElement('div')
     clickableContainer.classList.add(TimeSlider.CLICKABLE_CLASS)
@@ -121,7 +122,7 @@ export default class TimeSlider {
     }
     clickableContainer.appendChild(momentsContainer)
 
-    clickableContainer.appendChild(this.createPostTools())
+    clickableContainer.appendChild(this.createPostTools(moments))
 
     let postMargin = document.createElement('div')
     postMargin.classList.add(TimeSlider.POST_MARGIN_CLASS)
@@ -138,9 +139,11 @@ export default class TimeSlider {
 
     this.mouseListeners_.push(listen(this.container_, 'mouseup', event => {
       self.setDragging(false)
+      document.activeElement.blur()
     }))
     this.mouseListeners_.push(listen(this.container_, 'touchend', event => {
       self.setDragging(false)
+      document.activeElement.blur()
     }))
 
     this.resizeDetector.listenTo(this.container_.getElementsByClassName(TimeSlider.FRAMES_CONTAINER_CLASS)[0], function (element) {
@@ -171,8 +174,9 @@ export default class TimeSlider {
     let preTools = document.createElement('div')
     preTools.classList.add(TimeSlider.PRE_TOOLS_CLASS)
 
-    let playButton = document.createElement('div')
+    let playButton = document.createElement('button')
     playButton.classList.add(TimeSlider.PLAY_BUTTON_CLASS)
+    playButton.tabIndex = TimeSlider.BASE_TAB_INDEX
     if (this.animationPlay_) {
       playButton.classList.add(TimeSlider.PLAYING_CLASS)
     }
@@ -188,15 +192,17 @@ export default class TimeSlider {
 
   /**
    * Creates an element for UI tools located in the slider after the last time step.
+   * @param {Array} moments Time values for the slider.
    * @returns {HTMLElement} An element for UI tools.
    */
-  createPostTools () {
+  createPostTools (moments) {
     let self = this
     let postTools = document.createElement('div')
     postTools.classList.add(TimeSlider.POST_TOOLS_CLASS)
 
-    let postButton = document.createElement('div')
+    let postButton = document.createElement('button')
     postButton.classList.add(TimeSlider.POST_BUTTON_CLASS)
+    postButton.tabIndex = TimeSlider.BASE_TAB_INDEX + 10 + moments.length
     postTools.appendChild(postButton)
     this.mouseListeners_.push(listen(postButton, 'click', () => {
       if (this.config_['showTimeSliderMenu']) {
@@ -369,6 +375,7 @@ export default class TimeSlider {
       type = (moments[i] <= currentTime) ? TimeFrame.HISTORY : TimeFrame.FUTURE
       weight = 100 * (endTime - beginTime) / timePeriod
       timeFrame = this.createFrame(beginTime, endTime, type, weight)
+      timeFrame['element'].getElementsByClassName(TimeSlider.KEYBOARD_ACCESSIBLE_CLASS)[0].tabIndex = TimeSlider.BASE_TAB_INDEX + i
       framesContainer.appendChild(timeFrame['element'])
       this.frames_.push(timeFrame)
     }
@@ -397,7 +404,26 @@ export default class TimeSlider {
       if (!self.dragging_) {
         return
       }
+      document.activeElement.blur()
       self.variableEvents.emitEvent('animationTime', [timeFrame['endTime']])
+    }))
+    this.mouseListeners_.push(listen(timeFrame.element, 'touchmove', event => {
+      if ((!self.dragging_) || (event.changedTouches[0] === undefined)) {
+        return
+      }
+      let currentTimeFrame
+      const touchX = event.changedTouches[0].clientX
+      const numFrames = this.frames_.length
+      let rect
+      for (let i = 0; i < numFrames; i++) {
+        rect = this.frames_[i].element.getBoundingClientRect()
+        if ((rect.left <= touchX) && (touchX <= rect.right)) {
+          currentTimeFrame = this.frames_[i]
+          break;
+        }
+      }
+      document.activeElement.blur()
+      self.variableEvents.emitEvent('animationTime', [currentTimeFrame['endTime']])
     }))
 
     return timeFrame
@@ -963,6 +989,7 @@ TimeSlider.FRAME_TICK_CLASS = 'fmi-metoclient-timeslider-frame-tick'
 TimeSlider.FRAME_TEXT_WRAPPER_CLASS = 'fmi-metoclient-timeslider-frame-text-wrapper'
 TimeSlider.FRAME_TEXT_CLASS = 'fmi-metoclient-timeslider-frame-text'
 TimeSlider.DRAG_LISTENER_CLASS = 'fmi-metoclient-timeslider-drag-listener'
+TimeSlider.KEYBOARD_ACCESSIBLE_CLASS = 'fmi-metoclient-timeslider-keyboard-accessible'
 TimeSlider.POINTER_CLASS = 'fmi-metoclient-timeslider-pointer'
 TimeSlider.POINTER_WRAPPER_CLASS = 'fmi-metoclient-timeslider-pointer-wrapper'
 TimeSlider.POINTER_TEXT_CLASS = 'fmi-metoclient-timeslider-pointer-text'
@@ -978,3 +1005,4 @@ TimeSlider.TIMESTEP_BUTTON_ACTIVE_CLASS = 'fmi-metoclient-timeslider-timestep-ac
 TimeSlider.DATA_STATUS_WORKING = 'working'
 TimeSlider.BACKWARDS = -1
 TimeSlider.FORWARDS = 1
+TimeSlider.BASE_TAB_INDEX = 100

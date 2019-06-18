@@ -1021,7 +1021,7 @@ MapAnimation.prototype.parameterizeLayers = function (capabilities) {
     if (template['timeCapabilities'] == null) {
       continue
     }
-    if (capabilities == null) {
+    if ((capabilities == null) || (capabilities[template['timeCapabilities']] == null)) {
       continue
     }
     wmsParser = new OlFormatWMSCapabilities()

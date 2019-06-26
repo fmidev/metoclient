@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "4.34.2",
+  "version": "4.34.3",
   "private": false,
   "description": "Map animation library",
   "main": "src/MetOClient.js",
@@ -53,7 +53,7 @@
     "cross-env": "5.0.5",
     "del-cli": "1.1.0",
     "env-cmd": "7.0.0",
-    "eslint": "4.18.0",
+    "eslint": "4.18.2",
     "eslint-config-standard": "11.0.0",
     "eslint-plugin-import": "2.10.0",
     "eslint-plugin-node": "6.0.1",

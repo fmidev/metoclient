@@ -79,14 +79,13 @@ export default class MapAnimation {
     this.set('selectedFeatureLayer', null)
     this.set('selectedFeatureTime', null)
     this.set('markerStyle', new OlStyleStyle({
-        'image': new OlStyleIcon(/** @type {olx.style.IconOptions} */ ({
-          'anchor': [0.5, 1],
-          'anchorXUnits': 'fraction',
-          'anchorYUnits': 'fraction',
-          'src': this.get('config')['markerImagePath']
-        }))
-      })
-    )
+      'image': new OlStyleIcon(/** @type {olx.style.IconOptions} */ ({
+        'anchor': [0.5, 1],
+        'anchorXUnits': 'fraction',
+        'anchorYUnits': 'fraction',
+        'src': this.get('config')['markerImagePath']
+      }))
+    }))
     this.contextMenu = null
     this.activeInteractions = []
     this.loadedOnce = false
@@ -1021,7 +1020,7 @@ MapAnimation.prototype.parameterizeLayers = function (capabilities) {
     if (template['timeCapabilities'] == null) {
       continue
     }
-    if (capabilities == null) {
+    if ((capabilities == null) || (capabilities[template['timeCapabilities']] == null)) {
       continue
     }
     wmsParser = new OlFormatWMSCapabilities()
@@ -1489,6 +1488,8 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   let animationUpdatedTime = -1
   let animationTime
   let title
+  let legend
+  let legends
   if (layers === undefined) {
     return layerData
   }
@@ -1522,52 +1523,68 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
       layer = this.createLayer(template)
       animation = layer.get('animation')
       title = layer.get('title')
-      if ((layerType === this.layerTypes['features']) && (animation != null) && (!animation['static'])) {
-        if ((callbacks != null) && (typeof callbacks['animationFeatures'] === 'function')) {
-          callbacks['animationFeatures']()
-        }
-        source = layer.getSource()
-        timePropertyName = source.get('timePropertyName')
-        source.on('addfeature', (event) => {
-          let newFeature = event['feature']
-          if ((callbacks != null) && (typeof callbacks['newAnimationFeature'] === 'function')) {
-            callbacks['newAnimationFeature'](newFeature)
+      if ((layerType === this.layerTypes['features']) && (animation != null)) {
+        if (!animation['static']) {
+          if ((callbacks != null) && (typeof callbacks['animationFeatures'] === 'function')) {
+            callbacks['animationFeatures']()
           }
-          let selectedFeature = this.getSelectedFeature()
-          let selectedId = (selectedFeature != null) ? selectedFeature.getId() : null
-          let selectedLayer = this.get('selectedFeatureLayer')
-          let selectedTime = this.get('selectedFeatureTime')
-          if (newFeature == null) {
-            return
-          }
-          newFeature.setStyle(new OlStyleStyle({}))
-          newFeature.set('layerTitle', title)
-          newFeature.set('timePropertyName', timePropertyName)
-          let featureTime = newFeature.get(timePropertyName)
-          if (((newFeature.get('id') === selectedId) && (newFeature.get('layerTitle') === selectedLayer)) && (((selectedTime == null) || (timePropertyName == null) || (timePropertyName.length === 0)) || (featureTime === selectedTime))) {
-            this.set('selectedFeatureLayer', title)
-            this.selectFeature(newFeature)
-          }
-          if (featureTime == null) {
-            return
-          }
-          let timestamp = moment(featureTime).utc().valueOf()
-          let vectorSource = event['target']
-          let featureTimes = vectorSource.get('featureTimes')
-          if (featureTimes == null) {
-            featureTimes = []
-          }
-          featureTimes.push({
-            'time': timestamp,
-            'feature': newFeature
+          source = layer.getSource()
+          timePropertyName = source.get('timePropertyName')
+          source.on('addfeature', (event) => {
+            let newFeature = event['feature']
+            if ((callbacks != null) && (typeof callbacks['newAnimationFeature'] === 'function')) {
+              callbacks['newAnimationFeature'](newFeature)
+            }
+            let selectedFeature = this.getSelectedFeature()
+            let selectedId = (selectedFeature != null) ? selectedFeature.getId() : null
+            let selectedLayer = this.get('selectedFeatureLayer')
+            let selectedTime = this.get('selectedFeatureTime')
+            if (newFeature == null) {
+              return
+            }
+            newFeature.setStyle(new OlStyleStyle({}))
+            newFeature.set('layerTitle', title)
+            newFeature.set('timePropertyName', timePropertyName)
+            let featureTime = newFeature.get(timePropertyName)
+            if (((newFeature.get('id') === selectedId) && (newFeature.get('layerTitle') === selectedLayer)) && (((selectedTime == null) || (timePropertyName == null) || (timePropertyName.length === 0)) || (featureTime === selectedTime))) {
+              this.set('selectedFeatureLayer', title)
+              this.selectFeature(newFeature)
+            }
+            if (featureTime == null) {
+              return
+            }
+            let timestamp = moment(featureTime).utc().valueOf()
+            let vectorSource = event['target']
+            let featureTimes = vectorSource.get('featureTimes')
+            if (featureTimes == null) {
+              featureTimes = []
+            }
+            featureTimes.push({
+              'time': timestamp,
+              'feature': newFeature
+            })
+            vectorSource.set('featureTimes', featureTimes)
+            animationTime = self.get('animationTime')
+            if ((timestamp > animationTime) && (animationTime > animationUpdatedTime)) {
+              self.updateFeatureAnimation()
+              animationUpdatedTime = animationTime
+            }
           })
-          vectorSource.set('featureTimes', featureTimes)
-          animationTime = self.get('animationTime')
-          if ((timestamp > animationTime) && (animationTime > animationUpdatedTime)) {
-            self.updateFeatureAnimation()
-            animationUpdatedTime = animationTime
+        }
+        if (animation['hasLegend']) {
+          legends = this.get('legends')
+          legend = {
+            'title': layer.get('title'),
+            'id': legends.length
           }
-        })
+          if (animation['legendSource'] != null) {
+            legend['source'] = animation['legendSource']
+          } else if (typeof animation['hasLegend'] === 'string') {
+            legend['url'] = animation['hasLegend']
+          }
+          layer.set('legends', [legend])
+          legends.push(legend)
+        }
       }
       layerData.push(layer)
     }
@@ -1592,6 +1609,7 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
   let numLayers
   const overlays = []
   const legends = []
+  let legendBaseId = this.get('legends').length
   let numLegends
   const numIntervals = /** @type {number} */ (this.get('animationNumIntervals'))
   let i
@@ -1703,7 +1721,7 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
             layerLegend = {
               'title': title,
               'source': layer['animation']['legendSource'],
-              'id': numLegends
+              'id': legendBaseId + numLegends
             }
             legends.push(layerLegend)
           }
@@ -1723,7 +1741,7 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
                 layerLegend = {
                   'title': title,
                   'url': legendUrls[l],
-                  'id': numLegends
+                  'id': legendBaseId + numLegends
                 }
                 legends.push(layerLegend)
               }
@@ -1759,10 +1777,10 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
   }
   this.scheduleOverlayLoading(overlays, loadId)
   if (this.get('config')['showLegend']) {
-    this.generateLegendFigures(legends, defaultLegend)
+    this.set('legends', this.get('legends').concat(legends))
+    this.generateLegendFigures(defaultLegend)
   }
   this.set('overlayTitles', overlayTitles)
-  this.set('legends', legends)
   this.set('animationGroups', animationGroups)
   this.set('pGrp', pGrp)
   this.set('extent', this.calculateExtent(true))
@@ -1834,11 +1852,11 @@ MapAnimation.prototype.getLegendUrls = layer => {
 
 /**
  * Generates legend images.
- * @param {Array} legends Information of legends.
  * @param {number} defaultLegend Index of visible default legend.
  */
-MapAnimation.prototype.generateLegendFigures = function (legends, defaultLegend) {
+MapAnimation.prototype.generateLegendFigures = function (defaultLegend) {
   const config = this.get('config')
+  let legends = this.get('legends')
   let containers
   let createFigure
   // Are legends already drawn?
@@ -1855,12 +1873,14 @@ MapAnimation.prototype.generateLegendFigures = function (legends, defaultLegend)
     const caption = document.createElement('figcaption')
     const captionText = document.createTextNode(legend['title'])
     const figure = document.createElement('figure')
+    const element = document.createElement('div')
     figure.style.display = (visible ? '' : 'none')
     figure.classList.add(constants.LEGEND_FIGURE_CLASS_PREFIX + legend['id'].toString(10))
     caption.appendChild(captionText)
     figure.appendChild(caption)
     if (legend['source'] !== undefined) {
-      figure.append(legend['source'])
+      element.innerHTML = legend['source']
+      figure.append(element)
     } else {
       img = document.createElement('img')
       img.addEventListener('load', () => {

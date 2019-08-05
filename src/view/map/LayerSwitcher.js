@@ -46,6 +46,10 @@ export default class OlControlLayerSwitcher {
     button.tabIndex = 20
     element.appendChild(button)
 
+    this.header = document.createElement('div')
+    this.header.className = 'header'
+    element.appendChild(this.header)
+
     this.panel = document.createElement('div')
     this.panel.className = 'panel'
     element.appendChild(this.panel)
@@ -133,6 +137,7 @@ OlControlLayerSwitcher.prototype.renderPanel = function () {
  */
 OlControlLayerSwitcher.prototype.renderLegends_ = function (legendInfo, elm) {
   const liLegend = document.createElement('li')
+  liLegend['className'] = 'legend'
   elm.appendChild(liLegend)
   const label = document.createElement('label')
   label['innerHTML'] = this.legendTitle

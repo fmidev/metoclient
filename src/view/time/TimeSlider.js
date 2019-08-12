@@ -227,7 +227,7 @@ export default class TimeSlider {
         type: 'stepButtons',
         callback: (e) => {
           let step = e.target.innerHTML
-          menuTimeSteps.forEach(function(timeStep) {
+          menuTimeSteps.forEach(function (timeStep) {
             if (timeStep[0] == step) {
               step = timeStep[1]
             }
@@ -251,7 +251,7 @@ export default class TimeSlider {
             if (this.modifiedResolutionTime_ >= constants.ONE_HOUR) {
               this.beginTime_ = Math.ceil((this.config_.firstDataPointTime + (this.modifiedResolutionTime_ * value)) / constants.ONE_HOUR) * constants.ONE_HOUR
               this.variableEvents.emitEvent('beginTime', [this.beginTime_])
-            }else {
+            } else {
               this.beginTime_ = Math.ceil((this.config_.firstDataPointTime + (this.modifiedResolutionTime_ * value)) / this.modifiedResolutionTime_) * this.modifiedResolutionTime_
               this.variableEvents.emitEvent('beginTime', [this.beginTime_])
             }
@@ -397,8 +397,58 @@ export default class TimeSlider {
       'type': type,
       'weight': weight
     })
-    this.mouseListeners_.push(listen(timeFrame.element, 'click', (event) => {
-      self.step(timeFrame['endTime'] - self.animationTime_)
+    let longClick
+    let longTap
+    let clickCount = 0
+    let singleClickTimer = 0
+    this.mouseListeners_.push(listen(timeFrame.element, 'mousedown', function () {
+      longClick = setTimeout(function () {
+        clearTimeout(singleClickTimer)
+        longClick = null
+        self.variableEvents.emitEvent('animationTime', [timeFrame['endTime']])
+      }, constants.LONG_CLICK_DELAY)
+    }))
+    this.mouseListeners_.push(listen(timeFrame.element, 'mouseup', function () {
+      if (longClick != null) {
+        clearTimeout(longClick)
+        clickCount++
+        if (clickCount === 1) {
+          singleClickTimer = setTimeout(function () {
+            clearTimeout(longClick)
+            clickCount = 0
+            if (timeFrame['endTime'] === self.animationTime_) {
+              self.variableEvents.emitEvent('animationTime', [timeFrame['beginTime']])
+            } else {
+              self.step(timeFrame['endTime'] - self.animationTime_)
+            }
+          }, constants.DOUBLE_PRESS_DELAY)
+        } else if (clickCount === 2) {
+          clearTimeout(singleClickTimer)
+          clickCount = 0
+          self.variableEvents.emitEvent('animationTime', [timeFrame['endTime']])
+        }
+      }
+    }))
+    this.mouseListeners_.push(listen(timeFrame.element, 'mouseout', function () {
+      if (longClick != null) {
+        clearTimeout(longClick)
+      }
+    }))
+    this.mouseListeners_.push(listen(timeFrame.element, 'touchstart', function () {
+      longTap = setTimeout(function () {
+        longTap = null
+        self.variableEvents.emitEvent('animationTime', [timeFrame['endTime']])
+      }, constants.LONG_TAP_DELAY)
+    }))
+    this.mouseListeners_.push(listen(timeFrame.element, 'touchend', function () {
+      if (longTap != null) {
+        clearTimeout(longTap)
+      }
+    }))
+    this.mouseListeners_.push(listen(timeFrame.element, 'touchcancel', function () {
+      if (longTap != null) {
+        clearTimeout(longTap)
+      }
     }))
     this.mouseListeners_.push(listen(timeFrame.dragListenerElement, 'mousemove', event => {
       if (!self.dragging_) {
@@ -419,7 +469,7 @@ export default class TimeSlider {
         rect = this.frames_[i].element.getBoundingClientRect()
         if ((rect.left <= touchX) && (touchX <= rect.right)) {
           currentTimeFrame = this.frames_[i]
-          break;
+          break
         }
       }
       document.activeElement.blur()

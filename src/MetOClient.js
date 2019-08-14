@@ -679,8 +679,12 @@ export class MetOClient {
    * @export
    */
   destroyAnimation () {
-    this.mapController_.destroyAnimation()
-    this.timeController_.destroyTime()
+    if (this.mapController_ != null) {
+      this.mapController_.destroyAnimation()
+    }
+    if (this.timeController_ != null) {
+      this.timeController_.destroyTime()
+    }
   }
 
   /**

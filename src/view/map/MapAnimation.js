@@ -1397,7 +1397,11 @@ MapAnimation.prototype.calculateExtent = function (useMap) {
  * @param {number} loadId Identifier for loading instance.
  */
 MapAnimation.prototype.loadOverlayGroup = function (extent, loadId) {
-  const layerGroups = this.get('map').getLayers()
+  const map = this.get('map')
+  if (map == null) {
+    return
+  }
+  const layerGroups = map.getLayers()
   let layerGroup
   const numLayerGroups = layerGroups.getLength()
   const config = this.get('config')

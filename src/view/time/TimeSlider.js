@@ -180,7 +180,8 @@ export default class TimeSlider {
     if (this.animationPlay_) {
       playButton.classList.add(TimeSlider.PLAYING_CLASS)
     }
-    this.mouseListeners_.push(listen(playButton, 'click', () => {
+    this.mouseListeners_.push(listen(playButton, 'click', (event) => {
+      event.preventDefault()
       self.animationPlay_ = !self.animationPlay_
       self.variableEvents.emitEvent('animationPlay', [self.animationPlay_])
     }))

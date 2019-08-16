@@ -955,6 +955,9 @@ MapAnimation.prototype.parameterizeLayers = function (capabilities) {
   let wmsParser
   let wmtsParser
   let options
+  if (layers == null) {
+    return
+  }
   numLayers = layers.length
   loopLayers: for (i = 0; i < numLayers; i++) {
     if (layers[i]['className'].toLowerCase() !== 'vector') {

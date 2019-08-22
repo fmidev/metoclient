@@ -410,7 +410,7 @@ export default class TimeSlider {
       }, constants.LONG_CLICK_DELAY)
     }))
     this.mouseListeners_.push(listen(timeFrame.element, 'mouseup', function () {
-      if (longClick != null) {
+      if ((longClick != null) && (!self.dragging_)) {
         clearTimeout(longClick)
         clickCount++
         if (clickCount === 1) {
@@ -743,6 +743,12 @@ export default class TimeSlider {
     let handle = document.createElement('div')
     handle.classList.add(TimeSlider.POINTER_HANDLE_CLASS)
     pointer.appendChild(handle)
+
+    let infotip = document.createElement('div')
+    infotip.classList.add(TimeSlider.POINTER_INFOTIP_CLASS)
+    infotip.style.display = 'none'
+    pointer.appendChild(infotip)
+
     this.mouseListeners_.push(listen(pointer, 'mousedown', e => {
       self.setDragging(true)
     }))
@@ -810,6 +816,7 @@ export default class TimeSlider {
     let i
     let index
     let needsUpdate
+    let tickText
     for (i = 0; i < numFrames; i++) {
       if (animationTime <= this.frames_[i]['endTime']) {
         index = i
@@ -825,8 +832,12 @@ export default class TimeSlider {
       }
       if (needsUpdate) {
         this.frames_[index].element.appendChild(this.visualPointer_)
+        tickText = this.getTickText(this.frames_[index]['endTime'], false)['content']
         Array.from(this.visualPointer_.getElementsByClassName(TimeSlider.POINTER_TEXT_CLASS)).forEach(textElement => {
-          textElement.innerHTML = this.getTickText(this.frames_[index]['endTime'], false)['content']
+          textElement.innerHTML = tickText
+        })
+        Array.from(this.container_.getElementsByClassName(TimeSlider.POINTER_INFOTIP_CLASS)).forEach(infotip => {
+          infotip.innerHTML = tickText
         })
       }
     }
@@ -895,6 +906,17 @@ export default class TimeSlider {
     let pointerEvents = dragging ? 'auto' : 'none'
     Array.from(this.container_.getElementsByClassName(TimeSlider.DRAG_LISTENER_CLASS)).forEach(element => {
       element.style.pointerEvents = pointerEvents
+    })
+    Array.from(this.container_.getElementsByClassName(TimeSlider.POINTER_CLASS)).forEach(element => {
+      if (dragging) {
+        element.classList.add(TimeSlider.POINTER_DRAGGING)
+      } else {
+        element.classList.remove(TimeSlider.POINTER_DRAGGING)
+      }
+    })
+    let display = dragging ? 'block' : 'none'
+    Array.from(this.container_.getElementsByClassName(TimeSlider.POINTER_INFOTIP_CLASS)).forEach(element => {
+      element.style.display = display
     })
   }
 
@@ -1045,6 +1067,7 @@ TimeSlider.POINTER_CLASS = 'fmi-metoclient-timeslider-pointer'
 TimeSlider.POINTER_WRAPPER_CLASS = 'fmi-metoclient-timeslider-pointer-wrapper'
 TimeSlider.POINTER_TEXT_CLASS = 'fmi-metoclient-timeslider-pointer-text'
 TimeSlider.POINTER_HANDLE_CLASS = 'fmi-metoclient-timeslider-pointer-handle'
+TimeSlider.POINTER_INFOTIP_CLASS = 'fmi-metoclient-timeslider-pointer-infotip'
 TimeSlider.INDICATOR_CLASS = 'fmi-metoclient-timeslider-indicator'
 TimeSlider.HIDDEN_CLASS = 'fmi-metoclient-timeslider-hidden'
 TimeSlider.MENU_CLASS = 'fmi-metoclient-timeslider-menu'
@@ -1053,6 +1076,7 @@ TimeSlider.END_TIME_CLASS = 'fmi-metoclient-timeslider-endtime'
 TimeSlider.TIMESTEP_CLASS = 'fmi-metoclient-timeslider-timestep'
 TimeSlider.TIMESTEP_BUTTON_CLASS = 'fmi-metoclient-timeslider-timestep-button'
 TimeSlider.TIMESTEP_BUTTON_ACTIVE_CLASS = 'fmi-metoclient-timeslider-timestep-active-button'
+TimeSlider.POINTER_DRAGGING = 'dragging'
 TimeSlider.DATA_STATUS_WORKING = 'working'
 TimeSlider.BACKWARDS = -1
 TimeSlider.FORWARDS = 1

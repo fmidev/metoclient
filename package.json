@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "4.34.3",
+  "version": "4.35.1",
   "private": false,
   "description": "Map animation library",
   "main": "src/MetOClient.js",
@@ -18,7 +18,8 @@
     "build-custom": "webpack --progress --config config/webpack/config.js",
     "test": "cross-env PHANTOMJS_EXECUTABLE=node_modules/.bin/phantomjs; $npm_package_executables_nodejs node_modules/casperjs/bin/casperjs.js test test/wms.js",
     "doc": "node_modules/.bin/del-cli ./build/jsdoc; node_modules/.bin/jsdoc -c config/jsdoc/config.json -d ./build/jsdoc",
-    "examples": "$npm_package_executables_nodejs ./example-builder/build-examples.js"
+    "examples": "$npm_package_executables_nodejs ./example-builder/build-examples.js",
+    "release": "release-it"
   },
   "author": "Finnish Meteorological Institute",
   "license": "MIT",
@@ -61,20 +62,26 @@
     "eslint-plugin-standard": "3.0.1",
     "extract-text-webpack-plugin": "3.0.0",
     "fs-extra": "0.30.0",
-    "handlebars": "^4.1.2",
-    "jsdoc": "3.6.2",
+    "handlebars": "4.1.2",
+    "jsdoc": "3.6.3",
     "license-webpack-plugin": "1.1.1",
-    "marked": "0.6.2",
+    "marked": "0.7.0",
     "metalsmith": "2.3.0",
     "metalsmith-layouts": "1.6.4",
     "nomnom": "1.8.1",
+    "release-it": "12.3.5",
     "slimerjs": "0.10.3",
     "standard": "10.0.3",
     "style-loader": "0.18.2",
     "temp": "0.8.3",
     "walk": "2.3.9",
     "webpack": "3.6.0",
-    "webpack-bundle-analyzer": "^3.3.2",
+    "webpack-bundle-analyzer": "3.3.2",
     "webpack-conditional-loader": "1.0.7"
+  },
+  "release-it": {
+    "github": {
+      "release": true
+    }
   }
 }

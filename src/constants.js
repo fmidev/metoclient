@@ -56,3 +56,7 @@ export const ONE_HOUR = 60 * ONE_MINUTE
 export const ONE_DAY = 24 * ONE_HOUR
 
 export const MAX_REFRESH_INTERVAL = 2147483647
+
+export const LONG_CLICK_DELAY = 0.5 * ONE_SECOND
+export const LONG_TAP_DELAY = 0.5 * ONE_SECOND
+export const DOUBLE_PRESS_DELAY = 0.3 * ONE_SECOND

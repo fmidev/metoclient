@@ -134,23 +134,24 @@ Ol.inherits(MapAnimation, OlObject)
 MapAnimation.prototype.createAnimation = async function (layers, capabilities, currentTime, animationTime, animationBeginTime, animationEndTime, animationResolutionTime, animationNumIntervals, animationCallbacks, useConfig = false) {
   const config = this.get('config')
   const featureGroupName = config['featureGroupName']
-  let isFeatureGroup
-  let layerGroups
-  let layerGroup
-  let numLayerGroups
-  let layer
-  let numLayers
-  let currentLayers
   let currentLayer
+  let currentLayers
   let currentLayerTitle
-  let numCurrentLayers
   let currentSource
-  let mapLayers
-  let surfaceLayers
-  let layerVisibility
   let i
+  let isFeatureGroup
   let j
   let k
+  let layer
+  let layerGroup
+  let layerGroups
+  let layerVisibility
+  let mapContainer
+  let mapLayers
+  let numCurrentLayers
+  let numLayerGroups
+  let numLayers
+  let surfaceLayers
   const map = this.get('map')
   const buttonClasses = ['ol-zoom-in', 'ol-zoom-out']
   if (layers != null) {
@@ -231,11 +232,14 @@ MapAnimation.prototype.createAnimation = async function (layers, capabilities, c
   this.set('mapLayers', mapLayers)
   surfaceLayers = (layers != null) ? layers.filter(layer => layer['type'] === this.layerTypes['surface']) : []
   this.set('surfaceLayers', surfaceLayers)
-  buttonClasses.forEach((buttonClass, index) => {
-    Array.from(document.getElementById(config['mapContainer']).getElementsByClassName(buttonClass)).forEach(button => {
-      button.tabIndex = 10 + index
+  mapContainer = document.getElementById(config['mapContainer'])
+  if (mapContainer != null) {
+    buttonClasses.forEach((buttonClass, index) => {
+      Array.from(mapContainer.getElementsByClassName(buttonClass)).forEach(button => {
+        button.tabIndex = 10 + index
+      })
     })
-  })
+  }
 }
 
 /**
@@ -804,25 +808,27 @@ MapAnimation.prototype.handleUpdateRequest = async function (updateRequested, di
     }
     this.actionEvents.emitEvent('reload')
     this.loadOverlayGroup(extent, loadId)
-    layerVisibility = map.get('layerVisibility')
-    this.getLayersByGroup(featureGroupName).forEach(layer => {
-      layerTitle = layer.get('title')
-      if (layerTitle == null) {
-        return
-      }
-      currentVisibility = layerVisibility[layerTitle]
-      if (currentVisibility !== undefined) {
-        layer.setVisible(currentVisibility)
-        if ((selectedFeature != null) && (self.layerContainsFeature(layer, selectedFeature))) {
-          self.set('selectedFeatureLayer', selectedFeature.get('layerTitle'))
-          if (currentVisibility) {
-            self.selectFeature(selectedFeature)
-          } else {
-            selectedFeature.setStyle(new OlStyleStyle({}))
+    if (map!= null) {
+      layerVisibility = map.get('layerVisibility')
+      this.getLayersByGroup(featureGroupName).forEach(layer => {
+        layerTitle = layer.get('title')
+        if (layerTitle == null) {
+          return
+        }
+        currentVisibility = layerVisibility[layerTitle]
+        if (currentVisibility !== undefined) {
+          layer.setVisible(currentVisibility)
+          if ((selectedFeature != null) && (self.layerContainsFeature(layer, selectedFeature))) {
+            self.set('selectedFeatureLayer', selectedFeature.get('layerTitle'))
+            if (currentVisibility) {
+              self.selectFeature(selectedFeature)
+            } else {
+              selectedFeature.setStyle(new OlStyleStyle({}))
+            }
           }
         }
-      }
-    })
+      })
+    }
   } else {
     overlayGroupName = this.get('config')['overlayGroupName']
     groupNames = [overlayGroupName, featureGroupName]
@@ -867,6 +873,9 @@ MapAnimation.prototype.updateStorage = async function () {
     return
   }
   const layers = this.get('layers')
+  if (layers == null) {
+    return
+  }
   let localStorageOpacity
   let localStorageVisible
   let localStorageLegendVisible
@@ -1497,7 +1506,7 @@ MapAnimation.prototype.loadStaticLayers = function (layerVisibility, layerType) 
   let title
   let legend
   let legends
-  if (layers === undefined) {
+  if (layers == null) {
     return layerData
   }
   numLayers = layers.length

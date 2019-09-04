@@ -44,6 +44,7 @@ import OlView from 'ol/view'
 import OlSourceVector from 'ol/source/vector'
 import OlSourceWMTS from 'ol/source/wmts'
 import OlGeomPoint from 'ol/geom/point'
+import OlOverlayPositioning from 'ol/overlaypositioning'
 import ContextMenu from './ContextMenu'
 
 export default class MapAnimation {
@@ -1625,7 +1626,8 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
   let numLayers
   const overlays = []
   const legends = []
-  let legendBaseId = this.get('legends').length
+  let mapLegends = this.get('legends')
+  let legendBaseId = (mapLegends != null) ? mapLegends.length : ''
   let numLegends
   const numIntervals = /** @type {number} */ (this.get('animationNumIntervals'))
   let i
@@ -1653,7 +1655,7 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
   let defaultLegend = -1
   const self = this
 
-  if (layers === undefined) {
+  if (layers == null) {
     return overlays
   }
   numLayers = layers.length
@@ -1792,8 +1794,8 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
     return null
   }
   this.scheduleOverlayLoading(overlays, loadId)
-  if (this.get('config')['showLegend']) {
-    this.set('legends', this.get('legends').concat(legends))
+  if ((this.get('config')['showLegend']) && (mapLegends != null)) {
+    this.set('legends', mapLegends.concat(legends))
     this.generateLegendFigures(defaultLegend)
   }
   this.set('overlayTitles', overlayTitles)
@@ -2311,6 +2313,9 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
  * @param type {string=} Popup type.
  */
 MapAnimation.prototype.showPopup = function (content, coordinate, append, type) {
+  const map = this.get('map')
+  let view = (map != null) ? map.getView()  : null
+  let center = (view != null) ? view.getCenter() : null
   if (this.contextMenu.isOpen()) {
     if (type === 'tooltip') {
       return
@@ -2332,6 +2337,7 @@ MapAnimation.prototype.showPopup = function (content, coordinate, append, type) 
     }
     overlay.setPosition(coordinate)
   }
+  overlay.setPositioning(OlOverlayPositioning[((coordinate[1] > center[1]) ? 'TOP' : 'BOTTOM') + '_' + ((coordinate[0] > center[0]) ? 'RIGHT' : 'LEFT')])
   if (type != null) {
     popupContent.parentElement.setAttribute('data-fmi-metoclient-popup-type', type)
   }

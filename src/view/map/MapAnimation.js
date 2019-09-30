@@ -52,12 +52,14 @@ export default class MapAnimation {
    * Constructs OpenLayers 4 based map view.
    * @constructor
    * @param config {object} Configuration for map view.
+   * @param {Object=} sessionForage Session storage.
    * @extends {ol.Object}
    */
-  constructor (config) {
+  constructor (config, sessionForage) {
     // Call to the OpenLayers superclass constructor
     OlObject.call(this)
     this.set('config', config)
+    this.set('sessionForage', sessionForage)
     this.set('map', null)
     this.set('layers', [])
     this.set('mapLayers', [])
@@ -1452,7 +1454,7 @@ MapAnimation.prototype.createLayer = function (options) {
   const extent = this.calculateExtent(false)
   let config = this.get('config')
   let template
-  let mapProducer = new MapProducer()
+  let mapProducer = new MapProducer(this.get('sessionForage'))
   let projection = /** @type {ol.proj.Projection|string} */ (this.get('viewProjection'))
   // Features may be too slow to extend
   template = ((options['source'] == null) || (options['source']['features'] == null)) ? options : extend(true, {}, options)

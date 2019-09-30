@@ -9,17 +9,18 @@ const DEFAULT_CACHE_TIME = 10 * 60 * 1000
  */
 export function loadFunction (image, src) {
   let self = this
-  localforage.getItem(src, (err, cachedData) => {
+  let storage = (this.sessionForage != null) ? this.sessionForage : localforage;
+  storage.getItem(src, (err, cachedData) => {
     if ((err != null) || (cachedData == null) || (cachedData.dataUrl == null) || (cachedData.expires <= Date.now())) {
       urlToDataUrl(src, function (dataUrl) {
         image.getImage().src = dataUrl
-        localforage.setItem(src, {
+        storage.setItem(src, {
           dataUrl: dataUrl,
           expires: Date.now() + ((self.cacheTime != null) ? self.cacheTime : DEFAULT_CACHE_TIME)
         }, (err) => {
           // Storage full? Clear layer data.
           if (err != null) {
-            localforage
+            storage
               .keys()
               .then(keys => {
                 let i
@@ -27,7 +28,7 @@ export function loadFunction (image, src) {
                 for (i = maxKeyIndex; i >= 0; i--) {
                   // Todo: Organize items smarter and use exact way to recognize layer data
                   if (keys[i].toLowerCase().startsWith('http')) {
-                    localforage.removeItem(keys[i])
+                    storage.removeItem(keys[i])
                   }
                 }
               })

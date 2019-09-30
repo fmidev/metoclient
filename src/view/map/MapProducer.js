@@ -19,6 +19,11 @@ import OlStyleStyle from 'ol/style/style'
 import { loadFunction } from './LayerLoader'
 
 export default class MapProducer {
+
+  constructor (sessionForage) {
+    this.sessionForage = sessionForage
+  }
+
   /**
    * Creates a new layer source object.
    * @param {string} type Source type.

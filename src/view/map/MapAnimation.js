@@ -439,10 +439,10 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let layerData
     let layerHeader
     let layerCoordinateRow
-    let coordOffset = [0, 0]
+    let tooltipOffset
+    let coordOffset
+    let offset = [0, 0]
     let numFeatures
-    let view
-    let center
 
     for (i = 0; i < numLayers; i++) {
       layerData = layers[i].get(type + 'Data')
@@ -521,16 +521,11 @@ MapAnimation.prototype.initMouseInteractions = function () {
       content += '</div>'
       let coord = map.getCoordinateFromPixel(pixel)
       if (type === 'tooltip') {
-        view = (map != null) ? map.getView() : null
-        center = (view != null) ? view.getCenter() : null
-        if (center != null) {
-          coordOffset = config['tooltipOffset'].map((offset, index) => {
-            return (coord[index] > center[index] ? -offset : offset)
-          })
-          coord = map.getCoordinateFromPixel([pixel[0] + coordOffset[0], pixel[1] + coordOffset[1]])
-        }
+        tooltipOffset = config['tooltipOffset']
+        coordOffset = map.getCoordinateFromPixel([pixel[0] + tooltipOffset[0], pixel[1] - tooltipOffset[1]])
+        offset = coord.map((coordinate, index) => coordOffset[index] - coordinate)
       }
-      self.showPopup(content, coord, true, type)
+      self.showPopup(content, coord, true, type, offset)
       dataShown = pixel
     } else if (typeActive) {
       if (document.querySelectorAll(`#${config['mapContainer']}-popup-content div.fmi-metoclient-gfi-item`).length === 0) {
@@ -2323,11 +2318,14 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
  * @param coordinate {Array} Popup coordinates.
  * @param append {boolean=} Append content into popup, if it already exists and is located at the same coordinates.
  * @param type {string=} Popup type.
+ * @param offset {Array=} Coordinate offset.
  */
-MapAnimation.prototype.showPopup = function (content, coordinate, append, type) {
+MapAnimation.prototype.showPopup = function (content, coordinate, append, type, offset = [0, 0]) {
   const map = this.get('map')
   let view = (map != null) ? map.getView() : null
   let center = (view != null) ? view.getCenter() : null
+  let offsetCoordinate = coordinate
+
   if (this.contextMenu.isOpen()) {
     if (type === 'tooltip') {
       return
@@ -2347,7 +2345,12 @@ MapAnimation.prototype.showPopup = function (content, coordinate, append, type) 
     if (popupContent['innerHTML'] !== content) {
       popupContent['innerHTML'] = content
     }
-    overlay.setPosition(coordinate)
+    if (center != null) {
+      offsetCoordinate = coordinate.map((coord, index) => {
+        return (coord > center[index] ? coord - offset[index] : coord + offset[index])
+      })
+    }
+    overlay.setPosition(offsetCoordinate)
   }
   overlay.setPositioning(OlOverlayPositioning[((coordinate[1] > center[1]) ? 'TOP' : 'BOTTOM') + '_' + ((coordinate[0] > center[0]) ? 'RIGHT' : 'LEFT')])
   if (type != null) {

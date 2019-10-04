@@ -441,6 +441,9 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let layerCoordinateRow
     let coordOffset = [0, 0]
     let numFeatures
+    let view
+    let center
+
     for (i = 0; i < numLayers; i++) {
       layerData = layers[i].get(type + 'Data')
       if ((Array.isArray(layerData)) && (layerData.length > 0) && (layers[i].get('visible')) && (layers[i].get('opacity'))) {
@@ -516,10 +519,17 @@ MapAnimation.prototype.initMouseInteractions = function () {
         content += self.createPopupContent(features[j].getProperties(), type, 'wfs')
       }
       content += '</div>'
+      let coord = map.getCoordinateFromPixel(pixel)
       if (type === 'tooltip') {
-        coordOffset = config['tooltipOffset']
+        view = (map != null) ? map.getView() : null
+        center = (view != null) ? view.getCenter() : null
+        if (center != null) {
+          coordOffset = config['tooltipOffset'].map((offset, index) => {
+            return (coord[index] > center[index] ? -offset : offset)
+          })
+          coord = map.getCoordinateFromPixel([pixel[0] + coordOffset[0], pixel[1] + coordOffset[1]])
+        }
       }
-      let coord = map.getCoordinateFromPixel([pixel[0] + coordOffset[0], pixel[1] + coordOffset[1]])
       self.showPopup(content, coord, true, type)
       dataShown = pixel
     } else if (typeActive) {
@@ -2316,7 +2326,7 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
  */
 MapAnimation.prototype.showPopup = function (content, coordinate, append, type) {
   const map = this.get('map')
-  let view = (map != null) ? map.getView()  : null
+  let view = (map != null) ? map.getView() : null
   let center = (view != null) ? view.getCenter() : null
   if (this.contextMenu.isOpen()) {
     if (type === 'tooltip') {

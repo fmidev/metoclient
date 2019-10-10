@@ -15,9 +15,10 @@ export default class MapController {
    * Constructs a new map controller.
    * @param {Object} config User configuration.
    * @param {number} referenceTime World creation time.
+   * @param {Object=} sessionForage Session storage.
    * @constructor
    */
-  constructor (config, referenceTime) {
+  constructor (config, referenceTime, sessionForage) {
     /**
      * @type {Object}
      * @private
@@ -34,7 +35,7 @@ export default class MapController {
      * @type {Object}
      * @private
      */
-    this.view_ = (config['view']['mapLoader'] === 'all') ? new FullAnimationLoader(config['view']) : new LazyAnimationLoader(config['view'])
+    this.view_ = (config['view']['mapLoader'] === 'all') ? new FullAnimationLoader(config['view'], sessionForage) : new LazyAnimationLoader(config['view'], sessionForage)
     this.reloadListener_ = () => {
     }
     this.numIntervalItemsListener_ = () => {

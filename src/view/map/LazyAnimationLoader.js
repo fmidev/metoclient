@@ -30,10 +30,11 @@ export default class LazyAnimationLoader extends MapAnimation {
    * Constructs OpenLayers 4 based map view.
    * @constructor
    * @param config {object} Configuration for map view.
+   * @param {Object=} sessionForage Session storage.
    * @extends {ol.Object}
    */
-  constructor (config) {
-    super(config)
+  constructor (config, sessionForage) {
+    super(config, sessionForage)
     this.nextLayerId = 0
     this.ready = 0
   }
@@ -392,7 +393,7 @@ LazyAnimationLoader.prototype.initListeners = function () {
     let className
     let config
     let layer
-    let mapProducer = new MapProducer()
+    let mapProducer = new MapProducer(this.get('sessionForage'))
     let maxAsyncLoadCount
     let prop
     let source

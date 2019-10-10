@@ -52,12 +52,14 @@ export default class MapAnimation {
    * Constructs OpenLayers 4 based map view.
    * @constructor
    * @param config {object} Configuration for map view.
+   * @param {Object=} sessionForage Session storage.
    * @extends {ol.Object}
    */
-  constructor (config) {
+  constructor (config, sessionForage) {
     // Call to the OpenLayers superclass constructor
     OlObject.call(this)
     this.set('config', config)
+    this.set('sessionForage', sessionForage)
     this.set('map', null)
     this.set('layers', [])
     this.set('mapLayers', [])
@@ -437,8 +439,11 @@ MapAnimation.prototype.initMouseInteractions = function () {
     let layerData
     let layerHeader
     let layerCoordinateRow
-    let coordOffset = [0, 0]
+    let tooltipOffset
+    let coordOffset
+    let offset = [0, 0]
     let numFeatures
+
     for (i = 0; i < numLayers; i++) {
       layerData = layers[i].get(type + 'Data')
       if ((Array.isArray(layerData)) && (layerData.length > 0) && (layers[i].get('visible')) && (layers[i].get('opacity'))) {
@@ -514,11 +519,13 @@ MapAnimation.prototype.initMouseInteractions = function () {
         content += self.createPopupContent(features[j].getProperties(), type, 'wfs')
       }
       content += '</div>'
+      let coord = map.getCoordinateFromPixel(pixel)
       if (type === 'tooltip') {
-        coordOffset = config['tooltipOffset']
+        tooltipOffset = config['tooltipOffset']
+        coordOffset = map.getCoordinateFromPixel([pixel[0] + tooltipOffset[0], pixel[1] - tooltipOffset[1]])
+        offset = coord.map((coordinate, index) => coordOffset[index] - coordinate)
       }
-      let coord = map.getCoordinateFromPixel([pixel[0] + coordOffset[0], pixel[1] + coordOffset[1]])
-      self.showPopup(content, coord, true, type)
+      self.showPopup(content, coord, true, type, offset)
       dataShown = pixel
     } else if (typeActive) {
       if (document.querySelectorAll(`#${config['mapContainer']}-popup-content div.fmi-metoclient-gfi-item`).length === 0) {
@@ -1452,7 +1459,7 @@ MapAnimation.prototype.createLayer = function (options) {
   const extent = this.calculateExtent(false)
   let config = this.get('config')
   let template
-  let mapProducer = new MapProducer()
+  let mapProducer = new MapProducer(this.get('sessionForage'))
   let projection = /** @type {ol.proj.Projection|string} */ (this.get('viewProjection'))
   // Features may be too slow to extend
   template = ((options['source'] == null) || (options['source']['features'] == null)) ? options : extend(true, {}, options)
@@ -2311,11 +2318,14 @@ MapAnimation.prototype.clearFeatures = function (layerTitle) {
  * @param coordinate {Array} Popup coordinates.
  * @param append {boolean=} Append content into popup, if it already exists and is located at the same coordinates.
  * @param type {string=} Popup type.
+ * @param offset {Array=} Coordinate offset.
  */
-MapAnimation.prototype.showPopup = function (content, coordinate, append, type) {
+MapAnimation.prototype.showPopup = function (content, coordinate, append, type, offset = [0, 0]) {
   const map = this.get('map')
-  let view = (map != null) ? map.getView()  : null
+  let view = (map != null) ? map.getView() : null
   let center = (view != null) ? view.getCenter() : null
+  let offsetCoordinate = coordinate
+
   if (this.contextMenu.isOpen()) {
     if (type === 'tooltip') {
       return
@@ -2335,7 +2345,12 @@ MapAnimation.prototype.showPopup = function (content, coordinate, append, type) 
     if (popupContent['innerHTML'] !== content) {
       popupContent['innerHTML'] = content
     }
-    overlay.setPosition(coordinate)
+    if (center != null) {
+      offsetCoordinate = coordinate.map((coord, index) => {
+        return (coord > center[index] ? coord - offset[index] : coord + offset[index])
+      })
+    }
+    overlay.setPosition(offsetCoordinate)
   }
   overlay.setPositioning(OlOverlayPositioning[((coordinate[1] > center[1]) ? 'TOP' : 'BOTTOM') + '_' + ((coordinate[0] > center[0]) ? 'RIGHT' : 'LEFT')])
   if (type != null) {

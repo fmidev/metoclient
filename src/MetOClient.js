@@ -13,6 +13,7 @@ import { tz } from 'moment-timezone'
 import extend from 'extend'
 import isNumeric from 'fast-isnumeric'
 import localforage from 'localforage'
+import sessionStorageWrapper from 'localforage-sessionstoragewrapper';
 
 export class MetOClient {
   /**
@@ -1074,7 +1075,25 @@ export class MetOClient {
         self.config_['map']['view']['mapLoader'] = 'all'
         self.config_['map']['view']['useStorage'] = false
       }).finally(() => {
-        self.produceAnimation(callbacks)
+        if ((sessionStorageWrapper != null) && (sessionStorageWrapper._support)) {
+          let sessionForage = localforage.createInstance({
+            name: 'metoclient-session-' + self.config_['project']
+          })
+          if (sessionForage.supports('sessionStorageWrapper')) {
+            sessionForage.setDriver(sessionStorageWrapper._driver);
+            self.produceAnimation(callbacks, sessionForage)
+          } else {
+            sessionForage.defineDriver(sessionStorageWrapper).then(function () {
+              return sessionForage.setDriver(sessionStorageWrapper._driver);
+            }).then(() => {
+              self.produceAnimation(callbacks, sessionForage)
+            }).catch(err => {
+              self.produceAnimation(callbacks)
+            })
+          }
+        } else {
+          self.produceAnimation(callbacks)
+        }
       })
     }
   }
@@ -1082,15 +1101,16 @@ export class MetOClient {
   /**
    * Produces a new animation.
    * @param {Object=} callbacks Callback functions for map events.
+   * @param {Object=} sessionForage Session storage.
    * @return {MetOClient} Owner class.
    * @export
    */
-  produceAnimation (callbacks) {
+  produceAnimation (callbacks, sessionForage) {
     let self = this
     let updateOptions
     let updateCallbacks
     this.timeController_ = new TimeController(this.config_['time'])
-    this.mapController_ = new MapController(this.config_['map'], this.timeController_.getCreationTime())
+    this.mapController_ = new MapController(this.config_['map'], this.timeController_.getCreationTime(), sessionForage)
     utils.supportOldBrowsers()
     this.initContainers()
     this.reloadListener_ = () => {

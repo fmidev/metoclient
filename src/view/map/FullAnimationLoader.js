@@ -391,7 +391,7 @@ FullAnimationLoader.prototype.initListeners = function () {
     let className
     let config
     let layer
-    let mapProducer = new MapProducer()
+    let mapProducer = new MapProducer(this.get('sessionForage'))
     let maxAsyncLoadCount
     let prop
     let source

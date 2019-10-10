@@ -1,6 +1,6 @@
 {
   "name": "metoclient-example",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "MetOClient example",
   "main": "index.js",
   "scripts": {
@@ -10,15 +10,15 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@babel/core": "7.3.4",
-    "@babel/plugin-transform-runtime": "^7.3.4",
-    "@babel/preset-env": "7.3.4",
-    "babel-loader": "8.0.5",
-    "webpack": "4.29.6",
-    "webpack-cli": "3.3.0"
+    "@babel/core": "7.6.3",
+    "@babel/plugin-transform-runtime": "7.6.2",
+    "@babel/preset-env": "7.6.3",
+    "babel-loader": "8.0.6",
+    "webpack": "4.41.0",
+    "webpack-cli": "3.3.9"
   },
   "dependencies": {
-    "@babel/runtime": "^7.3.4",
-    "@fmidev/metoclient": "1.0.22"
+    "@babel/runtime": "7.6.3",
+    "@fmidev/metoclient": "1.0.32"
   }
 }

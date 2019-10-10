@@ -1,6 +1,6 @@
 const webpack = require('webpack')
 const path = require('path')
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const LicenseWebpackPlugin = require('license-webpack-plugin').LicenseWebpackPlugin
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
@@ -9,11 +9,12 @@ const banner = PACKAGE.name + ' - ' + PACKAGE.version + ' | ' + PACKAGE.author +
 const externals = (process.env.METOCLIENT_EXTERNALS !== undefined) ? JSON.parse(process.env.METOCLIENT_EXTERNALS) : {}
 
 module.exports = {
+  mode: process.env.NODE_ENV,
   entry: path.resolve(__dirname, '../../src/MetOClient.js'),
   output: {
     library: ['fi', 'fmi', 'metoclient'],
     libraryTarget: 'umd',
-    filename: './dist/metoclient' + process.env.METOCLIENT_OUTPUT_POSTFIX + '.min.js'
+    filename: 'metoclient' + process.env.METOCLIENT_OUTPUT_POSTFIX + '.min.js'
   },
   externals: externals,
   module: {
@@ -39,24 +40,19 @@ module.exports = {
         loader: 'webpack-conditional-loader'
       }],
       include: path.join(__dirname, '../../src'),
-      exclude: [
-        ((process.env.METOCLIENT_GLOBAL_EXPORT !== undefined) && (process.env.METOCLIENT_GLOBAL_EXPORT)) ? 'null' : path.join(__dirname, '../../src/config')
-      ]
+      exclude: ((process.env.METOCLIENT_GLOBAL_EXPORT !== undefined) && (process.env.METOCLIENT_GLOBAL_EXPORT)) ? [] : [path.join(__dirname, '../../src/config')]
     }, {
       test: /\.css$/,
-      use: ExtractTextPlugin.extract({
-        fallback: 'style-loader',
-        use: 'css-loader'
-      })
+      use: [MiniCssExtractPlugin.loader, 'css-loader']
     }]
   },
   plugins: [
     // Ignore all locale files of moment.js
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
-    new ExtractTextPlugin('style.css'),
+    new  MiniCssExtractPlugin('style.css'),
     new CopyWebpackPlugin([
-      {from: 'img', to: 'dist/img', force: true},
-      {from: 'css', to: 'dist/css', force: true}
+      {from: 'img', to: 'img', force: true},
+      {from: 'css', to: 'css', force: true}
     ]),
     new LicenseWebpackPlugin({
       pattern: /.*/,
@@ -118,7 +114,10 @@ module.exports = {
       raw: false,
       entryOnly: true
     })
-  ]
+  ],
+  optimization: {
+    minimize: process.env.NODE_ENV === 'production'
+  }
 }
 
 // Optimize the bundle size
@@ -247,12 +246,4 @@ if (process.env.METOCLIENT_SKIP_OL_TILEGRID_WMTS) {
 }
 if (process.env.METOCLIENT_SKIP_OL_VIEW) {
   module.exports.externals['ol/view'] = 'OlView'
-}
-// Compress for production
-if (process.env.NODE_ENV === 'production') {
-  module.exports.plugins.push(new webpack.optimize.UglifyJsPlugin({
-    compress: {
-      drop_debugger: false
-    }
-  }))
 }

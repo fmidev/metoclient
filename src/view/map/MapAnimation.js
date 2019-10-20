@@ -8,7 +8,7 @@ import EventEmitter from 'wolfy87-eventemitter'
 import extend from 'extend'
 import isNumeric from 'fast-isnumeric'
 import { default as proj4 } from 'proj4'
-import 'core-js/fn/array/from'
+import 'core-js/features/array/from'
 import shallowEqual from 'shallowequal'
 import moment from 'moment-timezone'
 import localforage from 'localforage'
@@ -46,6 +46,7 @@ import OlSourceWMTS from 'ol/source/wmts'
 import OlGeomPoint from 'ol/geom/point'
 import OlOverlayPositioning from 'ol/overlaypositioning'
 import ContextMenu from './ContextMenu'
+import 'core-js/features/dom-collections/for-each'
 
 export default class MapAnimation {
   /**
@@ -1905,7 +1906,7 @@ MapAnimation.prototype.generateLegendFigures = function (defaultLegend) {
     figure.appendChild(caption)
     if (legend['source'] !== undefined) {
       element.innerHTML = legend['source']
-      figure.append(element)
+      figure.appendChild(element)
     } else {
       img = document.createElement('img')
       img.addEventListener('load', () => {

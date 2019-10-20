@@ -1,7 +1,7 @@
 {
   "author": "FMI",
   "dependencies": {
-    "core-js": "2.6.5",
+    "core-js": "3.3.2",
     "element-resize-detector": "1.1.15",
     "empty-element": "1.0.0",
     "extend": "3.0.2",

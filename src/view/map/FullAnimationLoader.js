@@ -7,7 +7,7 @@
 import elementResizeDetectorMaker from 'element-resize-detector'
 import extend from 'extend'
 import isNumeric from 'fast-isnumeric'
-import 'core-js/fn/array/from'
+import 'core-js/features/array/from'
 import * as constants from '../../constants'
 import LayerSwitcher from './LayerSwitcher'
 import MapProducer from './MapProducer'

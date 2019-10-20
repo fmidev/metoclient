@@ -8,7 +8,7 @@ import Map from '../model/Map'
 import LazyAnimationLoader from '../view/map/LazyAnimationLoader'
 import FullAnimationLoader from '../view/map/FullAnimationLoader'
 import EventEmitter from 'wolfy87-eventemitter'
-import 'core-js/fn/promise'
+import 'core-js/features/promise'
 
 export default class MapController {
   /**

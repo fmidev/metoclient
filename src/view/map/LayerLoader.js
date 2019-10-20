@@ -1,4 +1,5 @@
 import localforage from 'localforage'
+import 'core-js/features/string/starts-with'
 
 const DEFAULT_CACHE_TIME = 10 * 60 * 1000
 

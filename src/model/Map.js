@@ -4,7 +4,7 @@
  * @license MIT
  */
 
-import 'core-js/fn/promise'
+import 'core-js/features/promise'
 
 export default class Map {
   /**

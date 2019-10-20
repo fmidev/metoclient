@@ -10,6 +10,7 @@ import * as constants from './constants'
 import TimeController from './controller/TimeController'
 import MapController from './controller/MapController'
 import { tz } from 'moment-timezone'
+import 'core-js/features/array/fill'
 import extend from 'extend'
 import isNumeric from 'fast-isnumeric'
 import localforage from 'localforage'
@@ -1068,11 +1069,14 @@ export class MetOClient {
     if ((this.config_['map']['view']['mapLoader'] === 'all') && (!this.config_['map']['view']['useStorage'])) {
       this.produceAnimation(callbacks)
     } else {
+      const key = 'metoclient-key';
+      const value = Array(1000).fill(0).map(x => Math.random().toString(36).charAt(2)).join('')
       // Test storage before relying on it
-      localforage.setItem('metoclient-key', 'metoclient-value').then(function () {
-        return localforage.getItem('metoclient-key')
+      localforage.setItem(key, value).then(function () {
+        return localforage.getItem(key)
+      }).then(result => {
+        return localforage.removeItem(key)
       }).catch(err => {
-        self.config_['map']['view']['mapLoader'] = 'all'
         self.config_['map']['view']['useStorage'] = false
       }).finally(() => {
         if ((sessionStorageWrapper != null) && (sessionStorageWrapper._support)) {
@@ -1086,8 +1090,18 @@ export class MetOClient {
             sessionForage.defineDriver(sessionStorageWrapper).then(function () {
               return sessionForage.setDriver(sessionStorageWrapper._driver);
             }).then(() => {
-              self.produceAnimation(callbacks, sessionForage)
+              sessionForage.setItem(key, value).then(function () {
+                return sessionForage.getItem(key)
+              }).then(result => {
+                return sessionForage.removeItem(key)
+              }).then(result => {
+                self.produceAnimation(callbacks, sessionForage)
+              }).catch(err => {
+                self.config_['map']['view']['mapLoader'] = 'all'
+                self.produceAnimation(callbacks)
+              })
             }).catch(err => {
+              self.config_['map']['view']['mapLoader'] = 'all'
               self.produceAnimation(callbacks)
             })
           }

@@ -5,8 +5,8 @@
 import _ol_ from 'ol/index'
 import olControlControl from 'ol/control/control'
 import * as constants from '../../constants'
-import 'core-js/fn/array/from'
-import 'core-js/fn/number/parse-int'
+import 'core-js/features/array/from'
+import 'core-js/features/number/parse-int'
 import localforage from 'localforage'
 
 /**

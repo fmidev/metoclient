@@ -1,148 +1,43 @@
 # MetOClient
 
-Map animator library
+Map animator library based on OpenLayers 6
 
-## User's Guide
 
-Recommended method is to use npm and Webpack.
+## Examples
 
-    import {MetOClient} from 'metoclient';
+Basic usage with a module bundler:
 
-It is also possible to link with `script` tag to a build with or without global OpenLayers objects.
+    import {MetOClient} from 'metoclient/src/MetOClient';
+    
+    fetch('./config.json').then(response => {
+      return response.json();
+    }).then((options) => {
+      const metoclient = new MetOClient(options);
+      metoclient.render().then(function () {
+        metoclient.play({
+          delay: 1000,
+          time: Date.now()
+        });
+      }).catch(err => {
+        (console.error || console.log).call(console, err.stack || err);
+      });
+    });
 
-### Global example usage
+Also full build is available:
 
-Pseudo configuration and usage:
+      var metoclient = new fmi.metoclient.MetOClient(options)
+      metoclient.render().then(function () {
+        var map = metoclient.get('map');
+        map.addControl(new ol.control.FullScreen());
+      })
 
-    var config = {
-        project: 'weather',
-        layers: [], // Your layers here
-        container: 'animator-div-id',
-        // Other options here
-        localization: {
-            locale: 'fi'
-        }
-    }
-    var weatherMap = new fi.fmi.metoclient.MetOClient(config);
-    weatherMap.createAnimation({loaded: function() {}});
+For configuration see the examples directory.
 
-### More examples
+## API
 
-Example directory: [examples/](examples/)
-
-Use configuration option `mapLoader: 'all'` to preload all time step data, but be aware that this might be too resource-intensive task for some devices.
-
-### API
-
-List of API functions:
-
-* createAnimation(callbacks)
-    * possible event functions as callbacks
-        * animationFeatures()
-        * center(x, y)
-        * deselected(feature)
-        * hover(feature)
-        * init()
-        * loaded()
-        * loadedOnce()
-        * loadError(params)
-        * marker(x, y)
-        * newAnimationFeature(feature)
-        * popupClosed()
-        * preload()
-        * ready()
-        * refreshed()
-        * rotation(angle)
-        * selected(feature)
-        * time(timestamp_ms)
-        * timeSliderCreated(moments)
-        * toolClicked(name)
-        * unhover(feature)
-        * zoom(level)
-* updateAnimation(options, callbacks)
-    * possible options properties
-        * animationTime
-        * beginTime
-        * endTime
-        * frameRate
-        * layers
-        * layersChanged
-        * timeStep
-        * timeZone
-        * timeZoneLabel
-    * callbacks, see createAnimation
-* addFeatures(layerTitle, projection, optionsArray)
-* clearFeatures(layerTitle)
-* createTimeSlider()
-* destroyAnimation()
-* destruct()
-* getFeatures(layerTitle, invisible)
-* getFeaturesAt(layerTitle, x, y, tolerance_pix)
-* getLayer(layerTitle)
-* getLayerConfigs()
-* getMap()
-* getAnimationTimes()
-* getStaticControls()
-* getTime()
-* hidePopup()
-* next()
-* pause()
+* render()
 * play()
-* previous()
-* refresh(callbacks)
-* refreshMap()
-* requestViewUpdate()
-* selectFeature(feature)
-* setBeginTime(time)
-* setCallbacks(callbacks)
-* setCapabilities(urlMap)
-* setCenter(x,y)
-* setDayStartOffset(timestamp_ms)
-* setEndTime(time)
-* setInteractions(options)
-* setLayerVisible(layerTitle, visibility)
-* setMarkerVisible(visibility)
-* setRotation(angle)
-* setStaticControls(enabled)
-* setTime(timestamp_ms)
-* setTimeRate(rate_ms)
-* setTimeStep(timeStep)
-* setZoom(level)
-* showPopup(content, x, y, append)
 * stop()
-
-More information: [build/jsdoc/MetOClient.html](build/jsdoc/MetOClient.html)
-
-
-In static build, OpenLayers 4 functionality is also available to the extent that is included in the build. This can be optimized depending on project needs. However, it is more convenient to use both MetOClient and OpenLayers (if needed) as ES6 modules with Webpack.
-
-### Static functions
-
-* fi.fmi.metoclient.MetOClient.createMenu(options)
-* fi.fmi.metoclient.MetOClient.floorTime(time_ms,resolution_ms,timeZone)
-* fi.fmi.metoclient.MetOClient.transformCoordinates(fromProjection, toProjection, coordinates)
-
-## Development
-
-### Prerequisites
-
-* Node.js 6 or greater (default executable `node` defined in package.js)
-* Npm package manager
-
-### Building
-
-* npm install
-* npm run build
-
-### Running tests
-
-* npm run test
-
-### Generating documentation and examples
-
-* npm run doc
-* npm run examples
-
-### Class documentation
-
-Full documentation: [build/jsdoc/index.html](build/jsdoc/index.html)
+* previous()
+* next()
+* get(propertyName)

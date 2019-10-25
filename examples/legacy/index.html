@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="css/ol.css" type="text/css">
+  <link rel="stylesheet" href="../../dist/css/metoclient.css" type="text/css">
+  <style>
+    #map {
+      height: 400px;
+      width: 100%;
+    }
+  </style>
+  <script src="config.js"></script>
+  <script src="../../dist/metoclient.js"></script>
+  <!-- OpenLayers is optional dependency -->
+  <script src="lib/ol.js"></script>
+  <!-- For IE 11 support -->
+  <!-- script src="lib/bluebird.min.js"></script -->
+  <title>Rain Map</title>
+</head>
+<body>
+<h2>Rain Map</h2>
+<div id="map"></div>
+<script type="text/javascript">
+  var metoclient = new fmi.metoclient.MetOClient(fmi.config.metoclient)
+  metoclient.render().then(function () {
+    var map = metoclient.get('map');
+    map.addControl(new ol.control.FullScreen());
+  })
+</script>
+</body>
+</html>

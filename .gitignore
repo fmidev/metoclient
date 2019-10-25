@@ -95,3 +95,5 @@ Staticfile
 
 # VS Code
 .vscode
+
+/build/

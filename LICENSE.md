@@ -1,6 +1,6 @@
 This software may be freely distributed and used under the following MIT license:
 
-Copyright (c) 2017 Finnish Meteorological Institute
+Copyright (c) 2019 Finnish Meteorological Institute
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this
 software and associated documentation files (the "Software"), to deal in the

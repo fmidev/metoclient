@@ -73,7 +73,6 @@ export const GET_CAPABILITIES_QUERY = 'request=GetCapabilities';
 
 export const DEFAULT_OPTIONS = {
   sources: {},
-  mouseWheelTimeStep: true,
   time: null, //floorTime(Date.now(), 15 * timeConstants.MINUTE), // Todo: from configuration
   timeZone: 'Europe/Helsinki',
   timeZoneLabel: '',

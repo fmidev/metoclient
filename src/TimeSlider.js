@@ -99,12 +99,6 @@ class TimeSlider extends Control {
 
     const momentsContainer = document.createElement('div');
     momentsContainer.classList.add(constants.FRAMES_CONTAINER_CLASS);
-    if (this.config_['mouseWheelTimeStep']) {
-      this.mouseListeners_.push(listen(momentsContainer, 'wheel', event => {
-        self.step(event.deltaY);
-        event.preventDefault();
-      }));
-    }
     clickableContainer.appendChild(momentsContainer);
 
     clickableContainer.appendChild(this.createPostTools(moments));

@@ -675,8 +675,7 @@ export class MetOClient extends BaseObject {
       locale: 'fi-FI',
       showTimeSlider: true,
       timeZone: this.config_.timeZone,
-      timeZoneLabel: this.config_.timeZoneLabel,
-      mouseWheelTimeStep: this.config_.mouseWheelTimeStep
+      timeZoneLabel: this.config_.timeZoneLabel
     });
     let map = new Map({
       target: this.config_.container,

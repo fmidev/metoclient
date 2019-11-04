@@ -4,8 +4,6 @@
 
 import empty from 'empty-element';
 import listen from 'good-listener';
-import 'core-js/fn/array/from';
-import 'core-js/fn/number/parse-int';
 import elementResizeDetectorMaker from 'element-resize-detector';
 import TimeFrame from './TimeFrame';
 import * as constants from './constants';

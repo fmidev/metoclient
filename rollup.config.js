@@ -1,4 +1,5 @@
 import babel from 'rollup-plugin-babel';
+import replace from '@rollup/plugin-replace';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 import { terser } from 'rollup-plugin-terser';
@@ -16,23 +17,30 @@ export default {
   },
   plugins: [
     babel({
-      exclude: 'node_modules/**',
+      include: [
+        'src/**',
+        'node_modules/luxon/**'
+      ],
       presets: [
         [
           '@babel/env',
           {
-            modules: 'false',
             targets: {
               browsers: 'ie >= 11',
               node: 8
             },
-            corejs: '3.1.3',
+            corejs: 3,
             useBuiltIns: 'usage'
           }
         ]
       ]
     }),
-    resolve(),
+    replace({
+      'process.env.NODE_ENV': JSON.stringify( 'production' )
+    }),
+    resolve({
+      preferBuiltins: true
+    }),
     commonjs(),
     terser({
       keep_fnames: true

@@ -15,6 +15,7 @@ import CapabilitiesReader from './CapabilitiesReader';
 import { unByKey } from 'ol/Observable';
 import * as constants from './constants';
 import { Duration } from 'luxon';
+import ajax from 'can-ajax';
 import Map from 'ol/Map.js';
 import View from 'ol/View.js';
 import Collection from 'ol/Collection';
@@ -98,6 +99,8 @@ export class MetOClient extends BaseObject {
         }
       });
       this.updateMap_();
+    }).catch(error => {
+      console.log(error);
     });
   }
 
@@ -171,10 +174,17 @@ export class MetOClient extends BaseObject {
         }
       });
       return urls;
-    }, []).map(url => fetch(url)));
-    await Promise.all(responses.map(response => response.text().then(text => {
-      if ((text != null) && (response.url.endsWith(constants.GET_CAPABILITIES_QUERY))) {
-        let capabKey = response.url.split('?')[0];
+    }, []).map(url => ajax({
+      url: url,
+      crossDomain: true,
+      contentType: 'text/plain',
+      beforeSend: function(jqxhr, settings) {
+        jqxhr.requestURL = url;
+      }
+    })));
+    await Promise.all(responses.map(response => {
+      if ((response.responseText != null) && (response.requestURL.endsWith(constants.GET_CAPABILITIES_QUERY))) {
+        let capabKey = response.requestURL.split('?')[0];
         const capabKeyParts = capabKey.split('/');
         let localCapabKey = '';
         if (capabKeyParts.length > 0) {
@@ -184,12 +194,10 @@ export class MetOClient extends BaseObject {
           capabKey = localCapabKey;
         }
         if (typeof CapabilitiesReader[this.capabilities_[capabKey].type] === 'function') {
-          this.capabilities_[capabKey].data = CapabilitiesReader[this.capabilities_[capabKey].type](text);
+          this.capabilities_[capabKey].data = CapabilitiesReader[this.capabilities_[capabKey].type](response.responseText);
         }
       }
-    }).catch(error => {
-      console.log(error);
-    })));
+    }));
   }
 
   /**

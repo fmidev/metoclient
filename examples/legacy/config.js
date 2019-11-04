@@ -12,6 +12,7 @@ fmi.config.metoclient = {
   'container': 'map',
   'projection': 'EPSG:3067',
   'refreshInterval': 'PT15M',
+  'timeZone': 'Europe/Helsinki',
   'sources': {
     'openwms': {
       'type': 'raster',
@@ -29,7 +30,7 @@ fmi.config.metoclient = {
     'osm': {
       'type': 'raster',
       'tiles': [
-        'http://avaa.tdata.fi/geoserver/osm_finland/gwc/service/wmts'
+        'https://avaa.tdata.fi/geoserver/osm_finland/gwc/service/wmts'
       ],
       'bounds': [
         -1214975,

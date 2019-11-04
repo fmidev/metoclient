@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "description": "Map animator",
   "module": "src/index.js",
   "main": "dist/index.js",
@@ -57,9 +57,9 @@
     "element-resize-detector": "1.1.15",
     "empty-element": "1.0.0",
     "good-listener": "1.2.2",
-    "legally": "^3.3.7",
+    "legally": "3.3.7",
     "luxon": "1.15.0",
-    "ol": "6.0.1",
+    "ol": "6.1.0",
     "ol-layerswitcher": "3.4.0",
     "proj4": "2.5.0",
     "rrule": "2.6.2"

@@ -107,7 +107,7 @@ export class MetOClient extends BaseObject {
   /**
    *
    */
-  refresh () {
+  refresh_ () {
     let map = this.get('map');
     if (map != null) {
       let layers = map.getLayers().getArray();
@@ -446,8 +446,8 @@ export class MetOClient extends BaseObject {
       this.renderComplete_ = true;
       this.timeUpdated_();
     } else {
-      const prevTime = this.getPrevTime();
-      const nextTime = this.getNextTime();
+      const prevTime = this.getPrevTime_();
+      const nextTime = this.getNextTime_();
       layers.filter(layer => {
         const times = layer.get('times');
         if ((times == null) || (!Array.isArray(times)) || (times.length === 0)) {
@@ -671,7 +671,7 @@ export class MetOClient extends BaseObject {
    * @private
    */
   updateTimeListener_ () {
-    this.timeListener = this.get('map').on('change:time', this.timeUpdated_.bind(this));
+    this.timeListener_ = this.get('map').on('change:time', this.timeUpdated_.bind(this));
   }
 
   /**
@@ -725,7 +725,7 @@ export class MetOClient extends BaseObject {
     });
     map.set('time', this.config_.time);
 
-    this.refreshTimer = interval(this.refresh.bind(this), this.refreshInterval_);
+    this.refreshTimer_ = interval(this.refresh_.bind(this), this.refreshInterval_);
   }
 
   /**
@@ -822,7 +822,7 @@ export class MetOClient extends BaseObject {
     }
   }
 
-  getNextTime () {
+  getNextTime_ () {
     const time = this.config_.time;
     const numTimes = this.times_.length;
     let timeIndex = 0;
@@ -842,10 +842,10 @@ export class MetOClient extends BaseObject {
     if (!this.isReady_()) {
       return;
     }
-    this.get('map').set('time', this.getNextTime());
+    this.get('map').set('time', this.getNextTime_());
   }
 
-  getPrevTime () {
+  getPrevTime_ () {
     const time = this.config_.time;
     const numTimes = this.times_.length;
     let timeIndex = numTimes - 1;
@@ -866,7 +866,7 @@ export class MetOClient extends BaseObject {
     if (!this.isReady_()) {
       return;
     }
-    this.get('map').set('time', this.getPrevTime());
+    this.get('map').set('time', this.getPrevTime_());
   }
 
   /**
@@ -882,8 +882,13 @@ export class MetOClient extends BaseObject {
    *
    * @api
    */
-  stop () {
+  pause () {
     this.get('map').set('playing', false);
+  }
+
+
+  stop () {
+    this.pause();
   }
 
   /**
@@ -894,7 +899,7 @@ export class MetOClient extends BaseObject {
     unByKey(this.playingListener_);
     unByKey(this.nextListener_);
     unByKey(this.previousListener_);
-    unByKey(this.timeListener);
+    unByKey(this.timeListener_);
     this.timeSlider_.destroy();
   }
 

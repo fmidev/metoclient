@@ -22,12 +22,9 @@ import Collection from 'ol/Collection';
 import Url from 'domurl';
 import LayerSwitcher from 'ol-layerswitcher';
 import Zoom from 'ol/control/Zoom';
-import DragRotate from 'ol/interaction/DragRotate';
 import DoubleClickZoom from 'ol/interaction/DoubleClickZoom';
 import DragPan from 'ol/interaction/DragPan';
 import PinchZoom from 'ol/interaction/PinchZoom';
-import DragZoom from 'ol/interaction/DragZoom';
-import PinchRotate from 'ol/interaction/PinchRotate';
 import KeyboardPan from 'ol/interaction/KeyboardPan';
 import KeyboardZoom from 'ol/interaction/KeyboardZoom';
 
@@ -698,14 +695,11 @@ export class MetOClient extends BaseObject {
         this.timeSlider_
       ],
       interactions: [
-        new DragRotate(),
         new DoubleClickZoom(),
         new DragPan(),
-        new PinchRotate(),
         new PinchZoom(),
         new KeyboardPan(),
-        new KeyboardZoom(),
-        new DragZoom()
+        new KeyboardZoom()
       ]
     });
     this.set('map', map);

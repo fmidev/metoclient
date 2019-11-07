@@ -27,7 +27,7 @@ class TimeSlider extends Control {
     this.container_ = element;
     this.config_ = options;
     this.callbacks_ = options.callbacks;
-    this.visualPointer_ = null;
+    this.interactions_ = null;
     this.playButton_ = null;
     this.animationPlay_ = false;
     this.frames_ = [];
@@ -56,7 +56,7 @@ class TimeSlider extends Control {
     this.createFrames(moments);
     this.createIndicators();
     this.createTicks();
-    this.createPointer();
+    this.createInteractions();
     if (this.getMap().get('time') != null) {
       this.updatePointer(this.getMap().get('time'));
     }
@@ -575,8 +575,12 @@ class TimeSlider extends Control {
   /**
    * Creates a pointer for indicating current time in the slider.
    */
-  createPointer() {
+  createInteractions() {
     const self = this;
+
+    const interactionContainer = document.createElement('div');
+    interactionContainer.classList.add(constants.INTERACTIONS_CLASS);
+
     const pointer = document.createElement('div');
     pointer.classList.add(constants.POINTER_CLASS);
 
@@ -591,22 +595,25 @@ class TimeSlider extends Control {
     textContainer.appendChild(textItem);
     pointer.appendChild(textContainer);
 
-    const handle = document.createElement('div');
-    handle.classList.add(constants.POINTER_HANDLE_CLASS);
-    pointer.appendChild(handle);
-
     let infotip = document.createElement('div');
     infotip.classList.add(constants.POINTER_INFOTIP_CLASS);
     infotip.style.display = 'none';
     pointer.appendChild(infotip);
 
-    this.mouseListeners_.push(listen(pointer, 'mousedown', e => {
+    interactionContainer.append(pointer);
+
+    const handle = document.createElement('div');
+    handle.classList.add(constants.POINTER_HANDLE_CLASS);
+    interactionContainer.appendChild(handle);
+
+    this.mouseListeners_.push(listen(interactionContainer, 'mousedown', e => {
       self.setDragging(true);
     }));
-    this.mouseListeners_.push(listen(pointer, 'touchstart', e => {
+    this.mouseListeners_.push(listen(interactionContainer, 'touchstart', e => {
       self.setDragging(true);
     }));
-    this.visualPointer_ = pointer;
+
+    this.interactions_ = interactionContainer;
   }
 
   /**
@@ -659,7 +666,7 @@ class TimeSlider extends Control {
    * @param {number} animationTime Time value.
    */
   updatePointer(animationTime) {
-    if (this.visualPointer_ == null) {
+    if (this.interactions_ == null) {
       return;
     }
     const numFrames = this.frames_.length;
@@ -674,16 +681,16 @@ class TimeSlider extends Control {
       }
     }
     if (index != null) {
-      if (this.visualPointer_.parentElement == null) {
+      if (this.interactions_.parentElement == null) {
         needsUpdate = true;
-      } else if (Number.parseInt(this.visualPointer_.parentElement.dataset['time']) !== animationTime) {
-        this.visualPointer_.parentElement.removeChild(this.visualPointer_);
+      } else if (Number.parseInt(this.interactions_.parentElement.dataset['time']) !== animationTime) {
+        this.interactions_.parentElement.removeChild(this.interactions_);
         needsUpdate = true;
       }
       if (needsUpdate) {
-        this.frames_[index].element.appendChild(this.visualPointer_);
+        this.frames_[index].element.appendChild(this.interactions_);
         tickText = this.getTickText(this.frames_[index]['endTime'], false)['content'];
-        Array.from(this.visualPointer_.getElementsByClassName(constants.POINTER_TEXT_CLASS)).forEach(textElement => {
+        Array.from(this.interactions_.getElementsByClassName(constants.POINTER_TEXT_CLASS)).forEach(textElement => {
           textElement.innerHTML = tickText;
         });
         Array.from(this.container_.getElementsByClassName(constants.POINTER_INFOTIP_CLASS)).forEach(infotip => {

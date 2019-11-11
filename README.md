@@ -37,7 +37,9 @@ For configuration see the examples directory.
 
 * render()
 * play()
-* stop()
+* pause()
 * previous()
 * next()
-* get(propertyName)
+* get('map')
+* get('options')
+* set('options', options) // Triggers refresh

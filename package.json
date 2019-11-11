@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "6.0.6",
+  "version": "6.0.7",
   "description": "Map animator",
   "module": "src/index.js",
   "main": "dist/index.js",
@@ -9,6 +9,15 @@
     "src",
     "dist"
   ],
+  "eslintConfig": {
+    "extends": [
+      "airbnb-base",
+      "plugin:sonarjs/recommended"
+    ],
+    "plugins": [
+      "sonarjs"
+    ]
+  },
   "scripts": {
     "start": "rollup --config rollup.config.js --watch",
     "build": "npm run clean:dist && rollup --config rollup.config.js",
@@ -75,12 +84,15 @@
     "coveralls": "3.0.7",
     "documentation": "12.1.3",
     "eslint": "6.6.0",
+    "eslint-config-airbnb-base": "14.0.0",
+    "eslint-plugin-import": "2.18.2",
     "eslint-plugin-sonarjs": "0.4.0",
     "gh-pages": "2.1.1",
     "jest": "24.9.0",
     "node-pre-gyp": "0.14.0",
     "np": "5.1.2",
     "npm-license-crawler": "0.2.1",
+    "release-it": "12.4.3",
     "rimraf": "3.0.0",
     "rollup": "1.26.3",
     "rollup-plugin-analyzer": "3.2.2",
@@ -94,5 +106,6 @@
     "whatwg-fetch": "3.0.0",
     "xmldom": "0.1.27"
   },
-  "peerDependencies": {}
+  "peerDependencies": {},
+  "release-it": {}
 }

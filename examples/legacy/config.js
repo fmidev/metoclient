@@ -14,20 +14,10 @@ fmi.config.metoclient = {
   'refreshInterval': 'PT15M',
   'timeZone': 'Europe/Helsinki',
   'sources': {
-    'openwms': {
-      'type': 'raster',
-      'tiles': [
-        'https://openwms.fmi.fi/geoserver/wms'
-      ],
-      'bounds': [
-        -1214975,
-        6518785,
-        1179690,
-        7850125
-      ],
-      'tileSize': 1024
-    },
     'osm': {
+      'type': 'OSM'
+    },
+    'osm-wmts': {
       'type': 'raster',
       'tiles': [
         'https://avaa.tdata.fi/geoserver/osm_finland/gwc/service/wmts'
@@ -41,14 +31,36 @@ fmi.config.metoclient = {
       'tileSize': 1024,
       'capabilities': 'osm-getcapabilities.xml'
     },
+    'openwms': {
+      'type': 'raster',
+      'tiles': [
+        'https://openwms.fmi.fi/geoserver/wms'
+      ],
+      'bounds': [
+        -1214975,
+        6518785,
+        1179690,
+        7850125
+      ],
+      'tileSize': 1024
+    },
   },
   'layers': [
     {
       'id': 'basic-map',
-      'type': 'raster',
       'source': 'osm',
       'metadata': {
-        'type': 'base'
+        'type': 'base',
+        'title': 'Basic map'
+      }
+    },
+    {
+      'id': 'basic-map-wmts',
+      'type': 'raster',
+      'source': 'osm-wmts',
+      'metadata': {
+        'type': 'base',
+        'title': 'Basic map WMTS'
       },
       'url': {
         'service': 'WMTS',

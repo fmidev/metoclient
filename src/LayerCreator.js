@@ -1,6 +1,7 @@
 import TileLayer from 'ol/layer/Tile';
 import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
+import { OSM } from 'ol/source';
 import SourceCreator from './SourceCreator';
 import { getBaseUrl } from './util';
 
@@ -10,6 +11,14 @@ export default class LayerCreator {
     const source = options.sources[layer.source];
     if (source == null) {
       return null;
+    }
+    if (source.type === 'OSM') {
+      return new TileLayer({
+        source: new OSM(),
+        type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
+        title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
+        id: layer.id
+      });
     }
     const service = layer.url.service.toLowerCase();
     if (typeof SourceCreator[service] === 'function') {

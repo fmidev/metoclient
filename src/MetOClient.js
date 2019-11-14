@@ -211,6 +211,9 @@ export class MetOClient extends BaseObject {
       return true;
     }
     const source = this.config_.sources[layer.source];
+    if (source.type === 'OSM') {
+      return true;
+    }
     if ((source == null) || (source.tiles == null)) {
       return false;
     }
@@ -250,8 +253,9 @@ export class MetOClient extends BaseObject {
         }, layerConfig.time.data[0]);
       }
     }
-    const url = ((source.capabilities != null) && (source.capabilities.length > 0)) ? source.capabilities : source.tiles[0];
-    const layer = LayerCreator[layerType](layerConfig, options, this.capabilities_[url]);
+    const tiles = source.tiles != null ? source.tiles[0] : null;
+    const url = ((source.capabilities != null) && (source.capabilities.length > 0)) ? source.capabilities : tiles;
+    const layer = LayerCreator[layerType](layerConfig, options, url != null ? this.capabilities_[url] : null);
     if (layer != null) {
       layer.on('change:visible', event => {
         const visible = layer.getVisible();
@@ -346,7 +350,7 @@ export class MetOClient extends BaseObject {
           return lowerCased;
         }, {});
       }
-      if ((layerConfig.source == null) || ((layerConfig.url != null) && (typeof layerConfig.url.service !== 'string') || (layerConfig.url.service.length === 0))) {
+      if ((layerConfig.source == null) || ((layerConfig.url != null) && ((typeof layerConfig.url.service !== 'string') || (layerConfig.url.service.length === 0)))) {
         return olLayers;
       }
       if ((numBaseMaps === 1) && (layerConfig.metadata != null) && (layerConfig.metadata.type != null) && (layerConfig.metadata.type.toLowerCase() === 'base')) {
@@ -691,7 +695,6 @@ export class MetOClient extends BaseObject {
           'zoomInTipLabel': this.config_.texts['Zoom In'],
           'zoomOutTipLabel': this.config_.texts['Zoom Out'],
         }),
-        new LayerSwitcher(),
         this.timeSlider_
       ],
       interactions: [
@@ -703,6 +706,7 @@ export class MetOClient extends BaseObject {
       ]
     });
     this.set('map', map);
+    map.addControl(new LayerSwitcher());
     this.renderComplete_ = true;
     this.timeSlider_.createTimeSlider(this.times_);
     this.playingListener_ = this.get('map').on('change:playing', evt => {

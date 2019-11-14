@@ -18,6 +18,10 @@
       "sonarjs"
     ]
   },
+  "eslintIgnore": [
+    "examples/*",
+    "test/*"
+  ],
   "scripts": {
     "start": "rollup --config rollup.config.js --watch",
     "build": "npm run clean:dist && rollup --config rollup.config.js",

@@ -91,3 +91,7 @@ export const DEFAULT_OPTIONS = {
 };
 
 export const DEFAULT_TILESIZE = 1024;
+
+export const SOURCE_TIME = 'metoclient:time';
+
+export const PRESENT = 'present';

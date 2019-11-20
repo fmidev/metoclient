@@ -47,6 +47,7 @@ button.fmi-metoclient-timeslider-play-button {
     background-color: #585858;
     margin: 0;
     border-radius: 0;
+    cursor: pointer;
 }
 
 button.fmi-metoclient-timeslider-play-button:hover {

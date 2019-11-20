@@ -8,13 +8,13 @@ fmi.config.metoclient = {
     385956,
     6671437
   ],
-  'zoom': 8,
+  'zoom': 3,
   'container': 'map',
   'projection': 'EPSG:3067',
   'refreshInterval': 'PT15M',
   'timeZone': 'Europe/Helsinki',
   'sources': {
-    'osm': {
+  'osm': {
       'type': 'OSM'
     },
     'osm-wmts': {
@@ -51,7 +51,7 @@ fmi.config.metoclient = {
       'source': 'osm',
       'metadata': {
         'type': 'base',
-        'title': 'Basic map'
+        'title': 'OpenStreetMap'
       }
     },
     {
@@ -60,7 +60,7 @@ fmi.config.metoclient = {
       'source': 'osm-wmts',
       'metadata': {
         'type': 'base',
-        'title': 'Basic map WMTS'
+        'title': 'OpenStreetMap WMTS'
       },
       'url': {
         'service': 'WMTS',

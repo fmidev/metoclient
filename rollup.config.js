@@ -6,6 +6,7 @@ import { terser } from 'rollup-plugin-terser';
 import versionInjector from 'rollup-plugin-version-injector';
 import copy from 'rollup-plugin-copy';
 import analyze from 'rollup-plugin-analyzer';
+import license from 'rollup-plugin-license';
 
 export default {
   input: './src/MetOClient.js',
@@ -36,7 +37,7 @@ export default {
       ]
     }),
     replace({
-      'process.env.NODE_ENV': JSON.stringify( 'production' )
+      'process.env.NODE_ENV': JSON.stringify('production')
     }),
     resolve({
       preferBuiltins: true
@@ -66,6 +67,12 @@ export default {
     }),
     analyze({
       summaryOnly: true
+    }),
+    license({
+      thirdParty: {
+        output: 'metoclient.licenses.txt',
+        includePrivate: true, // Default is false.
+      },
     })
   ]
 };

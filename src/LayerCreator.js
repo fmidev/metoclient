@@ -31,6 +31,7 @@ export default class LayerCreator {
         title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
         previous: (layer.previous != null) ? layer.previous : options.layers.find(layer => layer['next'] === layer.id),
         next: (layer.next != null) ? layer.next : options.layers.find(layer => layer['previous'] === layer.id),
+        legendTitle: layer.legendTitle,
         id: layer.id
       }) : null;
     }
@@ -69,6 +70,7 @@ export default class LayerCreator {
       title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
       previous: (layer.previous != null) ? layer.previous : options.layers.find(layer => layer['next'] === layer.id),
       next: (layer.next != null) ? layer.next : options.layers.find(layer => layer['previous'] === layer.id),
+      legendTitle: layer.legendTitle,
       id: layer.id
     });
   }

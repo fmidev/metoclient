@@ -27,8 +27,7 @@ export default {
           '@babel/env',
           {
             targets: {
-              browsers: 'ie >= 11',
-              node: 8
+              browsers: 'ie >= 11'
             },
             corejs: 3,
             useBuiltIns: 'usage'

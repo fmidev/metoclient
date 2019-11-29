@@ -17,8 +17,6 @@ export const LEGEND_FIGURE_CLASS_PREFIX = 'legend';
  * @type {string}
  * @const
  */
-export const LEGEND_CONTAINER_CLASS = 'fmi-metoclient-legend';
-
 export const NO_SELECT_CLASS = 'noselect';
 
 export const ONE_SECOND = 1000;
@@ -86,7 +84,8 @@ export const DEFAULT_OPTIONS = {
   periodDelay: 2 * DEFAULT_DELAY,
   texts: {
     'Zoom In': 'Zoom In',
-    'Zoom Out': 'Zoom Out'
+    'Zoom Out': 'Zoom Out',
+    Legend: 'Legend'
   }
 };
 
@@ -95,3 +94,11 @@ export const DEFAULT_TILESIZE = 1024;
 export const SOURCE_TIME = 'metoclient:time';
 
 export const PRESENT = 'present';
+
+export const DEFAULT_LEGEND = 'metoclient:defaultLegend';
+
+export const LAYER_SWITCHER_CONTAINER_ID = 'fmi-metoclient-layer-switcher-container';
+export const LEGEND_CHOOSER_CONTAINER_ID = 'fmi-metoclient-legend-chooser-container';
+export const LEGEND_CHOOSER_LABEL_ID = 'fmi-metoclient-legend-chooser-label';
+export const LEGEND_CHOOSER_SELECT_ID = 'fmi-metoclient-legend-chooser-select';
+export const LEGEND_CONTAINER_ID = 'fmi-metoclient-legend-container';

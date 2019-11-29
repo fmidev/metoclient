@@ -27,6 +27,7 @@ import DragPan from 'ol/interaction/DragPan';
 import PinchZoom from 'ol/interaction/PinchZoom';
 import KeyboardPan from 'ol/interaction/KeyboardPan';
 import KeyboardZoom from 'ol/interaction/KeyboardZoom';
+import ElementVisibilityWatcher from 'element-visibility-watcher';
 
 /**
  * @classdesc
@@ -42,6 +43,9 @@ export class MetOClient extends BaseObject {
     proj4.defs('EPSG:3067', '+proj=utm +zone=35 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
     register(proj4);
     this.config_ = assign(constants.DEFAULT_OPTIONS, options);
+    if ((options.target == null) && (options.container != null)) {
+      this.config_.target = options.container;
+    }
     this.set('options', options, true);
     this.set('map', null);
     this.timeSlider_ = null;
@@ -57,6 +61,9 @@ export class MetOClient extends BaseObject {
     this.waitingRender_ = 0;
     this.refreshInterval_ = options.refreshInterval ? Math.min(Duration.fromISO(options.refreshInterval).valueOf(), constants.MAX_REFRESH_INTERVAL) : constants.DEFAULT_REFRESH_INTERVAL;
     this.capabilities_ = {};
+    this.legends_ = {};
+    this.selectedLegend_ = constants.DEFAULT_LEGEND;
+    this.layerSwitcherWatcher = null;
     this.on('change:options', () => {
       this.config_ = assign(constants.DEFAULT_OPTIONS, this.get('options'));
       this.refresh();
@@ -265,11 +272,11 @@ export class MetOClient extends BaseObject {
         const visible = layer.getVisible();
         ['previous', 'next'].forEach(relative => {
           this.setRelativesVisible_(layer, relative, visible);
-          let previousLayer = layer.get('metoclient:previous');
+          const previousLayer = layer.get('metoclient:previous');
           if (previousLayer != null) {
             previousLayer.setVisible(visible);
           }
-          let nextLayer = layer.get('metoclient:next');
+          const nextLayer = layer.get('metoclient:next');
           if (nextLayer != null) {
             nextLayer.setVisible(visible);
           }
@@ -355,7 +362,12 @@ export class MetOClient extends BaseObject {
    */
   createLayers_ () {
     const numBaseMaps = this.config_.layers.reduce((baseMapCount, layerConfig) => baseMapCount + ((layerConfig.metadata != null) && (layerConfig.metadata.type != null) && (layerConfig.metadata.type.toLowerCase() === 'base')), 0);
-    let layers = new Collection(this.config_.layers.reduce((olLayers, layerConfig) => {
+    let layers = new Collection(this.config_.layers.map(layerConfig => {
+      if ((layerConfig.time != null) && (layerConfig.metadata != null) && (layerConfig.metadata.title != null)) {
+        layerConfig.legendTitle = layerConfig.metadata.title;
+      }
+      return layerConfig;
+    }).reduce((olLayers, layerConfig) => {
       if ((layerConfig.time != null) && ((layerConfig.previous == null) || (layerConfig.previous.length === 0)) && (layerConfig.metadata != null) && (layerConfig.metadata.title != null)) {
         layerConfig.metadata.title = this.createLayerSwitcherTitle_(layerConfig);
       }
@@ -723,6 +735,145 @@ export class MetOClient extends BaseObject {
     this.timeListener_ = this.get('map').on('change:time', this.timeUpdated_.bind(this));
   }
 
+  getLayerSwitcherPanel_ () {
+    return document.querySelector('div#' + constants.LAYER_SWITCHER_CONTAINER_ID + ' div.panel');
+  }
+
+  /**
+   *
+   * @private
+   */
+  createLegendChooser_() {
+    const layerSwitcherPanel = this.getLayerSwitcherPanel_();
+    if (layerSwitcherPanel == null) {
+      return;
+    }
+    let legendChooserContainer = document.getElementById(constants.LEGEND_CHOOSER_CONTAINER_ID);
+    if (legendChooserContainer != null) {
+      return;
+    }
+    legendChooserContainer = document.createElement('div');
+    legendChooserContainer.setAttribute('id', constants.LEGEND_CHOOSER_CONTAINER_ID);
+
+    const legendSelectLabel = document.createElement('label');
+    legendSelectLabel.setAttribute('id', constants.LEGEND_CHOOSER_LABEL_ID);
+    legendSelectLabel.setAttribute('for', constants.LEGEND_CHOOSER_SELECT_ID);
+    legendSelectLabel.innerHTML = this.config_.texts['Legend'];
+    legendChooserContainer.appendChild(legendSelectLabel);
+
+    const legendSelect = document.createElement('select');
+    legendSelect.setAttribute('id', constants.LEGEND_CHOOSER_SELECT_ID);
+    Object.keys(this.legends_).forEach((key) => {
+      const legendOption = document.createElement('option');
+      legendOption.value = key;
+      legendOption.text = this.legends_[key].title;
+      legendSelect.appendChild(legendOption);
+    });
+    legendSelect.value = this.selectedLegend_;
+    legendSelect.addEventListener('change', (event) => {
+      const selectedOption = legendSelect.options[legendSelect.selectedIndex];
+      this.selectedLegend_ = selectedOption.value;
+      const legendContainer = document.getElementById(constants.LEGEND_CONTAINER_ID);
+      if (legendContainer != null) {
+        while (legendContainer.firstChild) {
+          legendContainer.removeChild(legendContainer.firstChild);
+        }
+        const url = this.legends_[selectedOption.value].url;
+        if ((url != null) && (url.length > 0)) {
+          const legendFigure = document.createElement('figure');
+          const legendCaption = document.createElement('figcaption');
+          legendCaption.innerHTML = selectedOption.text;
+          legendFigure.appendChild(legendCaption);
+          const legendImage = document.createElement('img');
+          legendImage.setAttribute('src', url);
+          legendFigure.appendChild(legendImage);
+          legendContainer.appendChild(legendFigure);
+        }
+      }
+    });
+    legendChooserContainer.appendChild(legendSelect);
+    layerSwitcherPanel.appendChild(legendChooserContainer);
+    const layerList = layerSwitcherPanel.querySelector('ul');
+    if (layerList != null) {
+      layerList.addEventListener('change', (event) => {
+        this.createLegendChooser_();
+      });
+    }
+  }
+
+  /**
+   *
+   * @private
+   */
+  createLayerSwitcherWatcher_() {
+    if (this.layerSwitcherWatcher != null) {
+      return;
+    }
+    const layerSwitcherPanel = this.getLayerSwitcherPanel_();
+      // A workaround for https://github.com/walkermatt/ol-layerswitcher/issues/209
+    if (layerSwitcherPanel != null) {
+      this.layerSwitcherWatcher = new ElementVisibilityWatcher();
+      this.layerSwitcherWatcher.watch(layerSwitcherPanel, (visible) => {
+        if (visible) {
+          this.createLegendChooser_();
+        }
+      });
+    }
+  }
+
+  /**
+   *
+   * @private
+   */
+  createLegendContainer_ () {
+    let mapContainer = document.getElementById(this.config_.target);
+    if (mapContainer != null) {
+      let legendContainer = document.createElement('div');
+      legendContainer.setAttribute('id', constants.LEGEND_CONTAINER_ID);
+      mapContainer.appendChild(legendContainer);
+    }
+  }
+
+  /**
+   *
+   */
+  createLegends_() {
+    const map = this.get('map');
+    if (map == null) {
+      return;
+    }
+    const view = map.getView();
+    if (view == null) {
+      return;
+    }
+    // Todo: support resolutions
+    // const resolution = view.getResolution();
+    const layers = map.getLayers();
+    this.legends_ = layers
+      .getArray()
+      .filter(layer => this.isAnimationLayer_(layer))
+      .reduce((legendArray, layer) => {
+        const source = layer.getSource();
+        if ((source != null) && (typeof source['getLegendUrl'] === 'function')) {
+          const legendUrl = source.getLegendUrl();
+          legendArray[layer.get('id')] = {
+            'title': layer.get('legendTitle'),
+            'url': legendUrl
+          }
+        }
+        return legendArray;
+    }, {
+      [constants.DEFAULT_LEGEND]: {
+        title: '',
+        url: null
+      }
+    });
+    if (Object.entries(this.legends_).length > 0) {
+      this.createLegendContainer_();
+      this.createLayerSwitcherWatcher_();
+    }
+  }
+
   /**
    *
    * @private
@@ -735,7 +886,7 @@ export class MetOClient extends BaseObject {
       timeZoneLabel: this.config_.timeZoneLabel
     });
     let map = new Map({
-      target: this.config_.container,
+      target: this.config_.target,
       layers: this.createLayers_(),
       view: this.createView_(),
       controls: [
@@ -755,6 +906,20 @@ export class MetOClient extends BaseObject {
     });
     this.set('map', map);
     map.addControl(new LayerSwitcher());
+    const layerSwitcherContainer = document.querySelector('div#' + this.config_.target + ' div.layer-switcher');
+    if (layerSwitcherContainer != null) {
+      layerSwitcherContainer.setAttribute('id', constants.LAYER_SWITCHER_CONTAINER_ID);
+      // https://github.com/walkermatt/ol-layerswitcher/issues/39
+      const layerSwitcherButton = layerSwitcherContainer.querySelector('button');
+      if (layerSwitcherButton != null) {
+        layerSwitcherButton.onmouseover = () => {};
+      }
+      const layerSwitcherPanel = this.getLayerSwitcherPanel_();
+      if (layerSwitcherPanel != null) {
+        layerSwitcherPanel.onmouseout = () => {};
+      }
+    }
+    this.createLegends_();
     this.renderComplete_ = true;
     this.timeSlider_.createTimeSlider(this.times_);
     this.playingListener_ = this.get('map').on('change:playing', evt => {
@@ -783,7 +948,7 @@ export class MetOClient extends BaseObject {
     if (map == null) {
       this.createMap_();
     } else {
-      map.setTarget(this.config_.container);
+      map.setTarget(this.config_.target);
       map.getLayerGroup().setLayers(this.createLayers_());
       map.setView(this.createView_());
       map.set('time', this.config_.time);

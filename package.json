@@ -1,6 +1,6 @@
 {
   "name": "metoclient",
-  "version": "6.0.9",
+  "version": "6.0.10",
   "description": "Map animator",
   "module": "src/index.js",
   "main": "dist/index.js",
@@ -16,7 +16,10 @@
     ],
     "plugins": [
       "sonarjs"
-    ]
+    ],
+    "env": {
+      "browser": true
+    }
   },
   "eslintIgnore": [
     "examples/*",
@@ -63,11 +66,12 @@
   "homepage": "https://github.com/fmidev/metoclient",
   "dependencies": {
     "can-ajax": "2.4.5",
-    "core-js": "3.4.0",
-    "d3-timer": "1.0.9",
+    "core-js": "3.4.5",
+    "d3-timer": "1.0.10",
     "date-time-format-timezone": "1.0.21",
     "domurl": "2.2.0",
     "element-resize-detector": "1.1.15",
+    "element-visibility-watcher": "1.0.5",
     "empty-element": "1.0.0",
     "good-listener": "1.2.2",
     "legally": "3.3.7",
@@ -97,7 +101,7 @@
     "np": "5.1.2",
     "release-it": "12.4.3",
     "rimraf": "3.0.0",
-    "rollup": "1.27.2",
+    "rollup": "1.27.5",
     "rollup-plugin-analyzer": "3.2.2",
     "rollup-plugin-babel": "4.3.3",
     "rollup-plugin-commonjs": "10.1.0",

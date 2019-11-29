@@ -76,10 +76,11 @@ class TimeSlider extends Control {
    * @param {number} direction Forward or backward direction
    */
   step(direction) {
+    const map = this.getMap();
     if (direction > 0) {
-      this.getMap().dispatchEvent('next');
+      map.dispatchEvent('next');
     } else if (direction < 0) {
-      this.getMap().dispatchEvent('previous');
+      map.dispatchEvent('previous');
     }
   }
 
@@ -92,8 +93,10 @@ class TimeSlider extends Control {
     const clickableContainer = document.createElement('div');
     clickableContainer.classList.add(constants.CLICKABLE_CLASS);
 
-    clickableContainer.appendChild(this.createPreMargin());
-    clickableContainer.appendChild(this.createPreTools());
+    if (moments.length > 0) {
+      clickableContainer.appendChild(this.createPreMargin());
+      clickableContainer.appendChild(this.createPreTools());
+    }
 
     const momentsContainer = document.createElement('div');
     momentsContainer.classList.add(constants.FRAMES_CONTAINER_CLASS);
@@ -621,7 +624,6 @@ class TimeSlider extends Control {
    * @param {number} animationTime Animation time.
    */
   setAnimationTime(animationTime) {
-    // console.log(new Date(animationTime));
     if (animationTime === this.getMap().get('time')) {
       this.updatePointer(animationTime);
       return;
@@ -702,9 +704,15 @@ class TimeSlider extends Control {
 
   /**
    * Updates loading state visualization
-   * @param {Object} numIntervalItems Loader counter information for intervals.
+   * @param {Object} timeSteps Loader counter information for intervals.
    */
-  updateTimeLoaderVis(numIntervalItems) {
+  updateTimeLoaderVis(timeSteps) {
+    let numIntervalItems = timeSteps.reduce((activeTimeSteps, timeStep) => {
+      if (timeStep.active) {
+        activeTimeSteps.push(timeStep);
+      }
+      return activeTimeSteps;
+    }, []);
     if (!this.config_['showTimeSlider']) {
       return;
     }
@@ -761,9 +769,10 @@ class TimeSlider extends Control {
   setDragging(dragging) {
     this.dragging_ = dragging;
     const pointerEvents = dragging ? 'auto' : 'none';
-    Array.from(this.container_.getElementsByClassName(constants.DRAG_LISTENER_CLASS)).forEach(element => {
-      element.style.pointerEvents = pointerEvents;
-    });
+    Array.from(this.container_.getElementsByClassName(constants.DRAG_LISTENER_CLASS))
+      .forEach(element => {
+        element.style.pointerEvents = pointerEvents;
+      });
     Array.from(this.container_.getElementsByClassName(constants.POINTER_CLASS)).forEach(element => {
       if (dragging) {
         element.classList.add(constants.POINTER_DRAGGING);
@@ -772,9 +781,10 @@ class TimeSlider extends Control {
       }
     });
     let display = dragging ? 'block' : 'none';
-    Array.from(this.container_.getElementsByClassName(constants.POINTER_INFOTIP_CLASS)).forEach(element => {
-      element.style.display = display;
-    });
+    Array.from(this.container_.getElementsByClassName(constants.POINTER_INFOTIP_CLASS))
+      .forEach(element => {
+        element.style.display = display;
+      });
   }
 
   /**

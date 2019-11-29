@@ -43,7 +43,7 @@ button.fmi-metoclient-timeslider-play-button {
     top: 0;
     height: 55px;
     width: 55px;
-    background-image: url('../img/play.png');
+    background-image: url('play.png');
     background-color: #585858;
     margin: 0;
     border-radius: 0;
@@ -55,7 +55,7 @@ button.fmi-metoclient-timeslider-play-button:hover {
 }
 
 button.fmi-metoclient-timeslider-play-button.playing {
-    background-image: url('../img/pause.png');
+    background-image: url('pause.png');
 }
 
 button.fmi-metoclient-timeslider-step-button {
@@ -457,23 +457,26 @@ output {
 
 /* layer switcher */
 
-#fmi-metoclient-layer-switcher-container.shown.ol-control {
+.layer-switcher.shown.ol-control {
     background-color: transparent;
 }
 
-#fmi-metoclient-layer-switcher-container.shown.ol-control:hover {
+.layer-switcher.shown.ol-control:hover {
     background-color: transparent;
 }
 
-#fmi-metoclient-layer-switcher-container {
+.layer-switcher {
     position: absolute;
     top: 0.5em;
     right: 0.5em;
     text-align: left;
-    font-family: Roboto, Arial, Helvetica, sans-serif;
 }
 
-#fmi-metoclient-layer-switcher-container .panel {
+.layer-switcher.shown {
+    bottom: 3em;
+}
+
+.layer-switcher .panel {
     padding: 0 1em 0 0;
     margin: 0;
     border: 4px solid #eee;
@@ -484,11 +487,11 @@ output {
     overflow-y: auto;
 }
 
-#fmi-metoclient-layer-switcher-container.shown .panel {
+.layer-switcher.shown .panel {
     display: block;
 }
 
-#fmi-metoclient-layer-switcher-container button {
+.layer-switcher button {
     float: right;
     width: 38px;
     height: 38px;
@@ -499,70 +502,72 @@ output {
     border: none;
 }
 
-#fmi-metoclient-layer-switcher-container.shown button {
+.layer-switcher.shown button {
     display: none;
 }
 
-#fmi-metoclient-layer-switcher-container button:focus, #fmi-metoclient-layer-switcher-container button:hover {
+.layer-switcher button:focus, .layer-switcher button:hover {
     background-color: white;
 }
 
-#fmi-metoclient-layer-switcher-container ul {
+.layer-switcher ul {
+    list-style: none;
     display: block;
-    list-style: disc none;
+    list-style-type: disc;
     margin-block-start: 1em;
     margin-block-end: 1em;
-    margin-inline-start: 0;
-    margin-inline-end: 0;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
     padding-inline-start: 1em;
 }
 
-#fmi-metoclient-layer-switcher-container li.group > label {
+.layer-switcher li.group > label {
     font-weight: bold;
 }
 
-#fmi-metoclient-layer-switcher-container li > label {
+.layer-switcher li > label {
+    font-family: Roboto, Arial, Helvetica, sans-serif;
     font-weight: bold;
     cursor: pointer;
 }
 
-#fmi-metoclient-layer-switcher-container li.layer {
+.layer-switcher li.layer {
     display: table;
 }
 
-#fmi-metoclient-layer-switcher-container li:not(:last-child) {
+.layer-switcher li:not(:last-child) {
     margin-bottom: 1px;
 }
 
-#fmi-metoclient-layer-switcher-container li.layer label, #fmi-metoclient-layer-switcher-container li.layer input {
+.layer-switcher li.layer label, .layer-switcher li.layer input {
     display: table-cell;
     vertical-align: middle;
 }
 
-#fmi-metoclient-layer-switcher-container label.disabled {
+.layer-switcher label.disabled {
     opacity:0.4;
 }
 
-#fmi-metoclient-layer-switcher-container input {
+.layer-switcher input {
     cursor: pointer;
     margin: 4px;
 }
 
-#fmi-metoclient-layer-switcher-container.touch ::-webkit-scrollbar {
+.layer-switcher.touch ::-webkit-scrollbar {
     width: 4px;
 }
 
-#fmi-metoclient-layer-switcher-container.touch ::-webkit-scrollbar-track {
+.layer-switcher.touch ::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
     border-radius: 10px;
 }
 
-#fmi-metoclient-layer-switcher-container.touch ::-webkit-scrollbar-thumb {
+.layer-switcher.touch ::-webkit-scrollbar-thumb {
     border-radius: 10px;
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
 }
 
-#fmi-metoclient-layer-switcher-container .group button {
+.layer-switcher .group button {
     display: inline-block;
     vertical-align: top;
     float: none;
@@ -575,7 +580,7 @@ output {
     transition: transform .2s ease-in-out;
 }
 
-#fmi-metoclient-layer-switcher-container .group.layer-switcher-close button {
+.layer-switcher .group.layer-switcher-close button {
     transform: rotate(-90deg);
     -webkit-transform: rotate(-90deg);
 }
@@ -584,45 +589,13 @@ li.group.layer-switcher-fold {
     margin-left: -18px;
 }
 
-#fmi-metoclient-layer-switcher-container .group.layer-switcher-fold > ul {
+.layer-switcher .group.layer-switcher-fold > ul {
     padding-left: 3em;
 }
 
-#fmi-metoclient-layer-switcher-container .group.layer-switcher-fold.layer-switcher-close > ul {
+.layer-switcher .group.layer-switcher-fold.layer-switcher-close > ul {
     overflow: hidden;
     height: 0;
-}
-
-div#fmi-metoclient-legend-chooser-container {
-  margin-left: 16px;
-  margin-bottom: 16px;
-}
-
-label#fmi-metoclient-legend-chooser-label {
-  display: inline-block;
-  width: 100%;
-}
-
-div#fmi-metoclient-legend-container {
-  position: absolute;
-  top: .5em;
-  left: 50px;
-}
-
-div#fmi-metoclient-legend-container figure {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
-  margin-block-start: 0;
-  margin-block-end: 0;
-  margin-inline-start: 0;
-  margin-inline-end: 0;
-  background-color:rgba(255,255,255,0.8);
-}
-
-div#fmi-metoclient-layer-switcher-container button {
-  cursor: pointer;
 }
 
 div.ol-zoom button {

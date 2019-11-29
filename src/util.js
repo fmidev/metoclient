@@ -4,6 +4,7 @@
 import Url from 'domurl';
 import { Duration, DateTime } from 'luxon';
 import { default as RRule } from 'rrule/dist/es5/rrule';
+import * as constants from './constants';
 
 /**
  * Floors time based on the given resolution.
@@ -27,11 +28,10 @@ export function isValidDate (d) {
 }
 
 // Todo: refactor long function
-export function parseTimes (timeInput, timeOffset) {
+export function parseTimes (timeInput, timeOffset, timeData = null) {
   const DATE_TYPE = 'date';
   const DURATION_TYPE = 'period';
-  const PRESENT = 'present';
-
+  const currentTime = Date.now();
   let times = [];
 
   if (timeInput == null) {
@@ -55,7 +55,7 @@ export function parseTimes (timeInput, timeOffset) {
     times = dates.map(date => new Date(date).getTime());
   } else if (timeInput.includes('/')) {
     const parsedParts = timeInput.split('/').map(part => {
-      if (part.toLowerCase() === PRESENT) {
+      if (part.toLowerCase() === constants.PRESENT) {
         return {
           value: Date.now(),
           type: DATE_TYPE
@@ -97,7 +97,11 @@ export function parseTimes (timeInput, timeOffset) {
     }
   } else {
     let texts = timeInput.toLowerCase().split(' and ');
-    texts.forEach(text => {
+    texts.map(text => text.trim()).forEach(text => {
+      let dataSteps = text.startsWith('data');
+      if (dataSteps) {
+        text = text.replace('data', 'every');
+      }
       let rule;
       const parts = text.split(' ');
       if (parts.length >= 2) {
@@ -107,20 +111,27 @@ export function parseTimes (timeInput, timeOffset) {
           return;
         }
       }
+      const history = text.includes(' history');
+      text = text.replace(' history', '');
+      if (dataSteps) {
+        text += ' for 2 times';
+      }
       try {
         rule = RRule.fromText(text);
       } catch (err) {
         return [];
       }
-      if (rule.options.freq === RRule.HOURLY) {
-        rule.options.byhour = Array.from(Array(24).keys()).filter(hour => hour % rule.options.interval === 0);
-        rule.options.byminute = [0];
-        rule.options.bysecond = [0];
-        rule.options.interval = 1;
-      } else if (rule.options.freq === RRule.MINUTELY) {
-        rule.options.byminute = Array.from(Array(60).keys()).filter(minute => minute % rule.options.interval === 0);
-        rule.options.bysecond = [0];
-        rule.options.interval = 1;
+      if (!dataSteps) {
+        if (rule.options.freq === RRule.HOURLY) {
+          rule.options.byhour = Array.from(Array(24).keys()).filter(hour => hour % rule.options.interval === 0);
+          rule.options.byminute = [0];
+          rule.options.bysecond = [0];
+          rule.options.interval = 1;
+        } else if (rule.options.freq === RRule.MINUTELY) {
+          rule.options.byminute = Array.from(Array(60).keys()).filter(minute => minute % rule.options.interval === 0);
+          rule.options.bysecond = [0];
+          rule.options.interval = 1;
+        }
       }
       if (timeOffset != null) {
         let start = DateTime.fromJSDate(rule.options.dtstart);
@@ -140,24 +151,32 @@ export function parseTimes (timeInput, timeOffset) {
           .valueOf()
       );
       let offset;
-      if (text.toLowerCase().includes(' history')) {
-        let numTimeSteps = ruleTimes.length - 1;
-        if (numTimeSteps === 0) {
+      if (history) {
+        let lastTimeStepIndex = ruleTimes.length - 1;
+        if (lastTimeStepIndex === 0) {
           let tmpOptions = {...rule.options};
           tmpOptions.count = 2;
           let tmpRule = new RRule(tmpOptions);
           let tmpRuleTimes = tmpRule.all();
           offset = tmpRuleTimes[1] - tmpRuleTimes[0];
         } else {
-          offset = (numTimeSteps + 1) * (ruleTimes[numTimeSteps] - ruleTimes[0]) / numTimeSteps;
+          offset = (lastTimeStepIndex + 1) * (ruleTimes[lastTimeStepIndex] - ruleTimes[0]) / lastTimeStepIndex;
         }
         ruleTimes = ruleTimes.map(time => time - offset);
       }
-      ruleTimes.forEach(ruleTime => {
-        if (!times.includes(ruleTime)) {
-          times.push(ruleTime);
-        }
-      });
+      if (dataSteps) {
+        timeData.forEach(dataTime => {
+          if (((history) && (dataTime >= ruleTimes[1]) && (dataTime <= currentTime)) || ((!history) && (dataTime <= ruleTimes[1]) && (dataTime >= currentTime))){
+            times.push(dataTime);
+          }
+        });
+      } else {
+        ruleTimes.forEach(ruleTime => {
+          if (!times.includes(ruleTime)) {
+            times.push(ruleTime);
+          }
+        });
+      }
     });
   }
   times.sort();
@@ -180,7 +199,7 @@ export function updateSourceTime (tiles, newTime) {
     if (newTime != null) {
       url.query[timeKey] = typeof newTime === 'number' ? (new Date(newTime)).toISOString() : newTime;
     } else {
-      delete url.query[p];
+      delete url.query[timeKey];
     }
     return url.toString();
   });
@@ -194,7 +213,7 @@ export function updateSourceTime (tiles, newTime) {
  * @api
  */
 export function stringifyUrl (baseUrl, params) {
-  return Object.keys(params).reduce((joined, paramKey, index) => joined + ((index > 0) ? '&' : '') + paramKey + '=' + (((typeof params[paramKey] === 'string') && (params[paramKey].match(/\{([^}]+)\}/g) === null)) ? encodeURIComponent(params[paramKey]) : params[paramKey]), baseUrl.trim() + '?');
+  return Object.keys(params).reduce((joined, paramKey, index) => joined + ((index > 0) ? '&' : '') + paramKey + '=' + (((typeof params[paramKey] === 'string') && (params[paramKey].match(/{([^}]+)}/g) === null)) ? encodeURIComponent(params[paramKey]) : params[paramKey]), baseUrl.trim() + '?');
 }
 
 /**
@@ -208,6 +227,11 @@ export function createInterval (start, end, period) {
   return start + '/' + end + '/' + period;
 }
 
+/**
+ *
+ * @param url
+ * @returns {*|string}
+ */
 export function getBaseUrl (url) {
   return url.split(/[?#]/)[0];
 }

@@ -8,29 +8,12 @@ fmi.config.metoclient = {
     385956,
     6671437
   ],
-  'zoom': 3,
+  'zoom': 8,
   'container': 'map',
   'projection': 'EPSG:3067',
   'refreshInterval': 'PT15M',
   'timeZone': 'Europe/Helsinki',
   'sources': {
-  'osm': {
-      'type': 'OSM'
-    },
-    'osm-wmts': {
-      'type': 'raster',
-      'tiles': [
-        'https://avaa.tdata.fi/geoserver/osm_finland/gwc/service/wmts'
-      ],
-      'bounds': [
-        -1214975,
-        6518785,
-        1179690,
-        7850125
-      ],
-      'tileSize': 1024,
-      'capabilities': 'osm-getcapabilities.xml'
-    },
     'openwms': {
       'type': 'raster',
       'tiles': [
@@ -44,32 +27,17 @@ fmi.config.metoclient = {
       ],
       'tileSize': 1024
     },
+    'osm': {
+      'type': 'OSM'
+    },
   },
   'layers': [
     {
       'id': 'basic-map',
+      'type': 'OSM',
       'source': 'osm',
       'metadata': {
-        'type': 'base',
-        'title': 'OpenStreetMap'
-      }
-    },
-    {
-      'id': 'basic-map-wmts',
-      'type': 'raster',
-      'source': 'osm-wmts',
-      'metadata': {
-        'type': 'base',
-        'title': 'OpenStreetMap WMTS'
-      },
-      'url': {
-        'service': 'WMTS',
-        'layer': 'osm_finland:osm-finland',
-        'tilematrixset': 'ETRS-TM35FIN-FINLAND',
-        'style': '',
-        'request': 'GetTile',
-        'version': '1.0.0',
-        'format': 'image/png'
+        'type': 'base'
       }
     },
     {

@@ -1,6 +1,6 @@
 {
   "name": "@fmidev/metoclient",
-  "version": "6.0.11",
+  "version": "6.0.12",
   "description": "Map animator",
   "module": "src/index.js",
   "main": "dist/index.js",
@@ -25,9 +25,24 @@
     "examples/*",
     "test/*"
   ],
+  "config": {
+    "generateRelease": {
+      "no_confirm": false,
+      "pre_commit_commands": [
+        "npm run build"
+      ],
+      "post_commit_commands": [],
+      "post_complete_commands": [
+        "npm publish"
+      ],
+      "files_to_commit": [
+        "./dist/**/*"
+      ]
+    }
+  },
   "scripts": {
-    "start": "rollup --config rollup.config.js --watch",
-    "build": "npm run clean:dist && rollup --config rollup.config.js",
+    "start": "rollup --config rollup/config.js --watch",
+    "build": "npm run clean:dist && rollup --config rollup/config.js",
     "clean:dist": "rimraf ./dist/*",
     "clean:docs": "rimraf build/docs",
     "lint:src": "eslint --ext js src/",
@@ -44,7 +59,7 @@
     "prepublishOnly": "npm run build:dist",
     "deploy": "NODE_DEBUG=gh-pages node tasks/update-gh-pages.js",
     "licenses": "npm-license-crawler --onlyDirectDependencies --json metoclient.licenses.json",
-    "release": "np --no-yarn && git push https://github.com/fmidev/metoclient.git master --tags && npm run build:docs && npm run deploy"
+    "release": "generate-release"
   },
   "repository": {
     "type": "git",
@@ -94,12 +109,11 @@
     "eslint": "6.6.0",
     "eslint-config-airbnb-base": "14.0.0",
     "eslint-plugin-import": "2.18.2",
-    "eslint-plugin-sonarjs": "0.4.0",
+    "eslint-plugin-sonarjs": "0.5.0",
+    "generate-release": "github:masapu/node-generate-release",
     "gh-pages": "2.1.1",
     "jest": "24.9.0",
     "node-pre-gyp": "0.14.0",
-    "np": "5.1.2",
-    "release-it": "12.4.3",
     "rimraf": "3.0.0",
     "rollup": "1.27.5",
     "rollup-plugin-analyzer": "3.2.2",
@@ -114,6 +128,5 @@
     "whatwg-fetch": "3.0.0",
     "xmldom": "0.1.27"
   },
-  "peerDependencies": {},
-  "release-it": {}
+  "peerDependencies": {}
 }

@@ -1,6 +1,6 @@
 {
   "name": "@fmidev/metoclient",
-  "version": "6.0.11",
+  "version": "6.0.12",
   "description": "Map animator",
   "module": "src/index.js",
   "main": "dist/index.js",
@@ -31,8 +31,7 @@
       "pre_commit_commands": [
         "npm run build"
       ],
-      "post_commit_commands": [
-      ],
+      "post_commit_commands": [],
       "post_complete_commands": [
         "npm publish"
       ],

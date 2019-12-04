@@ -10,7 +10,7 @@ An animation API is provided to extend OpenLayers map methods.
 
 ### Using a module bundler
 
-For production, the recommended method is to bundle the application together with its dependencies. In this case, the first step is to install the [metoclient](https://www.npmjs.com/package/@fmidev/metoclient) package:
+For production, the recommended method is to bundle the application together with its dependencies. In this case, the first step is to install the [`metoclient`](https://www.npmjs.com/package/@fmidev/metoclient) package:
 
 ```
 npm install metoclient
@@ -32,6 +32,7 @@ metoclient.render().then(function () {
 });
 ```
 
+<a name="using-a-full-build"></a>
 #### Using a full build
 
 A full build is also available. In this case, to define a map animation on a web page the following four steps are required:
@@ -68,10 +69,10 @@ MetOClient offers the following interface to control an animation:
         -   [Layer times](#layer-times)
         -   [Relative time ranges](#relative-time)
             -   [Natural language](#natural-language)
-            -   [Recurrence Rules](#recurrence-rules)
-            -   [JSON Format](#json-format)
+            -   [Recurrence rules](#recurrence-rules)
+            -   [JSON format](#json-format)
         -   [Absolute time ranges](#absolute-time)
-            -   [WMS GetCapabilites Format](#wms-getcapabilites)
+            -   [WMS GetCapabilites format](#wms-getcapabilites)
 -   [Methods](#methods)
     -   [get('map')](#get-map)
         -   [Map properties](#map-properties)
@@ -85,6 +86,8 @@ MetOClient offers the following interface to control an animation:
     -   [previous()](#previous)
     -   [render()](#render)
     -   [set('options', options)](#set-options)
+-   [Static methods](#static-methods)
+    -   [transform (coordinate, source, destination)](#transform)
 
 ---
 
@@ -107,11 +110,11 @@ The root properties of the standard [Mapbox Style Specification](https://docs.ma
 
 In addition, the following root properties are supported:
 
-target: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Id of the container element for the map.
+`target`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Id of the container element for the map.
 
-refreshInterval: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Map refresh interval as [ISO\_8601 duration](https://en.wikipedia.org/wiki/ISO_8601#Durations) string, e.g. 'PT15M'.
+`refreshInterval`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Map refresh interval as [ISO\_8601 duration](https://en.wikipedia.org/wiki/ISO_8601#Durations) string, e.g. 'PT15M'.
 
-timeZone: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Time zone defined in [IANA time zone database](<https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>) format, e.g. 'Europe/Helsinki'.
+`timeZone`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Time zone defined in [IANA time zone database](<https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>) format, e.g. `'Europe/Helsinki'`.
 
 <a name="layer-url"></a>
 ##### Layer URL parameters
@@ -141,9 +144,9 @@ Layers can be linked to be temporally sequential which makes them transition smo
 
 Linking is defined in the following properties in a layer configuration object:
 
-next: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Layer id of the following layer.
+`next`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Layer id of the following layer.
 
-previous: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Layer id of the previous layer.
+`previous`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Layer id of the previous layer.
 
 For a single link it is sufficient to define either the next property of the first layer or the previous property of the latter layer. Of course, both can be defined to make the configuration easy to understand.
 
@@ -154,9 +157,9 @@ The visual layer switcher control is included in the map. It is a third party Op
 
 The layer switcher is configured via layers following [metadata](https://docs.mapbox.com/mapbox-gl-js/style-spec/#layer-metadata) properties:
 
-title: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Layer title in the layer switcher. A missing title field means that the layer won\'t be included in the layer switcher.
+`title`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Layer title in the layer switcher. A missing title field means that the layer won\'t be included in the layer switcher.
 
-type: [**Object**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/Object) Layer type. For base maps, the layer type is the base. In practice, the layer switcher only allows one base map to be visible at a time. Other type values do not have any effect.
+`type`: [**Object**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/Object) Layer type. For base maps, the layer type is the base. In practice, the layer switcher only allows one base map to be visible at a time. Other type values do not have any effect.
 
 Example layer definition for a base layer visible in the layer switcher:
 
@@ -180,9 +183,9 @@ The core configuration of a layer animation is to define the time points which a
 
 A layer\'s animation time points are defined as following the properties of a time object inside a layer definition:
 
-source: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Optional source reference that can be used to request GetCapabilities data containing a layer\'s available time dimension data. As a default layer\'s own source reference is used.
+`source`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Optional source reference that can be used to request GetCapabilities data containing a layer\'s available time dimension data. As a default layer\'s own source reference is used.
 
-range: **[String](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) \| [Object](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/Object)** Definitions for layer\'s requested time points. These times are only requested if they are defined as available in the layer's GetCapabilities response. Several different formats are provided to express the range, so as to fulfill different use cases. Let\'s review them next.
+`range`: **[String](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) \| [Object](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/Object)** Definitions for layer\'s requested time points. These times are only requested if they are defined as available in the layer's GetCapabilities response. Several different formats are provided to express the range, so as to fulfill different use cases. Let\'s review them next.
 
 <a name="relative-time"></a>
 ##### Relative time ranges
@@ -225,14 +228,14 @@ For example, if time is now 10:10, the previous time range would request layer t
 Not every layer contains regularly timed data. For example satellite weather data may be totally irregular.
 
 ```js
-'time': {
-  'range': 'data 25 hours history'
+"time": {
+  "range": "data 25 hours history"
 }
 ```
 
 The previous time range would contain all the time points offered by the layer during the latest 25 hours.
 
-The following tokens are available in natural language rule strings
+The following tokens are available in natural language rule strings, based on but not limited to the [English interface](https://github.com/jakubroztocil/rrule/blob/master/src/nlp/i18n.ts) of the [rrule.js](https://github.com/jakubroztocil/rrule) library:
 
 - history: /^history/i,
 - and: /^and/i,
@@ -277,15 +280,15 @@ The following tokens are available in natural language rule strings
 - november: /^nov(ember)?/i,
 - december: /^dec(ember)?/i,
 - comma: /^(,\s*|(and|or)\s*)+/i
-- SKIP: /^[ \r\n\t]+|^\.$/    
+- SKIP: /^[ \r\n\t]+|^\.$/
 
 <a name="recurrence-rules"></a>
-###### Recurrence Rules
+###### Recurrence rules
 
 [Recurrence rules](https://icalendar.org/iCalendar-RFC-5545/3-8-5-3-recurrence-rule.html) closely resembling [iCalendar (RFC 5545)](https://icalendar.org/RFC-Specifications/iCalendar-RFC-5545/) specification can be given as a string. For examples, see a [rule generator tool](https://icalendar.org/rrule-tool.html). There are some [differences](https://github.com/jakubroztocil/rrule#differences-from-icalendar-rfc) compared to the specification.
 
 <a name="json-format"></a>
-###### JSON Format
+###### JSON format
 
 The same information can be given as a JSON object as defined in [options object](https://github.com/jakubroztocil/rrule#rrule-constructor) in RRule constructor.
 
@@ -295,7 +298,7 @@ The same information can be given as a JSON object as defined in [options object
 Another totally different use case is to animate data between static time limits instead of around the present time.
 
 <a name="wms-getcapabilites"></a>
-###### WMS GetCapabilites Format
+###### WMS GetCapabilites format
 
 For a static time range, MetOClient supports the same time range format as used in [WMS 1.3.0 GetCapabilities](http://portal.opengeospatial.org/files/?artifact_id=14416), which is an extension to the ISO 8601:2000 standard. Thus, a list of several times is expressed by separating valid time values with a comma (\",\"). A temporal range is expressed using the syntax \"start/end/period\" to indicate the start time of the data, the ending time, and the time resolution.
 
@@ -315,9 +318,10 @@ For a static time range, MetOClient supports the same time range format as used 
 }
 ```
 
-<a name="get-map"></a>
+<a name="methods"></a>
 ### Methods
 
+<a name="get-map"></a>
 #### get(\'map\')
 
 **Returns**: [**Object**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/Object) The animation map.
@@ -340,9 +344,9 @@ let map = metoclient.get(\'map\')
 
 MetOClient extends OpenLayers map using the following properties:
 
--   time [**Number**](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number) Current animation time as the number of milliseconds elapsed since January 1, 1970, 00:00:00 UTC.
+-   `time` [**Number**](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number) Current animation time as the number of milliseconds elapsed since January 1, 1970, 00:00:00 UTC.
 
--   playing [**Boolean**](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean) Status of animation being currently played.
+-   `playing` [**Boolean**](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean) Status of animation being currently played.
 
 These properties are available as any other OpenLayers map property:
 
@@ -429,9 +433,23 @@ Renders the animation after evaluating the relative time values and updating lay
 <a name="set-options"></a>
 #### set('options', options)
 
-options: [**Object**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/Object) Animation configuration options.
+`options`: [**Object**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/Object) Animation configuration options.
 
 Sets the animation options and refreshes the map view.
+
+<a name="methods"></a>
+### Static methods
+
+<a name="transform"></a>
+#### transform(coordinate, source, destination)
+
+`coordinate`: [**Array**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) Coordinate.\
+`source`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Source projection.\
+`destination`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Destination projection.
+
+**Returns**: [**Array**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array) Coordinate.
+
+Transforms a coordinate from source projection to destination projection.
 
 ## Visual styling
 
@@ -441,7 +459,7 @@ The map can be extended with any OpenLayers control or other functionality inclu
 
 ## Default controls
 
-As a default, the animation map contains the following controls: Layer Switcher, Time slider and Zoom. The OpenLayers map function [addControl](https://openlayers.org/en/latest/apidoc/module-ol_Map-Map.html#addControl) can be used to provide a map with OpenLayers controls like FullScreen control in the previous \[full build example\](\#Using full build).
+As a default, the animation map contains the following controls: Layer Switcher, Time slider and Zoom. The OpenLayers map function [addControl](https://openlayers.org/en/latest/apidoc/module-ol_Map-Map.html#addControl) can be used to provide a map with OpenLayers controls like FullScreen control in the previous [full build example](#using-a-full-build).
 
 ### Layer Switcher
 
@@ -470,7 +488,7 @@ After visualizing data for the current time step, MetOClient will load data to m
 
 ## Supported Browsers
 
-All the new versions of the major browsers are supported, including desktop versions of Chrome, Firefox, Safari and Edge and mobile versions of Chrome and Safari. Also Internet Explorer 11 is supported but polyfills are needed for promises and Intl API, see [the legacy example](file:///C:/Users/Paul/AppData/Local/Temp/examples/legacy/index.html) .
+All the new versions of the major browsers are supported, including desktop versions of Chrome, Firefox, Safari and Edge and mobile versions of Chrome and Safari. Also Internet Explorer 11 is supported but polyfills are needed for promises and Intl API, see [the legacy example](examples/legacy/index.html) .
 
 ## Abbreviation
 

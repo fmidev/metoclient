@@ -70,7 +70,7 @@ export default {
     license({
       thirdParty: {
         output: 'metoclient.licenses.txt',
-        includePrivate: true, // Default is false.
+        includePrivate: true,
       },
     })
   ]

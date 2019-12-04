@@ -1,6 +1,6 @@
 {
   "name": "wms-example",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MetOClient WMS Example",
   "scripts": {
     "start": "rollup --config rollup.config.js --watch",
@@ -14,6 +14,6 @@
     "rollup-plugin-terser": "5.1.2"
   },
   "dependencies": {
-    "metoclient": "file:../.."
+    "@fmidev/metoclient": "6.0.13"
   }
 }

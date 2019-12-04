@@ -1,4 +1,4 @@
-import { MetOClient } from 'metoclient/src/MetOClient';
+import MetOClient from '@fmidev/metoclient';
 
 fetch('./config.json').then(response => {
   return response.json();

@@ -96,4 +96,5 @@ Staticfile
 # VS Code
 .vscode
 
-/build/
+# Wallaby
+wallaby

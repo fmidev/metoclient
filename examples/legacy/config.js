@@ -14,7 +14,7 @@ fmi.config.metoclient = {
   'refreshInterval': 'PT15M',
   'timeZone': 'Europe/Helsinki',
   'sources': {
-  'osm': {
+    'osm': {
       'type': 'OSM'
     },
     'osm-wmts': {

@@ -71,6 +71,8 @@ export const DOUBLE_PRESS_DELAY = 0.3 * ONE_SECOND;
 export const GET_CAPABILITIES_QUERY = 'request=GetCapabilities';
 
 export const DEFAULT_OPTIONS = {
+  center: [0, 0],
+  zoom: 4,
   sources: {},
   time: null, //floorTime(Date.now(), 15 * timeConstants.MINUTE), // Todo: from configuration
   timeZone: 'Europe/Helsinki',

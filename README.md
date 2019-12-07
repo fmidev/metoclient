@@ -19,7 +19,7 @@ npm install metoclient
 The following code introduces MetOClient's basic usage in a modern environment. At first the MetOClient instance is created with a suitable options object. After that the map view renderer is called which returns a [promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise). Once it is fulfilled, any interaction with the map animation is possible. In the example code the animation player is started from the current time at a one second frame rate.
 
 ```js
-import {MetOClient} from 'metoclient/src/MetOClient';
+import MetOClient from '@fmidev/metoclient';
 
 const metoclient = new MetOClient(options);
 metoclient.render().then(function () {

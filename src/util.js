@@ -27,7 +27,13 @@ export function isValidDate(d) {
   return d instanceof Date && !isNaN(d);
 }
 
-// Todo: refactor long function
+/**
+ *
+ * @param timeInput
+ * @param timeOffset
+ * @param timeData
+ * @returns {[]}
+ */
 export function parseTimes(timeInput, timeOffset, timeData = null) {
   const DATE_TYPE = 'date';
   const DURATION_TYPE = 'period';
@@ -119,12 +125,14 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
       }
       if (!dataSteps) {
         if (rule.options.freq === RRule.HOURLY) {
-          rule.options.byhour = Array.from(Array(24).keys()).filter((hour) => hour % rule.options.interval === 0);
+          rule.options.byhour = Array.from(Array(24).keys())
+            .filter((hour) => hour % rule.options.interval === 0);
           rule.options.byminute = [0];
           rule.options.bysecond = [0];
           rule.options.interval = 1;
         } else if (rule.options.freq === RRule.MINUTELY) {
-          rule.options.byminute = Array.from(Array(60).keys()).filter((minute) => minute % rule.options.interval === 0);
+          rule.options.byminute = Array.from(Array(60).keys())
+            .filter((minute) => minute % rule.options.interval === 0);
           rule.options.bysecond = [0];
           rule.options.interval = 1;
         }
@@ -132,9 +140,9 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
       if (timeOffset != null) {
         let start = DateTime.fromJSDate(rule.options.dtstart);
         if (start != null) {
-          const offset = Duration.fromISO(timeOffset);
-          if (offset != null) {
-            start = start.plus(offset);
+          const offsetDuration = Duration.fromISO(timeOffset);
+          if (offsetDuration != null) {
+            start = start.plus(offsetDuration);
             if (start != null) {
               rule.options.dtstart = start.toJSDate();
             }
@@ -154,13 +162,15 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
           const tmpRuleTimes = tmpRule.all();
           offset = tmpRuleTimes[1] - tmpRuleTimes[0];
         } else {
-          offset = (lastTimeStepIndex + 1) * (ruleTimes[lastTimeStepIndex] - ruleTimes[0]) / lastTimeStepIndex;
+          offset = ((lastTimeStepIndex + 1) * (ruleTimes[lastTimeStepIndex] - ruleTimes[0]))
+            / lastTimeStepIndex;
         }
         ruleTimes = ruleTimes.map((time) => time - offset);
       }
       if (dataSteps) {
         timeData.forEach((dataTime) => {
-          if (((history) && (dataTime >= ruleTimes[1]) && (dataTime <= currentTime)) || ((!history) && (dataTime <= ruleTimes[1]) && (dataTime >= currentTime))) {
+          if (((history) && (dataTime >= ruleTimes[1]) && (dataTime <= currentTime))
+            || ((!history) && (dataTime <= ruleTimes[1]) && (dataTime >= currentTime))) {
             times.push(dataTime);
           }
         });

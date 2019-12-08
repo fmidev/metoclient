@@ -2,6 +2,7 @@ import TileWMS from 'ol/source/TileWMS';
 import TileGrid from 'ol/tilegrid/TileGrid';
 import WMTS, { optionsFromCapabilities } from 'ol/source/WMTS';
 import Url from 'domurl';
+import Projection from 'ol/proj/Projection';
 import * as constants from './constants';
 import { getBaseUrl } from './util';
 
@@ -25,11 +26,17 @@ export default class SourceCreator {
     if (timeDefined) {
       params.TIME = (new Date(options.time)).toISOString();
     }
+    let extent = source.bounds;
+    if ((extent == null) && (options.projection != null)) {
+      extent = new Projection({
+        code: options.projection,
+      }).getExtent();
+    }
     const olSource = new TileWMS({
       url: getBaseUrl(url),
       params,
       tileGrid: new TileGrid({
-        extent: (source.bounds != null) ? source.bounds : get(options.projection).getExtent(),
+        extent,
         resolutions: options.resolutions,
         tileSize: (source.tileSize != null) ? source.tileSize : constants.DEFAULT_TILESIZE,
       }),

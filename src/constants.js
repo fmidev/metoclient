@@ -57,6 +57,7 @@ export const POINTER_INFOTIP_CLASS = 'fmi-metoclient-timeslider-pointer-infotip'
 export const INDICATOR_CLASS = 'fmi-metoclient-timeslider-indicator';
 export const HIDDEN_CLASS = 'fmi-metoclient-timeslider-hidden';
 export const POINTER_DRAGGING = 'dragging';
+export const DATA_STATUS_ATTRIBUTE = 'data-status';
 export const DATA_STATUS_WORKING = 'working';
 export const BACKWARDS = -1;
 export const FORWARDS = 1;
@@ -74,7 +75,7 @@ export const DEFAULT_OPTIONS = {
   center: [0, 0],
   zoom: 4,
   sources: {},
-  time: null, // floorTime(Date.now(), 15 * timeConstants.MINUTE), // Todo: from configuration
+  time: null, // Todo: from configuration
   timeZone: 'Europe/Helsinki',
   timeZoneLabel: '',
   container: 'map',
@@ -93,10 +94,14 @@ export const DEFAULT_OPTIONS = {
 
 export const DEFAULT_TILESIZE = 1024;
 
-export const SOURCE_TIME = 'metoclient:time';
-
 export const PRESENT = 'present';
 
+export const METOCLIENT_PREFIX = 'metoclient:';
+export const TIME = 'metoclient:time';
+export const PREVIOUS = 'metoclient:previous';
+export const NEXT = 'metoclient:next';
+export const OPACITY = 'metoclient:opacity';
+export const ID = 'metoclient:id';
 export const DEFAULT_LEGEND = 'metoclient:defaultLegend';
 
 export const LAYER_SWITCHER_CONTAINER_ID = 'fmi-metoclient-layer-switcher-container';

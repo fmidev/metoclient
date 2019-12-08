@@ -127,62 +127,6 @@ Copyright (c) 2014, Mike Adair, Richard Greenwood, Didier Richard, Stephen Irons
 
 ---
 
-Name: domurl
-Version: 2.2.0
-License: MIT
-Private: false
-Description: Lightweight URL manipulation with JavaScript.
-Repository: git+https://github.com/Mikhus/domurl.git
-Homepage: https://github.com/Mikhus/jsurl
-License Copyright:
-===
-
-The MIT License (MIT)
-
-Copyright (c) 2016 Mykhailo Stadnyk
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
----
-
-Name: luxon
-Version: 1.21.1
-License: MIT
-Private: false
-Description: Immutable date wrapper
-Repository: git+https://github.com/moment/luxon.git
-Homepage: https://github.com/moment/luxon#readme
-Author: Isaac Cambron
-
----
-
-Name: rrule
-Version: 2.6.2
-License: SEE LICENSE IN LICENSE
-Private: false
-Description: JavaScript library for working with recurrence rules for calendar dates.
-Repository: git://github.com/jakubroztocil/rrule.git
-Homepage: http://jakubroztocil.github.io/rrule/
-Author: Jakub Roztocil, Lars Schöning, and David Golightly
-
----
-
 Name: d3-timer
 Version: 1.0.10
 License: BSD-3-Clause
@@ -225,132 +169,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ---
 
-Name: empty-element
-Version: 1.0.0
+Name: luxon
+Version: 1.21.1
 License: MIT
 Private: false
-Description: Empty a DOM element.
-Repository: git+https://github.com/goto-bus-stop/empty-element.git
-Homepage: https://github.com/goto-bus-stop/empty-element#readme
-Author: René Kooi <rene@kooi.me>
-License Copyright:
-===
-
-The MIT License (MIT)
-
-Copyright (c) 2014 René Kooi
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
-
----
-
-Name: good-listener
-Version: 1.2.2
-License: MIT
-Private: false
-Description: A more versatile way of adding & removing event listeners
-Repository: git+https://github.com/zenorocha/good-listener.git
-Homepage: https://github.com/zenorocha/good-listener#readme
-
----
-
-Name: delegate
-Version: 3.2.0
-License: MIT
-Private: false
-Description: Lightweight event delegation
-Repository: git+https://github.com/zenorocha/delegate.git
-Homepage: https://github.com/zenorocha/delegate#readme
-
----
-
-Name: element-resize-detector
-Version: 1.1.15
-License: MIT
-Private: false
-Description: Resize event emitter for elements.
-Repository: git://github.com/wnr/element-resize-detector.git
-Homepage: https://github.com/wnr/element-resize-detector
-License Copyright:
-===
-
-The MIT License (MIT)
-
-Copyright (c) 2016 Lucas Wiener
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
----
-
-Name: batch-processor
-Version: 1.0.0
-License: MIT
-Private: false
-Description: Batch processing in JS
-Repository: git+https://github.com/wnr/batch-processor.git
-Homepage: https://github.com/wnr/batch-processor
-Author: Lucas Wiener
-License Copyright:
-===
-
-The MIT License (MIT)
-
-Copyright (c) 2015 Lucas Wiener
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
+Description: Immutable date wrapper
+Repository: git+https://github.com/moment/luxon.git
+Homepage: https://github.com/moment/luxon#readme
+Author: Isaac Cambron
 
 ---
 
@@ -587,6 +413,40 @@ you read them, as their terms may differ from the terms above.
 
 ---
 
+Name: domurl
+Version: 2.2.0
+License: MIT
+Private: false
+Description: Lightweight URL manipulation with JavaScript.
+Repository: git+https://github.com/Mikhus/domurl.git
+Homepage: https://github.com/Mikhus/jsurl
+License Copyright:
+===
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Mykhailo Stadnyk
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+---
+
 Name: ol-layerswitcher
 Version: 3.4.0
 License: MIT
@@ -816,3 +676,142 @@ License Copyright:
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+
+---
+
+Name: rrule
+Version: 2.6.2
+License: SEE LICENSE IN LICENSE
+Private: false
+Description: JavaScript library for working with recurrence rules for calendar dates.
+Repository: git://github.com/jakubroztocil/rrule.git
+Homepage: http://jakubroztocil.github.io/rrule/
+Author: Jakub Roztocil, Lars Schöning, and David Golightly
+
+---
+
+Name: empty-element
+Version: 1.0.0
+License: MIT
+Private: false
+Description: Empty a DOM element.
+Repository: git+https://github.com/goto-bus-stop/empty-element.git
+Homepage: https://github.com/goto-bus-stop/empty-element#readme
+Author: René Kooi <rene@kooi.me>
+License Copyright:
+===
+
+The MIT License (MIT)
+
+Copyright (c) 2014 René Kooi
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+
+---
+
+Name: good-listener
+Version: 1.2.2
+License: MIT
+Private: false
+Description: A more versatile way of adding & removing event listeners
+Repository: git+https://github.com/zenorocha/good-listener.git
+Homepage: https://github.com/zenorocha/good-listener#readme
+
+---
+
+Name: delegate
+Version: 3.2.0
+License: MIT
+Private: false
+Description: Lightweight event delegation
+Repository: git+https://github.com/zenorocha/delegate.git
+Homepage: https://github.com/zenorocha/delegate#readme
+
+---
+
+Name: element-resize-detector
+Version: 1.1.15
+License: MIT
+Private: false
+Description: Resize event emitter for elements.
+Repository: git://github.com/wnr/element-resize-detector.git
+Homepage: https://github.com/wnr/element-resize-detector
+License Copyright:
+===
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Lucas Wiener
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+---
+
+Name: batch-processor
+Version: 1.0.0
+License: MIT
+Private: false
+Description: Batch processing in JS
+Repository: git+https://github.com/wnr/batch-processor.git
+Homepage: https://github.com/wnr/batch-processor
+Author: Lucas Wiener
+License Copyright:
+===
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Lucas Wiener
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

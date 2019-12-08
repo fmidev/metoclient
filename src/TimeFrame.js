@@ -10,14 +10,14 @@ export default class TimeFrame {
    * @memberOf TimeFrame
    */
   constructor(options) {
-    this['beginTime'] = options['beginTime'];
-    this['endTime'] = options['endTime'];
-    this['useDateFormat'] = false;
+    this.beginTime = options.beginTime;
+    this.endTime = options.endTime;
+    this.useDateFormat = false;
     this.element = document.createElement('div');
-    this.element.style['flex-grow'] = options['weight'];
+    this.element.style['flex-grow'] = options.weight;
     this.element.classList.add('fmi-metoclient-timeslider-frame');
-    this.element.classList.add(options['type']);
-    this.element.dataset.time = this['endTime'];
+    this.element.classList.add(options.type);
+    this.element.dataset.time = this.endTime;
     this.dragListenerElement = document.createElement('div');
     this.dragListenerElement.classList.add('fmi-metoclient-timeslider-drag-listener');
     this.dragListenerElement.style.pointerEvents = 'none';

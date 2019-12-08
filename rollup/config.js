@@ -33,7 +33,8 @@ export default {
             useBuiltIns: 'usage'
           }
         ]
-      ]
+      ],
+      plugins: ['@babel/plugin-proposal-class-properties']
     }),
     replace({
       'process.env.NODE_ENV': JSON.stringify('production')

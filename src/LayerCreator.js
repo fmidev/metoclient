@@ -6,38 +6,42 @@ import SourceCreator from './SourceCreator';
 import { getBaseUrl } from './util';
 
 export default class LayerCreator {
-
-  static tiled (layer, options, capabilities) {
-    const source = options.sources[layer.source];
-    if (source == null) {
+  static tiled(layer, options, capabilities) {
+    const sourceOptions = options.sources[layer.source];
+    if (sourceOptions == null) {
       return null;
     }
-    if (source.type === 'OSM') {
+    if (sourceOptions.type === 'OSM') {
       return new TileLayer({
         source: new OSM(),
         type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
         title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
-        id: layer.id
+        id: layer.id,
       });
     }
     const service = layer.url.service.toLowerCase();
     if (typeof SourceCreator[service] === 'function') {
-      let source = SourceCreator[service](layer, options, capabilities);
+      const source = SourceCreator[service](layer, options, capabilities);
       return (source != null) ? new TileLayer({
-        source: source,
+        source,
         preload: 0,
         opacity: 0,
         type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
         title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
-        previous: (layer.previous != null) ? layer.previous : options.layers.find(layer => layer['next'] === layer.id),
-        next: (layer.next != null) ? layer.next : options.layers.find(layer => layer['previous'] === layer.id),
+        previous: (layer.previous != null)
+          ? layer.previous
+          : options.layers.find((l) => l.next === layer.id).id,
+        next: (layer.next != null)
+          ? layer.next
+          : options.layers.find((l) => l.previous === layer.id).id,
         legendTitle: layer.legendTitle,
-        id: layer.id
+        id: layer.id,
       }) : null;
     }
+    return null;
   }
 
-  static image (layer, options, capabilities) {
+  static image(layer, options) {
     const source = options.sources[layer.source];
     if ((source == null) || (source.tiles[0] == null) || (source.tiles[0].length === 0)) {
       return null;
@@ -47,16 +51,13 @@ export default class LayerCreator {
     const url = getBaseUrl(source.tiles[0]);
     const timeDefined = (layer.time != null) && (layer.time.data.includes(options.time));
     if (timeDefined) {
-      let timeFormatted = (new Date(options.time)).toISOString();
+      const timeFormatted = (new Date(options.time)).toISOString();
       layer.url.TIME = timeFormatted;
     }
-    let olSource = new ImageWMS({
-      url: url,
-      params: layer.url
+    const olSource = new ImageWMS({
+      url,
+      params: layer.url,
     });
-    if (olSource == null) {
-      return null;
-    }
     if (timeDefined) {
       olSource.set('metoclient:time', options.time);
     }
@@ -68,10 +69,14 @@ export default class LayerCreator {
       opacity: 0,
       type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
       title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
-      previous: (layer.previous != null) ? layer.previous : options.layers.find(layer => layer['next'] === layer.id),
-      next: (layer.next != null) ? layer.next : options.layers.find(layer => layer['previous'] === layer.id),
+      previous: (layer.previous != null)
+        ? layer.previous
+        : options.layers.find((l) => l.next === layer.id).id,
+      next: (layer.next != null)
+        ? layer.next
+        : options.layers.find((l) => l.previous === layer.id).id,
       legendTitle: layer.legendTitle,
-      id: layer.id
+      id: layer.id,
     });
   }
 }

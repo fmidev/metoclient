@@ -13,7 +13,7 @@ import * as constants from './constants';
  * @return {number} Floored timestamp (ms).
  * @api
  */
-export function floorTime (time, resolution) {
+export function floorTime(time, resolution) {
   return Math.floor(time / resolution) * resolution;
 }
 
@@ -23,12 +23,12 @@ export function floorTime (time, resolution) {
  * @returns {boolean}
  * @api
  */
-export function isValidDate (d) {
+export function isValidDate(d) {
   return d instanceof Date && !isNaN(d);
 }
 
 // Todo: refactor long function
-export function parseTimes (timeInput, timeOffset, timeData = null) {
+export function parseTimes(timeInput, timeOffset, timeData = null) {
   const DATE_TYPE = 'date';
   const DURATION_TYPE = 'period';
   const currentTime = Date.now();
@@ -37,68 +37,64 @@ export function parseTimes (timeInput, timeOffset, timeData = null) {
   if (timeInput == null) {
     times = [];
   } else if (Array.isArray(timeInput)) {
-    times = timeInput.map(date => new Date(date).getTime());
+    times = timeInput.map((date) => new Date(date).getTime());
   } else if (typeof timeInput === 'object') {
     const rule = new RRule(timeInput);
-    let ruleTimes = rule.all().map(date =>
-      DateTime.fromJSDate(date)
-        .toUTC()
-        .valueOf()
-    );
-    ruleTimes.forEach(ruleTime => {
+    const ruleTimes = rule.all().map((date) => DateTime.fromJSDate(date)
+      .toUTC()
+      .valueOf());
+    ruleTimes.forEach((ruleTime) => {
       if (!times.includes(ruleTime)) {
         times.push(ruleTime);
       }
     });
   } else if (timeInput.includes(',')) {
     const dates = timeInput.split(',');
-    times = dates.map(date => new Date(date).getTime());
+    times = dates.map((date) => new Date(date).getTime());
   } else if (timeInput.includes('/')) {
-    const parsedParts = timeInput.split('/').map(part => {
+    const parsedParts = timeInput.split('/').map((part) => {
       if (part.toLowerCase() === constants.PRESENT) {
         return {
           value: Date.now(),
-          type: DATE_TYPE
+          type: DATE_TYPE,
         };
       }
       const date = new Date(part);
       if (isValidDate(date)) {
         return {
           value: date.getTime(),
-          type: DATE_TYPE
+          type: DATE_TYPE,
         };
       }
       try {
         const duration = Duration.fromISO(part).toObject();
         return {
           value: duration,
-          type: DURATION_TYPE
+          type: DURATION_TYPE,
         };
       } catch (e) {
         return {
           value: null,
-          type: null
+          type: null,
         };
       }
     });
     if (parsedParts.length === 2) {
 
-    } else if (parsedParts.length === 3) {
-      if ((parsedParts[0].type === DATE_TYPE) && (parsedParts[1].type === DATE_TYPE) && (parsedParts[2].type === DURATION_TYPE)) {
-        const duration = Duration.fromObject(parsedParts[2].value).as('milliseconds');
-        let i = 0;
-        let moment = parsedParts[0].value;
-        while (moment <= parsedParts[1].value) {
-          times.push(moment);
-          i++;
-          moment = parsedParts[0].value + i * duration;
-        }
+    } else if ((parsedParts.length === 3) && ((parsedParts[0].type === DATE_TYPE) && (parsedParts[1].type === DATE_TYPE) && (parsedParts[2].type === DURATION_TYPE))) {
+      const duration = Duration.fromObject(parsedParts[2].value).as('milliseconds');
+      let i = 0;
+      let moment = parsedParts[0].value;
+      while (moment <= parsedParts[1].value) {
+        times.push(moment);
+        i += 1;
+        moment = parsedParts[0].value + i * duration;
       }
     }
   } else {
-    let texts = timeInput.toLowerCase().split(' and ');
-    texts.map(text => text.trim()).forEach(text => {
-      let dataSteps = text.startsWith('data');
+    const texts = timeInput.toLowerCase().split(' and ');
+    texts.map((text) => text.trim()).forEach((text) => {
+      const dataSteps = text.startsWith('data');
       if (dataSteps) {
         text = text.replace('data', 'every');
       }
@@ -123,12 +119,12 @@ export function parseTimes (timeInput, timeOffset, timeData = null) {
       }
       if (!dataSteps) {
         if (rule.options.freq === RRule.HOURLY) {
-          rule.options.byhour = Array.from(Array(24).keys()).filter(hour => hour % rule.options.interval === 0);
+          rule.options.byhour = Array.from(Array(24).keys()).filter((hour) => hour % rule.options.interval === 0);
           rule.options.byminute = [0];
           rule.options.bysecond = [0];
           rule.options.interval = 1;
         } else if (rule.options.freq === RRule.MINUTELY) {
-          rule.options.byminute = Array.from(Array(60).keys()).filter(minute => minute % rule.options.interval === 0);
+          rule.options.byminute = Array.from(Array(60).keys()).filter((minute) => minute % rule.options.interval === 0);
           rule.options.bysecond = [0];
           rule.options.interval = 1;
         }
@@ -136,7 +132,7 @@ export function parseTimes (timeInput, timeOffset, timeData = null) {
       if (timeOffset != null) {
         let start = DateTime.fromJSDate(rule.options.dtstart);
         if (start != null) {
-          let offset = Duration.fromISO(timeOffset);
+          const offset = Duration.fromISO(timeOffset);
           if (offset != null) {
             start = start.plus(offset);
             if (start != null) {
@@ -145,33 +141,31 @@ export function parseTimes (timeInput, timeOffset, timeData = null) {
           }
         }
       }
-      let ruleTimes = rule.all().map(date =>
-        DateTime.fromJSDate(date)
-          .toUTC()
-          .valueOf()
-      );
+      let ruleTimes = rule.all().map((date) => DateTime.fromJSDate(date)
+        .toUTC()
+        .valueOf());
       let offset;
       if (history) {
-        let lastTimeStepIndex = ruleTimes.length - 1;
+        const lastTimeStepIndex = ruleTimes.length - 1;
         if (lastTimeStepIndex === 0) {
-          let tmpOptions = {...rule.options};
+          const tmpOptions = { ...rule.options };
           tmpOptions.count = 2;
-          let tmpRule = new RRule(tmpOptions);
-          let tmpRuleTimes = tmpRule.all();
+          const tmpRule = new RRule(tmpOptions);
+          const tmpRuleTimes = tmpRule.all();
           offset = tmpRuleTimes[1] - tmpRuleTimes[0];
         } else {
           offset = (lastTimeStepIndex + 1) * (ruleTimes[lastTimeStepIndex] - ruleTimes[0]) / lastTimeStepIndex;
         }
-        ruleTimes = ruleTimes.map(time => time - offset);
+        ruleTimes = ruleTimes.map((time) => time - offset);
       }
       if (dataSteps) {
-        timeData.forEach(dataTime => {
-          if (((history) && (dataTime >= ruleTimes[1]) && (dataTime <= currentTime)) || ((!history) && (dataTime <= ruleTimes[1]) && (dataTime >= currentTime))){
+        timeData.forEach((dataTime) => {
+          if (((history) && (dataTime >= ruleTimes[1]) && (dataTime <= currentTime)) || ((!history) && (dataTime <= ruleTimes[1]) && (dataTime >= currentTime))) {
             times.push(dataTime);
           }
         });
       } else {
-        ruleTimes.forEach(ruleTime => {
+        ruleTimes.forEach((ruleTime) => {
           if (!times.includes(ruleTime)) {
             times.push(ruleTime);
           }
@@ -187,11 +181,11 @@ export function parseTimes (timeInput, timeOffset, timeData = null) {
  *
  * @param newTime
  */
-export function updateSourceTime (tiles, newTime) {
-  return tiles.map(tile => {
+export function updateSourceTime(tiles, newTime) {
+  return tiles.map((tile) => {
     const url = new Url(tile);
     let timeKey = 'time';
-    for (let p in url.query) {
+    for (const p in url.query) {
       if ((url.query.hasOwnProperty(p)) && (p.toLocaleLowerCase() === 'time')) {
         timeKey = p;
       }
@@ -212,8 +206,8 @@ export function updateSourceTime (tiles, newTime) {
  * @returns {string} url
  * @api
  */
-export function stringifyUrl (baseUrl, params) {
-  return Object.keys(params).reduce((joined, paramKey, index) => joined + ((index > 0) ? '&' : '') + paramKey + '=' + (((typeof params[paramKey] === 'string') && (params[paramKey].match(/{([^}]+)}/g) === null)) ? encodeURIComponent(params[paramKey]) : params[paramKey]), baseUrl.trim() + '?');
+export function stringifyUrl(baseUrl, params) {
+  return Object.keys(params).reduce((joined, paramKey, index) => `${joined + ((index > 0) ? '&' : '') + paramKey}=${((typeof params[paramKey] === 'string') && (params[paramKey].match(/{([^}]+)}/g) === null)) ? encodeURIComponent(params[paramKey]) : params[paramKey]}`, `${baseUrl.trim()}?`);
 }
 
 /**
@@ -223,8 +217,8 @@ export function stringifyUrl (baseUrl, params) {
  * @param {string} period period
  * @api
  */
-export function createInterval (start, end, period) {
-  return start + '/' + end + '/' + period;
+export function createInterval(start, end, period) {
+  return `${start}/${end}/${period}`;
 }
 
 /**
@@ -232,6 +226,6 @@ export function createInterval (start, end, period) {
  * @param url
  * @returns {*|string}
  */
-export function getBaseUrl (url) {
+export function getBaseUrl(url) {
   return url.split(/[?#]/)[0];
 }

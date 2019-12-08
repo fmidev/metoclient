@@ -10,7 +10,7 @@ export default class CapabilitiesReader {
    * @param text
    * @returns {*}
    */
-  static wms (text) {
+  static wms(text) {
     return new WMSCapabilities().read(text);
   }
 
@@ -19,7 +19,7 @@ export default class CapabilitiesReader {
    * @param text
    * @returns {*}
    */
-  static wmts (text) {
+  static wmts(text) {
     return new WMTSCapabilities().read(text);
   }
 }

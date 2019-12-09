@@ -3,10 +3,10 @@ export default class SourceUpdater {
     if (time == null) {
       return;
     }
-    const timeFormatted = (new Date(time)).toISOString();
+    const timeFormatted = new Date(time).toISOString();
     source.set('metoclient:time', time);
     source.updateParams({
-      TIME: timeFormatted,
+      TIME: timeFormatted
     });
     source.refresh();
   }
@@ -16,7 +16,7 @@ export default class SourceUpdater {
     if (time == null) {
       return;
     }
-    const timeFormatted = (new Date(time)).toISOString();
+    const timeFormatted = new Date(time).toISOString();
     source.set('metoclient:time', time);
     source.setTileLoadFunction((imageTile, src) => {
       imageTile.getImage().src = `${src}&Time=${timeFormatted}`;

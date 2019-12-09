@@ -16,20 +16,22 @@ export default class SourceCreator {
     const url = source.tiles[0];
     const queryUrl = new Url(url);
     const params = Object.keys(queryUrl.query).reduce((upperCased, key) => {
-      upperCased[typeof key === 'string' ? key.toUpperCase() : key] = queryUrl.query[key];
+      upperCased[typeof key === 'string' ? key.toUpperCase() : key] =
+        queryUrl.query[key];
       return upperCased;
     }, {});
-    Object.keys(layer.url).forEach((key) => {
+    Object.keys(layer.url).forEach(key => {
       params[key.toUpperCase()] = layer.url[key].toString();
     });
-    const timeDefined = (layer.time != null) && (layer.time.data.includes(options.time));
+    const timeDefined =
+      layer.time != null && layer.time.data.includes(options.time);
     if (timeDefined) {
-      params.TIME = (new Date(options.time)).toISOString();
+      params.TIME = new Date(options.time).toISOString();
     }
     let extent = source.bounds;
-    if ((extent == null) && (options.projection != null)) {
+    if (extent == null && options.projection != null) {
       extent = new Projection({
-        code: options.projection,
+        code: options.projection
       }).getExtent();
     }
     const olSource = new TileWMS({
@@ -38,9 +40,10 @@ export default class SourceCreator {
       tileGrid: new TileGrid({
         extent,
         resolutions: options.resolutions,
-        tileSize: (source.tileSize != null) ? source.tileSize : constants.DEFAULT_TILESIZE,
+        tileSize:
+          source.tileSize != null ? source.tileSize : constants.DEFAULT_TILESIZE
       }),
-      transition: 0,
+      transition: 0
     });
     if (timeDefined) {
       olSource.set('metoclient:time', options.time);
@@ -50,21 +53,24 @@ export default class SourceCreator {
 
   static wmts(layer, options, capabilities) {
     const source = options.sources[layer.source];
-    if ((source == null) || (capabilities.type !== 'wmts')) {
+    if (source == null || capabilities.type !== 'wmts') {
       return null;
     }
     const sourceOptions = optionsFromCapabilities(capabilities.data, {
       // Todo: support all config options
       layer: layer.url.layer,
-      matrixSet: layer.url.tilematrixset,
+      matrixSet: layer.url.tilematrixset
     });
     if (sourceOptions == null) {
       return null;
     }
-    const timeDefined = (layer.time != null) && (layer.time.data.includes(options.time));
+    const timeDefined =
+      layer.time != null && layer.time.data.includes(options.time);
     if (timeDefined) {
       sourceOptions.tileLoadFunction = (imageTile, src) => {
-        imageTile.getImage().src = `${src}&Time=${(new Date(options.time)).toISOString()}`;
+        imageTile.getImage().src = `${src}&Time=${new Date(
+          options.time
+        ).toISOString()}`;
       };
     }
     sourceOptions.transition = 0;

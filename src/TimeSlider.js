@@ -15,6 +15,8 @@ import * as timeConstants from './timeConstants';
 class TimeSlider extends Control {
   /**
    * Creates an instance of TimeSlider.
+   *
+   * @param options
    */
   constructor(options = {}) {
     const element = document.createElement('div');
@@ -47,6 +49,7 @@ class TimeSlider extends Control {
 
   /**
    * Creates a new time slider.
+   *
    * @param {Array} moments Time values for the slider.
    */
   createTimeSlider(moments) {
@@ -75,6 +78,7 @@ class TimeSlider extends Control {
 
   /**
    * Triggers a movement to the next or previous time moment
+   *
    * @param {number} direction Forward or backward direction
    */
   step(direction) {
@@ -88,6 +92,7 @@ class TimeSlider extends Control {
 
   /**
    * Creates container elements and appropriate listeners.
+   *
    * @param {Array} moments Time values for the slider.
    */
   createContainers(moments) {
@@ -145,6 +150,7 @@ class TimeSlider extends Control {
 
   /**
    * Creates functional margin area before the actual time slider.
+   *
    * @returns {HTMLElement} Margin element.
    */
   createPreMargin() {
@@ -161,6 +167,7 @@ class TimeSlider extends Control {
 
   /**
    * Creates an element for UI tools located in the slider before the first time step
+   *
    * @returns {HTMLElement} An element for UI tools.
    */
   createPreTools() {
@@ -188,6 +195,7 @@ class TimeSlider extends Control {
 
   /**
    * Creates an element for UI tools located in the slider after the last time step.
+   *
    * @param {Array} moments Time values for the slider.
    * @returns {HTMLElement} An element for UI tools.
    */
@@ -214,6 +222,7 @@ class TimeSlider extends Control {
 
   /**
    * Creates an element for time zone label.
+   *
    * @returns {HTMLElement} Time zone label.
    */
   createTimeZoneLabel() {
@@ -225,6 +234,7 @@ class TimeSlider extends Control {
 
   /**
    * Creates time frames and provides the frames container with frame elements.
+   *
    * @param {Array} moments Time values for the slider.
    */
   createFrames(moments) {
@@ -264,11 +274,12 @@ class TimeSlider extends Control {
 
   /**
    * Creates a single time frame and corresponding element listeners.
+   *
    * @param {number} beginTime Begin time.
    * @param {number} endTime End time.
    * @param {string} type Frame type for observation or forecast.
    * @param {number} weight Weight corresponding time frame length.
-   * @returns {Object} Time frame.
+   * @returns {object} Time frame.
    */
   createFrame(beginTime, endTime, type, weight) {
     const self = this;
@@ -465,6 +476,7 @@ class TimeSlider extends Control {
 
   /**
    * Performs a new iteration for tick distribution optimization.
+   *
    * @param {number=} minStep Minimum allowed time step.
    * @returns {boolean} Information if using default time step is suitable for the current data.
    */
@@ -731,6 +743,7 @@ class TimeSlider extends Control {
 
   /**
    * Sets an animation time.
+   *
    * @param {number} animationTime Animation time.
    */
   setAnimationTime(animationTime) {
@@ -789,6 +802,7 @@ class TimeSlider extends Control {
 
   /**
    * Updates pointer text and location on the time slider.
+   *
    * @param {number} animationTime Time value.
    */
   updatePointer(animationTime) {
@@ -800,7 +814,7 @@ class TimeSlider extends Control {
     let index;
     let needsUpdate;
     let tickText;
-    for (i = 0; i < numFrames; i++) {
+    for (i = 0; i < numFrames; i += 1) {
       if (animationTime <= this.frames_[i].endTime) {
         index = i;
         break;
@@ -810,7 +824,7 @@ class TimeSlider extends Control {
       if (this.interactions_.parentElement == null) {
         needsUpdate = true;
       } else if (
-        Number.parseInt(this.interactions_.parentElement.dataset.time) !==
+        Number.parseInt(this.interactions_.parentElement.dataset.time, 10) !==
         animationTime
       ) {
         this.interactions_.parentElement.removeChild(this.interactions_);
@@ -839,7 +853,8 @@ class TimeSlider extends Control {
 
   /**
    * Updates loading state visualization
-   * @param {Object} timeSteps Loader counter information for intervals.
+   *
+   * @param {object} timeSteps Loader counter information for intervals.
    */
   updateTimeLoaderVis(timeSteps) {
     const numIntervalItems = timeSteps.reduce((activeTimeSteps, timeStep) => {
@@ -856,7 +871,7 @@ class TimeSlider extends Control {
     let i;
     const moments = [];
     if (!creationNeeded) {
-      for (i = 0; i < numIntervals; i++) {
+      for (i = 0; i < numIntervals; i += 1) {
         if (numIntervalItems[i].endTime !== this.frames_[i].endTime) {
           creationNeeded = true;
           break;
@@ -864,7 +879,7 @@ class TimeSlider extends Control {
       }
     }
     if (creationNeeded) {
-      for (i = 0; i < numIntervals; i++) {
+      for (i = 0; i < numIntervals; i += 1) {
         moments.push(numIntervalItems[i].endTime);
       }
       this.createTimeSlider(moments);
@@ -886,7 +901,7 @@ class TimeSlider extends Control {
         if (elementTime == null) {
           return;
         }
-        time = parseInt(elementTime);
+        time = parseInt(elementTime, 10);
         if (time != null) {
           numIntervals = numIntervalItems.length;
           for (let j = 0; j < numIntervals; j += 1) {
@@ -906,6 +921,7 @@ class TimeSlider extends Control {
 
   /**
    * Enables or disables pointer dragging.
+   *
    * @param {boolean} dragging True if pointer dragging is enabled.
    */
   setDragging(dragging) {
@@ -935,6 +951,7 @@ class TimeSlider extends Control {
 
   /**
    * Turns animation play on or off.
+   *
    * @param {boolean} animationPlay True if play is turned on.
    */
   setAnimationPlay(animationPlay) {
@@ -948,6 +965,7 @@ class TimeSlider extends Control {
 
   /**
    * Sets a time zone.
+   *
    * @param {string} timeZone Time zone.
    */
   setTimeZone(timeZone) {
@@ -966,6 +984,7 @@ class TimeSlider extends Control {
 
   /**
    * Sets a time zone.
+   *
    * @param {string} timeZoneLabel Time zone label.
    */
   setTimeZoneLabel(timeZoneLabel) {
@@ -980,7 +999,8 @@ class TimeSlider extends Control {
 
   /**
    * Sets callbacks.
-   * @param {Object=} callbacks Callback functions for time events.
+   *
+   * @param {object=} callbacks Callback functions for time events.
    */
   setCallbacks(callbacks) {
     this.callbacks_ = callbacks;
@@ -988,12 +1008,12 @@ class TimeSlider extends Control {
 
   /**
    * Generate text presentation of the given time.
+   *
    * @param {number} tickTime Time value.
    * @param {boolean} showDate Show date information.
-   * @return {Object} Generated text presentation.
+   * @returns {object} Generated text presentation.
    */
   getTickText(tickTime, showDate = true) {
-    let zTime;
     let numFrames;
     let i;
     let frameTime;
@@ -1013,7 +1033,7 @@ class TimeSlider extends Control {
     if (tickTime < beginTime) {
       tickTime = beginTime;
     }
-    zTime = DateTime.fromMillis(tickTime)
+    const zTime = DateTime.fromMillis(tickTime)
       .setZone(this.timeZone_)
       .setLocale(this.locale_);
     const day = zTime.ordinal;

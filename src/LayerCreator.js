@@ -1,3 +1,6 @@
+/**
+ * @module LayerCreator
+ */
 import TileLayer from 'ol/layer/Tile';
 import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
@@ -5,7 +8,18 @@ import { OSM } from 'ol/source';
 import SourceCreator from './SourceCreator';
 import { getBaseUrl } from './util';
 
+/**
+ * Class abstracting layer creators for different layer types.
+ */
 export default class LayerCreator {
+  /**
+   * Create a tiled layer based on given configurations.
+   *
+   * @param {object} layer Layer configuration.
+   * @param {object} options General options.
+   * @param {object} capabilities Capabilities data.
+   * @returns {null | object} Layer.
+   */
   static tiled(layer, options, capabilities) {
     const sourceOptions = options.sources[layer.source];
     if (sourceOptions == null) {
@@ -50,6 +64,13 @@ export default class LayerCreator {
     return null;
   }
 
+  /**
+   * Create an image layer based on given configurations.
+   *
+   * @param {object} layer Layer configuration.
+   * @param {object} options General options.
+   * @returns {null | object} Layer.
+   */
   static image(layer, options) {
     const source = options.sources[layer.source];
     if (
@@ -64,13 +85,14 @@ export default class LayerCreator {
     const url = getBaseUrl(source.tiles[0]);
     const timeDefined =
       layer.time != null && layer.time.data.includes(options.time);
+    const layerUrl = { ...layer.url };
     if (timeDefined) {
       const timeFormatted = new Date(options.time).toISOString();
-      layer.url.TIME = timeFormatted;
+      layerUrl.TIME = timeFormatted;
     }
     const olSource = new ImageWMS({
       url,
-      params: layer.url
+      params: layerUrl
     });
     if (timeDefined) {
       olSource.set('metoclient:time', options.time);

@@ -1,6 +1,3 @@
-/**
- * @module ol/metoclient/util
- */
 import Url from 'domurl';
 import { Duration, DateTime } from 'luxon';
 import { default as RRule } from 'rrule/dist/es5/rrule';
@@ -8,10 +5,10 @@ import * as constants from './constants';
 
 /**
  * Floors time based on the given resolution.
+ *
  * @param {number} time Original timestamp (ms).
  * @param {number} resolution Flooring resolution (ms).
- * @return {number} Floored timestamp (ms).
- * @api
+ * @returns {number} Floored timestamp (ms).
  */
 export function floorTime(time, resolution) {
   return Math.floor(time / resolution) * resolution;
@@ -19,12 +16,12 @@ export function floorTime(time, resolution) {
 
 /**
  * isValidDate
+ *
  * @param {Date} d Date
  * @returns {boolean}
- * @api
  */
 export function isValidDate(d) {
-  return d instanceof Date && !isNaN(d);
+  return d instanceof Date && !Number.isNaN(d);
 }
 
 /**
@@ -87,8 +84,8 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
         };
       }
     });
-    if (parsedParts.length === 2) {
-    } else if (
+    // Todo: if (parsedParts.length === 2) {} else
+    if (
       parsedParts.length === 3 &&
       parsedParts[0].type === DATE_TYPE &&
       parsedParts[1].type === DATE_TYPE &&
@@ -118,7 +115,7 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
         const parts = text.split(' ');
         if (parts.length >= 2) {
           const numTimes = Number(parts[0]);
-          if (!isNaN(numTimes) && parts[1].trim() === 'times') {
+          if (!Number.isNaN(numTimes) && parts[1].trim() === 'times') {
             times = times.concat(
               Array(numTimes).fill(
                 parts.length >= 3 && parts[2] === 'history'
@@ -214,7 +211,7 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
 }
 
 /**
- *
+ * @param tiles
  * @param newTime
  */
 export function updateSourceTime(tiles, newTime) {
@@ -238,6 +235,7 @@ export function updateSourceTime(tiles, newTime) {
 
 /**
  * Url
+ *
  * @param {string} baseUrl baseUrl
  * @param {string} params params
  * @returns {string} url
@@ -258,6 +256,7 @@ export function stringifyUrl(baseUrl, params) {
 
 /**
  * createInterval
+ *
  * @param {string} start start
  * @param {string} end end
  * @param {string} period period

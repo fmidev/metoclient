@@ -5,6 +5,7 @@
 export default class TimeFrame {
   /**
    * Creates an instance of TimeFrame.
+   *
    * @param {any} options
    *
    * @memberOf TimeFrame

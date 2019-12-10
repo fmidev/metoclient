@@ -13,16 +13,30 @@
     "extends": [
       "airbnb-base",
       "plugin:prettier/recommended",
-      "plugin:sonarjs/recommended"
+      "plugin:sonarjs/recommended",
+      "plugin:jsdoc/recommended"
     ],
     "plugins": [
-      "sonarjs"
+      "sonarjs",
+      "jsdoc"
     ],
     "env": {
       "browser": true
     },
     "rules": {
-      "no-underscore-dangle": 0
+      "no-underscore-dangle": 0,
+      "require-jsdoc": [
+        "error",
+        {
+          "require": {
+            "FunctionDeclaration": true,
+            "MethodDefinition": true,
+            "ClassDeclaration": true,
+            "ArrowFunctionExpression": true,
+            "FunctionExpression": true
+          }
+        }
+      ]
     }
   },
   "eslintIgnore": [
@@ -113,6 +127,7 @@
     "eslint-config-prettier": "6.7.0",
     "eslint-plugin-import": "2.18.2",
     "eslint-plugin-jest": "23.1.1",
+    "eslint-plugin-jsdoc": "18.4.3",
     "eslint-plugin-prettier": "3.1.1",
     "eslint-plugin-sonarjs": "0.5.0",
     "generate-release": "github:masapu/node-generate-release",

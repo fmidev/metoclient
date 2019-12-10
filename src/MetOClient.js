@@ -35,7 +35,7 @@ import { parseTimes, updateSourceTime } from './util';
  */
 export class MetOClient extends BaseObject {
   /**
-   * @param {Object} options Map options.
+   * @param {object} options Map options.
    */
   constructor(options = {}) {
     super();
@@ -86,47 +86,43 @@ export class MetOClient extends BaseObject {
    * @returns {Promise<void>}
    */
   render() {
-    return this.updateCapabilities_()
-      .then(() => {
-        this.updateTimes_();
-        let defaultTime = this.times_[0];
-        const realWorldTime = Date.now();
-        this.times_.some(time => {
-          const future = time > realWorldTime;
-          if (!future) {
-            defaultTime = time;
-          }
-          return future;
-        });
-        if (this.config_.time == null) {
-          this.config_.time = defaultTime;
+    return this.updateCapabilities_().then(() => {
+      this.updateTimes_();
+      let defaultTime = this.times_[0];
+      const realWorldTime = Date.now();
+      this.times_.some(time => {
+        const future = time > realWorldTime;
+        if (!future) {
+          defaultTime = time;
         }
-        // Limit bounds after refresh
-        if (this.config_.time < this.times_[0]) {
-          [this.config_.time] = this.times_;
-        }
-        const lastTimeIndex = this.times_.length - 1;
-        if (this.config_.time > this.times_[lastTimeIndex]) {
-          this.config_.time = this.times_[lastTimeIndex];
-        }
-        Object.keys(this.config_.sources).forEach(source => {
-          if (
-            this.config_.sources[source].times != null &&
-            this.config_.sources[source].times.length > 0
-          ) {
-            this.config_.sources[source].tiles = updateSourceTime(
-              this.config_.sources[source].tiles,
-              this.config_.sources[source].times.includes(defaultTime)
-                ? defaultTime
-                : this.config_.sources[source].times[0]
-            );
-          }
-        });
-        this.updateMap_();
-      })
-      .catch(error => {
-        console.log(error);
+        return future;
       });
+      if (this.config_.time == null) {
+        this.config_.time = defaultTime;
+      }
+      // Limit bounds after refresh
+      if (this.config_.time < this.times_[0]) {
+        [this.config_.time] = this.times_;
+      }
+      const lastTimeIndex = this.times_.length - 1;
+      if (this.config_.time > this.times_[lastTimeIndex]) {
+        this.config_.time = this.times_[lastTimeIndex];
+      }
+      Object.keys(this.config_.sources).forEach(source => {
+        if (
+          this.config_.sources[source].times != null &&
+          this.config_.sources[source].times.length > 0
+        ) {
+          this.config_.sources[source].tiles = updateSourceTime(
+            this.config_.sources[source].tiles,
+            this.config_.sources[source].times.includes(defaultTime)
+              ? defaultTime
+              : this.config_.sources[source].times[0]
+          );
+        }
+      });
+      this.updateMap_();
+    });
   }
 
   /**
@@ -605,7 +601,7 @@ export class MetOClient extends BaseObject {
     );
   }
 
-  currentTimeRendered_(event) {
+  currentTimeRendered_() {
     const map = this.get('map');
     if (map == null) {
       return;
@@ -618,7 +614,7 @@ export class MetOClient extends BaseObject {
       if (!visible) {
         const source = layer.getSource();
         const visibleTime = this.getVisibleTime_(layer);
-        if (source.get('metoclient:time') === visibleTime) {
+        if (source.get(constants.TIME) === visibleTime) {
           visible = true;
           const prevLayerId = layer.get('previous');
           const prevLayer =
@@ -704,7 +700,7 @@ export class MetOClient extends BaseObject {
             }
           }
           const layers = map.getLayers();
-          let prevLayer = layer.get('metoclient:previous');
+          let prevLayer = layer.get(constants.PREVIOUS);
           if (
             prevLayer == null &&
             layerConfig != null &&
@@ -718,15 +714,13 @@ export class MetOClient extends BaseObject {
             prevLayer.setVisible(layer.getVisible());
             const index = layers
               .getArray()
-              .findIndex(
-                l => l.get('metoclient:id') === layer.get('metoclient:id')
-              );
+              .findIndex(l => l.get(constants.ID) === layer.get(constants.ID));
             layers.insertAt(index, prevLayer);
-            layer.set('metoclient:previous', prevLayer);
+            layer.set(constants.PREVIOUS, prevLayer);
           }
           if (!skipPrevious && prevLayer != null) {
             const prevSource = prevLayer.getSource();
-            if (prevSource.get('metoclient:time') !== layerPrevTime) {
+            if (prevSource.get(constants.TIME) !== layerPrevTime) {
               this.hideLayer_(prevLayer);
               SourceUpdater[prevSource.constructor.name](
                 prevSource,
@@ -734,7 +728,7 @@ export class MetOClient extends BaseObject {
               );
             }
           }
-          let nextLayer = layer.get('metoclient:next');
+          let nextLayer = layer.get(constants.NEXT);
           if (
             nextLayer == null &&
             layerConfig != null &&
@@ -744,15 +738,13 @@ export class MetOClient extends BaseObject {
             nextLayer.setVisible(layer.getVisible());
             const index = layers
               .getArray()
-              .findIndex(
-                l => l.get('metoclient:id') === layer.get('metoclient:id')
-              );
+              .findIndex(l => l.get(constants.ID) === layer.get(constants.ID));
             layers.insertAt(index, nextLayer);
-            layer.set('metoclient:next', nextLayer);
+            layer.set(constants.NEXT, nextLayer);
           }
           if (!skipNext && nextLayer != null) {
             const nextSource = nextLayer.getSource();
-            if (nextSource.get('metoclient:time') !== layerNextTime) {
+            if (nextSource.get(constants.TIME) !== layerNextTime) {
               this.hideLayer_(nextLayer);
               SourceUpdater[nextSource.constructor.name](
                 nextSource,
@@ -762,7 +754,7 @@ export class MetOClient extends BaseObject {
           }
         });
       map.renderSync();
-      map.once('rendercomplete', event => {
+      map.once('rendercomplete', () => {
         this.renderComplete_ = true;
         if (this.updateNeeded_) {
           this.updateNeeded_ = false;
@@ -835,10 +827,10 @@ export class MetOClient extends BaseObject {
     if (prevLayer != null) {
       prevLayer.set('id', `metoclient:${baseId}-next`);
     }
-    nextLayer.set('metoclient:previous', layer);
-    nextLayer.set('metoclient:next', prevLayer);
+    nextLayer.set(constants.PREVIOUS, layer);
+    nextLayer.set(constants.NEXT, prevLayer);
     nextLayer.set('title', layer.get('title'));
-    layer.set('metoclient:previous', nextLayer);
+    layer.set(constants.PREVIOUS, nextLayer);
     layer.set('title', '');
   }
 
@@ -1294,8 +1286,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
    * @api
+   * @param options
    */
   play(options) {
     this.delay_ =

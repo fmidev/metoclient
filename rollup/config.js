@@ -18,10 +18,7 @@ export default {
   },
   plugins: [
     babel({
-      include: [
-        'src/**',
-        'node_modules/luxon/**'
-      ],
+      include: ['src/**', 'node_modules/luxon/**'],
       presets: [
         [
           '@babel/env',
@@ -51,7 +48,7 @@ export default {
         fileRegexp: /\.js/g,
         tag: 'MetOClient {version} - FMI - {date}',
         dateFormat: 'longDate'
-      },
+      }
     }),
     copy({
       targets: [
@@ -71,8 +68,8 @@ export default {
     license({
       thirdParty: {
         output: 'metoclient.licenses.txt',
-        includePrivate: true,
-      },
+        includePrivate: true
+      }
     })
   ]
 };

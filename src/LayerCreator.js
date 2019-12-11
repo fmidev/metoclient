@@ -6,7 +6,7 @@ import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
 import { OSM } from 'ol/source';
 import SourceCreator from './SourceCreator';
-import { getBaseUrl } from './util';
+import { getBaseUrl, getAdjacentLayer } from './util';
 
 /**
  * Class abstracting layer creators for different layer types.
@@ -48,14 +48,8 @@ export default class LayerCreator {
               layer.metadata && layer.metadata.title
                 ? layer.metadata.title
                 : '',
-            previous:
-              layer.previous != null
-                ? layer.previous
-                : options.layers.find(l => l.next === layer.id).id,
-            next:
-              layer.next != null
-                ? layer.next
-                : options.layers.find(l => l.previous === layer.id).id,
+            previous: getAdjacentLayer('previous', layer, options.layers),
+            next: getAdjacentLayer('next', layer, options.layers),
             legendTitle: layer.legendTitle,
             id: layer.id
           })
@@ -105,14 +99,8 @@ export default class LayerCreator {
       opacity: 0,
       type: layer.metadata && layer.metadata.type ? layer.metadata.type : '',
       title: layer.metadata && layer.metadata.title ? layer.metadata.title : '',
-      previous:
-        layer.previous != null
-          ? layer.previous
-          : options.layers.find(l => l.next === layer.id).id,
-      next:
-        layer.next != null
-          ? layer.next
-          : options.layers.find(l => l.previous === layer.id).id,
+      previous: getAdjacentLayer('previous', layer, options.layers),
+      next: getAdjacentLayer('next', layer, options.layers),
       legendTitle: layer.legendTitle,
       id: layer.id
     });

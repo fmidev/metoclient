@@ -237,7 +237,7 @@ export class MetOClient extends BaseObject {
             typeof CapabilitiesReader[this.capabilities_[capabKey].type] ===
             'function'
           ) {
-            const [type] = this.capabilities_[capabKey];
+            const { type } = this.capabilities_[capabKey];
             this.capabilities_[capabKey].data = CapabilitiesReader[type](
               response.responseText
             );

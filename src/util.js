@@ -21,7 +21,7 @@ export function floorTime(time, resolution) {
  * @returns {boolean}
  */
 export function isValidDate(d) {
-  return d instanceof Date && !Number.isNaN(d);
+  return d instanceof Date && !Number.isNaN(d.getTime());
 }
 
 /**
@@ -273,4 +273,27 @@ export function createInterval(start, end, period) {
  */
 export function getBaseUrl(url) {
   return url.split(/[?#]/)[0];
+}
+
+/**
+ *
+ * @param direction
+ * @param layer
+ * @param layers
+ */
+export function getAdjacentLayer(direction, layer, layers) {
+  const directions = ['previous', 'next'];
+  const directionIndex = directions.indexOf(direction);
+  if (directionIndex < 0) {
+    return null;
+  }
+  if (layer[direction] != null) {
+    return layer[direction];
+  }
+  const opposite = directions[(directionIndex + 1) % 2];
+  const adjacentLayer = layers.find(l => l[opposite] === layer.id);
+  if (adjacentLayer == null) {
+    return null;
+  }
+  return adjacentLayer.id;
 }

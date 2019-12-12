@@ -10,7 +10,6 @@ import Control from 'ol/control/Control';
 import { unByKey } from 'ol/Observable';
 import TimeFrame from './TimeFrame';
 import * as constants from './constants';
-import * as timeConstants from './timeConstants';
 
 class TimeSlider extends Control {
   /**
@@ -407,21 +406,21 @@ class TimeSlider extends Control {
     let step;
     let stepStart;
     const discreteSteps = [
-      timeConstants.MINUTE,
-      2 * timeConstants.MINUTE,
-      5 * timeConstants.MINUTE,
-      10 * timeConstants.MINUTE,
-      15 * timeConstants.MINUTE,
-      20 * timeConstants.MINUTE,
-      30 * timeConstants.MINUTE,
-      timeConstants.HOUR,
-      2 * timeConstants.HOUR,
-      3 * timeConstants.HOUR,
-      4 * timeConstants.HOUR,
-      6 * timeConstants.HOUR,
-      8 * timeConstants.HOUR,
-      12 * timeConstants.HOUR,
-      timeConstants.DAY
+      constants.MINUTE,
+      2 * constants.MINUTE,
+      5 * constants.MINUTE,
+      10 * constants.MINUTE,
+      15 * constants.MINUTE,
+      20 * constants.MINUTE,
+      30 * constants.MINUTE,
+      constants.HOUR,
+      2 * constants.HOUR,
+      3 * constants.HOUR,
+      4 * constants.HOUR,
+      6 * constants.HOUR,
+      8 * constants.HOUR,
+      12 * constants.HOUR,
+      constants.DAY
     ];
     const numDiscreteSteps = discreteSteps.length;
     let minStep;
@@ -456,11 +455,9 @@ class TimeSlider extends Control {
       });
       if (
         nextStep !== minStep &&
-        ((nextStep < timeConstants.HOUR &&
-          timeConstants.HOUR % nextStep !== 0) ||
-          (nextStep > timeConstants.HOUR &&
-            nextStep % timeConstants.HOUR !== 0) ||
-          (nextStep < timeConstants.DAY && timeConstants.DAY % nextStep !== 0))
+        ((nextStep < constants.HOUR && constants.HOUR % nextStep !== 0) ||
+          (nextStep > constants.HOUR && nextStep % constants.HOUR !== 0) ||
+          (nextStep < constants.DAY && constants.DAY % nextStep !== 0))
       ) {
         for (i = 0; i < numDiscreteSteps; i += 1) {
           if (nextStep < discreteSteps[i]) {
@@ -554,7 +551,7 @@ class TimeSlider extends Control {
       const localTimeStep = frames[nextIndex].endTime - frame.endTime;
       if (
         DateTime.fromMillis(frame.endTime).setZone(self.timeZone_).isInDST &&
-        localTimeStep < timeConstants.DAY
+        localTimeStep < constants.DAY
       ) {
         containsDST = true;
       } else {
@@ -634,16 +631,15 @@ class TimeSlider extends Control {
           self.previousTickIndex_ >= 0 &&
           frames[self.previousTickIndex_] != null &&
           ((minStep === 0 &&
-            ((frame.endTime % timeConstants.HOUR === 0 &&
-              frames[self.previousTickIndex_].endTime % timeConstants.HOUR !==
-                0) ||
+            ((frame.endTime % constants.HOUR === 0 &&
+              frames[self.previousTickIndex_].endTime % constants.HOUR !== 0) ||
               (useTimeStep &&
-                (frame.endTime % timeConstants.HOUR) % timeStep === 0 &&
-                (frames[self.previousTickIndex_].endTime % constants.ONE_HOUR) %
+                (frame.endTime % constants.HOUR) % timeStep === 0 &&
+                (frames[self.previousTickIndex_].endTime % constants.HOUR) %
                   timeStep !==
                   0) ||
-              (frame.endTime % constants.ONE_HOUR === 0 &&
-                frames[self.previousTickIndex_].endTime % constants.ONE_HOUR ===
+              (frame.endTime % constants.HOUR === 0 &&
+                frames[self.previousTickIndex_].endTime % constants.HOUR ===
                   0 &&
                 DateTime.fromMillis(frame.endTime).setZone(self.timeZone_)
                   .hour %
@@ -657,17 +653,17 @@ class TimeSlider extends Control {
             !frames[self.previousTickIndex_].useDateFormat) ||
             frame.useDateFormat ||
             (minStep > 0 &&
-              ((minStep >= constants.ONE_HOUR &&
-                frames[self.previousTickIndex_].endTime % timeConstants.HOUR !==
+              ((minStep >= constants.HOUR &&
+                frames[self.previousTickIndex_].endTime % constants.HOUR !==
                   0) ||
-                (frames[self.previousTickIndex_].endTime % timeConstants.HOUR) %
+                (frames[self.previousTickIndex_].endTime % constants.HOUR) %
                   minStep !==
                   0 ||
                 (divisibleDays &&
                   DateTime.fromMillis(
                     frames[self.previousTickIndex_].endTime
                   ).setZone(self.timeZone_).hour %
-                    (minStep / timeConstants.HOUR) !==
+                    (minStep / constants.HOUR) !==
                     0))))
         ) {
           clearFrame(frames[self.previousTickIndex_]);

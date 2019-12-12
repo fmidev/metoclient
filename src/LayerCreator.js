@@ -4,9 +4,8 @@
 import TileLayer from 'ol/layer/Tile';
 import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
-import { OSM } from 'ol/source';
 import SourceCreator from './SourceCreator';
-import { getBaseUrl, getAdjacentLayer } from './util';
+import { getBaseUrl, getAdjacentLayer } from './utils';
 
 /**
  * Class abstracting layer creators for different layer types.
@@ -21,41 +20,41 @@ export default class LayerCreator {
    * @returns {null | object} Layer.
    */
   static tiled(layer, options, capabilities) {
+    if (layer == null) {
+      return null;
+    }
     const sourceOptions = options.sources[layer.source];
     if (sourceOptions == null) {
       return null;
     }
-    if (sourceOptions.type === 'OSM') {
-      return new TileLayer({
-        source: new OSM(),
-        type: layer.metadata && layer.metadata.type ? layer.metadata.type : '',
-        title:
-          layer.metadata && layer.metadata.title ? layer.metadata.title : '',
-        id: layer.id
-      });
+    let service;
+    let serviceAvailable = false;
+    if (sourceOptions.type != null) {
+      service = sourceOptions.type.toLowerCase();
+      serviceAvailable = typeof SourceCreator[service] === 'function';
     }
-    const service = layer.url.service.toLowerCase();
-    if (typeof SourceCreator[service] === 'function') {
-      const source = SourceCreator[service](layer, options, capabilities);
-      return source != null
-        ? new TileLayer({
-            source,
-            preload: 0,
-            opacity: 0,
-            type:
-              layer.metadata && layer.metadata.type ? layer.metadata.type : '',
-            title:
-              layer.metadata && layer.metadata.title
-                ? layer.metadata.title
-                : '',
-            previous: getAdjacentLayer('previous', layer, options.layers),
-            next: getAdjacentLayer('next', layer, options.layers),
-            legendTitle: layer.legendTitle,
-            id: layer.id
-          })
-        : null;
+    if (!serviceAvailable && layer.url != null && layer.url.service) {
+      service = layer.url.service.toLowerCase();
+      serviceAvailable = typeof SourceCreator[service] === 'function';
     }
-    return null;
+    if (!serviceAvailable) {
+      return null;
+    }
+    const source = SourceCreator[service](options, layer, capabilities);
+    if (source == null) {
+      return null;
+    }
+    return new TileLayer({
+      source,
+      preload: 0,
+      opacity: 0,
+      type: layer.metadata && layer.metadata.type ? layer.metadata.type : '',
+      title: layer.metadata && layer.metadata.title ? layer.metadata.title : '',
+      previous: getAdjacentLayer('previous', layer, options.layers),
+      next: getAdjacentLayer('next', layer, options.layers),
+      legendTitle: layer.legendTitle,
+      id: layer.id
+    });
   }
 
   /**

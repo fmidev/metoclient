@@ -1,4 +1,13 @@
+/**
+ *
+ */
 export default class SourceUpdater {
+  /**
+   *
+   * @param source
+   * @param time
+   * @constructor
+   */
   static TileWMS(source, time) {
     if (time == null) {
       return;
@@ -11,6 +20,12 @@ export default class SourceUpdater {
     source.refresh();
   }
 
+  /**
+   *
+   * @param source
+   * @param time
+   * @constructor
+   */
   static WMTS(source, time) {
     // Use same time formatter in TileWMS and WMTS
     if (time == null) {

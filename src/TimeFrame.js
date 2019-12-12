@@ -2,13 +2,14 @@
  * @module ol/metoclient/TimeFrame
  */
 
+/**
+ * Class representing a single time frame in a time slider.
+ */
 export default class TimeFrame {
   /**
-   * Creates an instance of TimeFrame.
+   * Create a time frame.
    *
-   * @param {any} options
-   *
-   * @memberOf TimeFrame
+   * @param {object} options Time frame options.
    */
   constructor(options) {
     this.beginTime = options.beginTime;

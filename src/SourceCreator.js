@@ -3,11 +3,21 @@ import TileGrid from 'ol/tilegrid/TileGrid';
 import WMTS, { optionsFromCapabilities } from 'ol/source/WMTS';
 import Url from 'domurl';
 import Projection from 'ol/proj/Projection';
+import { OSM } from 'ol/source';
 import * as constants from './constants';
-import { getBaseUrl } from './util';
+import { getBaseUrl } from './utils';
 
+/**
+ *
+ */
 export default class SourceCreator {
-  static wms(layer, options) {
+  /**
+   *
+   * @param options
+   * @param layer
+   * @returns {TileWMS|null}
+   */
+  static wms(options, layer) {
     const source = options.sources[layer.source];
     if (source == null) {
       return null;
@@ -51,7 +61,14 @@ export default class SourceCreator {
     return olSource;
   }
 
-  static wmts(layer, options, capabilities) {
+  /**
+   *
+   * @param options
+   * @param layer
+   * @param capabilities
+   * @returns {null|WMTS}
+   */
+  static wmts(options, layer, capabilities) {
     const source = options.sources[layer.source];
     if (source == null || capabilities.type !== 'wmts') {
       return null;
@@ -79,5 +96,14 @@ export default class SourceCreator {
       olSource.set('metoclient:time', options.time);
     }
     return olSource;
+  }
+
+  /**
+   *
+   * @param options
+   * @returns {OSM}
+   */
+  static osm(options) {
+    return new OSM(options);
   }
 }

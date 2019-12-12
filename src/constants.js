@@ -27,10 +27,14 @@ export const DEFAULT_OPTIONS = {
 };
 
 export const NO_SELECT_CLASS = 'noselect';
-export const ONE_SECOND = 1000;
-export const ONE_MINUTE = 60 * ONE_SECOND;
-export const ONE_HOUR = 60 * ONE_MINUTE;
-export const ONE_DAY = 24 * ONE_HOUR;
+export const MILLISECONDS_PER_SECOND = 1000;
+export const SECONDS_PER_MINUTE = 60;
+export const MINUTES_PER_HOUR = 60;
+export const HOURS_PER_DAY = 24;
+export const SECOND = MILLISECONDS_PER_SECOND;
+export const MINUTE = SECOND * SECONDS_PER_MINUTE;
+export const HOUR = MINUTE * MINUTES_PER_HOUR;
+export const DAY = HOUR * HOURS_PER_DAY;
 export const MAX_REFRESH_INTERVAL = 2147483647;
 export const FRAME_HISTORY = 'history';
 export const FRAME_FUTURE = 'future';
@@ -70,10 +74,10 @@ export const FORWARDS = 1;
 export const KEYBOARD_ACCESSIBLE_CLASS =
   'fmi-metoclient-timeslider-keyboard-accessible';
 export const BASE_TAB_INDEX = 100;
-export const DEFAULT_REFRESH_INTERVAL = 15 * ONE_MINUTE;
-export const LONG_CLICK_DELAY = 0.5 * ONE_SECOND;
-export const LONG_TAP_DELAY = 0.5 * ONE_SECOND;
-export const DOUBLE_PRESS_DELAY = 0.3 * ONE_SECOND;
+export const DEFAULT_REFRESH_INTERVAL = 15 * MINUTE;
+export const LONG_CLICK_DELAY = 0.5 * MILLISECONDS_PER_SECOND;
+export const LONG_TAP_DELAY = 0.5 * MILLISECONDS_PER_SECOND;
+export const DOUBLE_PRESS_DELAY = 0.3 * MILLISECONDS_PER_SECOND;
 export const GET_CAPABILITIES_QUERY = 'request=GetCapabilities';
 export const DEFAULT_TILESIZE = 1024;
 export const PRESENT = 'present';

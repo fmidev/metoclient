@@ -27,11 +27,10 @@ import CapabilitiesReader from './CapabilitiesReader';
 import SourceUpdater from './SourceUpdater';
 import LayerCreator from './LayerCreator';
 import TimeSlider from './TimeSlider';
-import { parseTimes, updateSourceTime } from './util';
+import { parseTimes, updateSourceTime } from './utils';
 
 /**
  * @classdesc
- * @api
  */
 export class MetOClient extends BaseObject {
   /**
@@ -1286,7 +1285,6 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   * @api
    * @param options
    */
   play(options) {

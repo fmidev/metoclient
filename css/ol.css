@@ -112,6 +112,7 @@
   background-color: rgba(0,60,136,0.5);
   border: none;
   border-radius: 2px;
+  cursor: pointer;
 }
 .ol-control button::-moz-focus-inner {
   border: none;

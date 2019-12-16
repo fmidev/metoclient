@@ -153,7 +153,7 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
         try {
           rule = RRule.fromText(text);
         } catch (err) {
-          return [];
+          return;
         }
         if (!dataSteps) {
           if (rule.options.freq === RRule.HOURLY) {

@@ -880,7 +880,7 @@ class TimeSlider extends Control {
       }
       this.createTimeSlider(moments);
     }
-    this.frames_.forEach((frame, index) => {
+    this.frames_.forEach((frame) => {
       Array.from(
         frame.element.getElementsByClassName(constants.INDICATOR_CLASS)
       ).forEach(indicatorElement => {

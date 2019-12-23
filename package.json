@@ -88,6 +88,7 @@
     "luxon": "1.21.3",
     "ol": "6.1.1",
     "ol-layerswitcher": "3.4.0",
+    "ol-mapbox-style": "5.0.2",
     "proj4": "2.6.0",
     "rrule": "2.6.3"
   },

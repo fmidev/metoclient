@@ -2,7 +2,7 @@
 
 MetOClient is a JavaScript library for map animations, based on OpenLayers 6. If you are looking for an older version, check out the `v4` branch.
 
-An animation is defined by map layers containing time rules. The map protocols it supports are WMS, WMTS and WFS. The configuration is given in a JSON object which is an extension of a Mapbox style configuration.
+An animation is defined by map layers containing time rules. The map standards it supports are WMS, WMTS and GeoJSON. The configuration is given in a JSON object which is an extension of a Mapbox style configuration.
 
 An animation API is provided to extend OpenLayers map methods.
 

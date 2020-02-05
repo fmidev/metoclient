@@ -69,7 +69,7 @@ export class MetOClient extends BaseObject {
     this.layerSwitcherWatcher = null;
     this.on('change:options', () => {
       this.config_ = assign(constants.DEFAULT_OPTIONS, this.get('options'));
-      this.refresh();
+      this.refresh_();
     });
   }
 

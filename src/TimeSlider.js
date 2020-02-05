@@ -19,7 +19,7 @@ class TimeSlider extends Control {
   constructor(opt_options) {
     const options = opt_options || {};
     const element = document.createElement('div');
-    element.className = 'ol-unselectable ol-control fmi-metoclient-timeslider';
+    element.className = `ol-unselectable ol-control fmi-metoclient-timeslider ${constants.METEOROLOGICAL_MODE}`;
     super({
       element: element,
       target: options.target
@@ -263,11 +263,15 @@ class TimeSlider extends Control {
     let clickCount = 0;
     let singleClickTimer = 0;
     this.mouseListeners_.push(listen(timeFrame.element, 'mousedown', () => {
-      longClick = setTimeout(() => {
-        clearTimeout(singleClickTimer);
-        longClick = null;
+      if (this.isMeteorologicalMode()) {
+        longClick = setTimeout(() => {
+          clearTimeout(singleClickTimer);
+          longClick = null;
+          this.getMap().set('time', timeFrame['endTime']);
+        }, constants.LONG_CLICK_DELAY);
+      } else {
         this.getMap().set('time', timeFrame['endTime']);
-      }, constants.LONG_CLICK_DELAY);
+      }
     }));
     this.mouseListeners_.push(listen(timeFrame.element, 'mouseup', () => {
       if ((longClick != null) && (!self.dragging_)) {
@@ -296,10 +300,14 @@ class TimeSlider extends Control {
       }
     }));
     this.mouseListeners_.push(listen(timeFrame.element, 'touchstart', () => {
-      longTap = setTimeout(() => {
-        longTap = null;
+      if (this.isMeteorologicalMode()) {
+        longTap = setTimeout(() => {
+          longTap = null;
+          this.getMap().set('time', timeFrame['endTime']);
+        }, constants.LONG_TAP_DELAY);
+      } else {
         this.getMap().set('time', timeFrame['endTime']);
-      }, constants.LONG_TAP_DELAY);
+      }
     }));
     this.mouseListeners_.push(listen(timeFrame.element, 'touchend', () => {
       if (longTap != null) {
@@ -837,10 +845,18 @@ class TimeSlider extends Control {
   }
 
   /**
+   * Return information if meteorological optimizations are enabled.
+   * @returns {boolean} Meteorological mode status.
+   */
+  isMeteorologicalMode() {
+    return this.container_.classList.contains(constants.METEOROLOGICAL_MODE);
+  }
+
+  /**
    * Generate text presentation of the given time.
    * @param {number} tickTime Time value.
    * @param {boolean} showDate Show date information.
-   * @return {Object} Generated text presentation.
+   * @returns {Object} Generated text presentation.
    */
   getTickText(tickTime, showDate = true) {
     let zTime;

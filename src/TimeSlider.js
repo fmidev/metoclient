@@ -342,7 +342,10 @@ class TimeSlider extends Control {
         }
       }
       document.activeElement.blur();
-      this.getMap().set('time', currentTimeFrame['endTime']);
+      if (currentTimeFrame['endTime'] !== this.getMap().get('time')) {
+        clearTimeout(longTap);
+        this.getMap().set('time', currentTimeFrame['endTime']);
+      }
     }));
 
     return timeFrame;

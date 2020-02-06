@@ -209,7 +209,7 @@ export class MetOClient extends BaseObject {
       const type = capabKeyValue[1].type;
       const url = ['startTime', 'endTime'].reduce((accQuery, timeParam) => {
         if (type === 'wms') {
-          const timeISO = DateTime.fromMillis(capabKeyValue[1][timeParam]).toISO({
+          const timeISO = DateTime.fromMillis(capabKeyValue[1][timeParam]).toUTC().toISO({
             suppressMilliseconds: true,
             includeOffset: true
           });

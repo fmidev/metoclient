@@ -5,7 +5,7 @@ import { assign } from 'ol/obj';
 import { register } from 'ol/proj/proj4.js';
 import proj4 from 'proj4/dist/proj4.js'; // Todo: do not use built version
 import { transform } from 'ol/proj';
-import { parseTimes, updateSourceTime } from './util.js';
+import { parseTimes, updateSourceTime, getSourceCapabilitiesUrl } from './util.js';
 import { interval, timeout } from 'd3-timer';
 import BaseObject from 'ol/Object';
 import TimeSlider from './TimeSlider';
@@ -153,31 +153,29 @@ export class MetOClient extends BaseObject {
    * @private
    */
   async updateCapabilities_ () {
-    let updateTime = Date.now();
-    let responses = await Promise.all(this.config_.layers.reduce((urls, layer) => {
+    const updateTime = Date.now();
+    const responses = await Promise.all(Object.entries(this.config_.layers.reduce((capabilities, layer) => {
       if (layer.source == null) {
-        return urls;
+        return capabilities;
       }
-      let sourceIds = [layer.source];
-      if ((layer.time != null) && (layer.time.source != null) && (!sourceIds.includes(layer.time.source))) {
-        sourceIds.push(layer.time.source);
+      const sourceIds = [layer.source];
+      let timeData;
+      if (layer.time != null) {
+        if ((layer.time.source != null) && (!sourceIds.includes(layer.time.source))) {
+          sourceIds.push(layer.time.source);
+        }
+        if (layer.time.range != null) {
+          timeData = parseTimes(layer.time.range);
+        }
       }
       sourceIds.forEach(sourceId => {
-        let source = this.config_.sources[sourceId];
+        const source = this.config_.sources[sourceId];
         if (source == null) {
           return;
         }
-        let url = '';
-        if ((source.capabilities != null) && (source.capabilities.length > 0)) {
-          url = source.capabilities;
-        } else {
-          if ((source.tiles == null) || (source.tiles.length === 0)) {
-            return;
-          }
-          url = source.tiles[0]; // Todo: Handle other indexes
-        }
-        if (url.endsWith('/')) {
-          url = url.substring(0, url.length - 1);
+        const url = getSourceCapabilitiesUrl(source);
+        if (url.length === 0) {
+          return;
         }
         const index = url.lastIndexOf('/');
         let type = '';
@@ -186,27 +184,50 @@ export class MetOClient extends BaseObject {
         } else {
           type = layer.url.service.toLowerCase();
         }
-        if (this.capabilities_[url] == null) {
-          this.capabilities_[url] = {
-            updated: null,
-            type: type,
-            data: null
+        if (capabilities[url] == null) {
+          capabilities[url] = {
+            updated: updateTime,
+            type,
+            data: null,
+            startTime: Number.POSITIVE_INFINITY,
+            endTime: Number.NEGATIVE_INFINITY,
           };
         }
-        if (this.capabilities_[url].updated !== updateTime) {
-          urls.push(url + `?service=${type}&${constants.GET_CAPABILITIES_QUERY}`);
-          this.capabilities_[url].updated = updateTime;
+        if ((timeData != null) && (timeData.length > 0)) {
+          if (timeData[0] < capabilities[url].startTime) {
+            capabilities[url].startTime = timeData[0];
+          }
+          const maxTimeIndex = timeData.length - 1;
+          if (timeData[maxTimeIndex] > capabilities[url].endTime) {
+            capabilities[url].endTime = timeData[maxTimeIndex];
+          }
         }
       });
-      return urls;
-    }, []).map(url => ajax({
-      url: url,
-      crossDomain: true,
-      contentType: 'text/plain',
-      beforeSend: function(jqxhr) {
-        jqxhr.requestURL = url;
-      }
-    })));
+      return capabilities;
+    }, {})).map(capabKeyValue => {
+      this.capabilities_[capabKeyValue[0]] = capabKeyValue[1];
+      const type = capabKeyValue[1].type;
+      const url = ['startTime', 'endTime'].reduce((accQuery, timeParam) => {
+        if (type === 'wms') {
+          const timeISO = DateTime.fromMillis(capabKeyValue[1][timeParam]).toISO({
+            suppressMilliseconds: true,
+            includeOffset: true
+          });
+          if (timeISO != null) {
+            accQuery += '&' + timeParam.toLowerCase() + '=' + timeISO;
+          }
+        }
+        return accQuery;
+      }, `${capabKeyValue[0]}?service=${type}`) + `&${constants.GET_CAPABILITIES_QUERY}`;
+      return ajax({
+        url,
+        crossDomain: true,
+        contentType: 'text/plain',
+        beforeSend: function (jqxhr) {
+          jqxhr.requestURL = url;
+        }
+      });
+    }));
     await Promise.all(responses.map(response => {
       if ((response.responseText != null) && (response.requestURL.endsWith(constants.GET_CAPABILITIES_QUERY))) {
         let capabKey = response.requestURL.split('?')[0];
@@ -223,6 +244,11 @@ export class MetOClient extends BaseObject {
         }
       }
     }));
+    Object.keys(this.capabilities_).forEach(capabilitiesKey => {
+      if ((this.capabilities_[capabilitiesKey] != null) && (this.capabilities_[capabilitiesKey].updated < updateTime)) {
+        delete this.capabilities_[capabilitiesKey];
+      }
+    });
   }
 
   /**

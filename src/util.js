@@ -235,3 +235,24 @@ export function createInterval (start, end, period) {
 export function getBaseUrl (url) {
   return url.split(/[?#]/)[0];
 }
+
+/**
+ *
+ * @param source
+ * @returns {string}
+ */
+export function getSourceCapabilitiesUrl (source) {
+  let url = '';
+  if ((source.capabilities != null) && (source.capabilities.length > 0)) {
+    url = source.capabilities;
+  } else {
+    if ((source.tiles == null) || (source.tiles.length === 0)) {
+      return url;
+    }
+    [url] = source.tiles; // Todo: Handle other indexes
+  }
+  if (url.endsWith('/')) {
+    url = url.substring(0, url.length - 1);
+  }
+  return url;
+}

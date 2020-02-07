@@ -24,7 +24,8 @@ export default class LayerCreator {
     if (typeof SourceCreator[service] === 'function') {
       let source = SourceCreator[service](layer, options, capabilities);
       return (source != null) ? new TileLayer({
-        source: source,
+        source,
+        extent: source.bounds,
         preload: 0,
         opacity: 0,
         type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
@@ -63,6 +64,7 @@ export default class LayerCreator {
 
     return new ImageLayer({
       source: olSource,
+      extent: source.bounds,
       // Todo: use same code with tiled and image layer options
       preload: 0,
       opacity: 0,

@@ -30,8 +30,8 @@ export default class LayerCreator {
         opacity: 0,
         type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
         title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
-        previous: (layer.previous != null) ? layer.previous : options.layers.find(layer => layer['next'] === layer.id),
-        next: (layer.next != null) ? layer.next : options.layers.find(layer => layer['previous'] === layer.id),
+        previous: (layer.previous != null) ? layer.previous : [options.layers.find(l => l['next'] === layer.id)].map(next => (next == null ? null : next.id))[0],
+        next: (layer.next != null) ? layer.next : [options.layers.find(l => l['previous'] === layer.id)].map(previous => (previous == null ? null : previous.id))[0],
         legendTitle: layer.legendTitle,
         id: layer.id
       }) : null;
@@ -70,8 +70,8 @@ export default class LayerCreator {
       opacity: 0,
       type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
       title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
-      previous: (layer.previous != null) ? layer.previous : options.layers.find(layer => layer['next'] === layer.id),
-      next: (layer.next != null) ? layer.next : options.layers.find(layer => layer['previous'] === layer.id),
+      previous: (layer.previous != null) ? layer.previous : [options.layers.find(l => l['next'] === layer.id)].map(next => (next == null ? null : next.id))[0],
+      next: (layer.next != null) ? layer.next : [options.layers.find(l => l['previous'] === layer.id)].map(previous => (previous == null ? null : previous.id))[0],
       legendTitle: layer.legendTitle,
       id: layer.id
     });

@@ -188,6 +188,7 @@ export class MetOClient extends BaseObject {
           capabilities[url] = {
             updated: updateTime,
             type,
+            server: source.server != null ? source.server.toLowerCase() : null,
             data: null,
             startTime: Number.POSITIVE_INFINITY,
             endTime: Number.NEGATIVE_INFINITY,
@@ -208,7 +209,7 @@ export class MetOClient extends BaseObject {
       this.capabilities_[capabKeyValue[0]] = capabKeyValue[1];
       const type = capabKeyValue[1].type;
       const url = ['startTime', 'endTime'].reduce((accQuery, timeParam) => {
-        if (type === 'wms') {
+        if ((type === 'wms') && (capabKeyValue[1].server === constants.SMARTMET_SERVER)) {
           const timeISO = DateTime.fromMillis(capabKeyValue[1][timeParam]).toUTC().toISO({
             suppressMilliseconds: true,
             includeOffset: true
@@ -378,7 +379,7 @@ export class MetOClient extends BaseObject {
   createLayerSwitcherTitle_ (layerConfig) {
     let title = layerConfig.metadata.title;
     let layersConfig = this.config_.layers;
-    const nextLayerId = layerConfig.next;
+    const nextLayerId = (layerConfig.next != null) ? layerConfig.next : [this.config_.layers.find(layer => layer.previous === layerConfig.id)].map(l => l == null ? null : l.id)[0];
     const nextLayerConfig = ((nextLayerId != null) && (nextLayerId.length > 0)) ? layersConfig.find(layer => layer.id === nextLayerId) : null;
     let nextTitle = (nextLayerConfig != null) ? this.createLayerSwitcherTitle_(nextLayerConfig) : '';
     if ((nextTitle != null) && (nextTitle.length > 0) && (title !== nextTitle)) {
@@ -388,7 +389,7 @@ export class MetOClient extends BaseObject {
     return title;
   }
 
-  /**
+/**
  *
  *
  * @param {*} layer
@@ -665,6 +666,15 @@ export class MetOClient extends BaseObject {
     return visibleTime;
   }
 
+  getFeatureLayerTime_ (featureLayer) {
+    let mapTime = this.get('map').get('time');
+    const layerTimes = featureLayer.get('times');
+    const hideAll = (mapTime < layerTimes[0]) || (mapTime > layerTimes[layerTimes.length - 1]);
+    const layerTime = hideAll ? null : [...layerTimes].reverse().find((time) => time <= mapTime);
+    return layerTime;
+  }
+
+
   /**
    *
    * @private
@@ -672,12 +682,10 @@ export class MetOClient extends BaseObject {
   timeUpdated_ () {
     let mapTime = this.get('map').get('time');
     const layers = this.get('map').getLayers().getArray();
-    layers.filter((layer) => layer.get('mapbox-source') != null).forEach((featureLayer) => {
-      const layerTimes = featureLayer.get('times');
-      const hideAll = (mapTime < layerTimes[0]) || (mapTime > layerTimes[layerTimes.length - 1]);
-      const layerTime = hideAll ? null : [...layerTimes].reverse().find((time) => time <= mapTime);
+    layers.filter((layer) => layer.get('mapbox-source') != null && layer.get('times') != null).forEach((featureLayer) => {
+      const layerTime = this.getFeatureLayerTime_(featureLayer);
       featureLayer.getSource().getFeatures().forEach((feature) => {
-        if ((hideAll) || (feature.get('metoclient:time') !== layerTime)) {
+        if ((layerTime == null) || (feature.get('metoclient:time') !== layerTime)) {
           feature.setStyle(new Style({}));
         } else {
           feature.setStyle(null);
@@ -990,7 +998,6 @@ export class MetOClient extends BaseObject {
   createVectorLayers_ (map, vectorConfig) {
     return olms(map, vectorConfig).then((updatedMap) => {
       if (vectorConfig.layers != null) {
-        const mapProjection = updatedMap.getView().getProjection().getCode();
         updatedMap.getLayers().getArray().filter(layer => layer.get('mapbox-source') != null).forEach((layer) => {
           let layerConfig;
           const layerTimes = [];
@@ -1013,35 +1020,44 @@ export class MetOClient extends BaseObject {
               layer.set('title', title);
             }
           }
-          if ((mapProjection !== 'EPSG:3857') || ((timeProperty != null) && (timeProperty.length > 0))) {
-            layer.getSource().getFeatures().forEach((feature) => {
-              if (mapProjection !== 'EPSG:3857') {
-                feature.getGeometry().transform('EPSG:3857', mapProjection);
-              }
-              if ((timeProperty != null) && (timeProperty.length > 0)) {
-                const time = feature.get(timeProperty);
-                if ((time != null) && (time.length > 0)) {
-                  const parsedTime = DateTime.fromISO(time).valueOf();
-                  if ((typeof parsedTime === 'number') && (!Number.isNaN(parsedTime))) {
-                    feature.setStyle(new Style({}));
-                    feature.set('metoclient:time', parsedTime);
-                    if (!layerTimes.includes(parsedTime)) {
-                      layerTimes.push(parsedTime);
+          const source = layer.getSource();
+          const initFeature = (feature) => {
+            if ((timeProperty != null) && (timeProperty.length > 0)) {
+              const time = feature.get(timeProperty);
+              if ((time != null) && (time.length > 0)) {
+                const parsedTime = DateTime.fromISO(time).valueOf();
+                if ((typeof parsedTime === 'number') && (!Number.isNaN(parsedTime))) {
+                  feature.set('metoclient:time', parsedTime);
+                  if (!layerTimes.includes(parsedTime)) {
+                    layerTimes.push(parsedTime);
+                    layerTimes.sort();
+                    if (layerConfig != null) {
+                      if (layerConfig.time == null) {
+                        layerConfig.time = {};
+                      }
+                      layerConfig.time.data = layerTimes;
+                      layer.set('times', layerConfig.time.data);
                     }
+                    this.addTimes_(layerTimes);
+                  }
+                  const layerTime = this.getFeatureLayerTime_(layer);
+                  if ((layerTime == null) || (parsedTime !== layerTime)) {
+                    feature.setStyle(new Style({}));
+                  } else {
+                    feature.setStyle(null);
                   }
                 }
               }
+            }
+          };
+          source.on('addfeature', event => {
+            initFeature(event.feature);
+          });
+          if (((timeProperty != null) && (timeProperty.length > 0))) {
+            source.getFeatures().forEach((feature) => {
+              initFeature(feature);
             });
           }
-          layerTimes.sort();
-          if (layerConfig != null) {
-            if (layerConfig.time == null) {
-              layerConfig.time = {};
-            }
-            layerConfig.time.data = layerTimes;
-            layer.set('times', layerConfig.time.data);
-          }
-          this.addTimes_(layerTimes);
         });
         if ((this.config_.time == null) && (this.times_.length > 0)) {
           this.config_.time = this.times_[0];

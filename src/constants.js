@@ -87,6 +87,7 @@ export const DEFAULT_OPTIONS = {
   texts: {
     'Zoom In': 'Zoom In',
     'Zoom Out': 'Zoom Out',
+    'Layer Switcher': 'Layer Switcher',
     Legend: 'Legend'
   }
 };
@@ -104,3 +105,6 @@ export const LEGEND_CHOOSER_CONTAINER_ID = 'fmi-metoclient-legend-chooser-contai
 export const LEGEND_CHOOSER_LABEL_ID = 'fmi-metoclient-legend-chooser-label';
 export const LEGEND_CHOOSER_SELECT_ID = 'fmi-metoclient-legend-chooser-select';
 export const LEGEND_CONTAINER_ID = 'fmi-metoclient-legend-container';
+
+export const METEOROLOGICAL_MODE = 'meteorological';
+export const SMARTMET_SERVER = 'smartmet server';

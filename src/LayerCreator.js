@@ -3,16 +3,16 @@ import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
 import { OSM } from 'ol/source';
 import SourceCreator from './SourceCreator';
-import { getBaseUrl } from './util';
+import { getBaseUrl, getLegendUrl } from './util';
 
 export default class LayerCreator {
 
   static tiled (layer, options, capabilities) {
-    const source = options.sources[layer.source];
-    if (source == null) {
+    const sourceOptions = options.sources[layer.source];
+    if (sourceOptions == null) {
       return null;
     }
-    if (source.type === 'OSM') {
+    if (sourceOptions.type === 'OSM') {
       return new TileLayer({
         source: new OSM(),
         type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
@@ -24,15 +24,17 @@ export default class LayerCreator {
     if (typeof SourceCreator[service] === 'function') {
       let source = SourceCreator[service](layer, options, capabilities);
       return (source != null) ? new TileLayer({
-        source: source,
+        source,
+        extent: source.bounds,
         preload: 0,
         opacity: 0,
         type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
         title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
-        previous: (layer.previous != null) ? layer.previous : options.layers.find(layer => layer['next'] === layer.id),
-        next: (layer.next != null) ? layer.next : options.layers.find(layer => layer['previous'] === layer.id),
+        previous: (layer.previous != null) ? layer.previous : [options.layers.find(l => l['next'] === layer.id)].map(next => (next == null ? null : next.id))[0],
+        next: (layer.next != null) ? layer.next : [options.layers.find(l => l['previous'] === layer.id)].map(previous => (previous == null ? null : previous.id))[0],
         legendTitle: layer.legendTitle,
-        id: layer.id
+        id: layer.id,
+        legendUrl: getLegendUrl(layer.url.layers, layer.url.styles, capabilities)
       }) : null;
     }
   }
@@ -63,15 +65,17 @@ export default class LayerCreator {
 
     return new ImageLayer({
       source: olSource,
+      extent: source.bounds,
       // Todo: use same code with tiled and image layer options
       preload: 0,
       opacity: 0,
       type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
       title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
-      previous: (layer.previous != null) ? layer.previous : options.layers.find(layer => layer['next'] === layer.id),
-      next: (layer.next != null) ? layer.next : options.layers.find(layer => layer['previous'] === layer.id),
+      previous: (layer.previous != null) ? layer.previous : [options.layers.find(l => l['next'] === layer.id)].map(next => (next == null ? null : next.id))[0],
+      next: (layer.next != null) ? layer.next : [options.layers.find(l => l['previous'] === layer.id)].map(previous => (previous == null ? null : previous.id))[0],
       legendTitle: layer.legendTitle,
-      id: layer.id
+      id: layer.id,
+      legendUrl: getLegendUrl(layer.url.layer, layer.url.style, capabilities)
     });
   }
 }

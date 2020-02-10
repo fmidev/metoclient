@@ -1,6 +1,6 @@
 {
   "name": "@fmidev/metoclient",
-  "version": "6.0.17",
+  "version": "6.1.0",
   "description": "Map animator",
   "module": "src/index.js",
   "main": "dist/index.js",
@@ -43,6 +43,7 @@
   "scripts": {
     "start": "rollup --config rollup/config.js --watch",
     "build": "npm run clean:dist && rollup --config rollup/config.js",
+    "build:dev": "rollup --config rollup/config-dev.js",
     "clean:dist": "rimraf ./dist/*",
     "clean:docs": "rimraf build/docs",
     "lint:src": "eslint --ext js src/",
@@ -88,6 +89,7 @@
     "luxon": "1.21.3",
     "ol": "6.1.1",
     "ol-layerswitcher": "3.4.0",
+    "ol-mapbox-style": "5.0.2",
     "proj4": "2.6.0",
     "rrule": "2.6.3"
   },

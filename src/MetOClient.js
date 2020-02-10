@@ -818,6 +818,14 @@ export class MetOClient extends BaseObject {
     return document.querySelector('div#' + constants.LAYER_SWITCHER_CONTAINER_ID + ' div.panel');
   }
 
+  isLayerSwitcherVisible_ () {
+    const layerSwitcher = this.getLayerSwitcher_()
+    if (layerSwitcher == null) {
+      return null
+    }
+    return document.getElementById(constants.LAYER_SWITCHER_CONTAINER_ID).classList.contains(layerSwitcher.shownClassName);
+  }
+
   /**
    *
    * @private
@@ -933,11 +941,13 @@ export class MetOClient extends BaseObject {
       .filter(layer => this.isAnimationLayer_(layer))
       .reduce((legendArray, layer) => {
         const source = layer.getSource();
-        if ((source != null) && (typeof source['getLegendUrl'] === 'function')) {
-          const legendUrl = source.getLegendUrl();
-          legendArray[layer.get('id')] = {
-            'title': layer.get('legendTitle'),
-            'url': legendUrl
+        if (source != null) {
+          let legendUrl = layer.get('legendUrl');
+          if ((legendUrl != null) && (legendUrl.length > 0)) {
+            legendArray[layer.get('id')] = {
+              'title': layer.get('legendTitle'),
+              'url': legendUrl
+            }
           }
         }
         return legendArray;
@@ -955,7 +965,9 @@ export class MetOClient extends BaseObject {
 
   initMap_ (map) {
     this.set('map', map);
-    map.addControl(new LayerSwitcher());
+    map.addControl(new LayerSwitcher({
+      tipLabel: this.config_.texts['Layer Switcher']
+    }));
     const layerSwitcherContainer = document.querySelector('div#' + this.config_.target + ' div.layer-switcher');
     if (layerSwitcherContainer != null) {
       layerSwitcherContainer.setAttribute('id', constants.LAYER_SWITCHER_CONTAINER_ID);
@@ -963,6 +975,14 @@ export class MetOClient extends BaseObject {
       const layerSwitcherButton = layerSwitcherContainer.querySelector('button');
       if (layerSwitcherButton != null) {
         layerSwitcherButton.onmouseover = () => {};
+        layerSwitcherButton.onclick = () => {
+          const layerSwitcher = this.getLayerSwitcher_()
+          if (this.isLayerSwitcherVisible_()) {
+            layerSwitcher.hidePanel()
+          } else {
+            layerSwitcher.showPanel()
+          }
+        };
       }
       const layerSwitcherPanel = this.getLayerSwitcherPanel_();
       if (layerSwitcherPanel != null) {
@@ -1000,7 +1020,7 @@ export class MetOClient extends BaseObject {
       if (vectorConfig.layers != null) {
         updatedMap.getLayers().getArray().filter(layer => layer.get('mapbox-source') != null).forEach((layer) => {
           let layerConfig;
-          const layerTimes = [];
+          let layerTimes = [];
           let timeProperty;
           const mapboxLayers = layer.get('mapbox-layers');
           if (mapboxLayers != null) {
@@ -1021,6 +1041,16 @@ export class MetOClient extends BaseObject {
             }
           }
           const source = layer.getSource();
+          const updateTimes = () => {
+            if (layerConfig != null) {
+              if (layerConfig.time == null) {
+                layerConfig.time = {};
+              }
+              layerConfig.time.data = layerTimes;
+              layer.set('times', layerConfig.time.data);
+            }
+            this.addTimes_(layerTimes);
+          }
           const initFeature = (feature) => {
             if ((timeProperty != null) && (timeProperty.length > 0)) {
               const time = feature.get(timeProperty);
@@ -1028,17 +1058,18 @@ export class MetOClient extends BaseObject {
                 const parsedTime = DateTime.fromISO(time).valueOf();
                 if ((typeof parsedTime === 'number') && (!Number.isNaN(parsedTime))) {
                   feature.set('metoclient:time', parsedTime);
-                  if (!layerTimes.includes(parsedTime)) {
-                    layerTimes.push(parsedTime);
-                    layerTimes.sort();
-                    if (layerConfig != null) {
-                      if (layerConfig.time == null) {
-                        layerConfig.time = {};
-                      }
-                      layerConfig.time.data = layerTimes;
-                      layer.set('times', layerConfig.time.data);
+                  const numLayerTimes = layerTimes.length;
+                  for (let i = 0; i <= numLayerTimes; i += 1) {
+                    if (i === numLayerTimes) {
+                      layerTimes.push(parsedTime);
+                      updateTimes();
+                    } else if (layerTimes[i] === parsedTime) {
+                      break;
+                    } else if (layerTimes[i] > parsedTime) {
+                      layerTimes.splice(i, 0, parsedTime);
+                      updateTimes();
+                      break;
                     }
-                    this.addTimes_(layerTimes);
                   }
                   const layerTime = this.getFeatureLayerTime_(layer);
                   if ((layerTime == null) || (parsedTime !== layerTime)) {

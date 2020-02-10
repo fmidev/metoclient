@@ -87,6 +87,7 @@ export const DEFAULT_OPTIONS = {
   texts: {
     'Zoom In': 'Zoom In',
     'Zoom Out': 'Zoom Out',
+    'Layer Switcher': 'Layer Switcher',
     Legend: 'Legend'
   }
 };

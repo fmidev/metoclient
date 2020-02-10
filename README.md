@@ -76,8 +76,6 @@ MetOClient offers the following interface to control an animation:
 -   [Methods](#methods)
     -   [get('map')](#get-map)
         -   [Map properties](#map-properties)
-            -   [time](#map-time)
-            -   [playing](#map-playing)
         -   [Map events](#map-events)
     -   [get('options')](#get-options)
     -   [next()](#next)
@@ -336,7 +334,7 @@ Simple map manipulation via OpenLayers commands does not need OpenLayers as a de
 If metoclient is an instance created by the MetOClient constructor, then the usage is as follows:
 
 ```js
-let map = metoclient.get(\'map\')
+let map = metoclient.get('map')
 ```
 
 <a name="map-properties"></a>

@@ -43,6 +43,7 @@
   "scripts": {
     "start": "rollup --config rollup/config.js --watch",
     "build": "npm run clean:dist && rollup --config rollup/config.js",
+    "build:dev": "rollup --config rollup/config-dev.js",
     "clean:dist": "rimraf ./dist/*",
     "clean:docs": "rimraf build/docs",
     "lint:src": "eslint --ext js src/",

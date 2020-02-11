@@ -87,9 +87,9 @@
     "good-listener": "1.2.2",
     "legally": "3.5.0",
     "luxon": "1.21.3",
-    "ol": "6.1.1",
+    "ol": "6.1.1-dev.1581425220371",
     "ol-layerswitcher": "3.4.0",
-    "ol-mapbox-style": "5.0.2",
+    "ol-mapbox-style": "6.0.1",
     "proj4": "2.6.0",
     "rrule": "2.6.3"
   },

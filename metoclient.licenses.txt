@@ -67,7 +67,7 @@ SOFTWARE.
 ---
 
 Name: ol
-Version: 6.1.1
+Version: 6.1.1-dev.1581425220371
 License: BSD-2-Clause
 Private: false
 Description: OpenLayers mapping library
@@ -354,34 +354,6 @@ SOFTWARE.
 
 ---
 
-Name: quickselect
-Version: 2.0.0
-License: ISC
-Private: false
-Description: A tiny and fast selection algorithm in JavaScript.
-Author: Vladimir Agafonkin
-License Copyright:
-===
-
-ISC License
-
-Copyright (c) 2018, Vladimir Agafonkin
-
-Permission to use, copy, modify, and/or distribute this software for any purpose
-with or without fee is hereby granted, provided that the above copyright notice
-and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
-FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
-OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
-TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
-THIS SOFTWARE.
-
-
----
-
 Name: rbush
 Version: 3.0.1
 License: MIT
@@ -594,60 +566,14 @@ SOFTWARE.
 
 ---
 
-Name: @openlayers/pepjs
-Version: 0.5.3
-License: MIT
+Name: elm-pep
+Version: 1.0.4
+License: MPL-2.0
 Private: false
-Description: Polyfill of the PointerEvents W3C spec
-Repository: git://github.com/jquery/PEP.git
-Homepage: https://github.com/jquery/PEP#readme
-Author: jQuery Foundation and other contributors (https://github.com/jquery/PEP/blob/master/AUTHORS.txt)
-License Copyright:
-===
-
-Copyright jQuery Foundation and other contributors, https://jquery.org/
-
-This software consists of voluntary contributions made by many
-individuals. For exact contribution history, see the revision history
-available at https://github.com/jquery/PEP
-
-The following license applies to all parts of this software except as
-documented below:
-
-====
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-====
-
-Copyright and related rights for sample code are waived via CC0. Sample
-code is defined as all source code contained within the samples directory.
-
-CC0: http://creativecommons.org/publicdomain/zero/1.0/
-
-====
-
-All files located in the node_modules directory are externally maintained
-libraries used by this software which have their own licenses; we recommend
-you read them, as their terms may differ from the terms above.
-
+Description: npm package for https://github.com/mpizenberg/elm-pep
+Repository: git://github.com/ahocevar/elm-pep.git
+Homepage: https://github.com/ahocevar/elm-pep#readme
+Author: Andreas Hocevar <andreas.hocevar@gmail.com>
 
 ---
 
@@ -922,7 +848,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 Name: @mapbox/mapbox-gl-style-spec
-Version: 13.10.1
+Version: 13.11.0
 License: ISC
 Private: false
 Description: a specification for mapbox gl styles
@@ -933,7 +859,7 @@ Author: Mapbox
 ---
 
 Name: ol-mapbox-style
-Version: 5.0.2
+Version: 6.0.1
 License: BSD-2-Clause
 Private: false
 Description: Create OpenLayers maps from Mapbox Style objects

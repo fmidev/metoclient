@@ -1136,7 +1136,8 @@ export class MetOClient extends BaseObject {
       showTimeSlider: true,
       timeZone: this.config_.timeZone,
       timeZoneLabel: this.config_.timeZoneLabel,
-      enableMouseWheel: this.config_.metadata.tags.includes(constants.TAG_MOUSE_WHEEL_INTERACTIONS)
+      enableMouseWheel: this.config_.metadata.tags.includes(constants.TAG_MOUSE_WHEEL_INTERACTIONS),
+      meteorologicalMode: !this.config_.metadata.tags.includes(constants.TAG_INSTANT_TIMESLIDER)
     });
     let newMap = new Map({
       target: this.config_.target,

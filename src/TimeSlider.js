@@ -614,7 +614,7 @@ class TimeSlider extends Control {
     infotip.style.display = 'none';
     pointer.appendChild(infotip);
 
-    interactionContainer.append(pointer);
+    interactionContainer.appendChild(pointer);
 
     const handle = document.createElement('div');
     handle.classList.add(constants.POINTER_HANDLE_CLASS);

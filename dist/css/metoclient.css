@@ -628,3 +628,9 @@ div#fmi-metoclient-layer-switcher-container button {
 div.ol-zoom button {
     cursor: pointer;
 }
+
+div.ol-full-screen {
+  left: .5em;
+  top: 5em;
+  width: 1.375em;
+}

@@ -27,6 +27,7 @@ import DragPan from 'ol/interaction/DragPan';
 import PinchZoom from 'ol/interaction/PinchZoom';
 import KeyboardPan from 'ol/interaction/KeyboardPan';
 import KeyboardZoom from 'ol/interaction/KeyboardZoom';
+import MouseWheelZoom from 'ol/interaction/MouseWheelZoom';
 import Style from 'ol/style/Style';
 import ElementVisibilityWatcher from 'element-visibility-watcher';
 import olms from 'ol-mapbox-style';
@@ -1100,14 +1101,42 @@ export class MetOClient extends BaseObject {
 
   /**
    *
+   */
+  createInteractions_ () {
+    if (this.config_.metadata.tags.includes(constants.TAG_NO_INTERACTIONS)) {
+      return [];
+    } else if (this.config_.metadata.tags.includes(constants.TAG_MOUSE_WHEEL_INTERACTIONS)) {
+      return [
+        new DoubleClickZoom(),
+        new DragPan(),
+        new PinchZoom(),
+        new KeyboardPan(),
+        new KeyboardZoom(),
+        new MouseWheelZoom()
+      ];
+    } else {
+      return [
+        new DoubleClickZoom(),
+        new DragPan(),
+        new PinchZoom(),
+        new KeyboardPan(),
+        new KeyboardZoom()
+      ];
+    }
+  }
+
+  /**
+   *
    * @private
    */
   createMap_ () {
+    const interactions = this.createInteractions_();
     this.timeSlider_ = new TimeSlider({
       locale: 'fi-FI',
       showTimeSlider: true,
       timeZone: this.config_.timeZone,
-      timeZoneLabel: this.config_.timeZoneLabel
+      timeZoneLabel: this.config_.timeZoneLabel,
+      enableMouseWheel: this.config_.metadata.tags.includes(constants.TAG_MOUSE_WHEEL_INTERACTIONS)
     });
     let newMap = new Map({
       target: this.config_.target,
@@ -1120,13 +1149,7 @@ export class MetOClient extends BaseObject {
         }),
         this.timeSlider_
       ],
-      interactions: [
-        new DoubleClickZoom(),
-        new DragPan(),
-        new PinchZoom(),
-        new KeyboardPan(),
-        new KeyboardZoom()
-      ]
+      interactions
     });
     if (this.vectorConfig_.layers.length > 0) {
       return this.createVectorLayers_(newMap, this.vectorConfig_).then((map) => this.initMap_(map));

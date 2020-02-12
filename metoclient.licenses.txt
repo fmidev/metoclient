@@ -67,7 +67,7 @@ SOFTWARE.
 ---
 
 Name: ol
-Version: 6.1.1-dev.1581425220371
+Version: 6.2.0
 License: BSD-2-Clause
 Private: false
 Description: OpenLayers mapping library

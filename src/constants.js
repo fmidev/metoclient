@@ -73,6 +73,9 @@ export const GET_CAPABILITIES_QUERY = 'request=GetCapabilities';
 export const DEFAULT_OPTIONS = {
   center: [0, 0],
   zoom: 4,
+  metadata: {
+    tags: [],
+  },
   sources: {},
   time: null, //floorTime(Date.now(), 15 * timeConstants.MINUTE), // Todo: from configuration
   timeZone: 'Europe/Helsinki',
@@ -108,3 +111,6 @@ export const LEGEND_CONTAINER_ID = 'fmi-metoclient-legend-container';
 
 export const METEOROLOGICAL_MODE = 'meteorological';
 export const SMARTMET_SERVER = 'smartmet server';
+
+export const TAG_MOUSE_WHEEL_INTERACTIONS = 'mouse wheel interactions';
+export const TAG_NO_INTERACTIONS = 'no interactions';

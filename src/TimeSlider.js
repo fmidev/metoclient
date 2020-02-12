@@ -27,6 +27,7 @@ class TimeSlider extends Control {
     this.container_ = element;
     this.config_ = options;
     this.callbacks_ = options.callbacks;
+    this.enableMouseWheel_ = options.enableMouseWheel;
     this.interactions_ = null;
     this.playButton_ = null;
     this.animationPlay_ = false;
@@ -100,6 +101,12 @@ class TimeSlider extends Control {
 
     const momentsContainer = document.createElement('div');
     momentsContainer.classList.add(constants.FRAMES_CONTAINER_CLASS);
+    if (this.enableMouseWheel_) {
+      this.mouseListeners_.push(listen(momentsContainer, 'wheel', event => {
+        event.preventDefault();
+        self.step(event.deltaY);
+      }));
+    }
     clickableContainer.appendChild(momentsContainer);
 
     clickableContainer.appendChild(this.createPostTools(moments));

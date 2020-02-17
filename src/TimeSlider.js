@@ -19,7 +19,10 @@ class TimeSlider extends Control {
   constructor(opt_options) {
     const options = opt_options || {};
     const element = document.createElement('div');
-    element.className = `ol-unselectable ol-control fmi-metoclient-timeslider ${constants.METEOROLOGICAL_MODE}`;
+    element.className = 'ol-unselectable ol-control fmi-metoclient-timeslider';
+    if (options.meteorologicalMode) {
+      element.className += ` ${constants.METEOROLOGICAL_MODE}`
+    }
     super({
       element: element,
       target: options.target

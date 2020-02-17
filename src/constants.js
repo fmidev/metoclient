@@ -83,7 +83,8 @@ export const DEFAULT_OPTIONS = {
   container: 'map',
   resolutions: [2048, 1024, 512, 256, 128, 64],
   metadata: {
-    'refreshInterval': 'map'
+    refreshInterval: 'map',
+    tags: []
   },
   delay: DEFAULT_DELAY,
   periodDelay: 2 * DEFAULT_DELAY,
@@ -114,3 +115,4 @@ export const SMARTMET_SERVER = 'smartmet server';
 
 export const TAG_MOUSE_WHEEL_INTERACTIONS = 'mouse wheel interactions';
 export const TAG_NO_INTERACTIONS = 'no interactions';
+export const TAG_INSTANT_TIMESLIDER = 'instant time slider';

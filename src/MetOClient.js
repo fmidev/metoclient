@@ -1006,6 +1006,19 @@ export class MetOClient extends BaseObject {
       this.previous();
     });
     map.set('time', this.config_.time);
+    map.on('moveend', event => {
+      const view = map.getView();
+      if (view == null) {
+        return;
+      }
+      const center = view.getCenter();
+      if (center == null) {
+        return;
+      }
+      if (center.some((coord, index) => coord !== this.config_.center[index])) {
+        this.config_.center = center;
+      }
+    });
     this.refreshTimer_ = interval(this.refresh_.bind(this), this.refreshInterval_);
     return map;
   }

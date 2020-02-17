@@ -83,7 +83,8 @@ export const DEFAULT_OPTIONS = {
   container: 'map',
   resolutions: [2048, 1024, 512, 256, 128, 64],
   metadata: {
-    'refreshInterval': 'map'
+    refreshInterval: 'map',
+    tags: []
   },
   delay: DEFAULT_DELAY,
   periodDelay: 2 * DEFAULT_DELAY,

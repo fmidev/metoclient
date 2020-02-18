@@ -78,6 +78,7 @@ MetOClient offers the following interface to control an animation:
         -   [Map properties](#map-properties)
         -   [Map events](#map-events)
     -   [get('options')](#get-options)
+    -   [get('timeSlider')](#get-timeslider)
     -   [next()](#next)
     -   [pause()](#pause)
     -   [play()](#play)
@@ -388,6 +389,15 @@ metoclient.get('map').on('change:playing')
 **Returns**: [**Object**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/Object) The animation options.
 
 Gets the animation options that are derived from the initial configuration and reflect the current animation view.
+
+---
+
+<a name="get-timeslider"></a>
+#### get('timeSlider')
+
+**Returns**: [**Object**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/Object) The time slider.
+
+Gets the time slider control. It can be listened for `render` and `rendercomplete` events.
 
 ---
 

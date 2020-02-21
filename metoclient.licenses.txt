@@ -283,7 +283,7 @@ Homepage: https://github.com/zenorocha/delegate#readme
 ---
 
 Name: element-resize-detector
-Version: 1.1.15
+Version: 1.2.1
 License: MIT
 Private: false
 Description: Resize event emitter for elements.

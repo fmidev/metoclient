@@ -55,6 +55,7 @@ class TimeSlider extends Control {
    * @param {Array} moments Time values for the slider.
    */
   createTimeSlider(moments) {
+    this.dispatchEvent('render');
     this.clear();
     this.createContainers(moments);
     this.createFrames(moments);
@@ -73,6 +74,7 @@ class TimeSlider extends Control {
     this.playingListener = this.getMap().on('change:playing', evt => {
       this.setAnimationPlay(evt.target.get('playing'));
     });
+    this.dispatchEvent('rendercomplete');
   }
 
   /**

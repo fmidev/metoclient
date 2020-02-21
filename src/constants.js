@@ -74,18 +74,16 @@ export const DEFAULT_OPTIONS = {
   center: [0, 0],
   zoom: 4,
   metadata: {
+    refreshInterval: 'map',
     tags: [],
   },
   sources: {},
+  layers: [],
   time: null, //floorTime(Date.now(), 15 * timeConstants.MINUTE), // Todo: from configuration
   timeZone: 'Europe/Helsinki',
   timeZoneLabel: '',
   container: 'map',
   resolutions: [2048, 1024, 512, 256, 128, 64],
-  metadata: {
-    refreshInterval: 'map',
-    tags: []
-  },
   delay: DEFAULT_DELAY,
   periodDelay: 2 * DEFAULT_DELAY,
   texts: {
@@ -116,3 +114,8 @@ export const SMARTMET_SERVER = 'smartmet server';
 export const TAG_MOUSE_WHEEL_INTERACTIONS = 'mouse wheel interactions';
 export const TAG_NO_INTERACTIONS = 'no interactions';
 export const TAG_INSTANT_TIMESLIDER = 'instant time slider';
+
+export const BASE_MAP = 'base';
+
+export const VISIBLE = 'visible';
+export const NOT_VISIBLE = 'none';

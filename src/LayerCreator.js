@@ -4,6 +4,7 @@ import ImageWMS from 'ol/source/ImageWMS';
 import { OSM } from 'ol/source';
 import SourceCreator from './SourceCreator';
 import { getBaseUrl, getLegendUrl } from './util';
+import * as constants from './constants';
 
 export default class LayerCreator {
 
@@ -15,6 +16,7 @@ export default class LayerCreator {
     if (sourceOptions.type === 'OSM') {
       return new TileLayer({
         source: new OSM(),
+        visible: layer.visible !== constants.NOT_VISIBLE,
         type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
         title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
         id: layer.id
@@ -27,6 +29,7 @@ export default class LayerCreator {
         source,
         extent: source.bounds,
         preload: 0,
+        visible: layer.visible !== constants.NOT_VISIBLE,
         opacity: 0,
         type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
         title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',
@@ -68,6 +71,7 @@ export default class LayerCreator {
       extent: source.bounds,
       // Todo: use same code with tiled and image layer options
       preload: 0,
+      visible: layer.visible !== constants.NOT_VISIBLE,
       opacity: 0,
       type: (layer.metadata) && (layer.metadata.type) ? layer.metadata.type : '',
       title: (layer.metadata) && (layer.metadata.title) ? layer.metadata.title : '',

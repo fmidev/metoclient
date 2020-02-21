@@ -146,7 +146,19 @@ export class MetOClient extends BaseObject {
         if (time != null) {
           source.set(constants.SOURCE_TIME, null);
         }
+        if (!layer.get('id').startsWith('metoclient:')) {
+          const config = this.config_.layers.find(layerConfig => layerConfig.id === layer.get('metoclient:id'));
+          if (config != null) {
+            config.visibility = (layer.getVisible() ? constants.VISIBLE : constants.NOT_VISIBLE);
+          }
+        }
       });
+      const view = map.getView();
+      if (view != null) {
+        this.config_.center = view.getCenter();
+        this.config_.zoom = view.getZoom();
+        this.config_.rotation = view.getRotation();
+      }
     }
     this.render();
   }
@@ -425,7 +437,11 @@ export class MetOClient extends BaseObject {
    * @private
    */
   createLayers_ () {
-    const numBaseMaps = this.config_.layers.reduce((baseMapCount, layerConfig) => baseMapCount + ((layerConfig.metadata != null) && (layerConfig.metadata.type != null) && (layerConfig.metadata.type.toLowerCase() === 'base')), 0);
+    const baseMapConfigs = this.config_.layers.filter(layerConfig => (layerConfig != null) && (layerConfig.metadata != null) && (layerConfig.metadata.type != null) && (layerConfig.metadata.type.toLowerCase() === constants.BASE_MAP));
+    const lastVisibleBaseMapIndex = baseMapConfigs.reduce((prevVisibleBaseMapIndex, baseMapConfig, index) => ((baseMapConfig.visible === constants.VISIBLE) ? index : prevVisibleBaseMapIndex, baseMapConfigs.length - 1));
+    baseMapConfigs.forEach((baseMapConfig, index) => {
+      baseMapConfig.visible = (index === lastVisibleBaseMapIndex) ? constants.VISIBLE : constants.NOT_VISIBLE;
+    });
     let layers = new Collection(this.config_.layers.map(layerConfig => {
       if ((layerConfig.time != null) && (layerConfig.metadata != null) && (layerConfig.metadata.title != null)) {
         layerConfig.legendTitle = layerConfig.metadata.title;
@@ -444,7 +460,7 @@ export class MetOClient extends BaseObject {
       if ((layerConfig.source == null) || ((layerConfig.url != null) && ((typeof layerConfig.url.service !== 'string') || (layerConfig.url.service.length === 0)))) {
         return olLayers;
       }
-      if ((numBaseMaps === 1) && (layerConfig.metadata != null) && (layerConfig.metadata.type != null) && (layerConfig.metadata.type.toLowerCase() === 'base')) {
+      if ((baseMapConfigs.length === 1) && (layerConfig.metadata != null) && (layerConfig.metadata.type != null) && (layerConfig.metadata.type.toLowerCase() === constants.BASE_MAP)) {
         layerConfig.metadata.title = '';
       }
       const olLayer = this.createLayer_(layerConfig);
@@ -1012,19 +1028,6 @@ export class MetOClient extends BaseObject {
       this.previous();
     });
     map.set('time', this.config_.time);
-    map.on('moveend', event => {
-      const view = map.getView();
-      if (view == null) {
-        return;
-      }
-      const center = view.getCenter();
-      if (center == null) {
-        return;
-      }
-      if (center.some((coord, index) => coord !== this.config_.center[index])) {
-        this.config_.center = center;
-      }
-    });
     this.refreshTimer_ = interval(this.refresh_.bind(this), this.refreshInterval_);
     return map;
   }

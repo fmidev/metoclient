@@ -68,6 +68,7 @@ export class MetOClient extends BaseObject {
     this.legends_ = {};
     this.selectedLegend_ = constants.DEFAULT_LEGEND;
     this.layerSwitcherWatcher = null;
+    this.delayLoop_ = this.config_.metadata.tags.includes(constants.TAG_DELAY_LOOP);
     this.on('change:options', (event) => {
       this.config_ = assign({}, constants.DEFAULT_OPTIONS, this.get('options'));
       this.refresh_();
@@ -1314,7 +1315,15 @@ export class MetOClient extends BaseObject {
     if (!this.isReady_()) {
       return;
     }
-    this.get('map').set('time', this.getNextTime_());
+    const map = this.get('map');
+    const currentTime = map.get('time');
+    const nextTime = this.getNextTime_();
+    if ((!this.delayLoop_) || (currentTime == null) || (currentTime < nextTime)) {
+      map.set('time', nextTime);
+      this.delayLoop_ = this.config_.metadata.tags.includes(constants.TAG_DELAY_LOOP);
+    } else {
+      this.delayLoop_ = false;
+    }
   }
 
   /**

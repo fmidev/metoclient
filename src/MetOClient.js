@@ -60,6 +60,7 @@ export class MetOClient extends BaseObject {
     this.playingListener_ = null;
     this.nextListener_ = null;
     this.previousListener_ = null;
+    this.timeListener_ = null;
     this.renderComplete_ = false;
     this.updateNeeded_ = false;
     this.waitingRender_ = 0;
@@ -69,7 +70,9 @@ export class MetOClient extends BaseObject {
     this.selectedLegend_ = constants.DEFAULT_LEGEND;
     this.layerSwitcherWatcher = null;
     this.delayLoop_ = this.config_.metadata.tags.includes(constants.TAG_DELAY_LOOP);
-    this.on('change:options', (event) => {
+    this.layerListeners_ = [];
+    this.sourceListeners_ = [];
+    this.optionsListener_ = this.on('change:options', (event) => {
       this.config_ = assign({}, constants.DEFAULT_OPTIONS, this.get('options'));
       this.refresh_();
     });
@@ -98,6 +101,7 @@ export class MetOClient extends BaseObject {
    */
   render () {
     return this.updateCapabilities_().then(() => {
+      this.clear_();
       this.updateTimes_();
       let defaultTime = this.times_[0];
       const realWorldTime = Date.now();
@@ -346,7 +350,7 @@ export class MetOClient extends BaseObject {
     const url = ((source.capabilities != null) && (source.capabilities.length > 0)) ? source.capabilities : tiles;
     const layer = LayerCreator[layerType](layerConfig, options, url != null ? this.capabilities_[url] : null);
     if (layer != null) {
-      layer.on('change:visible', event => {
+      this.layerListeners_.push(layer.on('change:visible', event => {
         const visible = layer.getVisible();
         ['previous', 'next'].forEach(relative => {
           this.setRelativesVisible_(layer, relative, visible);
@@ -370,7 +374,7 @@ export class MetOClient extends BaseObject {
           }
           this.updateTimeSlider_();
         }
-      });
+      }));
       if (timeDefined) {
         layer.set('times', layerConfig.time.data);
       }
@@ -834,7 +838,7 @@ export class MetOClient extends BaseObject {
    *
    * @private
    */
-  updateTimeListener_ () {
+  createTimeListener_ () {
     this.timeListener_ = this.get('map').on('change:time', this.timeUpdated_.bind(this));
   }
 
@@ -1021,7 +1025,7 @@ export class MetOClient extends BaseObject {
         this.animate_();
       }
     });
-    this.updateTimeListener_();
+    this.createTimeListener_();
     this.nextListener_ = this.get('map').on('next', evt => {
       this.next();
     });
@@ -1105,9 +1109,9 @@ export class MetOClient extends BaseObject {
               }
             }
           };
-          source.on('addfeature', event => {
+          this.sourceListeners_.push(source.on('addfeature', event => {
             initFeature(event.feature);
-          });
+          }));
           if (((timeProperty != null) && (timeProperty.length > 0))) {
             source.getFeatures().forEach((feature) => {
               initFeature(feature);
@@ -1196,7 +1200,7 @@ export class MetOClient extends BaseObject {
     map.getLayerGroup().setLayers(this.createLayers_());
     map.setView(this.createView_());
     map.set('time', this.config_.time);
-    this.updateTimeListener_();
+    this.createTimeListener_();
     if (this.vectorConfig_.layers.length > 0) {
       return this.createVectorLayers_(map, this.vectorConfig_).then((updatedMap) => {
         this.timeUpdated_();
@@ -1381,15 +1385,22 @@ export class MetOClient extends BaseObject {
     this.pause();
   }
 
+  clear_ () {
+    unByKey(this.playingListener_);
+    unByKey(this.nextListener_);
+    unByKey(this.previousListener_);
+    unByKey(this.timeListener_);
+    unByKey(this.layerListeners_);
+    unByKey(this.sourceListeners_);
+  }
+
   /**
    *
    * @api
    */
   destroy () {
-    unByKey(this.playingListener_);
-    unByKey(this.nextListener_);
-    unByKey(this.previousListener_);
-    unByKey(this.timeListener_);
+    this.clear();
+    unByKey(this.optionsListener_);
     this.get('timeSlider').destroy();
   }
 

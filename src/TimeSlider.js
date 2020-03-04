@@ -83,6 +83,7 @@ class TimeSlider extends Control {
    */
   step(direction) {
     const map = this.getMap();
+    map.set('playing', false);
     if (direction > 0) {
       map.dispatchEvent('next');
     } else if (direction < 0) {
@@ -264,6 +265,7 @@ class TimeSlider extends Control {
    */
   createFrame(beginTime, endTime, type, weight) {
     const self = this;
+    const map = this.getMap();
     const timeFrame = new TimeFrame({
       'beginTime': beginTime,
       'endTime': endTime,
@@ -279,10 +281,12 @@ class TimeSlider extends Control {
         longClick = setTimeout(() => {
           clearTimeout(singleClickTimer);
           longClick = null;
-          this.getMap().set('time', timeFrame['endTime']);
+          map.set('playing', false);
+          map.set('time', timeFrame['endTime']);
         }, constants.LONG_CLICK_DELAY);
       } else {
-        this.getMap().set('time', timeFrame['endTime']);
+        map.set('playing', false);
+        map.set('time', timeFrame['endTime']);
       }
     }));
     this.mouseListeners_.push(listen(timeFrame.element, 'mouseup', () => {
@@ -293,16 +297,18 @@ class TimeSlider extends Control {
           singleClickTimer = setTimeout(() => {
             clearTimeout(longClick);
             clickCount = 0;
-            if (timeFrame['endTime'] === this.getMap().get('time')) {
-              this.getMap().set('time', timeFrame['beginTime']);
+            if (timeFrame['endTime'] === map.get('time')) {
+              map.set('playing', false);
+              map.set('time', timeFrame['beginTime']);
             } else {
-              self.step(timeFrame['endTime'] - this.getMap().get('time'));
+              self.step(timeFrame['endTime'] - map.get('time'));
             }
           }, constants.DOUBLE_PRESS_DELAY);
         } else if (clickCount === 2) {
           clearTimeout(singleClickTimer);
           clickCount = 0;
-          this.getMap().set('time', timeFrame['endTime']);
+          map.set('playing', false);
+          map.set('time', timeFrame['endTime']);
         }
       }
     }));
@@ -315,10 +321,12 @@ class TimeSlider extends Control {
       if (this.isMeteorologicalMode()) {
         longTap = setTimeout(() => {
           longTap = null;
-          this.getMap().set('time', timeFrame['endTime']);
+          map.set('playing', false);
+          map.set('time', timeFrame['endTime']);
         }, constants.LONG_TAP_DELAY);
       } else {
-        this.getMap().set('time', timeFrame['endTime']);
+        map.set('playing', false);
+        map.set('time', timeFrame['endTime']);
       }
     }));
     this.mouseListeners_.push(listen(timeFrame.element, 'touchend', () => {
@@ -336,7 +344,8 @@ class TimeSlider extends Control {
         return;
       }
       document.activeElement.blur();
-      this.getMap().set('time', timeFrame['endTime']);
+      map.set('playing', false);
+      map.set('time', timeFrame['endTime']);
     }));
     this.mouseListeners_.push(listen(timeFrame.element, 'touchmove', event => {
       if ((!self.dragging_) || (event.changedTouches[0] === undefined)) {
@@ -354,9 +363,10 @@ class TimeSlider extends Control {
         }
       }
       document.activeElement.blur();
-      if ((currentTimeFrame != null) && (currentTimeFrame['endTime'] !== this.getMap().get('time'))) {
+      if ((currentTimeFrame != null) && (currentTimeFrame['endTime'] !== map.get('time'))) {
         clearTimeout(longTap);
-        this.getMap().set('time', currentTimeFrame['endTime']);
+        map.set('playing', false);
+        map.set('time', currentTimeFrame['endTime']);
       }
     }));
 
@@ -791,6 +801,9 @@ class TimeSlider extends Control {
    */
   setDragging(dragging) {
     this.dragging_ = dragging;
+    if (this.dragging_) {
+      this.getMap().set('playing', false);
+    }
     const pointerEvents = dragging ? 'auto' : 'none';
     Array.from(this.container_.getElementsByClassName(constants.DRAG_LISTENER_CLASS))
       .forEach(element => {

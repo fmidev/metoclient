@@ -6,7 +6,6 @@ import { register } from 'ol/proj/proj4.js';
 import proj4 from 'proj4/dist/proj4.js';
 import { transform } from 'ol/proj';
 import { parseTimes, updateSourceTime, getSourceCapabilitiesUrl } from './util.js';
-import { interval, timeout } from 'd3-timer';
 import BaseObject from 'ol/Object';
 import TimeSlider from './TimeSlider';
 import LayerCreator from './LayerCreator';
@@ -60,6 +59,7 @@ export class MetOClient extends BaseObject {
     this.playingListener_ = null;
     this.nextListener_ = null;
     this.previousListener_ = null;
+    this.timeListener_ = null;
     this.renderComplete_ = false;
     this.updateNeeded_ = false;
     this.waitingRender_ = 0;
@@ -68,7 +68,12 @@ export class MetOClient extends BaseObject {
     this.legends_ = {};
     this.selectedLegend_ = constants.DEFAULT_LEGEND;
     this.layerSwitcherWatcher = null;
-    this.on('change:options', (event) => {
+    this.delayLoop_ = this.config_.metadata.tags.includes(constants.TAG_DELAY_LOOP);
+    this.refreshTimer_ = null;
+    this.animationTimeout_ = null;
+    this.layerListeners_ = [];
+    this.sourceListeners_ = [];
+    this.optionsListener_ = this.on('change:options', (event) => {
       this.config_ = assign({}, constants.DEFAULT_OPTIONS, this.get('options'));
       this.refresh_();
     });
@@ -97,6 +102,7 @@ export class MetOClient extends BaseObject {
    */
   render () {
     return this.updateCapabilities_().then(() => {
+      this.clear_();
       this.updateTimes_();
       let defaultTime = this.times_[0];
       const realWorldTime = Date.now();
@@ -345,7 +351,7 @@ export class MetOClient extends BaseObject {
     const url = ((source.capabilities != null) && (source.capabilities.length > 0)) ? source.capabilities : tiles;
     const layer = LayerCreator[layerType](layerConfig, options, url != null ? this.capabilities_[url] : null);
     if (layer != null) {
-      layer.on('change:visible', event => {
+      this.layerListeners_.push(layer.on('change:visible', event => {
         const visible = layer.getVisible();
         ['previous', 'next'].forEach(relative => {
           this.setRelativesVisible_(layer, relative, visible);
@@ -369,7 +375,7 @@ export class MetOClient extends BaseObject {
           }
           this.updateTimeSlider_();
         }
-      });
+      }));
       if (timeDefined) {
         layer.set('times', layerConfig.time.data);
       }
@@ -647,7 +653,8 @@ export class MetOClient extends BaseObject {
           this.updateNeeded_ = false;
           this.timeUpdated_();
         } else if (this.waitingRender_ > 0) {
-          timeout(this.animate_.bind(this), Math.max(this.delay_ - (Date.now() - this.waitingRender_), 0));
+          clearTimeout(this.animationTimeout_);
+          this.animationTimeout_ = setTimeout(this.animate_.bind(this), Math.max(this.delay_ - (Date.now() - this.waitingRender_), 0));
         }
       });
     }
@@ -833,7 +840,7 @@ export class MetOClient extends BaseObject {
    *
    * @private
    */
-  updateTimeListener_ () {
+  createTimeListener_ () {
     this.timeListener_ = this.get('map').on('change:time', this.timeUpdated_.bind(this));
   }
 
@@ -1020,7 +1027,7 @@ export class MetOClient extends BaseObject {
         this.animate_();
       }
     });
-    this.updateTimeListener_();
+    this.createTimeListener_();
     this.nextListener_ = this.get('map').on('next', evt => {
       this.next();
     });
@@ -1028,7 +1035,7 @@ export class MetOClient extends BaseObject {
       this.previous();
     });
     map.set('time', this.config_.time);
-    this.refreshTimer_ = interval(this.refresh_.bind(this), this.refreshInterval_);
+    this.refreshTimer_ = setInterval(this.refresh_.bind(this), this.refreshInterval_);
     return map;
   }
 
@@ -1104,9 +1111,9 @@ export class MetOClient extends BaseObject {
               }
             }
           };
-          source.on('addfeature', event => {
+          this.sourceListeners_.push(source.on('addfeature', event => {
             initFeature(event.feature);
-          });
+          }));
           if (((timeProperty != null) && (timeProperty.length > 0))) {
             source.getFeatures().forEach((feature) => {
               initFeature(feature);
@@ -1195,7 +1202,7 @@ export class MetOClient extends BaseObject {
     map.getLayerGroup().setLayers(this.createLayers_());
     map.setView(this.createView_());
     map.set('time', this.config_.time);
-    this.updateTimeListener_();
+    this.createTimeListener_();
     if (this.vectorConfig_.layers.length > 0) {
       return this.createVectorLayers_(map, this.vectorConfig_).then((updatedMap) => {
         this.timeUpdated_();
@@ -1275,9 +1282,10 @@ export class MetOClient extends BaseObject {
   animate_ () {
     if (this.get('map').get('playing')) {
       if (this.renderComplete_) {
+        clearTimeout(this.animationTimeout_);
         this.waitingRender_ = 0;
         this.next();
-        timeout(this.animate_.bind(this), this.delay_);
+        this.animationTimeout_ = setTimeout(this.animate_.bind(this), this.delay_);
       } else {
         this.waitingRender_ = Date.now();
       }
@@ -1314,7 +1322,15 @@ export class MetOClient extends BaseObject {
     if (!this.isReady_()) {
       return;
     }
-    this.get('map').set('time', this.getNextTime_());
+    const map = this.get('map');
+    const currentTime = map.get('time');
+    const nextTime = this.getNextTime_();
+    if ((!this.delayLoop_) || (currentTime == null) || (currentTime < nextTime)) {
+      map.set('time', nextTime);
+      this.delayLoop_ = this.config_.metadata.tags.includes(constants.TAG_DELAY_LOOP);
+    } else {
+      this.delayLoop_ = false;
+    }
   }
 
   /**
@@ -1372,15 +1388,24 @@ export class MetOClient extends BaseObject {
     this.pause();
   }
 
+  clear_ () {
+    unByKey(this.playingListener_);
+    unByKey(this.nextListener_);
+    unByKey(this.previousListener_);
+    unByKey(this.timeListener_);
+    unByKey(this.layerListeners_);
+    unByKey(this.sourceListeners_);
+  }
+
   /**
    *
    * @api
    */
   destroy () {
-    unByKey(this.playingListener_);
-    unByKey(this.nextListener_);
-    unByKey(this.previousListener_);
-    unByKey(this.timeListener_);
+    this.clear();
+    unByKey(this.optionsListener_);
+    clearInterval(this.refreshTimer_);
+    clearTimeout(this.animationTimeout_);
     this.get('timeSlider').destroy();
   }
 

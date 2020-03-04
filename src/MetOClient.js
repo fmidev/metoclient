@@ -6,7 +6,6 @@ import { register } from 'ol/proj/proj4.js';
 import proj4 from 'proj4/dist/proj4.js';
 import { transform } from 'ol/proj';
 import { parseTimes, updateSourceTime, getSourceCapabilitiesUrl } from './util.js';
-import { interval, timeout } from 'd3-timer';
 import BaseObject from 'ol/Object';
 import TimeSlider from './TimeSlider';
 import LayerCreator from './LayerCreator';
@@ -70,6 +69,8 @@ export class MetOClient extends BaseObject {
     this.selectedLegend_ = constants.DEFAULT_LEGEND;
     this.layerSwitcherWatcher = null;
     this.delayLoop_ = this.config_.metadata.tags.includes(constants.TAG_DELAY_LOOP);
+    this.refreshTimer_ = null;
+    this.animationTimeout_ = null;
     this.layerListeners_ = [];
     this.sourceListeners_ = [];
     this.optionsListener_ = this.on('change:options', (event) => {
@@ -652,7 +653,8 @@ export class MetOClient extends BaseObject {
           this.updateNeeded_ = false;
           this.timeUpdated_();
         } else if (this.waitingRender_ > 0) {
-          timeout(this.animate_.bind(this), Math.max(this.delay_ - (Date.now() - this.waitingRender_), 0));
+          clearTimeout(this.animationTimeout_);
+          this.animationTimeout_ = setTimeout(this.animate_.bind(this), Math.max(this.delay_ - (Date.now() - this.waitingRender_), 0));
         }
       });
     }
@@ -1033,7 +1035,7 @@ export class MetOClient extends BaseObject {
       this.previous();
     });
     map.set('time', this.config_.time);
-    this.refreshTimer_ = interval(this.refresh_.bind(this), this.refreshInterval_);
+    this.refreshTimer_ = setInterval(this.refresh_.bind(this), this.refreshInterval_);
     return map;
   }
 
@@ -1280,9 +1282,10 @@ export class MetOClient extends BaseObject {
   animate_ () {
     if (this.get('map').get('playing')) {
       if (this.renderComplete_) {
+        clearTimeout(this.animationTimeout_);
         this.waitingRender_ = 0;
         this.next();
-        timeout(this.animate_.bind(this), this.delay_);
+        this.animationTimeout_ = setTimeout(this.animate_.bind(this), this.delay_);
       } else {
         this.waitingRender_ = Date.now();
       }
@@ -1401,6 +1404,8 @@ export class MetOClient extends BaseObject {
   destroy () {
     this.clear();
     unByKey(this.optionsListener_);
+    clearInterval(this.refreshTimer_);
+    clearTimeout(this.animationTimeout_);
     this.get('timeSlider').destroy();
   }
 

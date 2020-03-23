@@ -444,7 +444,7 @@ export class MetOClient extends BaseObject {
    */
   createLayers_ () {
     const baseMapConfigs = this.config_.layers.filter(layerConfig => (layerConfig != null) && (layerConfig.metadata != null) && (layerConfig.metadata.type != null) && (layerConfig.metadata.type.toLowerCase() === constants.BASE_MAP));
-    const lastVisibleBaseMapIndex = baseMapConfigs.reduce((prevVisibleBaseMapIndex, baseMapConfig, index) => ((baseMapConfig.visible === constants.VISIBLE) ? index : prevVisibleBaseMapIndex, baseMapConfigs.length - 1));
+    const lastVisibleBaseMapIndex = baseMapConfigs.reduce((prevVisibleBaseMapIndex, baseMapConfig, index) => ((baseMapConfig.visible === constants.VISIBLE) ? index : prevVisibleBaseMapIndex), baseMapConfigs.length - 1);
     baseMapConfigs.forEach((baseMapConfig, index) => {
       baseMapConfig.visible = (index === lastVisibleBaseMapIndex) ? constants.VISIBLE : constants.NOT_VISIBLE;
     });

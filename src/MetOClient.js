@@ -152,7 +152,8 @@ export class MetOClient extends BaseObject {
         if (time != null) {
           source.set(constants.SOURCE_TIME, null);
         }
-        if (!layer.get('id').startsWith('metoclient:')) {
+        const id = layer.get('id');
+        if ((id != null) && (!id.startsWith('metoclient:'))) {
           const config = this.config_.layers.find(layerConfig => layerConfig.id === layer.get('metoclient:id'));
           if (config != null) {
             config.visibility = (layer.getVisible() ? constants.VISIBLE : constants.NOT_VISIBLE);
@@ -1199,7 +1200,10 @@ export class MetOClient extends BaseObject {
       return this.createMap_();
     }
     map.setTarget(this.config_.target);
-    map.getLayerGroup().setLayers(this.createLayers_());
+    map.getLayerGroup().setLayers(this.createLayers_().extend(map
+      .getLayers()
+      .getArray()
+      .filter((layer) => layer.get('metoclient:id') == null)));
     map.setView(this.createView_());
     map.set('time', this.config_.time);
     this.createTimeListener_();

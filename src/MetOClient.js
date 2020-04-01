@@ -838,14 +838,6 @@ export class MetOClient extends BaseObject {
     }
   }
 
-  /**
-   *
-   * @private
-   */
-  createTimeListener_ () {
-    this.timeListener_ = this.get('map').on('change:time', this.timeUpdated_.bind(this));
-  }
-
   getLayerSwitcherPanel_ () {
     return document.querySelector('div#' + constants.LAYER_SWITCHER_CONTAINER_ID + ' div.panel');
   }
@@ -1025,15 +1017,15 @@ export class MetOClient extends BaseObject {
     this.renderComplete_ = true;
     this.get('timeSlider').createTimeSlider(this.times_);
     this.playingListener_ = this.get('map').on('change:playing', evt => {
-      if (this.get('map').get('playing')) {
+      if (map.get('playing')) {
         this.animate_();
       }
     });
-    this.createTimeListener_();
-    this.nextListener_ = this.get('map').on('next', evt => {
+    this.timeListener_ = map.on('change:time', this.timeUpdated_.bind(this));
+    this.nextListener_ = map.on('next', evt => {
       this.next();
     });
-    this.previousListener_ = this.get('map').on('previous', evt => {
+    this.previousListener_ = map.on('previous', evt => {
       this.previous();
     });
     map.set('time', this.config_.time);
@@ -1215,7 +1207,6 @@ export class MetOClient extends BaseObject {
       .filter((layer) => layer.get('metoclient:id') == null)));
     map.setView(this.createView_());
     map.set('time', this.config_.time);
-    this.createTimeListener_();
     if (this.vectorConfig_.layers.length > 0) {
       return this.createVectorLayers_(map, this.vectorConfig_).then((updatedMap) => {
         this.timeUpdated_();
@@ -1402,10 +1393,6 @@ export class MetOClient extends BaseObject {
   }
 
   clear_ () {
-    unByKey(this.playingListener_);
-    unByKey(this.nextListener_);
-    unByKey(this.previousListener_);
-    unByKey(this.timeListener_);
     unByKey(this.layerListeners_);
     unByKey(this.sourceListeners_);
   }
@@ -1416,6 +1403,10 @@ export class MetOClient extends BaseObject {
    */
   destroy () {
     this.clear();
+    unByKey(this.playingListener_);
+    unByKey(this.nextListener_);
+    unByKey(this.previousListener_);
+    unByKey(this.timeListener_);
     unByKey(this.optionsListener_);
     clearInterval(this.refreshTimer_);
     clearTimeout(this.animationTimeout_);

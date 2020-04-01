@@ -21,6 +21,7 @@ import Collection from 'ol/Collection';
 import Url from 'domurl';
 import LayerSwitcher from 'ol-layerswitcher';
 import Zoom from 'ol/control/Zoom';
+import FullScreen from 'ol/control/FullScreen';
 import DoubleClickZoom from 'ol/interaction/DoubleClickZoom';
 import DragPan from 'ol/interaction/DragPan';
 import PinchZoom from 'ol/interaction/PinchZoom';
@@ -1169,17 +1170,25 @@ export class MetOClient extends BaseObject {
       enableMouseWheel: this.config_.metadata.tags.includes(constants.TAG_MOUSE_WHEEL_INTERACTIONS),
       meteorologicalMode: !this.config_.metadata.tags.includes(constants.TAG_INSTANT_TIMESLIDER)
     }));
+    let controls = [
+      new Zoom({
+        zoomInTipLabel: this.config_.texts['Zoom In'],
+        zoomOutTipLabel: this.config_.texts['Zoom Out'],
+      }),
+      this.get('timeSlider'),
+    ];
+    if (this.config_.metadata.tags.includes(constants.TAG_FULL_SCREEN_CONTROL)) {
+      controls.push(new FullScreen({
+        label: this.config_.texts['Fullscreen Label'],
+        labelActive: this.config_.texts['Fullscreen Label Active'],
+        tipLabel: this.config_.texts['Fullscreen Tip Label'],
+      }));
+    }
     let newMap = new Map({
       target: this.config_.target,
       layers: this.createLayers_(),
       view: this.createView_(),
-      controls: [
-        new Zoom({
-          'zoomInTipLabel': this.config_.texts['Zoom In'],
-          'zoomOutTipLabel': this.config_.texts['Zoom Out'],
-        }),
-        this.get('timeSlider')
-      ],
+      controls,
       interactions
     });
     if (this.vectorConfig_.layers.length > 0) {

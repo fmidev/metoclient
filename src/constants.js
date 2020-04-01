@@ -33,7 +33,6 @@ export const STATUS_WORKING = 'working';
 export const STATUS_SUCCESS = 'success';
 export const DEFAULT_DELAY = 1000;
 
-
 export const PLAYING_CLASS = 'playing';
 export const CLICKABLE_CLASS = 'fmi-metoclient-timeslider-clickable-container';
 export const PRE_MARGIN_CLASS = 'fmi-metoclient-timeslider-pre-margin';
@@ -90,8 +89,11 @@ export const DEFAULT_OPTIONS = {
     'Zoom In': 'Zoom In',
     'Zoom Out': 'Zoom Out',
     'Layer Switcher': 'Layer Switcher',
-    Legend: 'Legend'
-  }
+    Legend: 'Legend',
+    'Fullscreen Label': '⤢',
+    'Fullscreen Label Active': '×',
+    'Fullscreen Tip Label': 'Fullscreen',
+  },
 };
 
 export const DEFAULT_TILESIZE = 1024;
@@ -115,6 +117,7 @@ export const TAG_MOUSE_WHEEL_INTERACTIONS = 'mouse wheel interactions';
 export const TAG_NO_INTERACTIONS = 'no interactions';
 export const TAG_INSTANT_TIMESLIDER = 'instant time slider';
 export const TAG_DELAY_LOOP = 'delay loop';
+export const TAG_FULL_SCREEN_CONTROL = 'fullscreen control';
 
 export const BASE_MAP = 'base';
 

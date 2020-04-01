@@ -625,7 +625,7 @@ div#fmi-metoclient-layer-switcher-container button {
   cursor: pointer;
 }
 
-div.ol-zoom button {
+div.ol-zoom button, div.ol-full-screen button {
     cursor: pointer;
 }
 

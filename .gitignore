@@ -1,4 +1,5 @@
 .project
+.cache
 
 # Temporary files
 tmp

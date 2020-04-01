@@ -632,5 +632,5 @@ div.ol-zoom button {
 div.ol-full-screen {
   left: .5em;
   top: 5em;
-  width: 1.375em;
+  right: auto;
 }

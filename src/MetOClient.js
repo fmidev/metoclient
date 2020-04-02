@@ -696,7 +696,11 @@ export class MetOClient extends BaseObject {
   }
 
   getFeatureLayerTime_ (featureLayer) {
-    let mapTime = this.get('map').get('time');
+    const map = this.get('map');
+    if (map == null) {
+      return null;
+    }
+    let mapTime = map.get('time');
     const layerTimes = featureLayer.get('times');
     const hideAll = (mapTime < layerTimes[0]) || (mapTime > layerTimes[layerTimes.length - 1]);
     const layerTime = hideAll ? null : [...layerTimes].reverse().find((time) => time <= mapTime);

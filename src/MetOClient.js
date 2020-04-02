@@ -993,28 +993,30 @@ export class MetOClient extends BaseObject {
 
   initMap_ (map) {
     this.set('map', map);
-    map.addControl(new LayerSwitcher({
-      tipLabel: this.config_.texts['Layer Switcher']
-    }));
-    const layerSwitcherContainer = document.querySelector('div#' + this.config_.target + ' div.layer-switcher');
-    if (layerSwitcherContainer != null) {
-      layerSwitcherContainer.setAttribute('id', constants.LAYER_SWITCHER_CONTAINER_ID);
-      // https://github.com/walkermatt/ol-layerswitcher/issues/39
-      const layerSwitcherButton = layerSwitcherContainer.querySelector('button');
-      if (layerSwitcherButton != null) {
-        layerSwitcherButton.onmouseover = () => {};
-        layerSwitcherButton.onclick = () => {
-          const layerSwitcher = this.getLayerSwitcher_()
-          if (this.isLayerSwitcherVisible_()) {
-            layerSwitcher.hidePanel()
-          } else {
-            layerSwitcher.showPanel()
-          }
-        };
-      }
-      const layerSwitcherPanel = this.getLayerSwitcherPanel_();
-      if (layerSwitcherPanel != null) {
-        layerSwitcherPanel.onmouseout = () => {};
+    if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
+      map.addControl(new LayerSwitcher({
+        tipLabel: this.config_.texts['Layer Switcher']
+      }));
+      const layerSwitcherContainer = document.querySelector('div#' + this.config_.target + ' div.layer-switcher');
+      if (layerSwitcherContainer != null) {
+        layerSwitcherContainer.setAttribute('id', constants.LAYER_SWITCHER_CONTAINER_ID);
+        // https://github.com/walkermatt/ol-layerswitcher/issues/39
+        const layerSwitcherButton = layerSwitcherContainer.querySelector('button');
+        if (layerSwitcherButton != null) {
+          layerSwitcherButton.onmouseover = () => {};
+          layerSwitcherButton.onclick = () => {
+            const layerSwitcher = this.getLayerSwitcher_()
+            if (this.isLayerSwitcherVisible_()) {
+              layerSwitcher.hidePanel()
+            } else {
+              layerSwitcher.showPanel()
+            }
+          };
+        }
+        const layerSwitcherPanel = this.getLayerSwitcherPanel_();
+        if (layerSwitcherPanel != null) {
+          layerSwitcherPanel.onmouseout = () => {};
+        }
       }
     }
     this.createLegends_();

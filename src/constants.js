@@ -115,6 +115,7 @@ export const SMARTMET_SERVER = 'smartmet server';
 
 export const TAG_MOUSE_WHEEL_INTERACTIONS = 'mouse wheel interactions';
 export const TAG_NO_INTERACTIONS = 'no interactions';
+export const TAG_NO_LAYER_SWITCHER = 'no layer switcher';
 export const TAG_INSTANT_TIMESLIDER = 'instant time slider';
 export const TAG_DELAY_LOOP = 'delay loop';
 export const TAG_FULL_SCREEN_CONTROL = 'fullscreen control';

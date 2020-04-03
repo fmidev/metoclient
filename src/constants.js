@@ -119,6 +119,7 @@ export const TAG_NO_LAYER_SWITCHER = 'no layer switcher';
 export const TAG_INSTANT_TIMESLIDER = 'instant time slider';
 export const TAG_DELAY_LOOP = 'delay loop';
 export const TAG_FULL_SCREEN_CONTROL = 'fullscreen control';
+export const TAG_RENDER_IMMEDIATELY = 'render immediately';
 
 export const BASE_MAP = 'base';
 

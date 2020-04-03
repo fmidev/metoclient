@@ -81,6 +81,9 @@ export class MetOClient extends BaseObject {
       }
       this.refresh_();
     });
+    if (this.config_.metadata.tags.includes(constants.TAG_RENDER_IMMEDIATELY)) {
+      this.render();
+    }
   }
 
   getVectorConfig_ () {

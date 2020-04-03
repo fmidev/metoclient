@@ -46,8 +46,8 @@ export class MetOClient extends BaseObject {
     proj4.defs('EPSG:3067', '+proj=utm +zone=35 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
     register(proj4);
     this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
-    if ((options.target == null) && (options.container != null)) {
-      this.config_.target = options.container;
+    if ((this.config_.target == null) && (this.config_.container != null)) {
+      this.config_.target = this.config_.container;
     }
     this.set('options', options, true);
     this.set('map', null);
@@ -76,6 +76,9 @@ export class MetOClient extends BaseObject {
     this.sourceListeners_ = [];
     this.optionsListener_ = this.on('change:options', (event) => {
       this.config_ = assign({}, constants.DEFAULT_OPTIONS, this.get('options'));
+      if ((this.config_.target == null) && (this.config_.container != null)) {
+        this.config_.target = this.config_.container;
+      }
       this.refresh_();
     });
   }

@@ -81,7 +81,7 @@ export const DEFAULT_OPTIONS = {
   time: null, //floorTime(Date.now(), 15 * timeConstants.MINUTE), // Todo: from configuration
   timeZone: 'Europe/Helsinki',
   timeZoneLabel: '',
-  container: 'map',
+  target: 'map',
   resolutions: [2048, 1024, 512, 256, 128, 64],
   delay: DEFAULT_DELAY,
   periodDelay: 2 * DEFAULT_DELAY,

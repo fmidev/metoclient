@@ -1416,7 +1416,7 @@ export class MetOClient extends BaseObject {
    * @api
    */
   destroy () {
-    this.clear();
+    this.clear_();
     unByKey(this.playingListener_);
     unByKey(this.nextListener_);
     unByKey(this.previousListener_);
@@ -1425,6 +1425,8 @@ export class MetOClient extends BaseObject {
     clearInterval(this.refreshTimer_);
     clearTimeout(this.animationTimeout_);
     this.get('timeSlider').destroy();
+    this.get('map').setTarget(null);
+    this.set('map', null);
   }
 
   /**

@@ -320,6 +320,13 @@ For a static time range, MetOClient supports the same time range format as used 
 <a name="methods"></a>
 ### Methods
 
+<a name="get-options"></a>
+#### destroy
+
+Removes the animation map.
+
+---
+
 <a name="get-map"></a>
 #### get(\'map\')
 

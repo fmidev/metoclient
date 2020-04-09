@@ -1176,6 +1176,8 @@ export class MetOClient extends BaseObject {
     }));
     let controls = [
       new Zoom({
+        zoomInLabel: this.config_.texts['Zoom In Label'],
+        zoomOutLabel: this.config_.texts['Zoom Out Label'],
         zoomInTipLabel: this.config_.texts['Zoom In'],
         zoomOutTipLabel: this.config_.texts['Zoom Out'],
       }),

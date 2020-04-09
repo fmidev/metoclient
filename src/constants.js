@@ -86,6 +86,8 @@ export const DEFAULT_OPTIONS = {
   delay: DEFAULT_DELAY,
   periodDelay: 2 * DEFAULT_DELAY,
   texts: {
+    'Zoom In Label': '+',
+    'Zoom Out Label': '-',
     'Zoom In': 'Zoom In',
     'Zoom Out': 'Zoom Out',
     'Layer Switcher': 'Layer Switcher',

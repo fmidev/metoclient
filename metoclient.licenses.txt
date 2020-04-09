@@ -1,5 +1,5 @@
 Name: core-js
-Version: 3.6.4
+Version: 3.5.0
 License: MIT
 Private: false
 Description: Standard library
@@ -8,7 +8,7 @@ Homepage: https://github.com/zloirock/core-js#readme
 License Copyright:
 ===
 
-Copyright (c) 2014-2020 Denis Pushkarev
+Copyright (c) 2014-2019 Denis Pushkarev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -67,7 +67,7 @@ SOFTWARE.
 ---
 
 Name: ol
-Version: 6.2.1
+Version: 6.2.0
 License: BSD-2-Clause
 Private: false
 Description: OpenLayers mapping library
@@ -128,7 +128,7 @@ Copyright (c) 2014, Mike Adair, Richard Greenwood, Didier Richard, Stephen Irons
 ---
 
 Name: domurl
-Version: 2.3.0
+Version: 2.2.0
 License: MIT
 Private: false
 Description: Lightweight URL manipulation with JavaScript.
@@ -162,7 +162,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ---
 
 Name: luxon
-Version: 1.22.0
+Version: 1.21.3
 License: MIT
 Private: false
 Description: Immutable date wrapper
@@ -173,7 +173,7 @@ Author: Isaac Cambron
 ---
 
 Name: rrule
-Version: 2.6.4
+Version: 2.6.3
 License: SEE LICENSE IN LICENSE
 Private: false
 Description: JavaScript library for working with recurrence rules for calendar dates.
@@ -525,7 +525,7 @@ SOFTWARE.
 ---
 
 Name: elm-pep
-Version: 1.0.6
+Version: 1.0.4
 License: MPL-2.0
 Private: false
 Description: npm package for https://github.com/mpizenberg/elm-pep
@@ -536,7 +536,7 @@ Author: Andreas Hocevar <andreas.hocevar@gmail.com>
 ---
 
 Name: ol-layerswitcher
-Version: 3.5.0
+Version: 3.4.0
 License: MIT
 Private: false
 Description: Layer switcher control for OpenLayers
@@ -806,7 +806,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 Name: @mapbox/mapbox-gl-style-spec
-Version: 13.13.0
+Version: 13.11.0
 License: ISC
 Private: false
 Description: a specification for mapbox gl styles

@@ -30,7 +30,7 @@
   var metoclient = new fmi.metoclient.MetOClient(fmi.config.metoclient)
   metoclient.render().then(function () {
     var map = metoclient.get('map');
-    map.addControl(new ol.control.FullScreen());
+    map.addControl(new ol.control.ScaleLine());
   })
 </script>
 </body>

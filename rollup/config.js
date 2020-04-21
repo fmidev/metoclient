@@ -7,15 +7,22 @@ import versionInjector from 'rollup-plugin-version-injector';
 import copy from 'rollup-plugin-copy';
 import analyze from 'rollup-plugin-analyzer';
 import license from 'rollup-plugin-license';
+import pkg from '../package.json';
 
 export default {
   input: './src/MetOClient.js',
-  output: {
-    file: './dist/metoclient.js',
-    format: 'iife',
-    name: 'fmi.metoclient',
-    exports: 'named'
-  },
+  output: [
+    {
+      file: pkg.module,
+      format: 'es',
+    },
+    {
+      file: pkg.main,
+      format: 'umd',
+      name: 'fmi.metoclient',
+      exports: 'named',
+    },
+  ],
   plugins: [
     babel({
       include: [
@@ -47,7 +54,7 @@ export default {
     }),
     versionInjector({
       injectInComments: {
-        fileRegexp: /\.js/g,
+        fileRegexp: /\.js$/,
         tag: 'MetOClient {version} - FMI - {date}',
         dateFormat: 'longDate'
       },

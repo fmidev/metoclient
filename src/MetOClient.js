@@ -21,6 +21,7 @@ import Collection from 'ol/Collection';
 import Url from 'domurl';
 import LayerSwitcher from 'ol-layerswitcher';
 import Zoom from 'ol/control/Zoom';
+import FullScreen from 'ol/control/FullScreen';
 import DoubleClickZoom from 'ol/interaction/DoubleClickZoom';
 import DragPan from 'ol/interaction/DragPan';
 import PinchZoom from 'ol/interaction/PinchZoom';
@@ -45,8 +46,8 @@ export class MetOClient extends BaseObject {
     proj4.defs('EPSG:3067', '+proj=utm +zone=35 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
     register(proj4);
     this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
-    if ((options.target == null) && (options.container != null)) {
-      this.config_.target = options.container;
+    if ((this.config_.target == null) && (this.config_.container != null)) {
+      this.config_.target = this.config_.container;
     }
     this.set('options', options, true);
     this.set('map', null);
@@ -75,8 +76,14 @@ export class MetOClient extends BaseObject {
     this.sourceListeners_ = [];
     this.optionsListener_ = this.on('change:options', (event) => {
       this.config_ = assign({}, constants.DEFAULT_OPTIONS, this.get('options'));
+      if ((this.config_.target == null) && (this.config_.container != null)) {
+        this.config_.target = this.config_.container;
+      }
       this.refresh_();
     });
+    if (this.config_.metadata.tags.includes(constants.TAG_RENDER_IMMEDIATELY)) {
+      this.render();
+    }
   }
 
   getVectorConfig_ () {
@@ -124,9 +131,6 @@ export class MetOClient extends BaseObject {
       if (this.config_.time > this.times_[lastTimeIndex]) {
         this.config_.time = this.times_[lastTimeIndex];
       }
-      if (this.config_.time == null) {
-        this.config_.time = Date.now();
-      }
       Object.keys(this.config_.sources).forEach(source => {
         if ((this.config_.sources[source].times != null) && (this.config_.sources[source].times.length > 0)) {
           this.config_.sources[source].tiles = updateSourceTime(this.config_.sources[source].tiles, this.config_.sources[source].times.includes(defaultTime) ? defaultTime : this.config_.sources[source].times[0]);
@@ -152,7 +156,8 @@ export class MetOClient extends BaseObject {
         if (time != null) {
           source.set(constants.SOURCE_TIME, null);
         }
-        if (!layer.get('id').startsWith('metoclient:')) {
+        const id = layer.get('id');
+        if ((id != null) && (!id.startsWith('metoclient:'))) {
           const config = this.config_.layers.find(layerConfig => layerConfig.id === layer.get('metoclient:id'));
           if (config != null) {
             config.visibility = (layer.getVisible() ? constants.VISIBLE : constants.NOT_VISIBLE);
@@ -444,7 +449,7 @@ export class MetOClient extends BaseObject {
    */
   createLayers_ () {
     const baseMapConfigs = this.config_.layers.filter(layerConfig => (layerConfig != null) && (layerConfig.metadata != null) && (layerConfig.metadata.type != null) && (layerConfig.metadata.type.toLowerCase() === constants.BASE_MAP));
-    const lastVisibleBaseMapIndex = baseMapConfigs.reduce((prevVisibleBaseMapIndex, baseMapConfig, index) => ((baseMapConfig.visible === constants.VISIBLE) ? index : prevVisibleBaseMapIndex, baseMapConfigs.length - 1));
+    const lastVisibleBaseMapIndex = baseMapConfigs.reduce((prevVisibleBaseMapIndex, baseMapConfig, index) => ((baseMapConfig.visible === constants.VISIBLE) ? index : prevVisibleBaseMapIndex), baseMapConfigs.length - 1);
     baseMapConfigs.forEach((baseMapConfig, index) => {
       baseMapConfig.visible = (index === lastVisibleBaseMapIndex) ? constants.VISIBLE : constants.NOT_VISIBLE;
     });
@@ -694,7 +699,11 @@ export class MetOClient extends BaseObject {
   }
 
   getFeatureLayerTime_ (featureLayer) {
-    let mapTime = this.get('map').get('time');
+    const map = this.get('map');
+    if (map == null) {
+      return null;
+    }
+    let mapTime = map.get('time');
     const layerTimes = featureLayer.get('times');
     const hideAll = (mapTime < layerTimes[0]) || (mapTime > layerTimes[layerTimes.length - 1]);
     const layerTime = hideAll ? null : [...layerTimes].reverse().find((time) => time <= mapTime);
@@ -834,14 +843,6 @@ export class MetOClient extends BaseObject {
     if (map.getLayers().getLength() > 0) {
       map.renderSync();
     }
-  }
-
-  /**
-   *
-   * @private
-   */
-  createTimeListener_ () {
-    this.timeListener_ = this.get('map').on('change:time', this.timeUpdated_.bind(this));
   }
 
   getLayerSwitcherPanel_ () {
@@ -995,43 +996,45 @@ export class MetOClient extends BaseObject {
 
   initMap_ (map) {
     this.set('map', map);
-    map.addControl(new LayerSwitcher({
-      tipLabel: this.config_.texts['Layer Switcher']
-    }));
-    const layerSwitcherContainer = document.querySelector('div#' + this.config_.target + ' div.layer-switcher');
-    if (layerSwitcherContainer != null) {
-      layerSwitcherContainer.setAttribute('id', constants.LAYER_SWITCHER_CONTAINER_ID);
-      // https://github.com/walkermatt/ol-layerswitcher/issues/39
-      const layerSwitcherButton = layerSwitcherContainer.querySelector('button');
-      if (layerSwitcherButton != null) {
-        layerSwitcherButton.onmouseover = () => {};
-        layerSwitcherButton.onclick = () => {
-          const layerSwitcher = this.getLayerSwitcher_()
-          if (this.isLayerSwitcherVisible_()) {
-            layerSwitcher.hidePanel()
-          } else {
-            layerSwitcher.showPanel()
-          }
-        };
-      }
-      const layerSwitcherPanel = this.getLayerSwitcherPanel_();
-      if (layerSwitcherPanel != null) {
-        layerSwitcherPanel.onmouseout = () => {};
+    if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
+      map.addControl(new LayerSwitcher({
+        tipLabel: this.config_.texts['Layer Switcher']
+      }));
+      const layerSwitcherContainer = document.querySelector('div#' + this.config_.target + ' div.layer-switcher');
+      if (layerSwitcherContainer != null) {
+        layerSwitcherContainer.setAttribute('id', constants.LAYER_SWITCHER_CONTAINER_ID);
+        // https://github.com/walkermatt/ol-layerswitcher/issues/39
+        const layerSwitcherButton = layerSwitcherContainer.querySelector('button');
+        if (layerSwitcherButton != null) {
+          layerSwitcherButton.onmouseover = () => {};
+          layerSwitcherButton.onclick = () => {
+            const layerSwitcher = this.getLayerSwitcher_()
+            if (this.isLayerSwitcherVisible_()) {
+              layerSwitcher.hidePanel()
+            } else {
+              layerSwitcher.showPanel()
+            }
+          };
+        }
+        const layerSwitcherPanel = this.getLayerSwitcherPanel_();
+        if (layerSwitcherPanel != null) {
+          layerSwitcherPanel.onmouseout = () => {};
+        }
       }
     }
     this.createLegends_();
     this.renderComplete_ = true;
     this.get('timeSlider').createTimeSlider(this.times_);
     this.playingListener_ = this.get('map').on('change:playing', evt => {
-      if (this.get('map').get('playing')) {
+      if (map.get('playing')) {
         this.animate_();
       }
     });
-    this.createTimeListener_();
-    this.nextListener_ = this.get('map').on('next', evt => {
+    this.timeListener_ = map.on('change:time', this.timeUpdated_.bind(this));
+    this.nextListener_ = map.on('next', evt => {
       this.next();
     });
-    this.previousListener_ = this.get('map').on('previous', evt => {
+    this.previousListener_ = map.on('previous', evt => {
       this.previous();
     });
     map.set('time', this.config_.time);
@@ -1043,11 +1046,17 @@ export class MetOClient extends BaseObject {
     if ((times != null) && (Array.isArray(times)) && times.length > 0) {
       this.times_ = [...new Set([...this.times_, ...times])].sort();
     }
+    let map = this.get('map');
+    if ((map != null) && (map.get('time') == null) && (this.times_.length > 0)) {
+      const currentTime = Date.now();
+      map.set('time', this.times_[Math.max(this.times_.findIndex(time => time > currentTime) - 1, 0)]);
+    }
   }
 
   createVectorLayers_ (map, vectorConfig) {
     return olms(map, vectorConfig).then((updatedMap) => {
       if (vectorConfig.layers != null) {
+        const mapProjection = updatedMap.getView().getProjection().getCode();
         updatedMap.getLayers().getArray().filter(layer => layer.get('mapbox-source') != null).forEach((layer) => {
           let layerConfig;
           let layerTimes = [];
@@ -1117,6 +1126,9 @@ export class MetOClient extends BaseObject {
           if (((timeProperty != null) && (timeProperty.length > 0))) {
             source.getFeatures().forEach((feature) => {
               initFeature(feature);
+              if (mapProjection !== 'EPSG:3857') {
+                feature.getGeometry().transform('EPSG:3857', mapProjection);
+              }
             });
           }
         });
@@ -1168,17 +1180,27 @@ export class MetOClient extends BaseObject {
       enableMouseWheel: this.config_.metadata.tags.includes(constants.TAG_MOUSE_WHEEL_INTERACTIONS),
       meteorologicalMode: !this.config_.metadata.tags.includes(constants.TAG_INSTANT_TIMESLIDER)
     }));
+    let controls = [
+      new Zoom({
+        zoomInLabel: this.config_.texts['Zoom In Label'],
+        zoomOutLabel: this.config_.texts['Zoom Out Label'],
+        zoomInTipLabel: this.config_.texts['Zoom In'],
+        zoomOutTipLabel: this.config_.texts['Zoom Out'],
+      }),
+      this.get('timeSlider'),
+    ];
+    if (this.config_.metadata.tags.includes(constants.TAG_FULL_SCREEN_CONTROL)) {
+      controls.push(new FullScreen({
+        label: this.config_.texts['Fullscreen Label'],
+        labelActive: this.config_.texts['Fullscreen Label Active'],
+        tipLabel: this.config_.texts['Fullscreen Tip Label'],
+      }));
+    }
     let newMap = new Map({
       target: this.config_.target,
       layers: this.createLayers_(),
       view: this.createView_(),
-      controls: [
-        new Zoom({
-          'zoomInTipLabel': this.config_.texts['Zoom In'],
-          'zoomOutTipLabel': this.config_.texts['Zoom Out'],
-        }),
-        this.get('timeSlider')
-      ],
+      controls,
       interactions
     });
     if (this.vectorConfig_.layers.length > 0) {
@@ -1199,10 +1221,12 @@ export class MetOClient extends BaseObject {
       return this.createMap_();
     }
     map.setTarget(this.config_.target);
-    map.getLayerGroup().setLayers(this.createLayers_());
+    map.getLayerGroup().setLayers(this.createLayers_().extend(map
+      .getLayers()
+      .getArray()
+      .filter((layer) => layer.get('metoclient:id') == null)));
     map.setView(this.createView_());
     map.set('time', this.config_.time);
-    this.createTimeListener_();
     if (this.vectorConfig_.layers.length > 0) {
       return this.createVectorLayers_(map, this.vectorConfig_).then((updatedMap) => {
         this.timeUpdated_();
@@ -1389,10 +1413,6 @@ export class MetOClient extends BaseObject {
   }
 
   clear_ () {
-    unByKey(this.playingListener_);
-    unByKey(this.nextListener_);
-    unByKey(this.previousListener_);
-    unByKey(this.timeListener_);
     unByKey(this.layerListeners_);
     unByKey(this.sourceListeners_);
   }
@@ -1402,11 +1422,17 @@ export class MetOClient extends BaseObject {
    * @api
    */
   destroy () {
-    this.clear();
+    this.clear_();
+    unByKey(this.playingListener_);
+    unByKey(this.nextListener_);
+    unByKey(this.previousListener_);
+    unByKey(this.timeListener_);
     unByKey(this.optionsListener_);
     clearInterval(this.refreshTimer_);
     clearTimeout(this.animationTimeout_);
     this.get('timeSlider').destroy();
+    this.get('map').setTarget(null);
+    this.set('map', null);
   }
 
   /**

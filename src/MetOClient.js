@@ -131,9 +131,6 @@ export class MetOClient extends BaseObject {
       if (this.config_.time > this.times_[lastTimeIndex]) {
         this.config_.time = this.times_[lastTimeIndex];
       }
-      if (this.config_.time == null) {
-        this.config_.time = Date.now();
-      }
       Object.keys(this.config_.sources).forEach(source => {
         if ((this.config_.sources[source].times != null) && (this.config_.sources[source].times.length > 0)) {
           this.config_.sources[source].tiles = updateSourceTime(this.config_.sources[source].tiles, this.config_.sources[source].times.includes(defaultTime) ? defaultTime : this.config_.sources[source].times[0]);
@@ -1049,11 +1046,17 @@ export class MetOClient extends BaseObject {
     if ((times != null) && (Array.isArray(times)) && times.length > 0) {
       this.times_ = [...new Set([...this.times_, ...times])].sort();
     }
+    let map = this.get('map');
+    if ((map != null) && (map.get('time') == null) && (this.times_.length > 0)) {
+      const currentTime = Date.now();
+      map.set('time', this.times_[Math.max(this.times_.findIndex(time => time > currentTime) - 1, 0)]);
+    }
   }
 
   createVectorLayers_ (map, vectorConfig) {
     return olms(map, vectorConfig).then((updatedMap) => {
       if (vectorConfig.layers != null) {
+        const mapProjection = updatedMap.getView().getProjection().getCode();
         updatedMap.getLayers().getArray().filter(layer => layer.get('mapbox-source') != null).forEach((layer) => {
           let layerConfig;
           let layerTimes = [];
@@ -1123,6 +1126,9 @@ export class MetOClient extends BaseObject {
           if (((timeProperty != null) && (timeProperty.length > 0))) {
             source.getFeatures().forEach((feature) => {
               initFeature(feature);
+              if (mapProjection !== 'EPSG:3857') {
+                feature.getGeometry().transform('EPSG:3857', mapProjection);
+              }
             });
           }
         });

@@ -86,6 +86,29 @@ export class MetOClient extends BaseObject {
     }
   }
 
+  /**
+   *
+   * @param key
+   * @param value
+   * @param silent
+   */
+  set(key, value, silent) {
+    let property = this.get(key);
+    if ((property != null) && (typeof property === 'object')) {
+      super.set(key, value, true);
+      if (!silent) {
+        this.dispatchEvent('change:' + key);
+      }
+    } else {
+      super.set(key, value, silent);
+    }
+  }
+
+  /**
+   *
+   * @returns {*}
+   * @private
+   */
   getVectorConfig_ () {
     return this.vectorConfig_ = this.config_.layers.reduce((vectorConfig, layer) => {
       const source = this.config_.sources[layer.source];
@@ -169,6 +192,15 @@ export class MetOClient extends BaseObject {
         this.config_.center = view.getCenter();
         this.config_.zoom = view.getZoom();
         this.config_.rotation = view.getRotation();
+      }
+    }
+    const timeSlider = this.get('timeSlider');
+    if (timeSlider != null) {
+      if (this.config_.timeZone !== timeSlider.get('timeZone')) {
+        timeSlider.set('timeZone', this.config_.timeZone);
+      }
+      if (this.config_.timeZoneLabel !== timeSlider.get('timeZoneLabel')) {
+        timeSlider.set('timeZoneLabel', this.config_.timeZoneLabel);
       }
     }
     this.render();

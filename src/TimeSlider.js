@@ -36,8 +36,6 @@ class TimeSlider extends Control {
     this.animationPlay_ = false;
     this.frames_ = [];
     this.locale_ = options['locale'];
-    this.timeZone_ = options['timeZone'];
-    this.timeZoneLabel_ = options['timeZoneLabel'];
     this.previousTickTextTop_ = Number.POSITIVE_INFINITY;
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY;
     this.previousTickTextBottom_ = Number.NEGATIVE_INFINITY;
@@ -46,8 +44,12 @@ class TimeSlider extends Control {
     this.mouseListeners_ = [];
     this.dragging_ = false;
     this.resizeDetector = elementResizeDetectorMaker();
-    this.timeListener = null;
-    this.playingListener = null;
+    this.timeListener_ = null;
+    this.playingListener_ = null;
+    this.timeZoneListener = null;
+    this.timeZoneLabelListener = null;
+    this.set('timeZone', options['timeZone']);
+    this.set('timeZoneLabel', options['timeZoneLabel']);
   }
 
   /**
@@ -68,11 +70,28 @@ class TimeSlider extends Control {
     if ((this.callbacks_ != null) && (typeof this.callbacks_['timeSliderCreated'] === 'function')) {
       this.callbacks_['timeSliderCreated'](moments);
     }
-    this.timeListener = this.getMap().on('change:time', evt => {
+    this.timeListener_ = this.getMap().on('change:time', evt => {
       this.setAnimationTime(evt.target.get('time'));
     });
-    this.playingListener = this.getMap().on('change:playing', evt => {
+    this.playingListener_ = this.getMap().on('change:playing', evt => {
       this.setAnimationPlay(evt.target.get('playing'));
+    });
+    this.timeZoneListener_ = this.on('change:timeZone', () => {
+      this.frames_.forEach(frame => {
+        const tickText = this.getTickText(frame['endTime']);
+        const textElement = frame.element.getElementsByClassName(constants.FRAME_TEXT_CLASS);
+        if (textElement.length > 0) {
+          textElement[0].textContent = tickText['content'];
+        }
+      });
+      if (this.getMap().get('time') != null) {
+        this.updatePointer(this.getMap().get('time'), true);
+      }
+    });
+    this.timeZoneLabelListener_ = this.on('change:timeZoneLabel', () => {
+      Array.from(this.container_.getElementsByClassName(constants.TIMEZONE_LABEL_CLASS)).forEach((timeZoneLabelElement) => {
+        timeZoneLabelElement.innerHTML = this.get('timeZoneLabel');
+      });
     });
     this.dispatchEvent('rendercomplete');
   }
@@ -218,7 +237,7 @@ class TimeSlider extends Control {
    */
   createTimeZoneLabel() {
     const timezoneLabel = document.createElement('div');
-    timezoneLabel.innerHTML = this.timeZoneLabel_;
+    timezoneLabel.innerHTML = this.get('timeZoneLabel');
     timezoneLabel.classList.add(constants.TIMEZONE_LABEL_CLASS);
     return timezoneLabel;
   }
@@ -511,7 +530,7 @@ class TimeSlider extends Control {
       const nextIndex = index + 1;
       frame.element.style.display = '';
 
-      if (DateTime.fromMillis(frame['endTime']).setZone(self.timeZone_).startOf('day').valueOf() === frame['endTime']) {
+      if (DateTime.fromMillis(frame['endTime']).setZone(self.get('timeZone')).startOf('day').valueOf() === frame['endTime']) {
         divisibleDays = true;
       }
       if (nextIndex === frames.length) {
@@ -523,7 +542,7 @@ class TimeSlider extends Control {
         maxTextWidth = clientRect['width'];
       }
       localTimeStep = frames[nextIndex]['endTime'] - frame['endTime'];
-      if ((DateTime.fromMillis(frame['endTime']).setZone(self.timeZone_).isInDST) && (localTimeStep < timeConstants.DAY)) {
+      if ((DateTime.fromMillis(frame['endTime']).setZone(self.get('timeZone')).isInDST) && (localTimeStep < timeConstants.DAY)) {
         containsDST = true;
       } else {
         containsNonDST = true;
@@ -586,7 +605,7 @@ class TimeSlider extends Control {
           self.previousTickTextBottom_ < clientRect.top ||
           self.previousTickTextTop_ > clientRect.bottom) && ((self.previousTickIndex_ == null) || (frame['endTime'] - frames[self.previousTickIndex_]['endTime'] >= minStep))) {
           createTick(frame, index, clientRect, frame['endTime']);
-        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frames[self.previousTickIndex_] != null) && (((((minStep === 0) && (((frame['endTime'] % (timeConstants.HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (timeConstants.HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (timeConstants.HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0)) || ((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) === 0) && (DateTime.fromMillis(frame['endTime']).setZone(self.timeZone_).hour % 2 === 0) && (DateTime.fromMillis(frames[self.previousTickIndex_]['endTime']).setZone(self.timeZone_).hour % 2 !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) || ((minStep > 0) && (((minStep >= constants.ONE_HOUR) && (frames[self.previousTickIndex_]['endTime'] % timeConstants.HOUR !== 0)) || ((frames[self.previousTickIndex_]['endTime'] % timeConstants.HOUR) % minStep !== 0) || ((divisibleDays) && (DateTime.fromMillis(frames[self.previousTickIndex_]['endTime']).setZone(self.timeZone_).hour % (minStep / timeConstants.HOUR) !== 0)))))) {
+        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frames[self.previousTickIndex_] != null) && (((((minStep === 0) && (((frame['endTime'] % (timeConstants.HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (timeConstants.HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (timeConstants.HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0)) || ((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) === 0) && (DateTime.fromMillis(frame['endTime']).setZone(self.get('timeZone')).hour % 2 === 0) && (DateTime.fromMillis(frames[self.previousTickIndex_]['endTime']).setZone(self.get('timeZone')).hour % 2 !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) || ((minStep > 0) && (((minStep >= constants.ONE_HOUR) && (frames[self.previousTickIndex_]['endTime'] % timeConstants.HOUR !== 0)) || ((frames[self.previousTickIndex_]['endTime'] % timeConstants.HOUR) % minStep !== 0) || ((divisibleDays) && (DateTime.fromMillis(frames[self.previousTickIndex_]['endTime']).setZone(self.get('timeZone')).hour % (minStep / timeConstants.HOUR) !== 0)))))) {
           clearFrame(frames[self.previousTickIndex_]);
           createTick(frame, index, clientRect, frame['endTime']);
         } else {
@@ -699,8 +718,9 @@ class TimeSlider extends Control {
   /**
    * Updates pointer text and location on the time slider.
    * @param {number} animationTime Time value.
+   * @param {boolean=} forceUpdate Forces an update.
    */
-  updatePointer(animationTime) {
+  updatePointer(animationTime, forceUpdate = false) {
     if (this.interactions_ == null) {
       return;
     }
@@ -716,7 +736,9 @@ class TimeSlider extends Control {
       }
     }
     if (index != null) {
-      if (this.interactions_.parentElement == null) {
+      if (forceUpdate) {
+        needsUpdate = true;
+      } else if (this.interactions_.parentElement == null) {
         needsUpdate = true;
       } else if (Number.parseInt(this.interactions_.parentElement.dataset['time']) !== animationTime) {
         this.interactions_.parentElement.removeChild(this.interactions_);
@@ -837,34 +859,6 @@ class TimeSlider extends Control {
   }
 
   /**
-   * Sets a time zone.
-   * @param {string} timeZone Time zone.
-   */
-  setTimeZone(timeZone) {
-    const self = this;
-    this.timeZone_ = timeZone;
-    this.frames_.forEach(frame => {
-      const tickText = self.getTickText(frame['endTime']);
-      const textElement = frame.element.getElementsByClassName(constants.FRAME_TEXT_CLASS);
-      if (textElement.length > 0) {
-        textElement[0].textContent = tickText['content'];
-      }
-    });
-  }
-
-  /**
-   * Sets a time zone.
-   * @param {string} timeZoneLabel Time zone label.
-   */
-  setTimeZoneLabel(timeZoneLabel) {
-    const self = this;
-    this.timeZoneLabel_ = timeZoneLabel;
-    Array.from(this.container_.getElementsByClassName(constants.TIMEZONE_LABEL_CLASS)).forEach(timeZoneLabelElement => {
-      timeZoneLabelElement.innerHTML = self.timeZoneLabel_;
-    });
-  }
-
-  /**
    * Sets callbacks.
    * @param {Object=} callbacks Callback functions for time events.
    */
@@ -906,7 +900,7 @@ class TimeSlider extends Control {
     }
     zTime = DateTime
       .fromMillis(tickTime)
-      .setZone(this.timeZone_)
+      .setZone(this.get('timeZone'))
       .setLocale(this.locale_);
     const day = zTime.ordinal;
     const year = zTime.year;
@@ -921,9 +915,9 @@ class TimeSlider extends Control {
           prevTime = frameTime;
         }
       }
-      currentMoment = DateTime.local().setZone(this.timeZone_);
+      currentMoment = DateTime.local().setZone(this.get('timeZone'));
       if (prevTime != null) {
-        zPrevTime = DateTime.fromMillis(prevTime).setZone(this.timeZone_);
+        zPrevTime = DateTime.fromMillis(prevTime).setZone(this.get('timeZone'));
         if ((day !== zPrevTime.ordinal) || (year !== zPrevTime.year)) {
           useDateFormat = true;
         }
@@ -941,11 +935,17 @@ class TimeSlider extends Control {
    * Clears time slider configurations.
    */
   clear() {
-    if (this.timeListener != null) {
-      unByKey(this.timeListener);
+    if (this.timeListener_ != null) {
+      unByKey(this.timeListener_);
     }
-    if (this.playingListener != null) {
-      unByKey(this.playingListener);
+    if (this.playingListener_ != null) {
+      unByKey(this.playingListener_);
+    }
+    if (this.timeZoneListener != null) {
+      unByKey(this.timeZoneListener);
+    }
+    if (this.timeZoneLabelListener != null) {
+      unByKey(this.timeZoneLabelListener);
     }
     this.mouseListeners_.forEach(mouseListener => {
       mouseListener.destroy();

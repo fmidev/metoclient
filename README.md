@@ -79,6 +79,8 @@ MetOClient offers the following interface to control an animation:
         -   [Map events](#map-events)
     -   [get('options')](#get-options)
     -   [get('timeSlider')](#get-timeslider)
+        -   [Time slider properties](#timeslider-properties)
+        -   [Time slider events](#timeslider-events)
     -   [next()](#next)
     -   [pause()](#pause)
     -   [play()](#play)
@@ -113,7 +115,7 @@ In addition, the following root properties are supported:
 
 `refreshInterval`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Map refresh interval as [ISO\_8601 duration](https://en.wikipedia.org/wiki/ISO_8601#Durations) string, e.g. 'PT15M'.
 
-`timeZone`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Time zone defined in [IANA time zone database](<https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>) format, e.g. `'Europe/Helsinki'`.
+`timeZone`: [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Time zone defined in [IANA time zone database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) format, e.g. `'Europe/Helsinki'`.
 
 <a name="layer-url"></a>
 ##### Layer URL parameters
@@ -366,13 +368,13 @@ metoclient.get('map').get(propertyName)
 Any OpenLayers map event is available. For example, following fires when map rendering is complete:
 
 ```js
-metoclient.get('map').on('rendercomplete')
+metoclient.get('map').on('rendercomplete', listener)
 ```
 
 The following can be used to notify about map property changes:
 
 ```js
-metoclient.get('map').on('change:properyName')
+metoclient.get('map').on('change:properyName', listener)
 ```
 
 This can be especially useful for MetOClient\'s own map properties discussed in the previous chapter:
@@ -380,13 +382,13 @@ This can be especially useful for MetOClient\'s own map properties discussed in 
 The following fires when animation time is changed:
 
 ```js
-metoclient.get('map').on('change:time')
+metoclient.get('map').on('change:time', listener)
 ```
 
 And the following fires when animation is started or paused:
 
 ```js
-metoclient.get('map').on('change:playing')
+metoclient.get('map').on('change:playing', listener)
 ```
 ---
 
@@ -404,8 +406,37 @@ Gets the animation options that are derived from the initial configuration and r
 
 **Returns**: [**Object**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/Object) The time slider.
 
-Gets the time slider control. It can be listened for `render` and `rendercomplete` events.
+The time slider is a standard OpenLayers control and the full [OpenLayers control API](https://openlayers.org/en/latest/apidoc/module-ol_control_Control-Control.html) can be used to interact with it.
 
+<a name="timeslider-properties"></a>
+##### Time slider properties
+
+The time slider control includes the following properties:
+
+-   `timeZone` [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Time zone defined in [IANA time zone database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) format, e.g. `'Europe/Helsinki'` or in [any other string representation parsed by Luxon](https://moment.github.io/luxon/docs/manual/zones.html#specifying-a-zone).
+
+-   `timeZoneLabel` [**String**](https://developer.mozilla.org/fi/docs/Web/JavaScript/Reference/Global_Objects/String) Optional time zone information displayed in the time slider.
+
+These properties are available as any other OpenLayers property:
+
+```js
+metoclient.get('timeSlider').get(propertyName)
+```
+
+<a name="timeslider-events"></a>
+##### Time slider events
+
+The following fires when the animation time zone is changed:
+
+```js
+metoclient.get('timeSlider').on('change:timeZone', listener)
+```
+
+And the following fires when the time zone label is changed:
+
+```js
+metoclient.get('timeSlider').on('change:timeZoneLabel', listener)
+```
 ---
 
 <a name="next"></a>

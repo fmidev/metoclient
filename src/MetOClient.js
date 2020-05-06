@@ -384,7 +384,7 @@ export class MetOClient extends BaseObject {
         }, layerConfig.time.data[0]);
       }
     }
-    const tiles = source.tiles != null ? source.tiles[0] : null;
+    const tiles = source.tiles != null ? source.tiles[0].split('?')[0] : null;
     const url = ((source.capabilities != null) && (source.capabilities.length > 0)) ? source.capabilities : tiles;
     const layer = LayerCreator[layerType](layerConfig, options, url != null ? this.capabilities_[url] : null);
     if (layer != null) {
@@ -1281,7 +1281,7 @@ export class MetOClient extends BaseObject {
     this.config_.layers.forEach(layer => {
       if ((layer.time != null) && (layer.time.range != null)) {
         const source = (layer.time.source != null) ? this.config_.sources[layer.time.source] : this.config_.sources[layer.source];
-        const capabilities = this.capabilities_[source.tiles[0]]; // Generalize
+        const capabilities = this.capabilities_[source.tiles[0].split('?')[0]]; // Generalize
         if ((capabilities == null) || (capabilities.data == null) || (capabilities.data.Capability == null) || (capabilities.data.Capability.Layer == null) || (capabilities.data.Capability.Layer.Layer == null)) {
           return;
         }

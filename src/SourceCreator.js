@@ -22,7 +22,7 @@ export default class SourceCreator {
     Object.keys(layer.url).forEach(key => {
       params[key.toUpperCase()] = layer.url[key].toString();
     });
-    const timeDefined = (layer.time != null) && (layer.time.data.includes(options.time));
+    const timeDefined = (layer.time != null) && (layer.time.data != null) && (layer.time.data.includes(options.time));
     if (timeDefined) {
       params.TIME = (new Date(options.time)).toISOString();
     }

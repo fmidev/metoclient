@@ -251,12 +251,12 @@ export function getSourceCapabilitiesUrl (source) {
     }
     [url] = source.tiles; // Todo: Handle other indexes
   }
+  url = url.split('?')[0];
   if (url.endsWith('/')) {
     url = url.substring(0, url.length - 1);
   }
   return url;
 }
-
 
 export function getLegendUrl (layerName, layerStyles, capabilities) {
   if ((layerName == null) || (layerName.length === 0) || (capabilities == null) || (capabilities.data == null) || (capabilities.data.Capability == null) || (capabilities.data.Capability.Layer == null) || (capabilities.data.Capability.Layer.Layer == null)) {

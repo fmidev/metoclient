@@ -6,8 +6,7 @@ import WMTS, { optionsFromCapabilities } from 'ol/source/WMTS';
 import Url from 'domurl';
 
 export default class SourceCreator {
-
-  static wms (layer, options) {
+  static wms(layer, options) {
     const source = options.sources[layer.source];
     if (source == null) {
       return null;
@@ -16,25 +15,35 @@ export default class SourceCreator {
     const url = source.tiles[0];
     const queryUrl = new Url(url);
     let params = Object.keys(queryUrl.query).reduce((upperCased, key) => {
-      upperCased[typeof key === 'string' ? key.toUpperCase() : key] = queryUrl.query[key];
+      upperCased[typeof key === 'string' ? key.toUpperCase() : key] =
+        queryUrl.query[key];
       return upperCased;
     }, {});
-    Object.keys(layer.url).forEach(key => {
+    Object.keys(layer.url).forEach((key) => {
       params[key.toUpperCase()] = layer.url[key].toString();
     });
-    const timeDefined = (layer.time != null) && (layer.time.data.includes(options.time));
+    const timeDefined =
+      layer.time != null &&
+      layer.time.data != null &&
+      layer.time.data.includes(options.time);
     if (timeDefined) {
-      params.TIME = (new Date(options.time)).toISOString();
+      params.TIME = new Date(options.time).toISOString();
     }
     let olSource = new TileWMS({
       url: getBaseUrl(url),
       params: params,
       tileGrid: new TileGrid({
-        extent: (source.bounds != null) ? source.bounds : get(options.projection).getExtent(),
+        extent:
+          source.bounds != null
+            ? source.bounds
+            : get(options.projection).getExtent(),
         resolutions: options.resolutions,
-        tileSize: (source.tileSize != null) ? source.tileSize : constants.DEFAULT_TILESIZE
+        tileSize:
+          source.tileSize != null
+            ? source.tileSize
+            : constants.DEFAULT_TILESIZE,
       }),
-      transition: 0
+      transition: 0,
     });
     if (timeDefined) {
       olSource.set('metoclient:time', options.time);
@@ -42,23 +51,25 @@ export default class SourceCreator {
     return olSource;
   }
 
-  static wmts (layer, options, capabilities) {
+  static wmts(layer, options, capabilities) {
     const source = options.sources[layer.source];
-    if ((source == null) || (capabilities.type !== 'wmts')) {
+    if (source == null || capabilities.type !== 'wmts') {
       return null;
     }
     let sourceOptions = optionsFromCapabilities(capabilities.data, {
       // Todo: support all config options
       layer: layer.url.layer,
-      matrixSet: layer.url.tilematrixset
+      matrixSet: layer.url.tilematrixset,
     });
     if (sourceOptions == null) {
       return null;
     }
-    const timeDefined = (layer.time != null) && (layer.time.data.includes(options.time));
+    const timeDefined =
+      layer.time != null && layer.time.data.includes(options.time);
     if (timeDefined) {
       sourceOptions.tileLoadFunction = function (imageTile, src) {
-        imageTile.getImage().src = src + '&Time=' + (new Date(options.time)).toISOString();
+        imageTile.getImage().src =
+          src + '&Time=' + new Date(options.time).toISOString();
       };
     }
     sourceOptions.transition = 0;

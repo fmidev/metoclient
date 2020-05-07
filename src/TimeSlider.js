@@ -8,9 +8,9 @@ import elementResizeDetectorMaker from 'element-resize-detector';
 import TimeFrame from './TimeFrame';
 import * as constants from './constants';
 import * as timeConstants from './timeConstants';
-import {DateTime} from 'luxon';
+import { DateTime } from 'luxon';
 import Control from 'ol/control/Control';
-import {unByKey} from 'ol/Observable';
+import { unByKey } from 'ol/Observable';
 
 class TimeSlider extends Control {
   /**
@@ -21,11 +21,11 @@ class TimeSlider extends Control {
     const element = document.createElement('div');
     element.className = 'ol-unselectable ol-control fmi-metoclient-timeslider';
     if (options.meteorologicalMode) {
-      element.className += ` ${constants.METEOROLOGICAL_MODE}`
+      element.className += ` ${constants.METEOROLOGICAL_MODE}`;
     }
     super({
       element: element,
-      target: options.target
+      target: options.target,
     });
     this.container_ = element;
     this.config_ = options;
@@ -36,8 +36,6 @@ class TimeSlider extends Control {
     this.animationPlay_ = false;
     this.frames_ = [];
     this.locale_ = options['locale'];
-    this.timeZone_ = options['timeZone'];
-    this.timeZoneLabel_ = options['timeZoneLabel'];
     this.previousTickTextTop_ = Number.POSITIVE_INFINITY;
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY;
     this.previousTickTextBottom_ = Number.NEGATIVE_INFINITY;
@@ -46,8 +44,12 @@ class TimeSlider extends Control {
     this.mouseListeners_ = [];
     this.dragging_ = false;
     this.resizeDetector = elementResizeDetectorMaker();
-    this.timeListener = null;
-    this.playingListener = null;
+    this.timeListener_ = null;
+    this.playingListener_ = null;
+    this.timeZoneListener = null;
+    this.timeZoneLabelListener = null;
+    this.set('timeZone', options['timeZone']);
+    this.set('timeZoneLabel', options['timeZoneLabel']);
   }
 
   /**
@@ -65,14 +67,38 @@ class TimeSlider extends Control {
     if (this.getMap().get('time') != null) {
       this.updatePointer(this.getMap().get('time'));
     }
-    if ((this.callbacks_ != null) && (typeof this.callbacks_['timeSliderCreated'] === 'function')) {
+    if (
+      this.callbacks_ != null &&
+      typeof this.callbacks_['timeSliderCreated'] === 'function'
+    ) {
       this.callbacks_['timeSliderCreated'](moments);
     }
-    this.timeListener = this.getMap().on('change:time', evt => {
+    this.timeListener_ = this.getMap().on('change:time', (evt) => {
       this.setAnimationTime(evt.target.get('time'));
     });
-    this.playingListener = this.getMap().on('change:playing', evt => {
+    this.playingListener_ = this.getMap().on('change:playing', (evt) => {
       this.setAnimationPlay(evt.target.get('playing'));
+    });
+    this.timeZoneListener_ = this.on('change:timeZone', () => {
+      this.frames_.forEach((frame) => {
+        const tickText = this.getTickText(frame['endTime']);
+        const textElement = frame.element.getElementsByClassName(
+          constants.FRAME_TEXT_CLASS
+        );
+        if (textElement.length > 0) {
+          textElement[0].textContent = tickText['content'];
+        }
+      });
+      if (this.getMap().get('time') != null) {
+        this.updatePointer(this.getMap().get('time'), true);
+      }
+    });
+    this.timeZoneLabelListener_ = this.on('change:timeZoneLabel', () => {
+      Array.from(
+        this.container_.getElementsByClassName(constants.TIMEZONE_LABEL_CLASS)
+      ).forEach((timeZoneLabelElement) => {
+        timeZoneLabelElement.innerHTML = this.get('timeZoneLabel');
+      });
     });
     this.dispatchEvent('rendercomplete');
   }
@@ -108,10 +134,12 @@ class TimeSlider extends Control {
     const momentsContainer = document.createElement('div');
     momentsContainer.classList.add(constants.FRAMES_CONTAINER_CLASS);
     if (this.enableMouseWheel_) {
-      this.mouseListeners_.push(listen(momentsContainer, 'wheel', event => {
-        event.preventDefault();
-        self.step(event.deltaY);
-      }));
+      this.mouseListeners_.push(
+        listen(momentsContainer, 'wheel', (event) => {
+          event.preventDefault();
+          self.step(event.deltaY);
+        })
+      );
     }
     clickableContainer.appendChild(momentsContainer);
 
@@ -119,9 +147,11 @@ class TimeSlider extends Control {
 
     const postMargin = document.createElement('div');
     postMargin.classList.add(constants.POST_MARGIN_CLASS);
-    this.mouseListeners_.push(listen(postMargin, 'click', event => {
-      self.step(constants.FORWARDS);
-    }));
+    this.mouseListeners_.push(
+      listen(postMargin, 'click', (event) => {
+        self.step(constants.FORWARDS);
+      })
+    );
     clickableContainer.appendChild(postMargin);
 
     clickableContainer.appendChild(this.createTimeZoneLabel());
@@ -130,18 +160,27 @@ class TimeSlider extends Control {
 
     this.container_.classList.add('noselect');
 
-    this.mouseListeners_.push(listen(this.container_, 'mouseup', event => {
-      self.setDragging(false);
-      document.activeElement.blur();
-    }));
-    this.mouseListeners_.push(listen(this.container_, 'touchend', event => {
-      self.setDragging(false);
-      document.activeElement.blur();
-    }));
+    this.mouseListeners_.push(
+      listen(this.container_, 'mouseup', (event) => {
+        self.setDragging(false);
+        document.activeElement.blur();
+      })
+    );
+    this.mouseListeners_.push(
+      listen(this.container_, 'touchend', (event) => {
+        self.setDragging(false);
+        document.activeElement.blur();
+      })
+    );
 
-    this.resizeDetector.listenTo(this.container_.getElementsByClassName(constants.FRAMES_CONTAINER_CLASS)[0], element => {
-      self.createTicks();
-    });
+    this.resizeDetector.listenTo(
+      this.container_.getElementsByClassName(
+        constants.FRAMES_CONTAINER_CLASS
+      )[0],
+      (element) => {
+        self.createTicks();
+      }
+    );
   }
 
   /**
@@ -152,9 +191,11 @@ class TimeSlider extends Control {
     const self = this;
     const preMargin = document.createElement('div');
     preMargin.classList.add(constants.PRE_MARGIN_CLASS);
-    this.mouseListeners_.push(listen(preMargin, 'click', () => {
-      self.step(constants.BACKWARDS);
-    }));
+    this.mouseListeners_.push(
+      listen(preMargin, 'click', () => {
+        self.step(constants.BACKWARDS);
+      })
+    );
     return preMargin;
   }
 
@@ -173,11 +214,13 @@ class TimeSlider extends Control {
     if (this.animationPlay_) {
       playButton.classList.add(constants.PLAYING_CLASS);
     }
-    this.mouseListeners_.push(listen(playButton, 'click', () => {
-      event.preventDefault();
-      let map = this.getMap();
-      map.set('playing', !map.get('playing'));
-    }));
+    this.mouseListeners_.push(
+      listen(playButton, 'click', () => {
+        event.preventDefault();
+        let map = this.getMap();
+        map.set('playing', !map.get('playing'));
+      })
+    );
     this.playButton_ = playButton;
 
     preTools.appendChild(playButton);
@@ -198,12 +241,17 @@ class TimeSlider extends Control {
     postButton.classList.add(constants.POST_BUTTON_CLASS);
     postButton.tabIndex = constants.BASE_TAB_INDEX + 10 + moments.length;
     postTools.appendChild(postButton);
-    this.mouseListeners_.push(listen(postButton, 'click', () => {
-      if (this.config_['showTimeSliderMenu']) {
-      } else if ((self.callbacks_ != null) && (typeof self.callbacks_['toolClicked'] === 'function')) {
-        this.callbacks_['toolClicked']('timeslider-right-button');
-      }
-    }));
+    this.mouseListeners_.push(
+      listen(postButton, 'click', () => {
+        if (this.config_['showTimeSliderMenu']) {
+        } else if (
+          self.callbacks_ != null &&
+          typeof self.callbacks_['toolClicked'] === 'function'
+        ) {
+          this.callbacks_['toolClicked']('timeslider-right-button');
+        }
+      })
+    );
 
     if (!this.config_['showTimeSliderMenu']) {
       return postTools;
@@ -218,7 +266,7 @@ class TimeSlider extends Control {
    */
   createTimeZoneLabel() {
     const timezoneLabel = document.createElement('div');
-    timezoneLabel.innerHTML = this.timeZoneLabel_;
+    timezoneLabel.innerHTML = this.get('timeZoneLabel');
     timezoneLabel.classList.add(constants.TIMEZONE_LABEL_CLASS);
     return timezoneLabel;
   }
@@ -236,7 +284,9 @@ class TimeSlider extends Control {
     let type;
     let weight;
     let timeFrame;
-    const framesContainer = this.container_.getElementsByClassName(constants.FRAMES_CONTAINER_CLASS)[0];
+    const framesContainer = this.container_.getElementsByClassName(
+      constants.FRAMES_CONTAINER_CLASS
+    )[0];
     empty(framesContainer);
     if (numMoments < 2) {
       return;
@@ -244,12 +294,17 @@ class TimeSlider extends Control {
     const timePeriod = moments[numMoments - 1] - moments[0];
 
     for (i = 0; i < numMoments; i++) {
-      beginTime = (i === 0) ? 2 * moments[0] - moments[1] : moments[i - 1];
+      beginTime = i === 0 ? 2 * moments[0] - moments[1] : moments[i - 1];
       endTime = moments[i];
-      type = (moments[i] <= currentTime) ? constants.FRAME_HISTORY : constants.FRAME_FUTURE;
-      weight = 100 * (endTime - beginTime) / timePeriod;
+      type =
+        moments[i] <= currentTime
+          ? constants.FRAME_HISTORY
+          : constants.FRAME_FUTURE;
+      weight = (100 * (endTime - beginTime)) / timePeriod;
       timeFrame = this.createFrame(beginTime, endTime, type, weight);
-      timeFrame['element'].getElementsByClassName(constants.KEYBOARD_ACCESSIBLE_CLASS)[0].tabIndex = constants.BASE_TAB_INDEX + i;
+      timeFrame['element'].getElementsByClassName(
+        constants.KEYBOARD_ACCESSIBLE_CLASS
+      )[0].tabIndex = constants.BASE_TAB_INDEX + i;
       framesContainer.appendChild(timeFrame['element']);
       this.frames_.push(timeFrame);
     }
@@ -267,108 +322,127 @@ class TimeSlider extends Control {
     const self = this;
     const map = this.getMap();
     const timeFrame = new TimeFrame({
-      'beginTime': beginTime,
-      'endTime': endTime,
-      'type': type,
-      'weight': weight
+      beginTime: beginTime,
+      endTime: endTime,
+      type: type,
+      weight: weight,
     });
     let longClick;
     let longTap;
     let clickCount = 0;
     let singleClickTimer = 0;
-    this.mouseListeners_.push(listen(timeFrame.element, 'mousedown', () => {
-      if (this.isMeteorologicalMode()) {
-        longClick = setTimeout(() => {
-          clearTimeout(singleClickTimer);
-          longClick = null;
+    this.mouseListeners_.push(
+      listen(timeFrame.element, 'mousedown', () => {
+        if (this.isMeteorologicalMode()) {
+          longClick = setTimeout(() => {
+            clearTimeout(singleClickTimer);
+            longClick = null;
+            map.set('playing', false);
+            map.set('time', timeFrame['endTime']);
+          }, constants.LONG_CLICK_DELAY);
+        } else {
           map.set('playing', false);
           map.set('time', timeFrame['endTime']);
-        }, constants.LONG_CLICK_DELAY);
-      } else {
-        map.set('playing', false);
-        map.set('time', timeFrame['endTime']);
-      }
-    }));
-    this.mouseListeners_.push(listen(timeFrame.element, 'mouseup', () => {
-      if ((longClick != null) && (!self.dragging_)) {
-        clearTimeout(longClick);
-        clickCount++;
-        if (clickCount === 1) {
-          singleClickTimer = setTimeout(() => {
-            clearTimeout(longClick);
+        }
+      })
+    );
+    this.mouseListeners_.push(
+      listen(timeFrame.element, 'mouseup', () => {
+        if (longClick != null && !self.dragging_) {
+          clearTimeout(longClick);
+          clickCount++;
+          if (clickCount === 1) {
+            singleClickTimer = setTimeout(() => {
+              clearTimeout(longClick);
+              clickCount = 0;
+              if (timeFrame['endTime'] === map.get('time')) {
+                map.set('playing', false);
+                map.set('time', timeFrame['beginTime']);
+              } else {
+                self.step(timeFrame['endTime'] - map.get('time'));
+              }
+            }, constants.DOUBLE_PRESS_DELAY);
+          } else if (clickCount === 2) {
+            clearTimeout(singleClickTimer);
             clickCount = 0;
-            if (timeFrame['endTime'] === map.get('time')) {
-              map.set('playing', false);
-              map.set('time', timeFrame['beginTime']);
-            } else {
-              self.step(timeFrame['endTime'] - map.get('time'));
-            }
-          }, constants.DOUBLE_PRESS_DELAY);
-        } else if (clickCount === 2) {
-          clearTimeout(singleClickTimer);
-          clickCount = 0;
+            map.set('playing', false);
+            map.set('time', timeFrame['endTime']);
+          }
+        }
+      })
+    );
+    this.mouseListeners_.push(
+      listen(timeFrame.element, 'mouseout', () => {
+        if (longClick != null) {
+          clearTimeout(longClick);
+        }
+      })
+    );
+    this.mouseListeners_.push(
+      listen(timeFrame.element, 'touchstart', () => {
+        if (this.isMeteorologicalMode()) {
+          longTap = setTimeout(() => {
+            longTap = null;
+            map.set('playing', false);
+            map.set('time', timeFrame['endTime']);
+          }, constants.LONG_TAP_DELAY);
+        } else {
           map.set('playing', false);
           map.set('time', timeFrame['endTime']);
         }
-      }
-    }));
-    this.mouseListeners_.push(listen(timeFrame.element, 'mouseout', () => {
-      if (longClick != null) {
-        clearTimeout(longClick);
-      }
-    }));
-    this.mouseListeners_.push(listen(timeFrame.element, 'touchstart', () => {
-      if (this.isMeteorologicalMode()) {
-        longTap = setTimeout(() => {
-          longTap = null;
-          map.set('playing', false);
-          map.set('time', timeFrame['endTime']);
-        }, constants.LONG_TAP_DELAY);
-      } else {
+      })
+    );
+    this.mouseListeners_.push(
+      listen(timeFrame.element, 'touchend', () => {
+        if (longTap != null) {
+          clearTimeout(longTap);
+        }
+      })
+    );
+    this.mouseListeners_.push(
+      listen(timeFrame.element, 'touchcancel', () => {
+        if (longTap != null) {
+          clearTimeout(longTap);
+        }
+      })
+    );
+    this.mouseListeners_.push(
+      listen(timeFrame.dragListenerElement, 'mousemove', (event) => {
+        if (!self.dragging_) {
+          return;
+        }
+        document.activeElement.blur();
         map.set('playing', false);
         map.set('time', timeFrame['endTime']);
-      }
-    }));
-    this.mouseListeners_.push(listen(timeFrame.element, 'touchend', () => {
-      if (longTap != null) {
-        clearTimeout(longTap);
-      }
-    }));
-    this.mouseListeners_.push(listen(timeFrame.element, 'touchcancel', () => {
-      if (longTap != null) {
-        clearTimeout(longTap);
-      }
-    }));
-    this.mouseListeners_.push(listen(timeFrame.dragListenerElement, 'mousemove', event => {
-      if (!self.dragging_) {
-        return;
-      }
-      document.activeElement.blur();
-      map.set('playing', false);
-      map.set('time', timeFrame['endTime']);
-    }));
-    this.mouseListeners_.push(listen(timeFrame.element, 'touchmove', event => {
-      if ((!self.dragging_) || (event.changedTouches[0] === undefined)) {
-        return;
-      }
-      let currentTimeFrame;
-      const touchX = event.changedTouches[0].clientX;
-      const numFrames = this.frames_.length;
-      let rect;
-      for (let i = 0; i < numFrames; i++) {
-        rect = this.frames_[i].element.getBoundingClientRect();
-        if ((rect.left <= touchX) && (touchX <= rect.right)) {
-          currentTimeFrame = this.frames_[i];
-          break;
+      })
+    );
+    this.mouseListeners_.push(
+      listen(timeFrame.element, 'touchmove', (event) => {
+        if (!self.dragging_ || event.changedTouches[0] === undefined) {
+          return;
         }
-      }
-      document.activeElement.blur();
-      if ((currentTimeFrame != null) && (currentTimeFrame['endTime'] !== map.get('time'))) {
-        clearTimeout(longTap);
-        map.set('playing', false);
-        map.set('time', currentTimeFrame['endTime']);
-      }
-    }));
+        let currentTimeFrame;
+        const touchX = event.changedTouches[0].clientX;
+        const numFrames = this.frames_.length;
+        let rect;
+        for (let i = 0; i < numFrames; i++) {
+          rect = this.frames_[i].element.getBoundingClientRect();
+          if (rect.left <= touchX && touchX <= rect.right) {
+            currentTimeFrame = this.frames_[i];
+            break;
+          }
+        }
+        document.activeElement.blur();
+        if (
+          currentTimeFrame != null &&
+          currentTimeFrame['endTime'] !== map.get('time')
+        ) {
+          clearTimeout(longTap);
+          map.set('playing', false);
+          map.set('time', currentTimeFrame['endTime']);
+        }
+      })
+    );
 
     return timeFrame;
   }
@@ -410,7 +484,7 @@ class TimeSlider extends Control {
       6 * timeConstants.HOUR,
       8 * timeConstants.HOUR,
       12 * timeConstants.HOUR,
-      timeConstants.DAY
+      timeConstants.DAY,
     ];
     const numDiscreteSteps = discreteSteps.length;
     let minStep;
@@ -428,19 +502,29 @@ class TimeSlider extends Control {
       timeStepsUsed = this.configureTicks(minStep);
       step = 0;
       stepStart = -1;
-      nextStep = (j > 0) ? minStep : Number.POSITIVE_INFINITY;
+      nextStep = j > 0 ? minStep : Number.POSITIVE_INFINITY;
       this.frames_.forEach((frame, index, frames) => {
-        if (frame.element.getElementsByClassName(constants.FRAME_TICK_CLASS).length > 0) {
+        if (
+          frame.element.getElementsByClassName(constants.FRAME_TICK_CLASS)
+            .length > 0
+        ) {
           if (stepStart >= 0) {
             step = frame['endTime'] - frames[stepStart]['endTime'];
-            if (((j === 0) && (step < nextStep)) || ((j !== 0) && (step > nextStep))) {
+            if ((j === 0 && step < nextStep) || (j !== 0 && step > nextStep)) {
               nextStep = step;
             }
           }
           stepStart = index;
         }
       });
-      if ((nextStep !== minStep) && (((nextStep < timeConstants.HOUR) && (timeConstants.HOUR % nextStep !== 0)) || ((nextStep > timeConstants.HOUR) && (nextStep % timeConstants.HOUR !== 0)) || ((nextStep < timeConstants.DAY) && (timeConstants.DAY % nextStep !== 0)))) {
+      if (
+        nextStep !== minStep &&
+        ((nextStep < timeConstants.HOUR &&
+          timeConstants.HOUR % nextStep !== 0) ||
+          (nextStep > timeConstants.HOUR &&
+            nextStep % timeConstants.HOUR !== 0) ||
+          (nextStep < timeConstants.DAY && timeConstants.DAY % nextStep !== 0))
+      ) {
         for (i = 0; i < numDiscreteSteps; i++) {
           if (nextStep < discreteSteps[i]) {
             nextStep = discreteSteps[i];
@@ -449,7 +533,7 @@ class TimeSlider extends Control {
         }
       }
       j++;
-    } while ((timeStepsUsed) && (nextStep !== minStep));
+    } while (timeStepsUsed && nextStep !== minStep);
     this.showTicks();
   }
 
@@ -478,9 +562,11 @@ class TimeSlider extends Control {
 
     const clearFrame = (frame) => {
       const removeChildrenByClass = (className) => {
-        Array.from(frame.element.getElementsByClassName(className)).forEach(element => {
-          element.parentElement.removeChild(element);
-        });
+        Array.from(frame.element.getElementsByClassName(className)).forEach(
+          (element) => {
+            element.parentElement.removeChild(element);
+          }
+        );
       };
       removeChildrenByClass(constants.FRAME_TEXT_WRAPPER_CLASS);
       removeChildrenByClass(constants.FRAME_TICK_CLASS);
@@ -511,19 +597,30 @@ class TimeSlider extends Control {
       const nextIndex = index + 1;
       frame.element.style.display = '';
 
-      if (DateTime.fromMillis(frame['endTime']).setZone(self.timeZone_).startOf('day').valueOf() === frame['endTime']) {
+      if (
+        DateTime.fromMillis(frame['endTime'])
+          .setZone(self.get('timeZone'))
+          .startOf('day')
+          .valueOf() === frame['endTime']
+      ) {
         divisibleDays = true;
       }
       if (nextIndex === frames.length) {
         return;
       }
-      const textElement = frame.element.querySelector('span.' + constants.FRAME_TEXT_CLASS);
+      const textElement = frame.element.querySelector(
+        'span.' + constants.FRAME_TEXT_CLASS
+      );
       const clientRect = textElement.getBoundingClientRect();
       if (maxTextWidth < clientRect['width']) {
         maxTextWidth = clientRect['width'];
       }
       localTimeStep = frames[nextIndex]['endTime'] - frame['endTime'];
-      if ((DateTime.fromMillis(frame['endTime']).setZone(self.timeZone_).isInDST) && (localTimeStep < timeConstants.DAY)) {
+      if (
+        DateTime.fromMillis(frame['endTime']).setZone(self.get('timeZone'))
+          .isInDST &&
+        localTimeStep < timeConstants.DAY
+      ) {
         containsDST = true;
       } else {
         containsNonDST = true;
@@ -531,11 +628,11 @@ class TimeSlider extends Control {
       if (timeStep == null) {
         useTimeStep = true;
         timeStep = localTimeStep;
-      } else if ((useTimeStep) && (localTimeStep !== timeStep)) {
+      } else if (useTimeStep && localTimeStep !== timeStep) {
         useTimeStep = false;
       }
     });
-    if ((containsDST) && (containsNonDST)) {
+    if (containsDST && containsNonDST) {
       useTimeStep = false;
     }
     // Prevent common tick asynchrony
@@ -544,7 +641,9 @@ class TimeSlider extends Control {
     }
 
     newTextWidth = Math.round(maxTextWidth) + 'px';
-    Array.from(this.container_.getElementsByClassName(constants.FRAME_TEXT_WRAPPER_CLASS)).forEach(element => {
+    Array.from(
+      this.container_.getElementsByClassName(constants.FRAME_TEXT_WRAPPER_CLASS)
+    ).forEach((element) => {
       element.style.width = newTextWidth;
     });
 
@@ -561,7 +660,9 @@ class TimeSlider extends Control {
       frame.element.appendChild(tick);
     };
 
-    framesContainer = Array.from(this.container_.getElementsByClassName(constants.FRAMES_CONTAINER_CLASS));
+    framesContainer = Array.from(
+      this.container_.getElementsByClassName(constants.FRAMES_CONTAINER_CLASS)
+    );
     if (framesContainer.length > 0) {
       framesContainer = framesContainer[0].getBoundingClientRect();
     }
@@ -569,7 +670,9 @@ class TimeSlider extends Control {
     this.frames_.forEach((frame, index, frames) => {
       let textWrapper;
       let clientRect;
-      const textElementArray = Array.from(frame.element.getElementsByClassName(constants.FRAME_TEXT_WRAPPER_CLASS));
+      const textElementArray = Array.from(
+        frame.element.getElementsByClassName(constants.FRAME_TEXT_WRAPPER_CLASS)
+      );
       if (textElementArray.length === 0) {
         return;
       }
@@ -577,16 +680,70 @@ class TimeSlider extends Control {
       clientRect = textWrapper.getBoundingClientRect();
 
       // Prevent text overlapping, favor full hours
-      if ((framesContainer.length === 0) || (framesContainer.left <= clientRect.left &&
-        framesContainer.right >= clientRect.right &&
-        framesContainer.top <= clientRect.top &&
-        framesContainer.bottom >= clientRect.bottom)) {
-        if ((self.previousTickTextRight_ < clientRect.left ||
-          self.previousTickTextLeft_ > clientRect.right ||
-          self.previousTickTextBottom_ < clientRect.top ||
-          self.previousTickTextTop_ > clientRect.bottom) && ((self.previousTickIndex_ == null) || (frame['endTime'] - frames[self.previousTickIndex_]['endTime'] >= minStep))) {
+      if (
+        framesContainer.length === 0 ||
+        (framesContainer.left <= clientRect.left &&
+          framesContainer.right >= clientRect.right &&
+          framesContainer.top <= clientRect.top &&
+          framesContainer.bottom >= clientRect.bottom)
+      ) {
+        if (
+          (self.previousTickTextRight_ < clientRect.left ||
+            self.previousTickTextLeft_ > clientRect.right ||
+            self.previousTickTextBottom_ < clientRect.top ||
+            self.previousTickTextTop_ > clientRect.bottom) &&
+          (self.previousTickIndex_ == null ||
+            frame['endTime'] - frames[self.previousTickIndex_]['endTime'] >=
+              minStep)
+        ) {
           createTick(frame, index, clientRect, frame['endTime']);
-        } else if ((index > 0) && (self.previousTickIndex_ >= 0) && (frames[self.previousTickIndex_] != null) && (((((minStep === 0) && (((frame['endTime'] % (timeConstants.HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (timeConstants.HOUR) !== 0)) || ((useTimeStep) && ((frame['endTime'] % (timeConstants.HOUR)) % timeStep === 0) && ((frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR)) % timeStep !== 0)) || ((frame['endTime'] % (constants.ONE_HOUR) === 0) && (frames[self.previousTickIndex_]['endTime'] % (constants.ONE_HOUR) === 0) && (DateTime.fromMillis(frame['endTime']).setZone(self.timeZone_).hour % 2 === 0) && (DateTime.fromMillis(frames[self.previousTickIndex_]['endTime']).setZone(self.timeZone_).hour % 2 !== 0))) && (!frames[self.previousTickIndex_]['useDateFormat'])) || (frame['useDateFormat']))) || ((minStep > 0) && (((minStep >= constants.ONE_HOUR) && (frames[self.previousTickIndex_]['endTime'] % timeConstants.HOUR !== 0)) || ((frames[self.previousTickIndex_]['endTime'] % timeConstants.HOUR) % minStep !== 0) || ((divisibleDays) && (DateTime.fromMillis(frames[self.previousTickIndex_]['endTime']).setZone(self.timeZone_).hour % (minStep / timeConstants.HOUR) !== 0)))))) {
+        } else if (
+          index > 0 &&
+          self.previousTickIndex_ >= 0 &&
+          frames[self.previousTickIndex_] != null &&
+          ((minStep === 0 &&
+            ((frame['endTime'] % timeConstants.HOUR === 0 &&
+              frames[self.previousTickIndex_]['endTime'] %
+                timeConstants.HOUR !==
+                0) ||
+              (useTimeStep &&
+                (frame['endTime'] % timeConstants.HOUR) % timeStep === 0 &&
+                (frames[self.previousTickIndex_]['endTime'] %
+                  constants.ONE_HOUR) %
+                  timeStep !==
+                  0) ||
+              (frame['endTime'] % constants.ONE_HOUR === 0 &&
+                frames[self.previousTickIndex_]['endTime'] %
+                  constants.ONE_HOUR ===
+                  0 &&
+                DateTime.fromMillis(frame['endTime']).setZone(
+                  self.get('timeZone')
+                ).hour %
+                  2 ===
+                  0 &&
+                DateTime.fromMillis(
+                  frames[self.previousTickIndex_]['endTime']
+                ).setZone(self.get('timeZone')).hour %
+                  2 !==
+                  0)) &&
+            !frames[self.previousTickIndex_]['useDateFormat']) ||
+            frame['useDateFormat'] ||
+            (minStep > 0 &&
+              ((minStep >= constants.ONE_HOUR &&
+                frames[self.previousTickIndex_]['endTime'] %
+                  timeConstants.HOUR !==
+                  0) ||
+                (frames[self.previousTickIndex_]['endTime'] %
+                  timeConstants.HOUR) %
+                  minStep !==
+                  0 ||
+                (divisibleDays &&
+                  DateTime.fromMillis(
+                    frames[self.previousTickIndex_]['endTime']
+                  ).setZone(self.get('timeZone')).hour %
+                    (minStep / timeConstants.HOUR) !==
+                    0))))
+        ) {
           clearFrame(frames[self.previousTickIndex_]);
           createTick(frame, index, clientRect, frame['endTime']);
         } else {
@@ -603,7 +760,9 @@ class TimeSlider extends Control {
    * Shows currently visible slider ticks.
    */
   showTicks() {
-    Array.from(this.container_.getElementsByClassName(constants.FRAME_TICK_CLASS)).forEach(element => {
+    Array.from(
+      this.container_.getElementsByClassName(constants.FRAME_TICK_CLASS)
+    ).forEach((element) => {
       element.classList.remove(constants.HIDDEN_CLASS);
     });
   }
@@ -642,12 +801,16 @@ class TimeSlider extends Control {
     handle.classList.add(constants.POINTER_HANDLE_CLASS);
     interactionContainer.appendChild(handle);
 
-    this.mouseListeners_.push(listen(interactionContainer, 'mousedown', e => {
-      self.setDragging(true);
-    }));
-    this.mouseListeners_.push(listen(interactionContainer, 'touchstart', e => {
-      self.setDragging(true);
-    }));
+    this.mouseListeners_.push(
+      listen(interactionContainer, 'mousedown', (e) => {
+        self.setDragging(true);
+      })
+    );
+    this.mouseListeners_.push(
+      listen(interactionContainer, 'touchstart', (e) => {
+        self.setDragging(true);
+      })
+    );
 
     this.interactions_ = interactionContainer;
   }
@@ -677,14 +840,28 @@ class TimeSlider extends Control {
         currentIndex = numFrames - 1;
       }
       nextIndex = (currentIndex + 1) % numFrames;
-      Array.from(this.frames_[currentIndex].element.getElementsByClassName(constants.INDICATOR_CLASS)).forEach(indicatorElement => {
-        if (indicatorElement.getAttribute('data-status') === constants.DATA_STATUS_WORKING) {
+      Array.from(
+        this.frames_[currentIndex].element.getElementsByClassName(
+          constants.INDICATOR_CLASS
+        )
+      ).forEach((indicatorElement) => {
+        if (
+          indicatorElement.getAttribute('data-status') ===
+          constants.DATA_STATUS_WORKING
+        ) {
           updateAllowed = false;
         }
       });
       if (updateAllowed) {
-        Array.from(this.frames_[nextIndex].element.getElementsByClassName(constants.INDICATOR_CLASS)).forEach(indicatorElement => {
-          if (indicatorElement.getAttribute('data-status') === constants.DATA_STATUS_WORKING) {
+        Array.from(
+          this.frames_[nextIndex].element.getElementsByClassName(
+            constants.INDICATOR_CLASS
+          )
+        ).forEach((indicatorElement) => {
+          if (
+            indicatorElement.getAttribute('data-status') ===
+            constants.DATA_STATUS_WORKING
+          ) {
             updateAllowed = false;
           }
         });
@@ -699,8 +876,9 @@ class TimeSlider extends Control {
   /**
    * Updates pointer text and location on the time slider.
    * @param {number} animationTime Time value.
+   * @param {boolean=} forceUpdate Forces an update.
    */
-  updatePointer(animationTime) {
+  updatePointer(animationTime, forceUpdate = false) {
     if (this.interactions_ == null) {
       return;
     }
@@ -716,19 +894,34 @@ class TimeSlider extends Control {
       }
     }
     if (index != null) {
-      if (this.interactions_.parentElement == null) {
+      if (forceUpdate) {
         needsUpdate = true;
-      } else if (Number.parseInt(this.interactions_.parentElement.dataset['time']) !== animationTime) {
+      } else if (this.interactions_.parentElement == null) {
+        needsUpdate = true;
+      } else if (
+        Number.parseInt(this.interactions_.parentElement.dataset['time']) !==
+        animationTime
+      ) {
         this.interactions_.parentElement.removeChild(this.interactions_);
         needsUpdate = true;
       }
       if (needsUpdate) {
         this.frames_[index].element.appendChild(this.interactions_);
-        tickText = this.getTickText(this.frames_[index]['endTime'], false)['content'];
-        Array.from(this.interactions_.getElementsByClassName(constants.POINTER_TEXT_CLASS)).forEach(textElement => {
+        tickText = this.getTickText(this.frames_[index]['endTime'], false)[
+          'content'
+        ];
+        Array.from(
+          this.interactions_.getElementsByClassName(
+            constants.POINTER_TEXT_CLASS
+          )
+        ).forEach((textElement) => {
           textElement.innerHTML = tickText;
         });
-        Array.from(this.container_.getElementsByClassName(constants.POINTER_INFOTIP_CLASS)).forEach(infotip => {
+        Array.from(
+          this.container_.getElementsByClassName(
+            constants.POINTER_INFOTIP_CLASS
+          )
+        ).forEach((infotip) => {
           infotip.innerHTML = tickText;
         });
       }
@@ -750,7 +943,7 @@ class TimeSlider extends Control {
       return;
     }
     const numIntervals = numIntervalItems.length;
-    let creationNeeded = (numIntervals !== this.frames_.length);
+    let creationNeeded = numIntervals !== this.frames_.length;
     let i;
     let moments = [];
     if (!creationNeeded) {
@@ -768,13 +961,18 @@ class TimeSlider extends Control {
       this.createTimeSlider(moments);
     }
     this.frames_.forEach((frame, index) => {
-      Array.from(frame.element.getElementsByClassName(constants.INDICATOR_CLASS)).forEach(indicatorElement => {
+      Array.from(
+        frame.element.getElementsByClassName(constants.INDICATOR_CLASS)
+      ).forEach((indicatorElement) => {
         let numIntervals;
         let i;
         let time;
         let elementTime;
         let endTime;
-        if ((indicatorElement.parentElement != null) && (indicatorElement.parentElement.dataset != null)) {
+        if (
+          indicatorElement.parentElement != null &&
+          indicatorElement.parentElement.dataset != null
+        ) {
           elementTime = indicatorElement.parentElement.dataset.time;
         }
         if (elementTime == null) {
@@ -785,8 +983,11 @@ class TimeSlider extends Control {
           numIntervals = numIntervalItems.length;
           for (i = 0; i < numIntervals; i++) {
             endTime = numIntervalItems[i].endTime;
-            if ((endTime != null) && (endTime === time)) {
-              indicatorElement.setAttribute('data-status', numIntervalItems[i].status);
+            if (endTime != null && endTime === time) {
+              indicatorElement.setAttribute(
+                'data-status',
+                numIntervalItems[i].status
+              );
               break;
             }
           }
@@ -805,11 +1006,14 @@ class TimeSlider extends Control {
       this.getMap().set('playing', false);
     }
     const pointerEvents = dragging ? 'auto' : 'none';
-    Array.from(this.container_.getElementsByClassName(constants.DRAG_LISTENER_CLASS))
-      .forEach(element => {
-        element.style.pointerEvents = pointerEvents;
-      });
-    Array.from(this.container_.getElementsByClassName(constants.POINTER_CLASS)).forEach(element => {
+    Array.from(
+      this.container_.getElementsByClassName(constants.DRAG_LISTENER_CLASS)
+    ).forEach((element) => {
+      element.style.pointerEvents = pointerEvents;
+    });
+    Array.from(
+      this.container_.getElementsByClassName(constants.POINTER_CLASS)
+    ).forEach((element) => {
       if (dragging) {
         element.classList.add(constants.POINTER_DRAGGING);
       } else {
@@ -817,10 +1021,11 @@ class TimeSlider extends Control {
       }
     });
     let display = dragging ? 'block' : 'none';
-    Array.from(this.container_.getElementsByClassName(constants.POINTER_INFOTIP_CLASS))
-      .forEach(element => {
-        element.style.display = display;
-      });
+    Array.from(
+      this.container_.getElementsByClassName(constants.POINTER_INFOTIP_CLASS)
+    ).forEach((element) => {
+      element.style.display = display;
+    });
   }
 
   /**
@@ -834,34 +1039,6 @@ class TimeSlider extends Control {
     } else {
       this.playButton_.classList.remove(constants.PLAYING_CLASS);
     }
-  }
-
-  /**
-   * Sets a time zone.
-   * @param {string} timeZone Time zone.
-   */
-  setTimeZone(timeZone) {
-    const self = this;
-    this.timeZone_ = timeZone;
-    this.frames_.forEach(frame => {
-      const tickText = self.getTickText(frame['endTime']);
-      const textElement = frame.element.getElementsByClassName(constants.FRAME_TEXT_CLASS);
-      if (textElement.length > 0) {
-        textElement[0].textContent = tickText['content'];
-      }
-    });
-  }
-
-  /**
-   * Sets a time zone.
-   * @param {string} timeZoneLabel Time zone label.
-   */
-  setTimeZoneLabel(timeZoneLabel) {
-    const self = this;
-    this.timeZoneLabel_ = timeZoneLabel;
-    Array.from(this.container_.getElementsByClassName(constants.TIMEZONE_LABEL_CLASS)).forEach(timeZoneLabelElement => {
-      timeZoneLabelElement.innerHTML = self.timeZoneLabel_;
-    });
   }
 
   /**
@@ -897,16 +1074,18 @@ class TimeSlider extends Control {
     const format = 'HH:mm';
     const dateFormat = ' d.M.';
     let useDateFormat = false;
-    const beginTime = (this.frames_.length > 0) ? this.frames_[0]['endTime'] : Number.NEGATIVE_INFINITY;
+    const beginTime =
+      this.frames_.length > 0
+        ? this.frames_[0]['endTime']
+        : Number.NEGATIVE_INFINITY;
     if (beginTime == null) {
       return '';
     }
     if (tickTime < beginTime) {
       tickTime = beginTime;
     }
-    zTime = DateTime
-      .fromMillis(tickTime)
-      .setZone(this.timeZone_)
+    zTime = DateTime.fromMillis(tickTime)
+      .setZone(this.get('timeZone'))
       .setLocale(this.locale_);
     const day = zTime.ordinal;
     const year = zTime.year;
@@ -917,23 +1096,34 @@ class TimeSlider extends Control {
         if (frameTime >= tickTime) {
           break;
         }
-        if (Array.from(this.frames_[i].element.getElementsByClassName(constants.FRAME_TEXT_WRAPPER_CLASS)).length > 0) {
+        if (
+          Array.from(
+            this.frames_[i].element.getElementsByClassName(
+              constants.FRAME_TEXT_WRAPPER_CLASS
+            )
+          ).length > 0
+        ) {
           prevTime = frameTime;
         }
       }
-      currentMoment = DateTime.local().setZone(this.timeZone_);
+      currentMoment = DateTime.local().setZone(this.get('timeZone'));
       if (prevTime != null) {
-        zPrevTime = DateTime.fromMillis(prevTime).setZone(this.timeZone_);
-        if ((day !== zPrevTime.ordinal) || (year !== zPrevTime.year)) {
+        zPrevTime = DateTime.fromMillis(prevTime).setZone(this.get('timeZone'));
+        if (day !== zPrevTime.ordinal || year !== zPrevTime.year) {
           useDateFormat = true;
         }
-      } else if ((tickTime === beginTime) && ((day !== currentMoment.ordinal) || (year !== currentMoment.year))) {
+      } else if (
+        tickTime === beginTime &&
+        (day !== currentMoment.ordinal || year !== currentMoment.year)
+      ) {
         useDateFormat = true;
       }
     }
     return {
-      content: useDateFormat ? zTime.weekdayShort + zTime.toFormat(dateFormat) : zTime.toFormat(format),
-      useDateFormat: useDateFormat
+      content: useDateFormat
+        ? zTime.weekdayShort + zTime.toFormat(dateFormat)
+        : zTime.toFormat(format),
+      useDateFormat: useDateFormat,
     };
   }
 
@@ -941,13 +1131,19 @@ class TimeSlider extends Control {
    * Clears time slider configurations.
    */
   clear() {
-    if (this.timeListener != null) {
-      unByKey(this.timeListener);
+    if (this.timeListener_ != null) {
+      unByKey(this.timeListener_);
     }
-    if (this.playingListener != null) {
-      unByKey(this.playingListener);
+    if (this.playingListener_ != null) {
+      unByKey(this.playingListener_);
     }
-    this.mouseListeners_.forEach(mouseListener => {
+    if (this.timeZoneListener != null) {
+      unByKey(this.timeZoneListener);
+    }
+    if (this.timeZoneLabelListener != null) {
+      unByKey(this.timeZoneLabelListener);
+    }
+    this.mouseListeners_.forEach((mouseListener) => {
       mouseListener.destroy();
     });
     this.resizeDetector.removeAllListeners(this.container_);

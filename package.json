@@ -1,6 +1,6 @@
 {
   "name": "@fmidev/metoclient",
-  "version": "6.2.0",
+  "version": "6.2.1",
   "description": "Map animator",
   "main": "dist/metoclient.js",
   "module": "dist/metoclient.es.js",
@@ -13,19 +13,40 @@
   "eslintConfig": {
     "extends": [
       "airbnb-base",
-      "plugin:sonarjs/recommended"
+      "plugin:prettier/recommended",
+      "plugin:sonarjs/recommended",
+      "plugin:jsdoc/recommended"
     ],
     "plugins": [
-      "sonarjs"
+      "sonarjs",
+      "jsdoc"
     ],
     "env": {
       "browser": true
+    },
+    "rules": {
+      "no-underscore-dangle": 0,
+      "require-jsdoc": [
+        "error",
+        {
+          "require": {
+            "FunctionDeclaration": true,
+            "MethodDefinition": true,
+            "ClassDeclaration": true,
+            "ArrowFunctionExpression": true,
+            "FunctionExpression": true
+          }
+        }
+      ]
     }
   },
   "eslintIgnore": [
     "examples/*",
     "test/*"
   ],
+  "prettier": {
+    "singleQuote": true
+  },
   "config": {
     "generateRelease": {
       "no_confirm": false,
@@ -79,38 +100,43 @@
   "homepage": "https://github.com/fmidev/metoclient",
   "dependencies": {
     "can-ajax": "2.4.5",
-    "core-js": "3.6.4",
+    "core-js": "3.6.5",
     "date-time-format-timezone": "1.0.22",
-    "domurl": "2.3.0",
+    "domurl": "2.3.4",
     "element-resize-detector": "1.2.1",
     "element-visibility-watcher": "1.0.5",
     "empty-element": "1.0.0",
     "good-listener": "1.2.2",
-    "luxon": "1.22.0",
-    "ol": "6.2.1",
-    "ol-layerswitcher": "3.5.0",
+    "luxon": "1.24.1",
+    "ol": "6.3.1",
+    "ol-layerswitcher": "3.6.0",
     "ol-mapbox-style": "6.1.1",
-    "proj4": "2.6.0",
+    "proj4": "2.6.1",
     "rrule": "2.6.4"
   },
   "devDependencies": {
     "@babel/cli": "7.8.4",
-    "@babel/core": "7.8.7",
+    "@babel/core": "7.9.6",
     "@babel/polyfill": "7.8.7",
-    "@babel/preset-env": "7.8.7",
-    "@rollup/plugin-replace": "2.3.1",
+    "@babel/preset-env": "7.9.6",
+    "@rollup/plugin-replace": "2.3.2",
     "babel-eslint": "10.1.0",
     "babel-jest": "25.1.0",
-    "coveralls": "3.0.11",
-    "documentation": "12.1.4",
+    "coveralls": "3.1.0",
+    "documentation": "12.3.0",
     "eslint": "6.8.0",
     "eslint-config-airbnb-base": "14.1.0",
-    "eslint-plugin-import": "2.20.1",
+    "eslint-config-prettier": "6.11.0",
+    "eslint-plugin-import": "2.20.2",
+    "eslint-plugin-jest": "23.9.0",
+    "eslint-plugin-jsdoc": "24.0.6",
+    "eslint-plugin-prettier": "3.1.3",
     "eslint-plugin-sonarjs": "0.5.0",
     "generate-release": "github:masapu/node-generate-release",
     "gh-pages": "2.2.0",
     "jest": "25.1.0",
     "node-pre-gyp": "0.14.0",
+    "prettier": "2.0.5",
     "rimraf": "3.0.2",
     "rollup": "1.32.1",
     "rollup-plugin-analyzer": "3.2.2",
@@ -120,7 +146,7 @@
     "rollup-plugin-license": "2.0.0",
     "rollup-plugin-node-resolve": "5.2.0",
     "rollup-plugin-terser": "5.3.0",
-    "rollup-plugin-version-injector": "1.2.0",
+    "rollup-plugin-version-injector": "1.2.2",
     "shp-write": "0.3.2",
     "whatwg-fetch": "3.0.0",
     "xmldom": "0.3.0"

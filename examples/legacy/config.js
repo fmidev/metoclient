@@ -11,7 +11,7 @@ fmi.config.metoclient = {
   zoom: 3,
   container: 'map',
   projection: 'EPSG:3067',
-  refreshInterval: 'PT1M',
+  refreshInterval: 'PT15M',
   timeZone: 'Europe/Helsinki',
   metadata: {
     tags: [

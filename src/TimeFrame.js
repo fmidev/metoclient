@@ -19,11 +19,15 @@ export default class TimeFrame {
     this.element.classList.add(options['type']);
     this.element.dataset.time = this['endTime'];
     this.dragListenerElement = document.createElement('div');
-    this.dragListenerElement.classList.add('fmi-metoclient-timeslider-drag-listener');
+    this.dragListenerElement.classList.add(
+      'fmi-metoclient-timeslider-drag-listener'
+    );
     this.dragListenerElement.style.pointerEvents = 'none';
     this.element.appendChild(this.dragListenerElement);
     this.keyboardAccessibleElement = document.createElement('button');
-    this.keyboardAccessibleElement.classList.add('fmi-metoclient-timeslider-keyboard-accessible');
+    this.keyboardAccessibleElement.classList.add(
+      'fmi-metoclient-timeslider-keyboard-accessible'
+    );
     this.keyboardAccessibleElement.style.pointerEvents = 'none';
     this.element.appendChild(this.keyboardAccessibleElement);
   }

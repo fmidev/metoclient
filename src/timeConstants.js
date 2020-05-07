@@ -93,9 +93,9 @@ export const AVERAGE_MONTH = YEAR / 12;
 /**
  * @api
  */
-export const MIN_DATE = new Date(-8.64E15);
+export const MIN_DATE = new Date(-8.64e15);
 
 /**
  * @api
  */
-export const MAX_DATE = new Date(8.64E15);
+export const MAX_DATE = new Date(8.64e15);

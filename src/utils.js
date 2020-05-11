@@ -72,7 +72,7 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
     times = addNewTimes(times, ruleTimes);
   } else if (timeInput.includes(',')) {
     const dates = timeInput.split(',');
-    times = dates.map((date) => new Date(date).getTime());
+    times = dates.map((date) => new Date(date.trim()).getTime());
   } else if (timeInput.includes('/')) {
     const parsedParts = timeInput.split('/').map((part) => {
       if (part.toLowerCase() === constants.PRESENT) {
@@ -307,4 +307,61 @@ export function getAdjacentLayer(direction, layer, layers) {
     return null;
   }
   return adjacentLayer.id;
+}
+
+/**
+ *
+ * @param source
+ * @returns {string}
+ */
+export function getSourceCapabilitiesUrl(source) {
+  let url = '';
+  if (source.capabilities != null && source.capabilities.length > 0) {
+    url = source.capabilities;
+  } else {
+    if (source.tiles == null || source.tiles.length === 0) {
+      return url;
+    }
+    [url] = source.tiles; // Todo: Handle other indexes
+  }
+  url = url.split('?')[0];
+  if (url.endsWith('/')) {
+    url = url.substring(0, url.length - 1);
+  }
+  return url;
+}
+
+export function getLegendUrl(layerName, layerStyles, capabilities) {
+  if (
+    layerName == null ||
+    layerName.length === 0 ||
+    capabilities == null ||
+    capabilities.data == null ||
+    capabilities.data.Capability == null ||
+    capabilities.data.Capability.Layer == null ||
+    capabilities.data.Capability.Layer.Layer == null
+  ) {
+    return null;
+  }
+  const layerCapabilities = capabilities.data.Capability.Layer.Layer.find(
+    (layer) => layer.Name === layerName
+  );
+  if (layerCapabilities == null || layerCapabilities.Style == null) {
+    return null;
+  }
+  let layerStyle = layerCapabilities.Style[0];
+  if (layerStyles != null && layerStyles.length > 0) {
+    const styles = layerStyles.split(',');
+    layerStyle = layerCapabilities.Style.find((style) =>
+      styles.includes(style.Name)
+    );
+  }
+  if (
+    layerStyle == null ||
+    layerStyle.LegendURL == null ||
+    layerStyle.LegendURL.length === 0
+  ) {
+    return null;
+  }
+  return layerStyle.LegendURL[0].OnlineResource;
 }

@@ -28,8 +28,7 @@
 <div id="map"></div>
 <script type="text/javascript">
   var metoclient = new fmi.metoclient.MetOClient(fmi.config.metoclient)
-  metoclient.render().then(function () {
-    var map = metoclient.get('map');
+  metoclient.render().then(function (map) {
     map.addControl(new ol.control.ScaleLine());
   })
 </script>

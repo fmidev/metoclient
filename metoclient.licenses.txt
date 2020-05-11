@@ -127,188 +127,111 @@ Copyright (c) 2014, Mike Adair, Richard Greenwood, Didier Richard, Stephen Irons
 
 ---
 
-Name: domurl
-Version: 2.3.4
-License: MIT
+Name: mapbox-to-css-font
+Version: 2.4.0
+License: BSD-2-Clause
 Private: false
-Description: Lightweight URL manipulation with JavaScript.
-Repository: git+https://github.com/Mikhus/domurl.git
-Homepage: https://github.com/Mikhus/jsurl
+Description: Utility to convert Mapbox GL Style font names to CSS font definitions
+Repository: git://github.com/openlayers/mapbox-to-css-font.git
+Homepage: https://github.com/openlayers/mapbox-to-css-font#readme
+Author: Andreas Hocevar
 License Copyright:
 ===
 
-The MIT License (MIT)
+Copyright 2016-present mapbox-to-css-font contributors
 
-Copyright (c) 2016 Mykhailo Stadnyk
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
----
-
-Name: luxon
-Version: 1.24.1
-License: MIT
-Private: false
-Description: Immutable date wrapper
-Repository: git+https://github.com/moment/luxon.git
-Homepage: https://github.com/moment/luxon#readme
-Author: Isaac Cambron
 
 ---
 
-Name: rrule
-Version: 2.6.4
-License: SEE LICENSE IN LICENSE
+Name: @mapbox/mapbox-gl-style-spec
+Version: 13.13.0
+License: ISC
 Private: false
-Description: JavaScript library for working with recurrence rules for calendar dates.
-Repository: git://github.com/jakubroztocil/rrule.git
-Homepage: http://jakubroztocil.github.io/rrule/
-Author: Jakub Roztocil, Lars Schöning, and David Golightly
+Description: a specification for mapbox gl styles
+Repository: git+ssh://git@github.com/mapbox/mapbox-gl-js.git
+Homepage: https://github.com/mapbox/mapbox-gl-js#readme
+Author: Mapbox
 
 ---
 
-Name: empty-element
-Version: 1.0.0
-License: MIT
+Name: ol-mapbox-style
+Version: 6.1.1
+License: BSD-2-Clause
 Private: false
-Description: Empty a DOM element.
-Repository: git+https://github.com/goto-bus-stop/empty-element.git
-Homepage: https://github.com/goto-bus-stop/empty-element#readme
-Author: René Kooi <rene@kooi.me>
+Description: Create OpenLayers maps from Mapbox Style objects
+Repository: git://github.com/openlayers/ol-mapbox-style.git
+Homepage: https://github.com/openlayers/ol-mapbox-style#readme
 License Copyright:
 ===
 
-The MIT License (MIT)
+Copyright 2016-present ol-mapbox-style contributors
 
-Copyright (c) 2014 René Kooi
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
-
----
-
-Name: good-listener
-Version: 1.2.2
-License: MIT
-Private: false
-Description: A more versatile way of adding & removing event listeners
-Repository: git+https://github.com/zenorocha/good-listener.git
-Homepage: https://github.com/zenorocha/good-listener#readme
-
----
-
-Name: delegate
-Version: 3.2.0
-License: MIT
-Private: false
-Description: Lightweight event delegation
-Repository: git+https://github.com/zenorocha/delegate.git
-Homepage: https://github.com/zenorocha/delegate#readme
-
----
-
-Name: element-resize-detector
-Version: 1.2.1
-License: MIT
-Private: false
-Description: Resize event emitter for elements.
-Repository: git://github.com/wnr/element-resize-detector.git
-Homepage: https://github.com/wnr/element-resize-detector
-License Copyright:
-===
-
-The MIT License (MIT)
-
-Copyright (c) 2016 Lucas Wiener
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 ---
 
-Name: batch-processor
-Version: 1.0.0
+Name: webfont-matcher
+Version: 1.1.0
 License: MIT
 Private: false
-Description: Batch processing in JS
-Repository: git+https://github.com/wnr/batch-processor.git
-Homepage: https://github.com/wnr/batch-processor
-Author: Lucas Wiener
-License Copyright:
-===
+Description: Tries to match your font to various webfont services and provide you with a link to use it
+Repository: git+https://github.com/csshat/webfont-matcher.git
+Homepage: https://github.com/csshat/webfont-matcher
+Author: Marek Hrabe <marekhrabe@abdoc.net> (https://github.com/marekhrabe)
+Contributors:
+  Tomas Hanacek <tomashanacek@avocode.com> (https://github.com/tomashanacek)
 
-The MIT License (MIT)
+---
 
-Copyright (c) 2015 Lucas Wiener
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
+Name: elm-pep
+Version: 1.0.6
+License: MPL-2.0
+Private: false
+Description: npm package for https://github.com/mpizenberg/elm-pep
+Repository: git://github.com/ahocevar/elm-pep.git
+Homepage: https://github.com/ahocevar/elm-pep#readme
+Author: Andreas Hocevar <andreas.hocevar@gmail.com>
 
 ---
 
@@ -348,206 +271,73 @@ THE SOFTWARE.
 
 ---
 
-Name: can-namespace
-Version: 1.0.0
-License: null
+Name: ieee754
+Version: 1.1.13
+License: BSD-3-Clause
 Private: false
-Description: Namespace where can-* packages are registered
-Repository: git://github.com/canjs/can-namespace.git
-Homepage: http://canjs.com
-Author: Bitovi <contact@bitovi.com> (http://bitovi.com)
-
----
-
-Name: can-symbol
-Version: 1.6.5
-License: null
-Private: false
-Description: Well known symbols used to detail how to operate on different objects
-Repository: git://github.com/canjs/can-symbol.git
-Homepage: http://canjs.com
-Author: Bitovi <core@donejs.com> (http://donejs.com)
-License Copyright:
-===
-
-The MIT License (MIT)
-
-Copyright (c) 2017 Bitovi
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----
-
-Name: can-reflect
-Version: 1.18.0
-License: null
-Private: false
-Description: reflection on unknown data types
-Repository: git://github.com/canjs/can-reflect.git
-Homepage: http://canjs.com
-Author: DoneJS core team <core@donejs.com> (http://donejs.com)
-License Copyright:
-===
-
-The MIT License (MIT)
-
-Copyright (c) 2017 Bitovi
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----
-
-Name: can-globals
-Version: 1.2.2
-License: MIT
-Private: false
-Description: This module provides a dependency injection container. Modules may define a key and specify a default value (which can be static, cached lazy, or dynamic lazy), but other code can set and reset the value as needed. There is also an event system, for alerting on value changes, both specific to a key and for any key.
-Repository: git+https://github.com/canjs/can-globals.git
-Homepage: https://github.com/canjs/can-globals#readme
-Author: Bitovi <contact@bitovi.com> (https://www.bitovi.com/)
-
----
-
-Name: can-parse-uri
-Version: 1.2.2
-License: null
-Private: false
-Description: Parse a URI into its components.
-Repository: git://github.com/canjs/can-parse-uri.git
-Homepage: https://canjs.com/
-Author: Bitovi <contact@bitovi.com> (https://www.bitovi.com/)
-License Copyright:
-===
-
-MIT License
-
-Copyright (c) 2017 CanJS
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
----
-
-Name: can-param
-Version: 1.1.2
-License: null
-Private: false
-Description: Serialize an array or object into a query string.
-Repository: git://github.com/canjs/can-param.git
-Homepage: https://canjs.com/doc/can-param.html
-Author: Bitovi <contact@bitovi.com> (https://www.bitovi.com/)
-License Copyright:
-===
-
-MIT License
-
-Copyright (c) 2017 [Bitovi](https://www.bitovi.com/)
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
----
-
-Name: can-ajax
-Version: 2.4.5
-License: MIT
-Private: false
-Description: jQuery-inspired AJAX request library.
-Repository: git://github.com/canjs/can-ajax.git
-Homepage: https://canjs.com/doc/can-ajax.html
-Author: Bitovi <contact@bitovi.com> (https://www.bitovi.com/)
-License Copyright:
-===
-
-MIT License
-
-Copyright (c) 2017 CanJS
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-
----
-
-Name: elm-pep
-Version: 1.0.6
-License: MPL-2.0
-Private: false
-Description: npm package for https://github.com/mpizenberg/elm-pep
-Repository: git://github.com/ahocevar/elm-pep.git
-Homepage: https://github.com/ahocevar/elm-pep#readme
-Author: Andreas Hocevar <andreas.hocevar@gmail.com>
-
----
-
-Name: ol-layerswitcher
-Version: 3.6.0
-License: MIT
-Private: false
-Description: Layer switcher control for OpenLayers
-Repository: git+https://github.com/walkermatt/ol-layerswitcher.git
-Homepage: https://github.com/walkermatt/ol-layerswitcher#readme
-Author: Matt Walker (http://longwayaround.org.uk)
+Description: Read/write IEEE754 floating point numbers from/to a Buffer or array-like object
+Repository: git://github.com/feross/ieee754.git
+Homepage: https://github.com/feross/ieee754#readme
+Author: Feross Aboukhadijeh <feross@feross.org> (http://feross.org)
 Contributors:
-  Thomas Gratier <thomas_gratier@yahoo.fr>
-  Poul Kjeldager Sørensen <pks@s-innovations.net>
-  Micho García <micho.garcia@geomati.co>
-  olivierdalang <olivier.dalang@gmail.com>
+  Romain Beauxis <toots@rastageeks.org>
+License Copyright:
+===
+
+Copyright 2008 Fair Oaks Labs, Inc.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+---
+
+Name: pbf
+Version: 3.2.1
+License: BSD-3-Clause
+Private: false
+Description: a low-level, lightweight protocol buffers implementation in JavaScript
+Repository: git+ssh://git@github.com/mapbox/pbf.git
+Homepage: https://github.com/mapbox/pbf
+Author: Konstantin Kaefer
+License Copyright:
+===
+
+Copyright (c) 2017, Mapbox
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of pbf nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 
 ---
 
@@ -768,166 +558,375 @@ License Copyright:
 
 ---
 
-Name: mapbox-to-css-font
-Version: 2.4.0
-License: BSD-2-Clause
-Private: false
-Description: Utility to convert Mapbox GL Style font names to CSS font definitions
-Repository: git://github.com/openlayers/mapbox-to-css-font.git
-Homepage: https://github.com/openlayers/mapbox-to-css-font#readme
-Author: Andreas Hocevar
-License Copyright:
-===
-
-Copyright 2016-present mapbox-to-css-font contributors
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
----
-
-Name: @mapbox/mapbox-gl-style-spec
-Version: 13.13.0
-License: ISC
-Private: false
-Description: a specification for mapbox gl styles
-Repository: git+ssh://git@github.com/mapbox/mapbox-gl-js.git
-Homepage: https://github.com/mapbox/mapbox-gl-js#readme
-Author: Mapbox
-
----
-
-Name: ol-mapbox-style
-Version: 6.1.1
-License: BSD-2-Clause
-Private: false
-Description: Create OpenLayers maps from Mapbox Style objects
-Repository: git://github.com/openlayers/ol-mapbox-style.git
-Homepage: https://github.com/openlayers/ol-mapbox-style#readme
-License Copyright:
-===
-
-Copyright 2016-present ol-mapbox-style contributors
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
----
-
-Name: webfont-matcher
-Version: 1.1.0
+Name: domurl
+Version: 2.3.4
 License: MIT
 Private: false
-Description: Tries to match your font to various webfont services and provide you with a link to use it
-Repository: git+https://github.com/csshat/webfont-matcher.git
-Homepage: https://github.com/csshat/webfont-matcher
-Author: Marek Hrabe <marekhrabe@abdoc.net> (https://github.com/marekhrabe)
-Contributors:
-  Tomas Hanacek <tomashanacek@avocode.com> (https://github.com/tomashanacek)
-
----
-
-Name: ieee754
-Version: 1.1.13
-License: BSD-3-Clause
-Private: false
-Description: Read/write IEEE754 floating point numbers from/to a Buffer or array-like object
-Repository: git://github.com/feross/ieee754.git
-Homepage: https://github.com/feross/ieee754#readme
-Author: Feross Aboukhadijeh <feross@feross.org> (http://feross.org)
-Contributors:
-  Romain Beauxis <toots@rastageeks.org>
+Description: Lightweight URL manipulation with JavaScript.
+Repository: git+https://github.com/Mikhus/domurl.git
+Homepage: https://github.com/Mikhus/jsurl
 License Copyright:
 ===
 
-Copyright 2008 Fair Oaks Labs, Inc.
+The MIT License (MIT)
 
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+Copyright (c) 2016 Mykhailo Stadnyk
 
-1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
 
-2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 ---
 
-Name: pbf
-Version: 3.2.1
-License: BSD-3-Clause
+Name: luxon
+Version: 1.24.1
+License: MIT
 Private: false
-Description: a low-level, lightweight protocol buffers implementation in JavaScript
-Repository: git+ssh://git@github.com/mapbox/pbf.git
-Homepage: https://github.com/mapbox/pbf
-Author: Konstantin Kaefer
+Description: Immutable date wrapper
+Repository: git+https://github.com/moment/luxon.git
+Homepage: https://github.com/moment/luxon#readme
+Author: Isaac Cambron
+
+---
+
+Name: rrule
+Version: 2.6.4
+License: SEE LICENSE IN LICENSE
+Private: false
+Description: JavaScript library for working with recurrence rules for calendar dates.
+Repository: git://github.com/jakubroztocil/rrule.git
+Homepage: http://jakubroztocil.github.io/rrule/
+Author: Jakub Roztocil, Lars Schöning, and David Golightly
+
+---
+
+Name: can-namespace
+Version: 1.0.0
+License: null
+Private: false
+Description: Namespace where can-* packages are registered
+Repository: git://github.com/canjs/can-namespace.git
+Homepage: http://canjs.com
+Author: Bitovi <contact@bitovi.com> (http://bitovi.com)
+
+---
+
+Name: can-symbol
+Version: 1.6.5
+License: null
+Private: false
+Description: Well known symbols used to detail how to operate on different objects
+Repository: git://github.com/canjs/can-symbol.git
+Homepage: http://canjs.com
+Author: Bitovi <core@donejs.com> (http://donejs.com)
 License Copyright:
 ===
 
-Copyright (c) 2017, Mapbox
-All rights reserved.
+The MIT License (MIT)
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+Copyright (c) 2017 Bitovi
 
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-* Neither the name of pbf nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+---
+
+Name: can-reflect
+Version: 1.18.0
+License: null
+Private: false
+Description: reflection on unknown data types
+Repository: git://github.com/canjs/can-reflect.git
+Homepage: http://canjs.com
+Author: DoneJS core team <core@donejs.com> (http://donejs.com)
+License Copyright:
+===
+
+The MIT License (MIT)
+
+Copyright (c) 2017 Bitovi
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+---
+
+Name: can-globals
+Version: 1.2.2
+License: MIT
+Private: false
+Description: This module provides a dependency injection container. Modules may define a key and specify a default value (which can be static, cached lazy, or dynamic lazy), but other code can set and reset the value as needed. There is also an event system, for alerting on value changes, both specific to a key and for any key.
+Repository: git+https://github.com/canjs/can-globals.git
+Homepage: https://github.com/canjs/can-globals#readme
+Author: Bitovi <contact@bitovi.com> (https://www.bitovi.com/)
+
+---
+
+Name: can-parse-uri
+Version: 1.2.2
+License: null
+Private: false
+Description: Parse a URI into its components.
+Repository: git://github.com/canjs/can-parse-uri.git
+Homepage: https://canjs.com/
+Author: Bitovi <contact@bitovi.com> (https://www.bitovi.com/)
+License Copyright:
+===
+
+MIT License
+
+Copyright (c) 2017 CanJS
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+---
+
+Name: can-param
+Version: 1.1.2
+License: null
+Private: false
+Description: Serialize an array or object into a query string.
+Repository: git://github.com/canjs/can-param.git
+Homepage: https://canjs.com/doc/can-param.html
+Author: Bitovi <contact@bitovi.com> (https://www.bitovi.com/)
+License Copyright:
+===
+
+MIT License
+
+Copyright (c) 2017 [Bitovi](https://www.bitovi.com/)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+---
+
+Name: can-ajax
+Version: 2.4.5
+License: MIT
+Private: false
+Description: jQuery-inspired AJAX request library.
+Repository: git://github.com/canjs/can-ajax.git
+Homepage: https://canjs.com/doc/can-ajax.html
+Author: Bitovi <contact@bitovi.com> (https://www.bitovi.com/)
+License Copyright:
+===
+
+MIT License
+
+Copyright (c) 2017 CanJS
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+---
+
+Name: ol-layerswitcher
+Version: 3.6.0
+License: MIT
+Private: false
+Description: Layer switcher control for OpenLayers
+Repository: git+https://github.com/walkermatt/ol-layerswitcher.git
+Homepage: https://github.com/walkermatt/ol-layerswitcher#readme
+Author: Matt Walker (http://longwayaround.org.uk)
+Contributors:
+  Thomas Gratier <thomas_gratier@yahoo.fr>
+  Poul Kjeldager Sørensen <pks@s-innovations.net>
+  Micho García <micho.garcia@geomati.co>
+  olivierdalang <olivier.dalang@gmail.com>
+
+---
+
+Name: empty-element
+Version: 1.0.0
+License: MIT
+Private: false
+Description: Empty a DOM element.
+Repository: git+https://github.com/goto-bus-stop/empty-element.git
+Homepage: https://github.com/goto-bus-stop/empty-element#readme
+Author: René Kooi <rene@kooi.me>
+License Copyright:
+===
+
+The MIT License (MIT)
+
+Copyright (c) 2014 René Kooi
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+
+---
+
+Name: good-listener
+Version: 1.2.2
+License: MIT
+Private: false
+Description: A more versatile way of adding & removing event listeners
+Repository: git+https://github.com/zenorocha/good-listener.git
+Homepage: https://github.com/zenorocha/good-listener#readme
+
+---
+
+Name: delegate
+Version: 3.2.0
+License: MIT
+Private: false
+Description: Lightweight event delegation
+Repository: git+https://github.com/zenorocha/delegate.git
+Homepage: https://github.com/zenorocha/delegate#readme
+
+---
+
+Name: element-resize-detector
+Version: 1.2.1
+License: MIT
+Private: false
+Description: Resize event emitter for elements.
+Repository: git://github.com/wnr/element-resize-detector.git
+Homepage: https://github.com/wnr/element-resize-detector
+License Copyright:
+===
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Lucas Wiener
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+---
+
+Name: batch-processor
+Version: 1.0.0
+License: MIT
+Private: false
+Description: Batch processing in JS
+Repository: git+https://github.com/wnr/batch-processor.git
+Homepage: https://github.com/wnr/batch-processor
+Author: Lucas Wiener
+License Copyright:
+===
+
+The MIT License (MIT)
+
+Copyright (c) 2015 Lucas Wiener
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

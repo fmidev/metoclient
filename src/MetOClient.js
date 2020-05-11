@@ -2,17 +2,18 @@
  * @module ol/metoclient/MetOClient
  */
 import { assign } from 'ol/obj';
-import { register } from 'ol/proj/proj4.js';
-import proj4 from 'proj4/dist/proj4.js';
+import { register } from 'ol/proj/proj4';
+import proj4 from 'proj4/dist/proj4';
+import olms from 'ol-mapbox-style';
 import { transform } from 'ol/proj';
+import ElementVisibilityWatcher from 'element-visibility-watcher';
 import {
   parseTimes,
   updateSourceTime,
   getSourceCapabilitiesUrl,
-} from './util.js';
+} from './utils';
 import BaseObject from 'ol/Object';
 import { unByKey } from 'ol/Observable';
-import * as constants from './constants';
 import { DateTime, Duration } from 'luxon';
 import ajax from 'can-ajax';
 import Map from 'ol/Map';
@@ -29,14 +30,11 @@ import KeyboardPan from 'ol/interaction/KeyboardPan';
 import KeyboardZoom from 'ol/interaction/KeyboardZoom';
 import MouseWheelZoom from 'ol/interaction/MouseWheelZoom';
 import Style from 'ol/style/Style';
-import ElementVisibilityWatcher from 'element-visibility-watcher';
-import olms from 'ol-mapbox-style';
 import * as constants from './constants';
 import CapabilitiesReader from './CapabilitiesReader';
 import SourceUpdater from './SourceUpdater';
 import LayerCreator from './LayerCreator';
 import TimeSlider from './TimeSlider';
-import { parseTimes, updateSourceTime } from './utils';
 
 /**
  * @classdesc
@@ -210,7 +208,7 @@ export class MetOClient extends BaseObject {
     const map = this.get('map');
     if (map != null) {
       const layers = map.getLayers().getArray();
-      layers.forEach(layer => {
+      layers.forEach((layer) => {
         const source = layer.getSource();
         const time = source.get(constants.TIME);
         if (time != null) {
@@ -433,7 +431,8 @@ export class MetOClient extends BaseObject {
 
   isAnimationLayer_(layer) {
     return (
-      layer.get('times') != null && !layer.get('id').startsWith(constants.METOCLIENT_PREFIX)
+      layer.get('times') != null &&
+      !layer.get('id').startsWith(constants.METOCLIENT_PREFIX)
     );
   }
 
@@ -583,9 +582,7 @@ export class MetOClient extends BaseObject {
    */
   setRelativesVisible_(layer, relative, visible) {
     const relativeLayerId = layer.get(relative);
-    const layers = this.get('map')
-      .getLayers()
-      .getArray();
+    const layers = this.get('map').getLayers().getArray();
     const relativeLayer =
       relativeLayerId != null && relativeLayerId.length > 0
         ? layers.find((layer) => layer.get('id') === relativeLayerId)
@@ -696,7 +693,9 @@ export class MetOClient extends BaseObject {
         if (time === this.config_.time) {
           const previousId = layer.get('previous');
           if (previousId != null && previousId.length > 0) {
-            const previous = layersArray.find((l) => l.get('id') === previousId);
+            const previous = layersArray.find(
+              (l) => l.get('id') === previousId
+            );
             const previousTimes = previous.get('times');
             if (!previousTimes.includes(this.config_.time)) {
               layers.item(index).setOpacity(opacity);
@@ -1219,7 +1218,7 @@ export class MetOClient extends BaseObject {
 
     const legendSelect = document.createElement('select');
     legendSelect.setAttribute('id', constants.LEGEND_CHOOSER_SELECT_ID);
-    Object.keys(this.legends_).forEach(key => {
+    Object.keys(this.legends_).forEach((key) => {
       const legendOption = document.createElement('option');
       legendOption.value = key;
       legendOption.text = this.legends_[key].title;
@@ -1271,7 +1270,7 @@ export class MetOClient extends BaseObject {
     // A workaround for https://github.com/walkermatt/ol-layerswitcher/issues/209
     if (layerSwitcherPanel != null) {
       this.layerSwitcherWatcher = new ElementVisibilityWatcher();
-      this.layerSwitcherWatcher.watch(layerSwitcherPanel, visible => {
+      this.layerSwitcherWatcher.watch(layerSwitcherPanel, (visible) => {
         if (visible) {
           this.createLegendChooser_();
         }
@@ -1686,7 +1685,7 @@ export class MetOClient extends BaseObject {
             if (time < 0) {
               if (historyData == null) {
                 historyData = parsedData
-                  .filter(t => t < currentTime)
+                  .filter((t) => t < currentTime)
                   .sort()
                   .reverse();
               }
@@ -1694,7 +1693,7 @@ export class MetOClient extends BaseObject {
               historyIndex += 1;
             } else {
               if (futureData == null) {
-                futureData = parsedData.filter(t => t >= currentTime).sort();
+                futureData = parsedData.filter((t) => t >= currentTime).sort();
               }
               times[index] = futureData[futureIndex];
               futureIndex += 1;
@@ -1792,7 +1791,7 @@ export class MetOClient extends BaseObject {
    * @returns {*}
    * @private
    */
-  getPrevTime_ () {
+  getPrevTime_() {
     const { time } = this.config_;
     const lastTimeIndex = this.times_.length - 1;
     let timeIndex;

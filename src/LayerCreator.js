@@ -5,7 +5,7 @@ import TileLayer from 'ol/layer/Tile';
 import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
 import SourceCreator from './SourceCreator';
-import { getBaseUrl, getAdjacentLayer, getLegendUrl  } from './utils';
+import { getBaseUrl, getAdjacentLayer, getLegendUrl } from './utils';
 import * as constants from './constants';
 
 /**
@@ -41,7 +41,7 @@ export default class LayerCreator {
     if (!serviceAvailable) {
       return null;
     }
-    const source = SourceCreator[service](options, layer, capabilities);
+    const source = SourceCreator[service](layer, options, capabilities);
     if (source == null) {
       return null;
     }
@@ -51,22 +51,17 @@ export default class LayerCreator {
       preload: 0,
       visible: layer.visible !== constants.NOT_VISIBLE,
       opacity: 0,
-      type:
-        layer.metadata && layer.metadata.type ? layer.metadata.type : '',
-      title:
-        layer.metadata && layer.metadata.title
-          ? layer.metadata.title
-          : '',
+      type: layer.metadata && layer.metadata.type ? layer.metadata.type : '',
+      title: layer.metadata && layer.metadata.title ? layer.metadata.title : '',
       previous: getAdjacentLayer('previous', layer, options.layers),
       next: getAdjacentLayer('next', layer, options.layers),
       legendTitle: layer.legendTitle,
       id: layer.id,
-      legendUrl: getLegendUrl(
-        layer.url.layers,
-        layer.url.styles,
-        capabilities
-      ),
-    })
+      legendUrl:
+        layer.url != null
+          ? getLegendUrl(layer.url.layers, layer.url.styles, capabilities)
+          : null,
+    });
   }
 
   /**

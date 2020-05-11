@@ -31,52 +31,52 @@ export default {
           '@babel/env',
           {
             targets: {
-              browsers: 'ie >= 11'
+              browsers: 'ie >= 11',
             },
             corejs: 3,
-            useBuiltIns: 'usage'
-          }
-        ]
+            useBuiltIns: 'usage',
+          },
+        ],
       ],
-      plugins: ['@babel/plugin-proposal-class-properties']
+      plugins: ['@babel/plugin-proposal-class-properties'],
     }),
     replace({
-      'process.env.NODE_ENV': JSON.stringify('production')
+      'process.env.NODE_ENV': JSON.stringify('production'),
     }),
     resolve({
-      preferBuiltins: true
+      preferBuiltins: true,
     }),
     commonjs(),
     terser({
-      keep_fnames: true
+      keep_fnames: true,
     }),
     versionInjector({
       injectInComments: {
         fileRegexp: /\.js$/,
         tag: 'MetOClient {version} - FMI - {date}',
-        dateFormat: 'longDate'
-      }
+        dateFormat: 'longDate',
+      },
     }),
     copy({
       targets: [
         {
           src: 'css',
-          dest: 'dist'
+          dest: 'dist',
         },
         {
           src: 'img',
-          dest: 'dist'
-        }
-      ]
+          dest: 'dist',
+        },
+      ],
     }),
     analyze({
-      summaryOnly: true
+      summaryOnly: true,
     }),
     license({
       thirdParty: {
         output: 'metoclient.licenses.txt',
-        includePrivate: true
-      }
-    })
-  ]
+        includePrivate: true,
+      },
+    }),
+  ],
 };

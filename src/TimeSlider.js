@@ -213,7 +213,7 @@ class TimeSlider extends Control {
       playButton.classList.add(constants.PLAYING_CLASS);
     }
     this.mouseListeners_.push(
-      listen(playButton, 'click', event => {
+      listen(playButton, 'click', (event) => {
         event.preventDefault();
         const map = this.getMap();
         map.set('playing', !map.get('playing'));
@@ -310,7 +310,7 @@ class TimeSlider extends Control {
       beginTime,
       endTime,
       type,
-      weight
+      weight,
     });
     let longClick;
     let longTap;
@@ -464,7 +464,7 @@ class TimeSlider extends Control {
       6 * constants.HOUR,
       8 * constants.HOUR,
       12 * constants.HOUR,
-      constants.DAY
+      constants.DAY,
     ];
     const numDiscreteSteps = discreteSteps.length;
     let minStep;
@@ -550,7 +550,7 @@ class TimeSlider extends Control {
       removeChildrenByClass(constants.FRAME_TICK_CLASS);
     };
 
-    this.frames_.forEach(frame => {
+    this.frames_.forEach((frame) => {
       clearFrame(frame);
 
       const textWrapperElement = document.createElement('div');
@@ -620,7 +620,7 @@ class TimeSlider extends Control {
     const newTextWidth = `${Math.round(maxTextWidth)}px`;
     Array.from(
       this.container_.getElementsByClassName(constants.FRAME_TEXT_WRAPPER_CLASS)
-    ).forEach(element => {
+    ).forEach((element) => {
       element.style.width = newTextWidth;
     });
 
@@ -668,8 +668,7 @@ class TimeSlider extends Control {
             self.previousTickTextBottom_ < clientRect.top ||
             self.previousTickTextTop_ > clientRect.bottom) &&
           (self.previousTickIndex_ == null ||
-            frame.endTime - frames[self.previousTickIndex_].endTime >=
-              minStep)
+            frame.endTime - frames[self.previousTickIndex_].endTime >= minStep)
         ) {
           createTick(frame, index, clientRect, frame.endTime);
         } else if (
@@ -678,22 +677,17 @@ class TimeSlider extends Control {
           frames[self.previousTickIndex_] != null &&
           ((minStep === 0 &&
             ((frame.endTime % constants.HOUR === 0 &&
-              frames[self.previousTickIndex_].endTime %
-                constants.HOUR !==
-                0) ||
+              frames[self.previousTickIndex_].endTime % constants.HOUR !== 0) ||
               (useTimeStep &&
                 (frame.endTime % constants.HOUR) % timeStep === 0 &&
-                (frames[self.previousTickIndex_].endTime %
-                  constants.HOUR) %
+                (frames[self.previousTickIndex_].endTime % constants.HOUR) %
                   timeStep !==
                   0) ||
               (frame.endTime % constants.HOUR === 0 &&
-                frames[self.previousTickIndex_].endTime %
-                  constants.HOUR ===
+                frames[self.previousTickIndex_].endTime % constants.HOUR ===
                   0 &&
-                DateTime.fromMillis(frame.endTime).setZone(
-                  self.get('timeZone')
-                ).hour %
+                DateTime.fromMillis(frame.endTime).setZone(self.get('timeZone'))
+                  .hour %
                   2 ===
                   0 &&
                 DateTime.fromMillis(
@@ -705,11 +699,9 @@ class TimeSlider extends Control {
             frame.useDateFormat ||
             (minStep > 0 &&
               ((minStep >= constants.HOUR &&
-                frames[self.previousTickIndex_].endTime %
-                  constants.HOUR !==
+                frames[self.previousTickIndex_].endTime % constants.HOUR !==
                   0) ||
-                (frames[self.previousTickIndex_].endTime %
-                  constants.HOUR) %
+                (frames[self.previousTickIndex_].endTime % constants.HOUR) %
                   minStep !==
                   0 ||
                 (divisibleDays &&
@@ -820,7 +812,7 @@ class TimeSlider extends Control {
         this.frames_[currentIndex].element.getElementsByClassName(
           constants.INDICATOR_CLASS
         )
-      ).forEach(indicatorElement => {
+      ).forEach((indicatorElement) => {
         if (
           indicatorElement.getAttribute(constants.DATA_STATUS_ATTRIBUTE) ===
           constants.DATA_STATUS_WORKING
@@ -833,7 +825,7 @@ class TimeSlider extends Control {
           this.frames_[nextIndex].element.getElementsByClassName(
             constants.INDICATOR_CLASS
           )
-        ).forEach(indicatorElement => {
+        ).forEach((indicatorElement) => {
           if (
             indicatorElement.getAttribute(constants.DATA_STATUS_ATTRIBUTE) ===
             constants.DATA_STATUS_WORKING
@@ -889,7 +881,7 @@ class TimeSlider extends Control {
           this.interactions_.getElementsByClassName(
             constants.POINTER_TEXT_CLASS
           )
-        ).forEach(textElement => {
+        ).forEach((textElement) => {
           textElement.innerHTML = tickText;
         });
         Array.from(
@@ -939,7 +931,7 @@ class TimeSlider extends Control {
     this.frames_.forEach((frame) => {
       Array.from(
         frame.element.getElementsByClassName(constants.INDICATOR_CLASS)
-      ).forEach(indicatorElement => {
+      ).forEach((indicatorElement) => {
         let numIntervals;
         let time;
         let elementTime;
@@ -999,7 +991,7 @@ class TimeSlider extends Control {
     const display = dragging ? 'block' : 'none';
     Array.from(
       this.container_.getElementsByClassName(constants.POINTER_INFOTIP_CLASS)
-    ).forEach(element => {
+    ).forEach((element) => {
       element.style.display = display;
     });
   }

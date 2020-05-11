@@ -4,10 +4,9 @@ fetch('./config.json').then(response => {
   return response.json();
 }).then((options) => {
   const metoclient = new MetOClient(options);
-  metoclient.render().then(function () {
-    // OpenLayers 6 map can be utilized
-    let map = metoclient.get('map');
-    // Play the animation
+  metoclient.render().then(function (map) {
+    // OpenLayers 6 map can be utilized.
+    // Play the animation.
     metoclient.play({
       delay: 1000,
       time: Date.now()

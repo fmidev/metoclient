@@ -22,7 +22,7 @@ The following code introduces MetOClient's basic usage in a modern environment. 
 import MetOClient from '@fmidev/metoclient';
 
 const metoclient = new MetOClient(options);
-metoclient.render().then(function () {
+metoclient.render().then(function (map) {
   metoclient.play({
     delay: 1000,
     time: Date.now()
@@ -46,8 +46,7 @@ The following code demonstrates initialization of the built MetOClient package a
 
 ```js
 var metoclient = new fmi.metoclient.MetOClient(options)
-metoclient.render().then(function () {
-  var map = metoclient.get('map');
+metoclient.render().then(function (map) {
   map.addControl(new ol.control.FullScreen());
 })
 ```

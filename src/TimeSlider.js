@@ -2,7 +2,6 @@
  * @module ol/metoclient/TimeSlider
  */
 
-import empty from 'empty-element';
 import listen from 'good-listener';
 import elementResizeDetectorMaker from 'element-resize-detector';
 import TimeFrame from './TimeFrame';
@@ -29,7 +28,6 @@ class TimeSlider extends Control {
     });
     this.container_ = element;
     this.config_ = options;
-    this.callbacks_ = options.callbacks;
     this.enableMouseWheel_ = options.enableMouseWheel;
     this.interactions_ = null;
     this.playButton_ = null;
@@ -271,7 +269,10 @@ class TimeSlider extends Control {
     const framesContainer = this.container_.getElementsByClassName(
       constants.FRAMES_CONTAINER_CLASS
     )[0];
-    empty(framesContainer);
+    let node;
+    while ((node = framesContainer.lastChild)) {
+      framesContainer.removeChild(node);
+    }
     if (numMoments < 2) {
       return;
     }
@@ -1011,15 +1012,6 @@ class TimeSlider extends Control {
   }
 
   /**
-   * Sets callbacks.
-   *
-   * @param {object=} callbacks Callback functions for time events.
-   */
-  setCallbacks(callbacks) {
-    this.callbacks_ = callbacks;
-  }
-
-  /**
    * Return information if meteorological optimizations are enabled.
    * @returns {boolean} Meteorological mode status.
    */
@@ -1097,6 +1089,10 @@ class TimeSlider extends Control {
     };
   }
 
+  getClock() {
+    return this.getTickText(this.getMap().get('time'), false).content;
+  }
+
   /**
    * Clears time slider configurations.
    */
@@ -1117,7 +1113,7 @@ class TimeSlider extends Control {
       mouseListener.destroy();
     });
     this.resizeDetector.removeAllListeners(this.container_);
-    empty(this.container_);
+    this.container_.removeChild(this.container_.lastChild);
     this.frames_ = [];
   }
 

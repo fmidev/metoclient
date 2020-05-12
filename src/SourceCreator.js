@@ -56,6 +56,7 @@ export default class SourceCreator {
       }),
       transition: 0,
     });
+    olSource.set('metoclient:olClassName', 'TileWMS');
     if (timeDefined) {
       olSource.set('metoclient:time', options.time);
     }
@@ -93,6 +94,7 @@ export default class SourceCreator {
     }
     sourceOptions.transition = 0;
     const olSource = new WMTS(sourceOptions);
+    olSource.set('metoclient:olClassName', 'WMTS');
     if (timeDefined != null) {
       olSource.set('metoclient:time', options.time);
     }

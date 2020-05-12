@@ -52,7 +52,7 @@ export class MetOClient extends BaseObject {
     register(proj4);
     this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
     if (options.target == null && options.container != null) {
-      this.config_.target = options.container;
+      this.config_.target = this.config_.container;
     }
     this.set('options', options, true);
     this.set('map', null);
@@ -91,8 +91,9 @@ export class MetOClient extends BaseObject {
     this.layerListeners_ = [];
     this.sourceListeners_ = [];
     this.optionsListener_ = this.on('change:options', (event) => {
-      this.config_ = assign({}, constants.DEFAULT_OPTIONS, this.get('options'));
-      if (this.config_.target == null && this.config_.container != null) {
+      const options = this.get('options');
+      this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
+      if (options.target == null && options.container != null) {
         this.config_.target = this.config_.container;
       }
       this.refresh_();
@@ -616,13 +617,13 @@ export class MetOClient extends BaseObject {
     );
     const lastVisibleBaseMapIndex = baseMapConfigs.reduce(
       (prevVisibleBaseMapIndex, baseMapConfig, index) =>
-        baseMapConfig.visible === constants.VISIBLE
+        baseMapConfig.visibility === constants.VISIBLE
           ? index
           : prevVisibleBaseMapIndex,
       baseMapConfigs.length - 1
     );
     baseMapConfigs.forEach((baseMapConfig, index) => {
-      baseMapConfig.visible =
+      baseMapConfig.visibility =
         index === lastVisibleBaseMapIndex
           ? constants.VISIBLE
           : constants.NOT_VISIBLE;
@@ -897,7 +898,7 @@ export class MetOClient extends BaseObject {
             const prevSource = prevLayer.getSource();
             if (prevSource.get(constants.TIME) !== layerPrevTime) {
               MetOClient.hideLayer_(prevLayer);
-              SourceUpdater[prevSource.constructor.name](
+              SourceUpdater[prevSource.get('metoclient:olClassName')](
                 prevSource,
                 layerPrevTime
               );
@@ -923,7 +924,7 @@ export class MetOClient extends BaseObject {
             const nextSource = nextLayer.getSource();
             if (nextSource.get(constants.TIME) !== layerNextTime) {
               MetOClient.hideLayer_(nextLayer);
-              SourceUpdater[nextSource.constructor.name](
+              SourceUpdater[nextSource.get('metoclient:olClassName')](
                 nextSource,
                 layerNextTime
               );
@@ -959,9 +960,7 @@ export class MetOClient extends BaseObject {
     return controls
       .getArray()
       .find(
-        (control) =>
-          control.constructor != null &&
-          control.constructor.name === 'LayerSwitcher'
+        (control) => control.get('metoclient:olClassName') === 'LayerSwitcher'
       );
   }
 
@@ -1157,14 +1156,17 @@ export class MetOClient extends BaseObject {
                 return;
               }
               this.useNextLayer_(layer, prevLayer, nextLayer);
-              SourceUpdater[nextSource.constructor.name](
+              SourceUpdater[nextSource.get('metoclient:olClassName')](
                 nextSource,
                 visibleTime
               );
               return;
             }
           }
-          SourceUpdater[source.constructor.name](source, this.config_.time);
+          SourceUpdater[source.get('metoclient:olClassName')](
+            source,
+            this.config_.time
+          );
         }
       });
     this.renderComplete_ = false;
@@ -1339,11 +1341,11 @@ export class MetOClient extends BaseObject {
   initMap_(map) {
     this.set('map', map);
     if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
-      map.addControl(
-        new LayerSwitcher({
-          tipLabel: this.config_.texts['Layer Switcher'],
-        })
-      );
+      const layerSwitcher = new LayerSwitcher({
+        tipLabel: this.config_.texts['Layer Switcher'],
+      });
+      layerSwitcher.set('metoclient:olClassName', 'LayerSwitcher');
+      map.addControl(layerSwitcher);
       const layerSwitcherContainer = document.querySelector(
         `div#${this.config_.target} div.layer-switcher`
       );

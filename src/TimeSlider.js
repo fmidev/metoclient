@@ -1,15 +1,17 @@
 /**
  * @module ol/metoclient/TimeSlider
  */
-
 import listen from 'good-listener';
 import elementResizeDetectorMaker from 'element-resize-detector';
-import TimeFrame from './TimeFrame';
-import * as constants from './constants';
+import { unByKey } from 'ol/Observable';
 import { DateTime } from 'luxon';
 import Control from 'ol/control/Control';
-import { unByKey } from 'ol/Observable';
+import TimeFrame from './TimeFrame';
+import * as constants from './constants';
 
+/**
+ *
+ */
 class TimeSlider extends Control {
   /**
    * Creates an instance of TimeSlider.
@@ -273,6 +275,7 @@ class TimeSlider extends Control {
     while ((node = framesContainer.lastChild)) {
       framesContainer.removeChild(node);
     }
+    this.frames_ = [];
     if (numMoments < 2) {
       return;
     }
@@ -927,7 +930,12 @@ class TimeSlider extends Control {
       for (i = 0; i < numIntervals; i += 1) {
         moments.push(numIntervalItems[i].endTime);
       }
-      this.createTimeSlider(moments);
+      this.createFrames(moments);
+      this.createIndicators();
+      this.createTicks();
+      if (this.getMap().get('time') != null) {
+        this.updatePointer(this.getMap().get('time'), true);
+      }
     }
     this.frames_.forEach((frame) => {
       Array.from(
@@ -1113,7 +1121,9 @@ class TimeSlider extends Control {
       mouseListener.destroy();
     });
     this.resizeDetector.removeAllListeners(this.container_);
-    this.container_.removeChild(this.container_.lastChild);
+    if (this.container_ != null && this.container_.lastChild != null) {
+      this.container_.removeChild(this.container_.lastChild);
+    }
     this.frames_ = [];
   }
 

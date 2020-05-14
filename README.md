@@ -53,7 +53,7 @@ metoclient.render().then(function (map) {
 
 #### Examples
 
-For fully working examples see the [examples](examples) directory. [The tiled example](examples/tiled) demonstrates the application of the Rollup module bundler while [the legacy example](examples/legacy) uses a traditional full build of the library.
+For fully working examples see the [examples](examples) directory. [The legacy example](examples/legacy) uses a traditional full build of the library.
 
 ## Animation API
 
@@ -523,6 +523,96 @@ The time slider is a custom OpenLayers component provided by MetOClient to visua
 -   Long click and double click will immediately move the time to the clicked time.
 -   As a default, time points are matched by a previous interval, so clicking for example the interval between 8:00 and 9:00 will move current time to 9:00.
 
+#### Styling the time slider
+
+The [examples](examples) contain several suitable CSS styles for the time slider to be adopted and adjusted. In addition, the following is a list of CSS selectors to define a custom style for the component. The corresponding HTML elements are visualized in the examples below.
+
+1. div.fmi-metoclient-timeslider
+
+2. div.fmi-metoclient-timeslider.rotated
+
+3. div.fmi-metoclient-timeslider-clickable-container
+
+4. div.fmi-metoclient-timeslider-pre-margin
+
+5. div.fmi-metoclient-timeslider-pre-tools
+
+6. div.fmi-metoclient-timeslider-play-button
+
+7. div.fmi-metoclient-timeslider-play-button:hover
+
+8. div.fmi-metoclient-timeslider-play-button.playing
+
+9. div.fmi-metoclient-timeslider-frames-container
+
+10. div.fmi-metoclient-timeslider-frame
+
+11. div.fmi-metoclient-timeslider-frame.history
+
+12. div.fmi-metoclient-timeslider-frame.future
+
+13. div.fmi-metoclient-timeslider-indicator
+
+14. div.fmi-metoclient-timeslider-indicator.first
+
+15. div.fmi-metoclient-timeslider-indicator.last
+
+16. div.fmi-metoclient-timeslider-indicator[data-status='working']
+
+17. .history > div.fmi-metoclient-timeslider-indicator[data-status='success']
+
+18. .future > div.fmi-metoclient-timeslider-indicator[data-status='success']
+
+19. div.fmi-metoclient-timeslider-indicator[data-status='error']
+
+20. div.fmi-metoclient-timeslider-frame-tick
+
+21. div.fmi-metoclient-timeslider-frame-text-wrapper
+
+22. div.fmi-metoclient-timeslider-post-tools
+
+23. div.fmi-metoclient-timeslider-step-button
+
+24. div.fmi-metoclient-timeslider-step-button:hover
+
+25. div.fmi-metoclient-timeslider-post-margin
+
+26. div.fmi-metoclient-timeslider-pointer
+
+27. div.fmi-metoclient-timeslider-pointer-wrapper
+
+28. div.fmi-metoclient-timeslider-pointer-wrapper:after
+
+29. div.fmi-metoclient-timeslider-pointer-wrapper:before
+
+30. div.fmi-metoclient-timeslider-pointer-wrapper:after
+
+31. div.fmi-metoclient-timeslider-pointer-wrapper:before
+
+32. div.fmi-metoclient-timeslider-pointer-handle
+
+33. span.fmi-metoclient-timeslider-pointer-text
+
+34. div.fmi-metoclient-timeslider-drag-listener
+
+##### Pointer below the time line
+
+![timeslider1](./doc/timeslider1.png)
+
+![timeslider1_plain](./doc/timeslider1_plain.png)
+
+##### Draggable circle inside the time line
+
+![timeslider2](./doc/timeslider2.png)
+
+![timeslider2_plain](./doc/timeslider2_plain.png)
+
+##### Vertical time line
+
+![timeslider3](./doc/timeslider3.png)
+
+![timeslider3_palin](./doc/timeslider3_plain.png)
+
 ### Zoom
 
 Zoom is a default OpenLayers [zoom control](https://openlayers.org/en/latest/apidoc/module-ol_control_Zoom-Zoom.html) to zoom in and out on the map.
@@ -533,7 +623,10 @@ After visualizing data for the current time step, MetOClient will load data to m
 
 ## Supported Browsers
 
-All the new versions of the major browsers are supported, including desktop versions of Chrome, Firefox, Safari and Edge and mobile versions of Chrome and Safari. Also Internet Explorer 11 is supported but polyfills are needed for promises and Intl API, see [the legacy example](examples/legacy/index.html) .
+All the new versions of the major browsers are supported, including desktop versions of Chrome, Firefox, Safari and Edge and mobile versions of Chrome and Safari. Also Internet Explorer 11 is supported but polyfills are needed for promises and Intl API, see [the legacy example](examples/legacy/index.html).
+
+## Keyboard support
+MetOClient supports keyboard navigation. UI element selection is made by the Tab key which moves from element to element from left to right and from up to down. Moving backward is Shift+Tab. Selection is made by pressing either Enter or Space key. Keyboard support is always on.
 
 ## Abbreviation
 

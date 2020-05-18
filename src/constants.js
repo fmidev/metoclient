@@ -113,3 +113,6 @@ export const TAG_RENDER_IMMEDIATELY = 'render immediately';
 export const BASE_MAP = 'base';
 export const VISIBLE = 'visible';
 export const NOT_VISIBLE = 'none';
+export const ROTATED = 'rotated';
+export const HORIZONTAL = 'horizontal';
+export const VERTICAL = 'vertical';

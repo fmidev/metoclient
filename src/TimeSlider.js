@@ -406,12 +406,32 @@ class TimeSlider extends Control {
           return;
         }
         let currentTimeFrame;
-        const touchX = event.changedTouches[0].clientX;
         const numFrames = this.frames_.length;
         let rect;
+        const orientation = !this.container_.classList.contains(
+          constants.ROTATED
+        )
+          ? constants.HORIZONTAL
+          : constants.VERTICAL;
+        const geom = {
+          [constants.HORIZONTAL]: {
+            coord: 'clientX',
+            min: 'left',
+            max: 'right',
+          },
+          [constants.VERTICAL]: {
+            coord: 'clientY',
+            min: 'top',
+            max: 'bottom',
+          },
+        };
+        const touchCoord = event.changedTouches[0][geom[orientation].coord];
         for (let i = 0; i < numFrames; i += 1) {
           rect = this.frames_[i].element.getBoundingClientRect();
-          if (rect.left <= touchX && touchX <= rect.right) {
+          if (
+            rect[geom[orientation].min] <= touchCoord &&
+            touchCoord <= rect[geom[orientation].max]
+          ) {
             currentTimeFrame = this.frames_[i];
             break;
           }
@@ -926,6 +946,7 @@ class TimeSlider extends Control {
         }
       }
     }
+    this.container_.style.display = numIntervals > 0 ? 'block' : 'none';
     if (creationNeeded) {
       for (i = 0; i < numIntervals; i += 1) {
         moments.push(numIntervalItems[i].endTime);
@@ -1042,7 +1063,7 @@ class TimeSlider extends Control {
     let zPrevTime;
     let currentMoment;
     const format = 'HH:mm';
-    const dateFormat = ' d.M.';
+    const dateFormat = String.fromCharCode(160) + 'd.M.';
     let useDateFormat = false;
     const beginTime =
       this.frames_.length > 0

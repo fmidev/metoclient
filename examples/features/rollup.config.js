@@ -9,14 +9,14 @@ export default {
   output: [
     {
       file: 'example.min.js',
-      format: 'iife'
-    }
+      format: 'iife',
+    },
   ],
   plugins: [
     node(),
     cjs(),
-    production && terser({
-      keep_fnames: true
-    })
-  ]
+    //    production && terser({
+    //      keep_fnames: true
+    //    })
+  ],
 };

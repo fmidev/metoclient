@@ -1,24 +1,40 @@
+/**
+ *
+ */
 export default class SourceUpdater {
+  /**
+   *
+   * @param source
+   * @param time
+   * @constructor
+   */
   static TileWMS(source, time) {
     if (time == null) {
       return;
     }
-    let timeFormatted = new Date(time).toISOString();
+    const timeFormatted = new Date(time).toISOString();
     source.set('metoclient:time', time);
     source.updateParams({
       TIME: timeFormatted,
     });
     source.refresh();
   }
+
+  /**
+   *
+   * @param source
+   * @param time
+   * @constructor
+   */
   static WMTS(source, time) {
     // Use same time formatter in TileWMS and WMTS
     if (time == null) {
       return;
     }
-    let timeFormatted = new Date(time).toISOString();
+    const timeFormatted = new Date(time).toISOString();
     source.set('metoclient:time', time);
-    source.setTileLoadFunction(function (imageTile, src) {
-      imageTile.getImage().src = src + '&Time=' + timeFormatted;
+    source.setTileLoadFunction((imageTile, src) => {
+      imageTile.getImage().src = `${src}&Time=${timeFormatted}`;
     });
   }
 }

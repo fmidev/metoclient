@@ -6,7 +6,7 @@
     6671437
   ],
   "zoom": 3,
-  "container": "map",
+  "target": "map",
   "projection": "EPSG:3067",
   "refreshInterval": "PT15M",
   "timeZone": "Europe/Helsinki",

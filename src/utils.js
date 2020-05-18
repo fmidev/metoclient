@@ -1,33 +1,59 @@
 /**
- * @module ol/metoclient/util
+ * Utils module.
+ *
+ * @module utils
  */
 import Url from 'domurl';
 import { Duration, DateTime } from 'luxon';
-import { default as RRule } from 'rrule/dist/es5/rrule';
+import RRule from 'rrule/dist/es5/rrule';
 import * as constants from './constants';
 
 /**
- * Floors time based on the given resolution.
+ * Floor time based on the given resolution.
+ *
  * @param {number} time Original timestamp (ms).
  * @param {number} resolution Flooring resolution (ms).
- * @return {number} Floored timestamp (ms).
- * @api
+ * @returns {number} Floored timestamp (ms).
  */
 export function floorTime(time, resolution) {
   return Math.floor(time / resolution) * resolution;
 }
 
 /**
- * isValidDate
- * @param {Date} d Date
- * @returns {boolean}
- * @api
+ * Validate date.
+ *
+ * @param {Date} d The date to be validated.
+ * @returns {boolean} Validation result.
  */
 export function isValidDate(d) {
-  return d instanceof Date && !isNaN(d);
+  return d instanceof Date && !Number.isNaN(d.getTime());
 }
 
-// Todo: refactor long function
+/**
+ * Update time array with time points of another array.
+ *
+ * @param {Array} times Array of time points to be updated.
+ * @param {Array} newTimes Array of new time points.
+ * @returns {Array} Updated time array.
+ */
+export function addNewTimes(times, newTimes) {
+  const updatedTimes = [...times];
+  newTimes.forEach((newTime) => {
+    if (!updatedTimes.includes(newTime)) {
+      updatedTimes.push(newTime);
+    }
+  });
+  return updatedTimes;
+}
+
+/**
+ * Parse time point input.
+ *
+ * @param {} timeInput
+ * @param timeOffset
+ * @param timeData
+ * @returns {}
+ */
 export function parseTimes(timeInput, timeOffset, timeData = null) {
   const DATE_TYPE = 'date';
   const DURATION_TYPE = 'period';
@@ -40,14 +66,10 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
     times = timeInput.map((date) => new Date(date).getTime());
   } else if (typeof timeInput === 'object') {
     const rule = new RRule(timeInput);
-    let ruleTimes = rule
+    const ruleTimes = rule
       .all()
       .map((date) => DateTime.fromJSDate(date).toUTC().valueOf());
-    ruleTimes.forEach((ruleTime) => {
-      if (!times.includes(ruleTime)) {
-        times.push(ruleTime);
-      }
-    });
+    times = addNewTimes(times, ruleTimes);
   } else if (timeInput.includes(',')) {
     const dates = timeInput.split(',');
     times = dates.map((date) => new Date(date.trim()).getTime());
@@ -79,31 +101,30 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
         };
       }
     });
-    if (parsedParts.length === 2) {
-    } else if (parsedParts.length === 3) {
-      if (
-        parsedParts[0].type === DATE_TYPE &&
-        parsedParts[1].type === DATE_TYPE &&
-        parsedParts[2].type === DURATION_TYPE
-      ) {
-        const duration = Duration.fromObject(parsedParts[2].value).as(
-          'milliseconds'
-        );
-        let i = 0;
-        let moment = parsedParts[0].value;
-        while (moment <= parsedParts[1].value) {
-          times.push(moment);
-          i++;
-          moment = parsedParts[0].value + i * duration;
-        }
+    // Todo: if (parsedParts.length === 2) {} else
+    if (
+      parsedParts.length === 3 &&
+      parsedParts[0].type === DATE_TYPE &&
+      parsedParts[1].type === DATE_TYPE &&
+      parsedParts[2].type === DURATION_TYPE
+    ) {
+      const duration = Duration.fromObject(parsedParts[2].value).as(
+        'milliseconds'
+      );
+      let i = 0;
+      let moment = parsedParts[0].value;
+      while (moment <= parsedParts[1].value) {
+        times.push(moment);
+        i += 1;
+        moment = parsedParts[0].value + i * duration;
       }
     }
   } else {
-    let texts = timeInput.toLowerCase().split(' and ');
+    const texts = timeInput.toLowerCase().split(' and ');
     texts
       .map((text) => text.trim())
       .forEach((text) => {
-        let dataSteps = text.startsWith('data');
+        const dataSteps = text.startsWith('data');
         if (dataSteps) {
           text = text.replace('data', 'every');
         }
@@ -111,7 +132,7 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
         const parts = text.split(' ');
         if (parts.length >= 2) {
           const numTimes = Number(parts[0]);
-          if (!isNaN(numTimes) && parts[1].trim() === 'times') {
+          if (!Number.isNaN(numTimes) && parts[1].trim() === 'times') {
             times = times.concat(
               Array(numTimes).fill(
                 parts.length >= 3 && parts[2] === 'history'
@@ -130,7 +151,7 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
         try {
           rule = RRule.fromText(text);
         } catch (err) {
-          return [];
+          return;
         }
         if (!dataSteps) {
           if (rule.options.freq === RRule.HOURLY) {
@@ -151,9 +172,9 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
         if (timeOffset != null) {
           let start = DateTime.fromJSDate(rule.options.dtstart);
           if (start != null) {
-            let offset = Duration.fromISO(timeOffset);
-            if (offset != null) {
-              start = start.plus(offset);
+            const offsetDuration = Duration.fromISO(timeOffset);
+            if (offsetDuration != null) {
+              start = start.plus(offsetDuration);
               if (start != null) {
                 rule.options.dtstart = start.toJSDate();
               }
@@ -165,12 +186,12 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
           .map((date) => DateTime.fromJSDate(date).toUTC().valueOf());
         let offset;
         if (history) {
-          let lastTimeStepIndex = ruleTimes.length - 1;
+          const lastTimeStepIndex = ruleTimes.length - 1;
           if (lastTimeStepIndex === 0) {
-            let tmpOptions = { ...rule.options };
+            const tmpOptions = { ...rule.options };
             tmpOptions.count = 2;
-            let tmpRule = new RRule(tmpOptions);
-            let tmpRuleTimes = tmpRule.all();
+            const tmpRule = new RRule(tmpOptions);
+            const tmpRuleTimes = tmpRule.all();
             offset = tmpRuleTimes[1] - tmpRuleTimes[0];
           } else {
             offset =
@@ -192,11 +213,7 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
             }
           });
         } else {
-          ruleTimes.forEach((ruleTime) => {
-            if (!times.includes(ruleTime)) {
-              times.push(ruleTime);
-            }
-          });
+          times = addNewTimes(times, ruleTimes);
         }
       });
   }
@@ -205,18 +222,18 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
 }
 
 /**
- *
+ * @param tiles
  * @param newTime
  */
 export function updateSourceTime(tiles, newTime) {
   return tiles.map((tile) => {
     const url = new Url(tile);
     let timeKey = 'time';
-    for (let p in url.query) {
-      if (url.query.hasOwnProperty(p) && p.toLocaleLowerCase() === 'time') {
-        timeKey = p;
+    Object.keys(url.query).forEach((key) => {
+      if (key.toLocaleLowerCase() === 'time') {
+        timeKey = key;
       }
-    }
+    });
     if (newTime != null) {
       url.query[timeKey] =
         typeof newTime === 'number' ? new Date(newTime).toISOString() : newTime;
@@ -229,44 +246,67 @@ export function updateSourceTime(tiles, newTime) {
 
 /**
  * Url
+ *
  * @param {string} baseUrl baseUrl
  * @param {string} params params
  * @returns {string} url
- * @api
  */
 export function stringifyUrl(baseUrl, params) {
   return Object.keys(params).reduce(
     (joined, paramKey, index) =>
-      joined +
-      (index > 0 ? '&' : '') +
-      paramKey +
-      '=' +
-      (typeof params[paramKey] === 'string' &&
-      params[paramKey].match(/{([^}]+)}/g) === null
-        ? encodeURIComponent(params[paramKey])
-        : params[paramKey]),
-    baseUrl.trim() + '?'
+      `${joined + (index > 0 ? '&' : '') + paramKey}=${
+        typeof params[paramKey] === 'string' &&
+        params[paramKey].match(/{([^}]+)}/g) === null
+          ? encodeURIComponent(params[paramKey])
+          : params[paramKey]
+      }`,
+    `${baseUrl.trim()}?`
   );
 }
 
 /**
  * createInterval
+ *
  * @param {string} start start
  * @param {string} end end
  * @param {string} period period
- * @api
  */
 export function createInterval(start, end, period) {
-  return start + '/' + end + '/' + period;
+  return `${start}/${end}/${period}`;
 }
 
 /**
  *
+ *
  * @param url
- * @returns {*|string}
+ * @returns {string}
  */
 export function getBaseUrl(url) {
   return url.split(/[?#]/)[0];
+}
+
+/**
+ *
+ *
+ * @param direction
+ * @param layer
+ * @param layers
+ */
+export function getAdjacentLayer(direction, layer, layers) {
+  const directions = ['previous', 'next'];
+  const directionIndex = directions.indexOf(direction);
+  if (directionIndex < 0) {
+    return null;
+  }
+  if (layer[direction] != null) {
+    return layer[direction];
+  }
+  const opposite = directions[(directionIndex + 1) % 2];
+  const adjacentLayer = layers.find((l) => l[opposite] === layer.id);
+  if (adjacentLayer == null) {
+    return null;
+  }
+  return adjacentLayer.id;
 }
 
 /**

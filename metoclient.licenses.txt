@@ -77,7 +77,7 @@ Homepage: https://openlayers.org/
 ---
 
 Name: proj4
-Version: 2.6.1
+Version: 2.6.2
 License: MIT
 Private: false
 Description: Proj4js is a JavaScript library to transform point coordinates from one coordinate system to another, including datum transformations.
@@ -755,7 +755,7 @@ SOFTWARE.
 ---
 
 Name: can-ajax
-Version: 2.4.5
+Version: 2.4.6
 License: MIT
 Private: false
 Description: jQuery-inspired AJAX request library.

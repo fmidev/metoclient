@@ -37,6 +37,7 @@ export default {
             useBuiltIns: 'usage',
           },
         ],
+        '@babel/preset-flow',
       ],
       plugins: ['@babel/plugin-proposal-class-properties'],
     }),

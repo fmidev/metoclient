@@ -5,11 +5,11 @@ fmi.config.metoclient = {
   minZoom: 1,
   maxZoom: 10,
   center: [
-    385956,
-    6671437
+    400000,
+    6700000
   ],
-  zoom: 3,
-  container: 'map',
+  zoom: 2,
+  target: 'map',
   projection: 'EPSG:3067',
   refreshInterval: 'PT15M',
   timeZone: 'Europe/Helsinki',
@@ -22,20 +22,6 @@ fmi.config.metoclient = {
   sources: {
     osm: {
       type: 'OSM'
-    },
-    'osm-wmts': {
-      type: 'raster',
-      tiles: [
-        'https://avaa.tdata.fi/geoserver/osm_finland/gwc/service/wmts'
-      ],
-      bounds: [
-        -1214975,
-        6518785,
-        1179690,
-        7850125
-      ],
-      tileSize: 1024,
-      capabilities: 'osm-getcapabilities.xml'
     },
     openwms: {
       type: 'raster',
@@ -55,27 +41,10 @@ fmi.config.metoclient = {
     {
       id: 'basic-map',
       source: 'osm',
+      visibility: 'visible',
       metadata: {
         type: 'base',
         title: 'OpenStreetMap'
-      }
-    },
-    {
-      id: 'basic-map-wmts',
-      type: 'raster',
-      source: 'osm-wmts',
-      metadata: {
-        type: 'base',
-        title: 'OpenStreetMap WMTS'
-      },
-      url: {
-        service: 'WMTS',
-        layer: 'osm_finland:osm-finland',
-        tilematrixset: 'ETRS-TM35FIN-FINLAND',
-        style: '',
-        request: 'GetTile',
-        version: '1.0.0',
-        format: 'image/png'
       }
     },
     {

@@ -123,10 +123,8 @@ class TimeSlider extends Control {
     const clickableContainer = document.createElement('div');
     clickableContainer.classList.add(constants.CLICKABLE_CLASS);
 
-    if (moments.length > 0) {
-      clickableContainer.appendChild(this.createPreMargin());
-      clickableContainer.appendChild(this.createPreTools());
-    }
+    clickableContainer.appendChild(this.createPreMargin());
+    clickableContainer.appendChild(this.createPreTools());
 
     const momentsContainer = document.createElement('div');
     momentsContainer.classList.add(constants.FRAMES_CONTAINER_CLASS);

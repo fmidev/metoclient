@@ -7,6 +7,9 @@ export const DEFAULT_DELAY = 1000;
 export const DEFAULT_OPTIONS = {
   center: [0, 0],
   zoom: 4,
+  minZoom: 0,
+  maxZoom: 28,
+  minExtent: [0, 0],
   metadata: {
     refreshInterval: 'map',
     tags: [],

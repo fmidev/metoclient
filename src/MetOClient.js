@@ -1594,6 +1594,17 @@ export class MetOClient extends BaseObject {
       controls,
       interactions,
     });
+    const view = newMap.getView();
+    const minZoom = view.getMinZoom();
+    let extent = view.calculateExtent();
+    while (
+      (extent[2] - extent[0] < this.config_.minExtent[0] ||
+        extent[3] - extent[1] < this.config_.minExtent[1]) &&
+      view.getZoom() > minZoom
+    ) {
+      view.setZoom(view.getZoom() - 1);
+      extent = view.calculateExtent();
+    }
     if (this.vectorConfig_.layers.length > 0) {
       return this.createVectorLayers_(newMap, this.vectorConfig_).then((map) =>
         this.initMap_(map)

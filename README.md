@@ -537,19 +537,19 @@ The [examples](examples) contain several suitable CSS styles for the time slider
 
 5. div.fmi-metoclient-timeslider-pre-tools
 
-6. div.fmi-metoclient-timeslider-play-button
+6. button.fmi-metoclient-timeslider-play-button
 
-7. div.fmi-metoclient-timeslider-play-button:hover
+7. button.fmi-metoclient-timeslider-play-button:hover
 
-8. div.fmi-metoclient-timeslider-play-button.playing
+8. button.fmi-metoclient-timeslider-play-button.playing
 
 9. div.fmi-metoclient-timeslider-frames-container
 
 10. div.fmi-metoclient-timeslider-frame
 
-11. div.fmi-metoclient-timeslider-frame.history
+11. div.fmi-metoclient-timeslider-frame.history > button.fmi-metoclient-timeslider-keyboard-accessible
 
-12. div.fmi-metoclient-timeslider-frame.future
+12. div.fmi-metoclient-timeslider-frame.future > button.fmi-metoclient-timeslider-keyboard-accessible
 
 13. div.fmi-metoclient-timeslider-indicator
 
@@ -571,9 +571,9 @@ The [examples](examples) contain several suitable CSS styles for the time slider
 
 22. div.fmi-metoclient-timeslider-post-tools
 
-23. div.fmi-metoclient-timeslider-step-button
+23. button.fmi-metoclient-timeslider-step-button
 
-24. div.fmi-metoclient-timeslider-step-button:hover
+24. button.fmi-metoclient-timeslider-step-button:hover
 
 25. div.fmi-metoclient-timeslider-post-margin
 

@@ -6,6 +6,8 @@ An animation is defined by map layers containing time rules. The map standards i
 
 An animation API is provided to extend OpenLayers map methods.
 
+![Screenshot](./doc/screenshot.png)
+
 ## Getting Started
 
 ### Using a module bundler
@@ -597,21 +599,21 @@ The [examples](examples) contain several suitable CSS styles for the time slider
 
 ##### Pointer below the time line
 
-![timeslider1](./doc/timeslider1.png)
+![Timeslider](./doc/timeslider1.png)
 
-![timeslider1_plain](./doc/timeslider1_plain.png)
+![Timeslider structure](./doc/timeslider1_plain.png)
 
 ##### Draggable circle inside the time line
 
-![timeslider2](./doc/timeslider2.png)
+![Timeslider](./doc/timeslider2.png)
 
-![timeslider2_plain](./doc/timeslider2_plain.png)
+![Timeslider structure](./doc/timeslider2_plain.png)
 
 ##### Vertical time line
 
-![timeslider3](./doc/timeslider3.png)
+![Timeslider](./doc/timeslider3.png)
 
-![timeslider3_palin](./doc/timeslider3_plain.png)
+![Timeslider structure](./doc/timeslider3_plain.png)
 
 ### Zoom
 

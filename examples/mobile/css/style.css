@@ -29,7 +29,7 @@ body {
 
 .ol-scale-line {
   background: #95b9e6;
-  background: rgba(0,60,136,.3);
+  background: rgba(88,88,88,.3);
   border-radius: 4px;
   bottom: 8px;
   left: 8px;
@@ -100,7 +100,7 @@ body {
   display: block;
   margin: 1px;
   padding: 0;
-  color: #fff;
+  color: #d7b13e;
   font-size: 1.14em;
   font-weight: 700;
   text-decoration: none;
@@ -108,8 +108,7 @@ body {
   height: 1.375em;
   width: 1.375em;
   line-height: .4em;
-  background-color: #7b98bc;
-  background-color: rgba(0,60,136,.5);
+  background-color: #585858;
   border: none;
   border-radius: 2px;
 }
@@ -395,7 +394,7 @@ body {
 }
 
 .fmi-white-or-dark-bg {
-  background-color: white !important;
+  background-color: #585858 !important;
   color: black !important;
 }
 
@@ -403,7 +402,7 @@ body {
   position: absolute;
   height: 600px;
   width: 100%;
-  background-color: white;
+  background-color: #585858;
 }
 
 #fmi-inner-animator-container {
@@ -498,7 +497,7 @@ body {
   width: 80px;
   height: 20px;
   line-height: 20px;
-  background-color: white;
+  background-color: #585858;
   color: black;
   opacity: 0.5;
   font-size: 16px;
@@ -643,7 +642,7 @@ input[type="text"] {
   position: absolute;
   width: 100vw;
   height: 100vh;
-  background-color: white;
+  background-color: #585858;
 }
 
 #fmi-loading-container {
@@ -674,7 +673,7 @@ input[type="text"] {
 }
 
 .fmi-button-group button {
-  background-color: white;
+  background-color: #585858;
   border: 1px solid rgb(53,89,185);
   font-size: 13px;
   color: rgb(53,89,185);
@@ -917,7 +916,7 @@ div.fmi-metoclient-timeslider-post-tools {
 }
 
 div.fmi-metoclient-timeslider-step-button:hover {
-  background-color: #60B3E1;
+  background-color: #686868;
 }
 
 div.fmi-metoclient-timeslider-post-margin {
@@ -933,7 +932,7 @@ div.fmi-metoclient-timeslider-handle {
   width: 20px;
   height: 20px;
   border-radius: 10px;
-  background-color: white;
+  background-color: #585858;
   border: 1px solid black;
   position: absolute;
   top: 9px;

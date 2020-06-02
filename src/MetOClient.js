@@ -1602,7 +1602,8 @@ export class MetOClient extends BaseObject {
         extent[3] - extent[1] < this.config_.minExtent[1]) &&
       view.getZoom() > minZoom
     ) {
-      view.setZoom(view.getZoom() - 1);
+      this.config_.zoom = view.getZoom() - 1;
+      view.setZoom(this.config_.zoom);
       extent = view.calculateExtent();
     }
     if (this.vectorConfig_.layers.length > 0) {

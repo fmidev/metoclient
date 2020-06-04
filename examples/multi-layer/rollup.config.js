@@ -15,9 +15,8 @@ export default {
   plugins: [
     node(),
     cjs(),
-    production &&
-      terser({
-        keep_fnames: true,
-      }),
+    //    production && terser({
+    //      keep_fnames: true
+    //    })
   ],
 };

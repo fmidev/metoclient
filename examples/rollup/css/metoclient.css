@@ -494,7 +494,7 @@ output {
     height: 38px;
     background-image: url(../img/layer-switcher.png);
     background-repeat: no-repeat;
-    background-position: 2px;
+    background-position: center;
     background-color: #585858;
     border: none;
 }

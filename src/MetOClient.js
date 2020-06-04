@@ -1414,106 +1414,131 @@ export class MetOClient extends BaseObject {
     }
   }
 
+  updateVectorConfig_(vectorConfig) {
+    return Promise.all(
+      Object.entries(vectorConfig.sources).map((source) => {
+        if (typeof source[1].data === 'string') {
+          return ajax({
+            url: source[1].data,
+            crossDomain: true,
+          }).then((response) => [
+            source[0],
+            {
+              data: response,
+              type: source[1].type,
+            },
+          ]);
+        }
+        return Promise.resolve(source);
+      })
+    ).then((sources) => {
+      vectorConfig.sources = Object.fromEntries(sources);
+      return vectorConfig;
+    });
+  }
+
   createVectorLayers_(map, vectorConfig) {
-    return olms(map, vectorConfig).then((updatedMap) => {
-      if (vectorConfig.layers != null) {
-        const mapProjection = updatedMap.getView().getProjection().getCode();
-        updatedMap
-          .getLayers()
-          .getArray()
-          .filter((layer) => layer.get('mapbox-source') != null)
-          .forEach((layer) => {
-            let layerConfig;
-            let layerTimes = [];
-            let timeProperty;
-            const mapboxLayers = layer.get('mapbox-layers');
-            if (mapboxLayers != null) {
-              layer.set('id', mapboxLayers.join('-'));
-              let title = mapboxLayers.reduce((layerTitle, layerId) => {
-                layerConfig = vectorConfig.layers.find(
-                  (layer) => layer.id === layerId
-                );
-                if (
-                  layerConfig.metadata != null &&
-                  layerConfig.metadata.title != null &&
-                  layerConfig.metadata.title.length > 0
-                ) {
-                  if (layerTitle.length > 0) {
-                    layerTitle += ' / ';
-                  }
-                  layerTitle += layerConfig.metadata.title;
-                  timeProperty = layerConfig.metadata.timeProperty;
-                }
-                return layerTitle;
-              }, '');
-              if (title != null && title.length > 0) {
-                layer.set('title', title);
-              }
-            }
-            const source = layer.getSource();
-            const updateTimes = () => {
-              if (layerConfig != null) {
-                if (layerConfig.time == null) {
-                  layerConfig.time = {};
-                }
-                layerConfig.time.data = layerTimes;
-                layer.set('times', layerConfig.time.data);
-              }
-              this.addTimes_(layerTimes);
-            };
-            const initFeature = (feature) => {
-              if (timeProperty != null && timeProperty.length > 0) {
-                const time = feature.get(timeProperty);
-                if (time != null && time.length > 0) {
-                  const parsedTime = DateTime.fromISO(time).valueOf();
+    return this.updateVectorConfig_(vectorConfig)
+      .then((config) => olms(map, config))
+      .then((updatedMap) => {
+        if (vectorConfig.layers != null) {
+          const mapProjection = updatedMap.getView().getProjection().getCode();
+          updatedMap
+            .getLayers()
+            .getArray()
+            .filter((layer) => layer.get('mapbox-source') != null)
+            .forEach((layer) => {
+              let layerConfig;
+              let layerTimes = [];
+              let timeProperty;
+              const mapboxLayers = layer.get('mapbox-layers');
+              if (mapboxLayers != null) {
+                layer.set('id', mapboxLayers.join('-'));
+                let title = mapboxLayers.reduce((layerTitle, layerId) => {
+                  layerConfig = vectorConfig.layers.find(
+                    (layer) => layer.id === layerId
+                  );
                   if (
-                    typeof parsedTime === 'number' &&
-                    !Number.isNaN(parsedTime)
+                    layerConfig.metadata != null &&
+                    layerConfig.metadata.title != null &&
+                    layerConfig.metadata.title.length > 0
                   ) {
-                    feature.set('metoclient:time', parsedTime);
-                    const numLayerTimes = layerTimes.length;
-                    for (let i = 0; i <= numLayerTimes; i += 1) {
-                      if (i === numLayerTimes) {
-                        layerTimes.push(parsedTime);
-                        updateTimes();
-                      } else if (layerTimes[i] === parsedTime) {
-                        break;
-                      } else if (layerTimes[i] > parsedTime) {
-                        layerTimes.splice(i, 0, parsedTime);
-                        updateTimes();
-                        break;
+                    if (layerTitle.length > 0) {
+                      layerTitle += ' / ';
+                    }
+                    layerTitle += layerConfig.metadata.title;
+                    timeProperty = layerConfig.metadata.timeProperty;
+                  }
+                  return layerTitle;
+                }, '');
+                if (title != null && title.length > 0) {
+                  layer.set('title', title);
+                }
+              }
+              const source = layer.getSource();
+              const updateTimes = () => {
+                if (layerConfig != null) {
+                  if (layerConfig.time == null) {
+                    layerConfig.time = {};
+                  }
+                  layerConfig.time.data = layerTimes;
+                  layer.set('times', layerConfig.time.data);
+                }
+                this.addTimes_(layerTimes);
+              };
+              const initFeature = (feature) => {
+                if (timeProperty != null && timeProperty.length > 0) {
+                  const time = feature.get(timeProperty);
+                  if (time != null && time.length > 0) {
+                    const parsedTime = DateTime.fromISO(time).valueOf();
+                    if (
+                      typeof parsedTime === 'number' &&
+                      !Number.isNaN(parsedTime)
+                    ) {
+                      feature.set('metoclient:time', parsedTime);
+                      const numLayerTimes = layerTimes.length;
+                      for (let i = 0; i <= numLayerTimes; i += 1) {
+                        if (i === numLayerTimes) {
+                          layerTimes.push(parsedTime);
+                          updateTimes();
+                        } else if (layerTimes[i] === parsedTime) {
+                          break;
+                        } else if (layerTimes[i] > parsedTime) {
+                          layerTimes.splice(i, 0, parsedTime);
+                          updateTimes();
+                          break;
+                        }
+                      }
+                      const layerTime = this.getFeatureLayerTime_(layer);
+                      if (layerTime == null || parsedTime !== layerTime) {
+                        feature.setStyle(new Style({}));
+                      } else {
+                        feature.setStyle(null);
                       }
                     }
-                    const layerTime = this.getFeatureLayerTime_(layer);
-                    if (layerTime == null || parsedTime !== layerTime) {
-                      feature.setStyle(new Style({}));
-                    } else {
-                      feature.setStyle(null);
-                    }
                   }
                 }
+              };
+              this.sourceListeners_.push(
+                source.on('addfeature', (event) => {
+                  initFeature(event.feature);
+                })
+              );
+              if (timeProperty != null && timeProperty.length > 0) {
+                source.getFeatures().forEach((feature) => {
+                  initFeature(feature);
+                  if (mapProjection !== 'EPSG:3857') {
+                    feature.getGeometry().transform('EPSG:3857', mapProjection);
+                  }
+                });
               }
-            };
-            this.sourceListeners_.push(
-              source.on('addfeature', (event) => {
-                initFeature(event.feature);
-              })
-            );
-            if (timeProperty != null && timeProperty.length > 0) {
-              source.getFeatures().forEach((feature) => {
-                initFeature(feature);
-                if (mapProjection !== 'EPSG:3857') {
-                  feature.getGeometry().transform('EPSG:3857', mapProjection);
-                }
-              });
-            }
-          });
-        if (this.config_.time == null && this.times_.length > 0) {
-          this.config_.time = this.times_[0];
+            });
+          if (this.config_.time == null && this.times_.length > 0) {
+            this.config_.time = this.times_[0];
+          }
         }
-      }
-      return updatedMap;
-    });
+        return updatedMap;
+      });
   }
 
   /**

@@ -194,8 +194,7 @@ export class MetOClient extends BaseObject {
           }
         });
         this.vectorConfig_ = this.getVectorConfig_();
-        this.updateMap_();
-        return this.get('map');
+        return this.updateMap_();
       })
       .catch((error) => {
         console.log(error);

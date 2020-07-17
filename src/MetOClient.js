@@ -1385,7 +1385,7 @@ export class MetOClient extends BaseObject {
     });
     this.timeListener_ = map.on('change:time', this.timeUpdated_.bind(this));
     this.nextListener_ = map.on('next', (evt) => {
-      this.next();
+      this.next(evt.force);
     });
     this.previousListener_ = map.on('previous', (evt) => {
       this.previous();
@@ -1808,14 +1808,19 @@ export class MetOClient extends BaseObject {
   /**
    *
    */
-  next() {
+  next(force) {
     if (!this.isReady_()) {
       return;
     }
     const map = this.get('map');
     const currentTime = map.get('time');
     const nextTime = this.getNextTime_();
-    if (!this.delayLoop_ || currentTime == null || currentTime < nextTime) {
+    if (
+      !this.delayLoop_ ||
+      force ||
+      currentTime == null ||
+      currentTime < nextTime
+    ) {
       map.set('time', nextTime);
       this.delayLoop_ = this.config_.metadata.tags.includes(
         constants.TAG_DELAY_LOOP

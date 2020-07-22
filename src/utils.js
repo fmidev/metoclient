@@ -320,11 +320,11 @@ export function getSourceCapabilitiesUrl(source) {
     url = source.capabilities;
   } else {
     if (source.tiles == null || source.tiles.length === 0) {
-      return url;
+      return null;
     }
-    [url] = source.tiles; // Todo: Handle other indexes
+    // Todo: Handle other indexes
+    [url] = source.tiles[0].split('?');
   }
-  url = url.split('?')[0];
   if (url.endsWith('/')) {
     url = url.substring(0, url.length - 1);
   }

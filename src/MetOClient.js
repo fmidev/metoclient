@@ -276,7 +276,19 @@ export class MetOClient extends BaseObject {
             if (source == null) {
               return;
             }
-            const url = getSourceCapabilitiesUrl(source);
+            const sourceCapabilitiesUrl = getSourceCapabilitiesUrl(source);
+            if (sourceCapabilitiesUrl == null) {
+              return;
+            }
+            let url;
+            let query = {};
+            if (sourceCapabilitiesUrl.toLowerCase().startsWith('http')) {
+              const domUrl = new Url(sourceCapabilitiesUrl);
+              url = `${domUrl.protocol}://${domUrl.host}${domUrl.path}`;
+              query = domUrl.query;
+            } else {
+              url = sourceCapabilitiesUrl;
+            }
             if (url.length === 0) {
               return;
             }
@@ -296,6 +308,7 @@ export class MetOClient extends BaseObject {
                 data: null,
                 startTime: Number.POSITIVE_INFINITY,
                 endTime: Number.NEGATIVE_INFINITY,
+                query,
               };
             }
             if (timeData != null && timeData.length > 0) {
@@ -312,26 +325,33 @@ export class MetOClient extends BaseObject {
         }, {})
       ).map((capabKeyValue) => {
         this.capabilities_[capabKeyValue[0]] = capabKeyValue[1];
-        const type = capabKeyValue[1].type;
-        const url =
-          ['startTime', 'endTime'].reduce((accQuery, timeParam) => {
-            if (
-              type === 'wms' &&
-              capabKeyValue[1].server === constants.SMARTMET_SERVER
-            ) {
-              const timeISO = DateTime.fromMillis(capabKeyValue[1][timeParam])
-                .toUTC()
-                .toISO({
-                  suppressMilliseconds: true,
-                  includeOffset: true,
-                });
-              if (timeISO != null) {
-                accQuery += '&' + timeParam.toLowerCase() + '=' + timeISO;
-              }
+        const params = {};
+        Object.keys(capabKeyValue[1].query).forEach((key) => {
+          params[key.toLowerCase()] = capabKeyValue[1].query[key];
+        });
+        if (params.service == null) {
+          params.service = capabKeyValue[1].type;
+        }
+        params.request = 'GetCapabilities';
+        ['startTime', 'endTime'].forEach((timeParam) => {
+          if (
+            params.service === 'wms' &&
+            capabKeyValue[1].server === constants.SMARTMET_SERVER
+          ) {
+            const timeISO = DateTime.fromMillis(capabKeyValue[1][timeParam])
+              .toUTC()
+              .toISO({
+                suppressMilliseconds: true,
+                includeOffset: true,
+              });
+            if (timeISO != null) {
+              params[timeParam.toLowerCase()] = timeISO;
             }
-            return accQuery;
-          }, `${capabKeyValue[0]}?service=${type}`) +
-          `&${constants.GET_CAPABILITIES_QUERY}`;
+          }
+        });
+        const url = `${capabKeyValue[0]}?${Object.keys(params)
+          .map((key) => `${key}=${params[key]}`)
+          .join('&')}`;
         return ajax({
           url,
           crossDomain: true,
@@ -346,7 +366,7 @@ export class MetOClient extends BaseObject {
       responses.map((response) => {
         if (
           response.responseText != null &&
-          response.requestURL.endsWith(constants.GET_CAPABILITIES_QUERY)
+          response.requestURL.includes(constants.GET_CAPABILITIES_QUERY)
         ) {
           let capabKey = response.requestURL.split('?')[0];
           const capabKeyParts = capabKey.split('/');
@@ -1687,7 +1707,12 @@ export class MetOClient extends BaseObject {
           layer.time.source != null
             ? this.config_.sources[layer.time.source]
             : this.config_.sources[layer.source];
-        const capabilities = this.capabilities_[source.tiles[0].split('?')[0]]; // Generalize
+        const capabilities = this.capabilities_[
+          (source.capabilities != null && source.capabilities.length > 0
+            ? source.capabilities
+            : source.tiles[0]
+          ).split('?')[0]
+        ]; // Todo: Generalize
         if (
           capabilities == null ||
           capabilities.data == null ||

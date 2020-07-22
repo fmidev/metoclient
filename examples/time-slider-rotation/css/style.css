@@ -200,7 +200,7 @@
 
 .ol-popup {
   position: absolute;
-  background-color: white;
+  background-color: #585858;
   -webkit-filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
   filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.2));
   padding: 15px;
@@ -525,7 +525,7 @@ button.fmi-metoclient-timeslider-timestep-button {
 
 button.fmi-metoclient-timeslider-timestep-active-button {
   background: #000;
-  color: #fff;
+  color: #d7b13e;
 }
 
 output {
@@ -845,7 +845,7 @@ div.fmi-metoclient-timeslider.rotated button.fmi-metoclient-timeslider-timestep-
 
 div.fmi-metoclient-timeslider.rotated button.fmi-metoclient-timeslider-timestep-active-button {
   background: #000;
-  color: #fff;
+  color: #d7b13e;
 }
 
 div.fmi-metoclient-timeslider.rotated output {

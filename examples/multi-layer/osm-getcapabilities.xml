@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Capabilities xmlns="http://www.opengis.net/wmts/1.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml" xsi:schemaLocation="http://www.opengis.net/wmts/1.0 http://schemas.opengis.net/wmts/1.0/wmtsGetCapabilities_response.xsd" version="1.0.0">
+  <ows:ServiceIdentification>
+    <ows:Title>Web Map Tile Service - GeoWebCache</ows:Title>
+    <ows:ServiceType>OGC WMTS</ows:ServiceType>
+    <ows:ServiceTypeVersion>1.0.0</ows:ServiceTypeVersion>
+  </ows:ServiceIdentification>
+  <ows:ServiceProvider>
+    <ows:ProviderName>http://avaa.tdata.fi/geoserver/gwc/service/wmts</ows:ProviderName>
+    <ows:ProviderSite xlink:href="http://avaa.tdata.fi/geoserver/gwc/service/wmts"/>
+    <ows:ServiceContact>
+      <ows:IndividualName>GeoWebCache User</ows:IndividualName>
+    </ows:ServiceContact>
+  </ows:ServiceProvider>
+  <ows:OperationsMetadata>
+    <ows:Operation name="GetCapabilities">
+      <ows:DCP>
+        <ows:HTTP>
+          <ows:Get xlink:href="http://avaa.tdata.fi/geoserver/gwc/service/wmts?">
+            <ows:Constraint name="GetEncoding">
+              <ows:AllowedValues>
+                <ows:Value>KVP</ows:Value>
+              </ows:AllowedValues>
+            </ows:Constraint>
+          </ows:Get>
+        </ows:HTTP>
+      </ows:DCP>
+    </ows:Operation>
+    <ows:Operation name="GetTile">
+      <ows:DCP>
+        <ows:HTTP>
+          <ows:Get xlink:href="http://avaa.tdata.fi/geoserver/gwc/service/wmts?">
+            <ows:Constraint name="GetEncoding">
+              <ows:AllowedValues>
+                <ows:Value>KVP</ows:Value>
+              </ows:AllowedValues>
+            </ows:Constraint>
+          </ows:Get>
+        </ows:HTTP>
+      </ows:DCP>
+    </ows:Operation>
+    <ows:Operation name="GetFeatureInfo">
+      <ows:DCP>
+        <ows:HTTP>
+          <ows:Get xlink:href="http://avaa.tdata.fi/geoserver/gwc/service/wmts?">
+            <ows:Constraint name="GetEncoding">
+              <ows:AllowedValues>
+                <ows:Value>KVP</ows:Value>
+              </ows:AllowedValues>
+            </ows:Constraint>
+          </ows:Get>
+        </ows:HTTP>
+      </ows:DCP>
+    </ows:Operation>
+  </ows:OperationsMetadata>
+  <Contents>
+    <Layer>
+      <ows:Title>osm-finland</ows:Title>
+      <ows:Abstract>Layergroup containing all OSM layers in following order:
+
+- Sea
+- Landuse
+- Protected
+- Waterways
+- Lakes
+- Admin boundary
+- Roads
+- Railways
+- Buldings
+- National boundary (only land)
+- Places
+- Points</ows:Abstract>
+      <ows:Identifier>osm_finland:osm-finland</ows:Identifier>
+      <Style isDefault="true">
+        <ows:Identifier/>
+      </Style>
+      <Format>image/png</Format>
+      <InfoFormat>text/plain</InfoFormat>
+      <InfoFormat>application/vnd.ogc.gml</InfoFormat>
+      <InfoFormat>text/xml</InfoFormat>
+      <InfoFormat>application/vnd.ogc.gml/3.1.1</InfoFormat>
+      <InfoFormat>text/xml</InfoFormat>
+      <InfoFormat>text/html</InfoFormat>
+      <InfoFormat>application/json</InfoFormat>
+      <TileMatrixSetLink>
+        <TileMatrixSet>EPSG:3067</TileMatrixSet>
+        <TileMatrixSetLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:0</TileMatrix>
+            <MinTileRow>0</MinTileRow>
+            <MaxTileRow>0</MaxTileRow>
+            <MinTileCol>0</MinTileCol>
+            <MaxTileCol>0</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:1</TileMatrix>
+            <MinTileRow>0</MinTileRow>
+            <MaxTileRow>1</MaxTileRow>
+            <MinTileCol>0</MinTileCol>
+            <MaxTileCol>1</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:2</TileMatrix>
+            <MinTileRow>1</MinTileRow>
+            <MaxTileRow>3</MaxTileRow>
+            <MinTileCol>1</MinTileCol>
+            <MaxTileCol>2</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:3</TileMatrix>
+            <MinTileRow>2</MinTileRow>
+            <MaxTileRow>6</MaxTileRow>
+            <MinTileCol>2</MinTileCol>
+            <MaxTileCol>4</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:4</TileMatrix>
+            <MinTileRow>4</MinTileRow>
+            <MaxTileRow>13</MaxTileRow>
+            <MinTileCol>4</MinTileCol>
+            <MaxTileCol>9</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:5</TileMatrix>
+            <MinTileRow>9</MinTileRow>
+            <MaxTileRow>26</MaxTileRow>
+            <MinTileCol>9</MinTileCol>
+            <MaxTileCol>19</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:6</TileMatrix>
+            <MinTileRow>18</MinTileRow>
+            <MaxTileRow>53</MaxTileRow>
+            <MinTileCol>19</MinTileCol>
+            <MaxTileCol>39</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:7</TileMatrix>
+            <MinTileRow>36</MinTileRow>
+            <MaxTileRow>107</MaxTileRow>
+            <MinTileCol>38</MinTileCol>
+            <MaxTileCol>78</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:8</TileMatrix>
+            <MinTileRow>72</MinTileRow>
+            <MaxTileRow>214</MaxTileRow>
+            <MinTileCol>77</MinTileCol>
+            <MaxTileCol>156</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:9</TileMatrix>
+            <MinTileRow>144</MinTileRow>
+            <MaxTileRow>429</MaxTileRow>
+            <MinTileCol>154</MinTileCol>
+            <MaxTileCol>313</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:10</TileMatrix>
+            <MinTileRow>289</MinTileRow>
+            <MaxTileRow>859</MaxTileRow>
+            <MinTileCol>308</MinTileCol>
+            <MaxTileCol>627</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:11</TileMatrix>
+            <MinTileRow>579</MinTileRow>
+            <MaxTileRow>1718</MaxTileRow>
+            <MinTileCol>616</MinTileCol>
+            <MaxTileCol>1255</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:12</TileMatrix>
+            <MinTileRow>1158</MinTileRow>
+            <MaxTileRow>3436</MaxTileRow>
+            <MinTileCol>1232</MinTileCol>
+            <MaxTileCol>2511</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:13</TileMatrix>
+            <MinTileRow>2316</MinTileRow>
+            <MaxTileRow>6872</MaxTileRow>
+            <MinTileCol>2464</MinTileCol>
+            <MaxTileCol>5022</MaxTileCol>
+          </TileMatrixLimits>
+          <TileMatrixLimits>
+            <TileMatrix>EPSG:3067:14</TileMatrix>
+            <MinTileRow>4633</MinTileRow>
+            <MaxTileRow>13745</MaxTileRow>
+            <MinTileCol>4928</MinTileCol>
+            <MaxTileCol>10044</MaxTileCol>
+          </TileMatrixLimits>
+        </TileMatrixSetLimits>
+      </TileMatrixSetLink>
+    </Layer>
+    <TileMatrixSet>
+      <ows:Identifier>EPSG:3067</ows:Identifier>
+      <ows:SupportedCRS>urn:ogc:def:crs:EPSG::3067</ows:SupportedCRS>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:0</ows:Identifier>
+        <ScaleDenominator>2.925714285714286E7</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>1</MatrixWidth>
+        <MatrixHeight>1</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:1</ows:Identifier>
+        <ScaleDenominator>1.462857142857143E7</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>2</MatrixWidth>
+        <MatrixHeight>2</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:2</ows:Identifier>
+        <ScaleDenominator>7314285.714285715</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>4</MatrixWidth>
+        <MatrixHeight>4</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:3</ows:Identifier>
+        <ScaleDenominator>3657142.8571428573</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>8</MatrixWidth>
+        <MatrixHeight>8</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:4</ows:Identifier>
+        <ScaleDenominator>1828571.4285714286</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>16</MatrixWidth>
+        <MatrixHeight>16</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:5</ows:Identifier>
+        <ScaleDenominator>914285.7142857143</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>32</MatrixWidth>
+        <MatrixHeight>32</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:6</ows:Identifier>
+        <ScaleDenominator>457142.85714285716</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>64</MatrixWidth>
+        <MatrixHeight>64</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:7</ows:Identifier>
+        <ScaleDenominator>228571.42857142858</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>128</MatrixWidth>
+        <MatrixHeight>128</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:8</ows:Identifier>
+        <ScaleDenominator>114285.71428571429</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>256</MatrixWidth>
+        <MatrixHeight>256</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:9</ows:Identifier>
+        <ScaleDenominator>57142.857142857145</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>512</MatrixWidth>
+        <MatrixHeight>512</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:10</ows:Identifier>
+        <ScaleDenominator>28571.428571428572</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>1024</MatrixWidth>
+        <MatrixHeight>1024</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:11</ows:Identifier>
+        <ScaleDenominator>14285.714285714286</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>2048</MatrixWidth>
+        <MatrixHeight>2048</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:12</ows:Identifier>
+        <ScaleDenominator>7142.857142857143</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>4096</MatrixWidth>
+        <MatrixHeight>4096</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:13</ows:Identifier>
+        <ScaleDenominator>3571.4285714285716</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>8192</MatrixWidth>
+        <MatrixHeight>8192</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:14</ows:Identifier>
+        <ScaleDenominator>1785.7142857142858</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>16384</MatrixWidth>
+        <MatrixHeight>16384</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:15</ows:Identifier>
+        <ScaleDenominator>892.8571428571429</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>32768</MatrixWidth>
+        <MatrixHeight>32768</MatrixHeight>
+      </TileMatrix>
+      <TileMatrix>
+        <ows:Identifier>EPSG:3067:16</ows:Identifier>
+        <ScaleDenominator>446.42857142857144</ScaleDenominator>
+        <TopLeftCorner>-548576.0 8388608.0</TopLeftCorner>
+        <TileWidth>256</TileWidth>
+        <TileHeight>256</TileHeight>
+        <MatrixWidth>65536</MatrixWidth>
+        <MatrixHeight>65536</MatrixHeight>
+      </TileMatrix>
+    </TileMatrixSet>
+  </Contents>
+  <ServiceMetadataURL xlink:href="http://avaa.tdata.fi/geoserver/gwc/service/wmts?REQUEST=getcapabilities&amp;VERSION=1.0.0"/>
+</Capabilities>

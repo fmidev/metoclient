@@ -107,7 +107,10 @@ class TimeSlider extends Control {
     const map = this.getMap();
     map.set('playing', false);
     if (direction > 0) {
-      map.dispatchEvent('next');
+      map.dispatchEvent({
+        type: 'next',
+        force: true,
+      });
     } else if (direction < 0) {
       map.dispatchEvent('previous');
     }

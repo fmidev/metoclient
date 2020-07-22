@@ -194,8 +194,7 @@ export class MetOClient extends BaseObject {
           }
         });
         this.vectorConfig_ = this.getVectorConfig_();
-        this.updateMap_();
-        return this.get('map');
+        return this.updateMap_();
       })
       .catch((error) => {
         console.log(error);
@@ -277,7 +276,19 @@ export class MetOClient extends BaseObject {
             if (source == null) {
               return;
             }
-            const url = getSourceCapabilitiesUrl(source);
+            const sourceCapabilitiesUrl = getSourceCapabilitiesUrl(source);
+            if (sourceCapabilitiesUrl == null) {
+              return;
+            }
+            let url;
+            let query = {};
+            if (sourceCapabilitiesUrl.toLowerCase().startsWith('http')) {
+              const domUrl = new Url(sourceCapabilitiesUrl);
+              url = `${domUrl.protocol}://${domUrl.host}${domUrl.path}`;
+              query = domUrl.query;
+            } else {
+              url = sourceCapabilitiesUrl;
+            }
             if (url.length === 0) {
               return;
             }
@@ -297,6 +308,7 @@ export class MetOClient extends BaseObject {
                 data: null,
                 startTime: Number.POSITIVE_INFINITY,
                 endTime: Number.NEGATIVE_INFINITY,
+                query,
               };
             }
             if (timeData != null && timeData.length > 0) {
@@ -313,26 +325,33 @@ export class MetOClient extends BaseObject {
         }, {})
       ).map((capabKeyValue) => {
         this.capabilities_[capabKeyValue[0]] = capabKeyValue[1];
-        const type = capabKeyValue[1].type;
-        const url =
-          ['startTime', 'endTime'].reduce((accQuery, timeParam) => {
-            if (
-              type === 'wms' &&
-              capabKeyValue[1].server === constants.SMARTMET_SERVER
-            ) {
-              const timeISO = DateTime.fromMillis(capabKeyValue[1][timeParam])
-                .toUTC()
-                .toISO({
-                  suppressMilliseconds: true,
-                  includeOffset: true,
-                });
-              if (timeISO != null) {
-                accQuery += '&' + timeParam.toLowerCase() + '=' + timeISO;
-              }
+        const params = {};
+        Object.keys(capabKeyValue[1].query).forEach((key) => {
+          params[key.toLowerCase()] = capabKeyValue[1].query[key];
+        });
+        if (params.service == null) {
+          params.service = capabKeyValue[1].type;
+        }
+        params.request = 'GetCapabilities';
+        ['startTime', 'endTime'].forEach((timeParam) => {
+          if (
+            params.service === 'wms' &&
+            capabKeyValue[1].server === constants.SMARTMET_SERVER
+          ) {
+            const timeISO = DateTime.fromMillis(capabKeyValue[1][timeParam])
+              .toUTC()
+              .toISO({
+                suppressMilliseconds: true,
+                includeOffset: true,
+              });
+            if (timeISO != null) {
+              params[timeParam.toLowerCase()] = timeISO;
             }
-            return accQuery;
-          }, `${capabKeyValue[0]}?service=${type}`) +
-          `&${constants.GET_CAPABILITIES_QUERY}`;
+          }
+        });
+        const url = `${capabKeyValue[0]}?${Object.keys(params)
+          .map((key) => `${key}=${params[key]}`)
+          .join('&')}`;
         return ajax({
           url,
           crossDomain: true,
@@ -347,7 +366,7 @@ export class MetOClient extends BaseObject {
       responses.map((response) => {
         if (
           response.responseText != null &&
-          response.requestURL.endsWith(constants.GET_CAPABILITIES_QUERY)
+          response.requestURL.includes(constants.GET_CAPABILITIES_QUERY)
         ) {
           let capabKey = response.requestURL.split('?')[0];
           const capabKeyParts = capabKey.split('/');
@@ -1385,7 +1404,7 @@ export class MetOClient extends BaseObject {
     });
     this.timeListener_ = map.on('change:time', this.timeUpdated_.bind(this));
     this.nextListener_ = map.on('next', (evt) => {
-      this.next();
+      this.next(evt.force);
     });
     this.previousListener_ = map.on('previous', (evt) => {
       this.previous();
@@ -1414,106 +1433,131 @@ export class MetOClient extends BaseObject {
     }
   }
 
+  updateVectorConfig_(vectorConfig) {
+    return Promise.all(
+      Object.entries(vectorConfig.sources).map((source) => {
+        if (typeof source[1].data === 'string') {
+          return ajax({
+            url: source[1].data,
+            crossDomain: true,
+          }).then((response) => [
+            source[0],
+            {
+              data: response,
+              type: source[1].type,
+            },
+          ]);
+        }
+        return Promise.resolve(source);
+      })
+    ).then((sources) => {
+      vectorConfig.sources = Object.fromEntries(sources);
+      return vectorConfig;
+    });
+  }
+
   createVectorLayers_(map, vectorConfig) {
-    return olms(map, vectorConfig).then((updatedMap) => {
-      if (vectorConfig.layers != null) {
-        const mapProjection = updatedMap.getView().getProjection().getCode();
-        updatedMap
-          .getLayers()
-          .getArray()
-          .filter((layer) => layer.get('mapbox-source') != null)
-          .forEach((layer) => {
-            let layerConfig;
-            let layerTimes = [];
-            let timeProperty;
-            const mapboxLayers = layer.get('mapbox-layers');
-            if (mapboxLayers != null) {
-              layer.set('id', mapboxLayers.join('-'));
-              let title = mapboxLayers.reduce((layerTitle, layerId) => {
-                layerConfig = vectorConfig.layers.find(
-                  (layer) => layer.id === layerId
-                );
-                if (
-                  layerConfig.metadata != null &&
-                  layerConfig.metadata.title != null &&
-                  layerConfig.metadata.title.length > 0
-                ) {
-                  if (layerTitle.length > 0) {
-                    layerTitle += ' / ';
-                  }
-                  layerTitle += layerConfig.metadata.title;
-                  timeProperty = layerConfig.metadata.timeProperty;
-                }
-                return layerTitle;
-              }, '');
-              if (title != null && title.length > 0) {
-                layer.set('title', title);
-              }
-            }
-            const source = layer.getSource();
-            const updateTimes = () => {
-              if (layerConfig != null) {
-                if (layerConfig.time == null) {
-                  layerConfig.time = {};
-                }
-                layerConfig.time.data = layerTimes;
-                layer.set('times', layerConfig.time.data);
-              }
-              this.addTimes_(layerTimes);
-            };
-            const initFeature = (feature) => {
-              if (timeProperty != null && timeProperty.length > 0) {
-                const time = feature.get(timeProperty);
-                if (time != null && time.length > 0) {
-                  const parsedTime = DateTime.fromISO(time).valueOf();
+    return this.updateVectorConfig_(vectorConfig)
+      .then((config) => olms(map, config))
+      .then((updatedMap) => {
+        if (vectorConfig.layers != null) {
+          const mapProjection = updatedMap.getView().getProjection().getCode();
+          updatedMap
+            .getLayers()
+            .getArray()
+            .filter((layer) => layer.get('mapbox-source') != null)
+            .forEach((layer) => {
+              let layerConfig;
+              let layerTimes = [];
+              let timeProperty;
+              const mapboxLayers = layer.get('mapbox-layers');
+              if (mapboxLayers != null) {
+                layer.set('id', mapboxLayers.join('-'));
+                let title = mapboxLayers.reduce((layerTitle, layerId) => {
+                  layerConfig = vectorConfig.layers.find(
+                    (layer) => layer.id === layerId
+                  );
                   if (
-                    typeof parsedTime === 'number' &&
-                    !Number.isNaN(parsedTime)
+                    layerConfig.metadata != null &&
+                    layerConfig.metadata.title != null &&
+                    layerConfig.metadata.title.length > 0
                   ) {
-                    feature.set('metoclient:time', parsedTime);
-                    const numLayerTimes = layerTimes.length;
-                    for (let i = 0; i <= numLayerTimes; i += 1) {
-                      if (i === numLayerTimes) {
-                        layerTimes.push(parsedTime);
-                        updateTimes();
-                      } else if (layerTimes[i] === parsedTime) {
-                        break;
-                      } else if (layerTimes[i] > parsedTime) {
-                        layerTimes.splice(i, 0, parsedTime);
-                        updateTimes();
-                        break;
+                    if (layerTitle.length > 0) {
+                      layerTitle += ' / ';
+                    }
+                    layerTitle += layerConfig.metadata.title;
+                    timeProperty = layerConfig.metadata.timeProperty;
+                  }
+                  return layerTitle;
+                }, '');
+                if (title != null && title.length > 0) {
+                  layer.set('title', title);
+                }
+              }
+              const source = layer.getSource();
+              const updateTimes = () => {
+                if (layerConfig != null) {
+                  if (layerConfig.time == null) {
+                    layerConfig.time = {};
+                  }
+                  layerConfig.time.data = layerTimes;
+                  layer.set('times', layerConfig.time.data);
+                }
+                this.addTimes_(layerTimes);
+              };
+              const initFeature = (feature) => {
+                if (timeProperty != null && timeProperty.length > 0) {
+                  const time = feature.get(timeProperty);
+                  if (time != null && time.length > 0) {
+                    const parsedTime = DateTime.fromISO(time).valueOf();
+                    if (
+                      typeof parsedTime === 'number' &&
+                      !Number.isNaN(parsedTime)
+                    ) {
+                      feature.set('metoclient:time', parsedTime);
+                      const numLayerTimes = layerTimes.length;
+                      for (let i = 0; i <= numLayerTimes; i += 1) {
+                        if (i === numLayerTimes) {
+                          layerTimes.push(parsedTime);
+                          updateTimes();
+                        } else if (layerTimes[i] === parsedTime) {
+                          break;
+                        } else if (layerTimes[i] > parsedTime) {
+                          layerTimes.splice(i, 0, parsedTime);
+                          updateTimes();
+                          break;
+                        }
+                      }
+                      const layerTime = this.getFeatureLayerTime_(layer);
+                      if (layerTime == null || parsedTime !== layerTime) {
+                        feature.setStyle(new Style({}));
+                      } else {
+                        feature.setStyle(null);
                       }
                     }
-                    const layerTime = this.getFeatureLayerTime_(layer);
-                    if (layerTime == null || parsedTime !== layerTime) {
-                      feature.setStyle(new Style({}));
-                    } else {
-                      feature.setStyle(null);
-                    }
                   }
                 }
+              };
+              this.sourceListeners_.push(
+                source.on('addfeature', (event) => {
+                  initFeature(event.feature);
+                })
+              );
+              if (timeProperty != null && timeProperty.length > 0) {
+                source.getFeatures().forEach((feature) => {
+                  initFeature(feature);
+                  if (mapProjection !== 'EPSG:3857') {
+                    feature.getGeometry().transform('EPSG:3857', mapProjection);
+                  }
+                });
               }
-            };
-            this.sourceListeners_.push(
-              source.on('addfeature', (event) => {
-                initFeature(event.feature);
-              })
-            );
-            if (timeProperty != null && timeProperty.length > 0) {
-              source.getFeatures().forEach((feature) => {
-                initFeature(feature);
-                if (mapProjection !== 'EPSG:3857') {
-                  feature.getGeometry().transform('EPSG:3857', mapProjection);
-                }
-              });
-            }
-          });
-        if (this.config_.time == null && this.times_.length > 0) {
-          this.config_.time = this.times_[0];
+            });
+          if (this.config_.time == null && this.times_.length > 0) {
+            this.config_.time = this.times_[0];
+          }
         }
-      }
-      return updatedMap;
-    });
+        return updatedMap;
+      });
   }
 
   /**
@@ -1602,7 +1646,8 @@ export class MetOClient extends BaseObject {
         extent[3] - extent[1] < this.config_.minExtent[1]) &&
       view.getZoom() > minZoom
     ) {
-      view.setZoom(view.getZoom() - 1);
+      this.config_.zoom = view.getZoom() - 1;
+      view.setZoom(this.config_.zoom);
       extent = view.calculateExtent();
     }
     if (this.vectorConfig_.layers.length > 0) {
@@ -1662,7 +1707,12 @@ export class MetOClient extends BaseObject {
           layer.time.source != null
             ? this.config_.sources[layer.time.source]
             : this.config_.sources[layer.source];
-        const capabilities = this.capabilities_[source.tiles[0].split('?')[0]]; // Generalize
+        const capabilities = this.capabilities_[
+          (source.capabilities != null && source.capabilities.length > 0
+            ? source.capabilities
+            : source.tiles[0]
+          ).split('?')[0]
+        ]; // Todo: Generalize
         if (
           capabilities == null ||
           capabilities.data == null ||
@@ -1782,14 +1832,19 @@ export class MetOClient extends BaseObject {
   /**
    *
    */
-  next() {
+  next(force) {
     if (!this.isReady_()) {
       return;
     }
     const map = this.get('map');
     const currentTime = map.get('time');
     const nextTime = this.getNextTime_();
-    if (!this.delayLoop_ || currentTime == null || currentTime < nextTime) {
+    if (
+      !this.delayLoop_ ||
+      force ||
+      currentTime == null ||
+      currentTime < nextTime
+    ) {
       map.set('time', nextTime);
       this.delayLoop_ = this.config_.metadata.tags.includes(
         constants.TAG_DELAY_LOOP

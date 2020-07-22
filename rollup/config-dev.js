@@ -14,61 +14,58 @@ export default {
     file: pkg.main,
     format: 'umd',
     name: 'fmi.metoclient',
-    exports: 'named'
+    exports: 'named',
   },
   plugins: [
     babel({
-      include: [
-        'src/**',
-        'node_modules/luxon/**'
-      ],
+      include: ['src/**', 'node_modules/luxon/**'],
       presets: [
         [
           '@babel/env',
           {
             targets: {
-              browsers: 'ie >= 11'
+              browsers: 'ie >= 11',
             },
             corejs: 3,
-            useBuiltIns: 'usage'
-          }
-        ]
-      ]
+            useBuiltIns: 'usage',
+          },
+        ],
+      ],
     }),
     replace({
-      'process.env.NODE_ENV': JSON.stringify('production')
+      'process.env.NODE_ENV': JSON.stringify('production'),
     }),
     resolve({
-      preferBuiltins: true
+      preferBuiltins: true,
     }),
     commonjs(),
     versionInjector({
       injectInComments: {
         fileRegexp: /\.js/g,
         tag: `MetOClient {version}-dev.${Date.now()} - FMI - {date}`,
-        dateFormat: 'longDate'
+        dateFormat: 'longDate',
       },
     }),
     copy({
       targets: [
         {
           src: 'css',
-          dest: 'dist'
+          dest: 'dist',
         },
         {
           src: 'img',
-          dest: 'dist'
-        }
-      ]
+          dest: 'dist',
+        },
+      ],
     }),
     analyze({
-      summaryOnly: true
+      summaryOnly: true,
     }),
     license({
       thirdParty: {
         output: 'metoclient.licenses.txt',
         includePrivate: true,
       },
-    })
-  ]
+    }),
+  ],
 };

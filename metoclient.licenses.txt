@@ -165,7 +165,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 Name: @mapbox/mapbox-gl-style-spec
-Version: 13.15.0
+Version: 13.13.0
 License: ISC
 Private: false
 Description: a specification for mapbox gl styles
@@ -176,7 +176,7 @@ Author: Mapbox
 ---
 
 Name: ol-mapbox-style
-Version: 6.1.2
+Version: 6.1.1
 License: BSD-2-Clause
 Private: false
 Description: Create OpenLayers maps from Mapbox Style objects

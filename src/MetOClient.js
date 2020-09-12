@@ -242,6 +242,7 @@ export class MetOClient extends BaseObject {
         timeSlider.set('timeZoneLabel', this.config_.timeZoneLabel);
       }
     }
+    this.renderComplete_ = true;
     this.render();
   }
 

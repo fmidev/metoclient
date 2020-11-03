@@ -1,4 +1,10 @@
 #!groovy
+
+def packageVersion = "undefined"
+def deployUserAndHost = "fmi@io.elmo.fmi.fi"
+def deployProductionBaseDirectory = " /fmi/prod/www/cdn.fmi.fi/javascript/metoclient"
+def deployNonProductionBaseDirectory = " /fmi/dev/www/test.fmi.fi/javascript/metoclient"
+
 pipeline {
 
     agent {
@@ -8,7 +14,12 @@ pipeline {
     }
 
     tools {
-        nodejs 'default'
+        nodejs 'nodejs-14'
+    }
+
+    options {
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '3'))
     }
 
     stages {
@@ -29,51 +40,83 @@ pipeline {
         stage('Install') {
             steps {
                 sh "env"
+                sh "npm --version"
+                sh "nodejs --version"
                 sh "npm install"
             }
         }
 
-        stage('For develop branch') {
-            when { environment name: 'BRANCH_NAME', value: 'develop' }
+        stage('Build') {
             steps {
-                echo "only executed in develop"
+                sh "npm run build"
             }
         }
 
-        stage('For master branch') {
+        stage('Test') {
+            steps {
+                sh "npm test || echo \"Some or all tests failed\""
+            }
+            // This syntax requires a newer Pipeline plugin
+            /*steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh "npm test"
+                }
+            }*/
+        }
+
+        stage('Determine version from package.json') {
+            steps {
+                script {
+                     packageVersion = sh(returnStdout: true, script: 'jq --raw-output .version package.json').trim()
+                }
+            }
+        }
+
+        stage('Require unique production deploy directory') {
             when { environment name: 'BRANCH_NAME', value: 'master' }
             steps {
-                echo "only executed in master"
+                sh "ssh ${deployUserAndHost} \"if [ -d ${deployProductionBaseDirectory}/${packageVersion} ]; then echo deploy directory already exists; exit 1; fi\""
             }
         }
 
-        stage('Build') {
-            environment {
-                FMI_APIKEY = credentials('metoclient.FMI_APIKEY')
-            }
+        stage('Deploy to production') {
+            when { environment name: 'BRANCH_NAME', value: 'master' }
             steps {
-                sh "fgrep -rl insert-your-apikey-here examples/ | xargs --no-run-if-empty sed --in-place s#insert-your-apikey-here#${env.FMI_APIKEY}#"
-                sh "npm run build"
-                sh "chmod --verbose --recursive u+r+w+X,g+r-w+X,o-r-w-x dist/ examples/"
-                sh "ssh fmi@dev.elmo.fmi.fi \"mkdir --parents --mode=755 /fmi/dev/www/test.fmi.fi/javascript/metoclient/${env.BRANCH_NAME}/${env.BUILD_NUMBER}\""
-                sh "scp -rp dist/ examples/ fmi@dev.elmo.fmi.fi:/fmi/dev/www/test.fmi.fi/javascript/metoclient/${env.BRANCH_NAME}/${env.BUILD_NUMBER}/"
-                sh "ssh fmi@dev.elmo.fmi.fi \"rm -rf /fmi/dev/www/test.fmi.fi/javascript/metoclient/${env.BRANCH_NAME}/latest; cp -rf /fmi/dev/www/test.fmi.fi/javascript/metoclient/${env.BRANCH_NAME}/${env.BUILD_NUMBER} /fmi/dev/www/test.fmi.fi/javascript/metoclient/${env.BRANCH_NAME}/latest\""
+                sh "chmod --verbose --recursive u+r+w+X,g+r-w+X,o-r-w-x dist/"
+                sh "ssh ${deployUserAndHost} \"mkdir --parents --mode=750 ${deployProductionBaseDirectory}/${packageVersion}\""
+                sh "scp -rp dist/* ${deployUserAndHost}:${deployProductionBaseDirectory}/${packageVersion}/"
+            }
+        }
+
+        stage('Deploy to non-production') {
+            when { not { environment name: 'BRANCH_NAME', value: 'master' } }
+            steps {
+                sh "chmod --verbose --recursive u+r+w+X,g+r-w+X,o-r-w-x dist/"
+                sh "ssh ${deployUserAndHost} \"mkdir --parents --mode=750 ${deployNonProductionBaseDirectory}/${env.BRANCH_NAME}/${env.BUILD_NUMBER}\""
+                sh "scp -rp dist/* ${deployUserAndHost}:${deployNonProductionBaseDirectory}/${env.BRANCH_NAME}/${env.BUILD_NUMBER}/"
+            }
+        }
+
+        stage('TODO: Publish package to npmjs.com') {
+            when { environment name: 'BRANCH_NAME', value: 'master' }
+            steps {
+                sh "echo \"TODO: npm publish\""
             }
         }
     }
 
     post {
         success {
-            slackSend "Success ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+            slackSend "Success ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)"
         }
         unstable {
-            slackSend "Unstable ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+            slackSend "Unstable ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)"
         }
         failure {
-            slackSend "Failure ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+            slackSend "Failure ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)"
         }
         changed {
-            slackSend "Changed ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)"
+            slackSend "Changed ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)"
         }
     }
 }

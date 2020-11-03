@@ -2,8 +2,8 @@
 
 def packageVersion = "undefined"
 def deployUserAndHost = "fmi@io.elmo.fmi.fi"
-def deployProductionBaseDirectory = " /fmi/prod/www/cdn.fmi.fi/javascript/metoclient"
-def deployNonProductionBaseDirectory = " /fmi/dev/www/test.fmi.fi/javascript/metoclient"
+def deployProductionBaseDirectory = "/fmi/prod/www/cdn.fmi.fi/javascript/metoclient"
+def deployNonProductionBaseDirectory = "/fmi/dev/www/test.fmi.fi/javascript/metoclient"
 
 pipeline {
 

@@ -1,17 +1,16 @@
-# MetOClient with Rollup
+# Mobile View
 
-This example demonstrates how the [`metoclient` package](https://www.npmjs.com/package/@fmidev/metoclient) can be used with Rollup.
-
+This example demonstrates how to define a touch-friendly user interface for mobile devices.
 
 Install the project dependencies.
 
-    cd examples/tiled
+    cd examples/mobile
     npm install
 
 Create a bundle for the browser.
 
     npm run build
 
-Open `index.html` to see the result.
+Open `index.html` in a browser.
 
-    open index.html
+The time step of the time series can be changed by clicking the button in the bottom right corner.

@@ -1,17 +1,16 @@
-# MetOClient with Rollup
+# WMTS Layers
 
-This example demonstrates how the [`metoclient` package](https://www.npmjs.com/package/@fmidev/metoclient) can be used with Rollup.
-
+This example demonstrates how to configure an alternative WMTS base map layer.
 
 Install the project dependencies.
 
-    cd examples/tiled
+    cd examples/wmts
     npm install
 
 Create a bundle for the browser.
 
     npm run build
 
-Open `index.html` to see the result.
+Open `index.html` in a browser.
 
-    open index.html
+The base map can be changed in the layer switcher in the top right corner. Also WMTS time series layers are supported.

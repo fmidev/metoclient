@@ -99,7 +99,10 @@ pipeline {
 
         stage('Publish package to npmjs.com') {
             when { environment name: 'BRANCH_NAME', value: 'master' }
-            withCredentials([string(credentialsId: 'npm-token', variable: 'NPM_TOKEN')]) {
+	    environment {
+	      NPM_TOKEN = credentials('npm-token')
+	    }
+            steps {
                 sh "echo //registry.npmjs.org/:_authToken=${env.NPM_TOKEN} > .npmrc"
                 sh 'npm whoami'
                 sh 'npm publish'

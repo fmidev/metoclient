@@ -97,10 +97,13 @@ pipeline {
             }
         }
 
-        stage('TODO: Publish package to npmjs.com') {
+        stage('Publish package to npmjs.com') {
             when { environment name: 'BRANCH_NAME', value: 'master' }
-            steps {
-                sh "echo \"TODO: npm publish\""
+            withCredentials([string(credentialsId: 'npm-token', variable: 'NPM_TOKEN')]) {
+                sh "echo //registry.npmjs.org/:_authToken=${env.NPM_TOKEN} > .npmrc"
+                sh 'npm whoami'
+                sh 'npm publish'
+		sh 'rm .npmrc'
             }
         }
     }

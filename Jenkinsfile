@@ -104,7 +104,6 @@ pipeline {
 	    }
             steps {
                 sh "echo //registry.npmjs.org/:_authToken=${env.NPM_TOKEN} > .npmrc"
-                sh 'npm whoami'
                 sh 'npm publish'
 		sh 'rm .npmrc'
             }

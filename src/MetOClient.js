@@ -803,8 +803,7 @@ export class MetOClient extends BaseObject {
       .filter((layer) => layer.get('mapbox-source') == null);
     layers.forEach((layer) => {
       const times = layer.get('times');
-      let visible =
-        times == null || !Array.isArray(times) || times.length === 0;
+      let visible = times == null || !Array.isArray(times);
       if (!visible) {
         const source = layer.getSource();
         const visibleTime = this.getVisibleTime_(layer);
@@ -1725,7 +1724,9 @@ export class MetOClient extends BaseObject {
         }
         const layerElement = capabilities.data.Capability.Layer.Layer.find(
           (element) =>
-            [layer.url.layer, layer.url.layers].includes(element.Name)
+            layer.time.name != null
+              ? layer.time.name === element.Name
+              : [layer.url.layer, layer.url.layers].includes(element.Name)
         );
         const data =
           layerElement != null

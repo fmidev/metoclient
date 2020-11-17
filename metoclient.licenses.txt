@@ -32,7 +32,7 @@ THE SOFTWARE.
 ---
 
 Name: regenerator-runtime
-Version: 0.13.6
+Version: 0.13.7
 License: MIT
 Private: false
 Description: Runtime for Regenerator-compiled generator and async functions.
@@ -165,7 +165,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 Name: @mapbox/mapbox-gl-style-spec
-Version: 13.15.0
+Version: 13.17.1
 License: ISC
 Private: false
 Description: a specification for mapbox gl styles
@@ -272,13 +272,13 @@ THE SOFTWARE.
 ---
 
 Name: ieee754
-Version: 1.1.13
+Version: 1.2.1
 License: BSD-3-Clause
 Private: false
 Description: Read/write IEEE754 floating point numbers from/to a Buffer or array-like object
 Repository: git://github.com/feross/ieee754.git
 Homepage: https://github.com/feross/ieee754#readme
-Author: Feross Aboukhadijeh <feross@feross.org> (http://feross.org)
+Author: Feross Aboukhadijeh <feross@feross.org> (https://feross.org)
 Contributors:
   Romain Beauxis <toots@rastageeks.org>
 License Copyright:
@@ -719,7 +719,7 @@ SOFTWARE.
 ---
 
 Name: can-param
-Version: 1.1.2
+Version: 1.1.3
 License: null
 Private: false
 Description: Serialize an array or object into a query string.

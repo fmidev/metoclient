@@ -594,6 +594,8 @@ class TimeSlider extends Control {
       frame.element.style.display = 'none';
     });
 
+    const hourFormatExists = this.frames_.some(frame => !frame.useDateFormat);
+
     // Separate loops to prevent accessing textElement width before it is available
     this.frames_.forEach((frame, index, frames) => {
       const nextIndex = index + 1;
@@ -720,8 +722,8 @@ class TimeSlider extends Control {
                 ).setZone(self.get('timeZone')).hour %
                   2 !==
                   0)) &&
-            !frames[self.previousTickIndex_].useDateFormat) ||
-            frame.useDateFormat ||
+            (hourFormatExists && !frames[self.previousTickIndex_].useDateFormat)) ||
+            (hourFormatExists && frame.useDateFormat) ||
             (minStep > 0 &&
               ((minStep >= constants.HOUR &&
                 frames[self.previousTickIndex_].endTime % constants.HOUR !==

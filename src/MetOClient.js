@@ -59,6 +59,7 @@ export class MetOClient extends BaseObject {
     this.set('timeSlider', null);
     this.vectorConfig_ = null;
     this.status_ = {};
+    this.resolutionOnEnterFullScreen_ = null;
     this.delay_ =
       options.refreshInterval != null &&
       options.refreshInterval <= Number.MAX_SAFE_INTEGER &&
@@ -757,7 +758,17 @@ export class MetOClient extends BaseObject {
     const viewOptions = { ...this.config_ };
     delete viewOptions.sources;
     delete viewOptions.layers;
-    return new View(viewOptions);
+    const view = new View(viewOptions);
+    view.on('change:resolution', () => {
+      if (
+        !document.fullscreenElement &&
+        !document.webkitCurrentFullScreenElement
+      ) {
+        this.resolutionOnEnterFullScreen_ = view.getResolution();
+      }
+    });
+    this.resolutionOnEnterFullScreen_ = view.getResolution();
+    return view;
   }
 
   /**
@@ -1357,6 +1368,35 @@ export class MetOClient extends BaseObject {
     }
   }
 
+  handleFullScreen_() {
+    const map = this.get('map');
+    if (map == null) {
+      return;
+    }
+    const view = map.getView();
+    if (view == null) {
+      return;
+    }
+    // ol/control/FullScreen: enterfullscreen / leavefullscreen were not stable
+    if (
+      !document.fullscreenElement &&
+      !document.webkitCurrentFullScreenElement
+    ) {
+      const resolution = view.getResolution();
+      const newResolution = this.resolutionOnEnterFullScreen_ / resolution;
+      view.adjustResolution(newResolution);
+      map.once('moveend', () => {
+        view.adjustResolution(newResolution);
+      });
+    }
+  }
+
+  createFullScreenListener_() {
+    const element = document.getElementById(this.config_.target);
+    element.onfullscreenchange = this.handleFullScreen_.bind(this);
+    element.onwebkitfullscreenchange = this.handleFullScreen_.bind(this);
+  }
+
   initMap_(map) {
     this.set('map', map);
     if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
@@ -1395,6 +1435,7 @@ export class MetOClient extends BaseObject {
       }
     }
     this.createLegends_();
+    this.createFullScreenListener_();
     this.renderComplete_ = true;
     this.get('timeSlider').createTimeSlider(this.times_);
     this.playingListener_ = this.get('map').on('change:playing', (evt) => {
@@ -1926,6 +1967,8 @@ export class MetOClient extends BaseObject {
     unByKey(this.previousListener_);
     unByKey(this.timeListener_);
     unByKey(this.optionsListener_);
+    document.onfullscreenchange = null;
+    document.onwebkitfullscreenchange = null;
     clearInterval(this.refreshTimer_);
     clearTimeout(this.animationTimeout_);
     this.get('timeSlider').destroy();

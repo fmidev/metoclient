@@ -1,5 +1,5 @@
 Name: core-js
-Version: 3.6.5
+Version: 3.7.0
 License: MIT
 Private: false
 Description: Standard library
@@ -67,7 +67,7 @@ SOFTWARE.
 ---
 
 Name: ol
-Version: 6.3.1
+Version: 6.4.3
 License: BSD-2-Clause
 Private: false
 Description: OpenLayers mapping library
@@ -77,7 +77,7 @@ Homepage: https://openlayers.org/
 ---
 
 Name: proj4
-Version: 2.6.2
+Version: 2.6.3
 License: MIT
 Private: false
 Description: Proj4js is a JavaScript library to transform point coordinates from one coordinate system to another, including datum transformations.
@@ -176,7 +176,7 @@ Author: Mapbox
 ---
 
 Name: ol-mapbox-style
-Version: 6.1.2
+Version: 6.1.4
 License: BSD-2-Clause
 Private: false
 Description: Create OpenLayers maps from Mapbox Style objects
@@ -221,17 +221,6 @@ Homepage: https://github.com/csshat/webfont-matcher
 Author: Marek Hrabe <marekhrabe@abdoc.net> (https://github.com/marekhrabe)
 Contributors:
   Tomas Hanacek <tomashanacek@avocode.com> (https://github.com/tomashanacek)
-
----
-
-Name: elm-pep
-Version: 1.0.6
-License: MPL-2.0
-Private: false
-Description: npm package for https://github.com/mpizenberg/elm-pep
-Repository: git://github.com/ahocevar/elm-pep.git
-Homepage: https://github.com/ahocevar/elm-pep#readme
-Author: Andreas Hocevar <andreas.hocevar@gmail.com>
 
 ---
 
@@ -593,7 +582,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ---
 
 Name: luxon
-Version: 1.24.1
+Version: 1.25.0
 License: MIT
 Private: false
 Description: Immutable date wrapper
@@ -604,8 +593,8 @@ Author: Isaac Cambron
 ---
 
 Name: rrule
-Version: 2.6.4
-License: SEE LICENSE IN LICENSE
+Version: 2.6.6
+License: BSD-3-Clause
 Private: false
 Description: JavaScript library for working with recurrence rules for calendar dates.
 Repository: git://github.com/jakubroztocil/rrule.git
@@ -791,7 +780,7 @@ SOFTWARE.
 ---
 
 Name: ol-layerswitcher
-Version: 3.6.0
+Version: 3.8.1
 License: MIT
 Private: false
 Description: Layer switcher control for OpenLayers
@@ -803,6 +792,7 @@ Contributors:
   Poul Kjeldager Sørensen <pks@s-innovations.net>
   Micho García <micho.garcia@geomati.co>
   olivierdalang <olivier.dalang@gmail.com>
+  Peter Goulborn <petergoulborn@astuntechnology.com>
 
 ---
 

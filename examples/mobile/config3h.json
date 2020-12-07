@@ -111,7 +111,7 @@
         "height": "1024"
       },
       "time": {
-        "range": "every hour for 1 time history AND every hour for 10 times"
+        "range": "every hour for 10 times"
       }
     }
   ]

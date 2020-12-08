@@ -73,14 +73,14 @@ pipeline {
         }
 
         stage('Require unique production deploy directory') {
-            when { environment name: 'BRANCH_NAME', value: 'master' }
+            when { environment name: 'BRANCH_NAME', value: 'main' }
             steps {
                 sh "ssh ${deployUserAndHost} \"if [ -d ${deployProductionBaseDirectory}/${packageVersion} ]; then echo deploy directory already exists; exit 1; fi\""
             }
         }
 
         stage('Deploy to production') {
-            when { environment name: 'BRANCH_NAME', value: 'master' }
+            when { environment name: 'BRANCH_NAME', value: 'main' }
             steps {
                 sh "chmod --verbose --recursive u+r+w+X,g+r-w+X,o-r-w-x dist/"
                 sh "ssh ${deployUserAndHost} \"mkdir --parents --mode=750 ${deployProductionBaseDirectory}/${packageVersion}\""
@@ -89,7 +89,7 @@ pipeline {
         }
 
         stage('Deploy to non-production') {
-            when { not { environment name: 'BRANCH_NAME', value: 'master' } }
+            when { not { environment name: 'BRANCH_NAME', value: 'main' } }
             steps {
                 sh "chmod --verbose --recursive u+r+w+X,g+r-w+X,o-r-w-x dist/"
                 sh "ssh ${deployUserAndHost} \"mkdir --parents --mode=750 ${deployNonProductionBaseDirectory}/${env.BRANCH_NAME}/${env.BUILD_NUMBER}\""
@@ -98,7 +98,7 @@ pipeline {
         }
 
         stage('Publish package to npmjs.com') {
-            when { environment name: 'BRANCH_NAME', value: 'master' }
+            when { environment name: 'BRANCH_NAME', value: 'main' }
             environment {
                 NPM_TOKEN = credentials('npm-token')
             }

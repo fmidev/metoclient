@@ -1,6 +1,6 @@
 {
   "name": "@fmidev/metoclient",
-  "version": "6.2.15",
+  "version": "6.2.16",
   "description": "Map animator",
   "main": "dist/metoclient.js",
   "module": "dist/metoclient.es.js",
@@ -136,8 +136,7 @@
     "rollup-plugin-terser": "5.3.1",
     "rollup-plugin-version-injector": "1.2.2",
     "shp-write": "0.3.2",
-    "whatwg-fetch": "3.5.0",
-    "xmldom": "0.3.0"
+    "whatwg-fetch": "3.5.0"
   },
   "peerDependencies": {}
 }

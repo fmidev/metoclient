@@ -3,8 +3,7 @@ Version: 3.7.0
 License: MIT
 Private: false
 Description: Standard library
-Repository: git+https://github.com/zloirock/core-js.git
-Homepage: https://github.com/zloirock/core-js#readme
+Repository: https://github.com/zloirock/core-js.git
 License Copyright:
 ===
 
@@ -82,15 +81,6 @@ License: MIT
 Private: false
 Description: Proj4js is a JavaScript library to transform point coordinates from one coordinate system to another, including datum transformations.
 Repository: git://github.com/proj4js/proj4js.git
-Homepage: https://github.com/proj4js/proj4js#readme
-Contributors:
-  Mike Adair <madair@dmsolutions.ca>
-  Richard Greenwood <rich@greenwoodmap.com>
-  Calvin Metcalf <calvin.metcalf@gmail.com>
-  Richard Marsden (http://www.winwaed.com)
-  T. Mittan
-  D. Steinwand
-  S. Nelson
 License Copyright:
 ===
 
@@ -133,7 +123,6 @@ License: BSD-2-Clause
 Private: false
 Description: Utility to convert Mapbox GL Style font names to CSS font definitions
 Repository: git://github.com/openlayers/mapbox-to-css-font.git
-Homepage: https://github.com/openlayers/mapbox-to-css-font#readme
 Author: Andreas Hocevar
 License Copyright:
 ===
@@ -169,8 +158,7 @@ Version: 13.17.1
 License: ISC
 Private: false
 Description: a specification for mapbox gl styles
-Repository: git+ssh://git@github.com/mapbox/mapbox-gl-js.git
-Homepage: https://github.com/mapbox/mapbox-gl-js#readme
+Repository: git@github.com:mapbox/mapbox-gl-js.git
 Author: Mapbox
 
 ---
@@ -181,7 +169,6 @@ License: BSD-2-Clause
 Private: false
 Description: Create OpenLayers maps from Mapbox Style objects
 Repository: git://github.com/openlayers/ol-mapbox-style.git
-Homepage: https://github.com/openlayers/ol-mapbox-style#readme
 License Copyright:
 ===
 
@@ -216,7 +203,7 @@ Version: 1.1.0
 License: MIT
 Private: false
 Description: Tries to match your font to various webfont services and provide you with a link to use it
-Repository: git+https://github.com/csshat/webfont-matcher.git
+Repository: https://github.com/csshat/webfont-matcher
 Homepage: https://github.com/csshat/webfont-matcher
 Author: Marek Hrabe <marekhrabe@abdoc.net> (https://github.com/marekhrabe)
 Contributors:
@@ -266,7 +253,6 @@ License: BSD-3-Clause
 Private: false
 Description: Read/write IEEE754 floating point numbers from/to a Buffer or array-like object
 Repository: git://github.com/feross/ieee754.git
-Homepage: https://github.com/feross/ieee754#readme
 Author: Feross Aboukhadijeh <feross@feross.org> (https://feross.org)
 Contributors:
   Romain Beauxis <toots@rastageeks.org>
@@ -293,7 +279,7 @@ Version: 3.2.1
 License: BSD-3-Clause
 Private: false
 Description: a low-level, lightweight protocol buffers implementation in JavaScript
-Repository: git+ssh://git@github.com/mapbox/pbf.git
+Repository: git@github.com:mapbox/pbf.git
 Homepage: https://github.com/mapbox/pbf
 Author: Konstantin Kaefer
 License Copyright:
@@ -552,7 +538,7 @@ Version: 2.3.4
 License: MIT
 Private: false
 Description: Lightweight URL manipulation with JavaScript.
-Repository: git+https://github.com/Mikhus/domurl.git
+Repository: https://github.com/Mikhus/domurl.git
 Homepage: https://github.com/Mikhus/jsurl
 License Copyright:
 ===
@@ -586,8 +572,7 @@ Version: 1.25.0
 License: MIT
 Private: false
 Description: Immutable date wrapper
-Repository: git+https://github.com/moment/luxon.git
-Homepage: https://github.com/moment/luxon#readme
+Repository: undefined
 Author: Isaac Cambron
 
 ---
@@ -784,8 +769,7 @@ Version: 3.8.1
 License: MIT
 Private: false
 Description: Layer switcher control for OpenLayers
-Repository: git+https://github.com/walkermatt/ol-layerswitcher.git
-Homepage: https://github.com/walkermatt/ol-layerswitcher#readme
+Repository: https://github.com/walkermatt/ol-layerswitcher.git
 Author: Matt Walker (http://longwayaround.org.uk)
 Contributors:
   Thomas Gratier <thomas_gratier@yahoo.fr>
@@ -801,8 +785,7 @@ Version: 1.2.2
 License: MIT
 Private: false
 Description: A more versatile way of adding & removing event listeners
-Repository: git+https://github.com/zenorocha/good-listener.git
-Homepage: https://github.com/zenorocha/good-listener#readme
+Repository: undefined
 
 ---
 
@@ -811,8 +794,7 @@ Version: 3.2.0
 License: MIT
 Private: false
 Description: Lightweight event delegation
-Repository: git+https://github.com/zenorocha/delegate.git
-Homepage: https://github.com/zenorocha/delegate#readme
+Repository: undefined
 
 ---
 
@@ -856,7 +838,7 @@ Version: 1.0.0
 License: MIT
 Private: false
 Description: Batch processing in JS
-Repository: git+https://github.com/wnr/batch-processor.git
+Repository: https://github.com/wnr/batch-processor.git
 Homepage: https://github.com/wnr/batch-processor
 Author: Lucas Wiener
 License Copyright:

@@ -1,13 +1,13 @@
 {
   "name": "parcel-example",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Parcel Example",
   "scripts": {
     "dev": "parcel main.js",
     "build": "parcel build main.js"
   },
   "devDependencies": {
-    "parcel-bundler": "1.12.4"
+    "parcel-bundler": "1.12.5"
   },
   "dependencies": {
     "@fmidev/metoclient": "file:../.."

@@ -47,6 +47,174 @@ export function addNewTimes(times, newTimes) {
 }
 
 /**
+ * Parse time item.
+ *
+ * @param {} timeInput
+ * @returns {}
+ */
+function parseTimeList(timeInput) {
+  const DATE_TYPE = 'date';
+  const DURATION_TYPE = 'period';
+  const times = [];
+  const parsedParts = timeInput.split('/').map((part) => {
+    if (part.toLowerCase() === constants.PRESENT) {
+      return {
+        value: Date.now(),
+        type: DATE_TYPE,
+      };
+    }
+    const date = new Date(part);
+    if (isValidDate(date)) {
+      return {
+        value: date.getTime(),
+        type: DATE_TYPE,
+      };
+    }
+    try {
+      const duration = Duration.fromISO(part).toObject();
+      return {
+        value: duration,
+        type: DURATION_TYPE,
+      };
+    } catch (e) {
+      return {
+        value: null,
+        type: null,
+      };
+    }
+  });
+  // Todo: if (parsedParts.length === 2) {} else
+  if (
+    parsedParts.length === 3 &&
+    parsedParts[0].type === DATE_TYPE &&
+    parsedParts[1].type === DATE_TYPE &&
+    parsedParts[2].type === DURATION_TYPE
+  ) {
+    const duration = Duration.fromObject(parsedParts[2].value).as(
+      'milliseconds'
+    );
+    let i = 0;
+    let moment = parsedParts[0].value;
+    while (moment <= parsedParts[1].value) {
+      times.push(moment);
+      i += 1;
+      moment = parsedParts[0].value + i * duration;
+    }
+  }
+  return times;
+}
+
+/**
+ * Parse time rule.
+ *
+ * @param {} timeInput
+ * @param timeOffset
+ * @param timeData
+ * @returns {}
+ */
+function parseRRule(timeInput, timeOffset, timeData = null) {
+  let times = [];
+  const currentTime = Date.now();
+  const texts = timeInput.toLowerCase().split(' and ');
+  texts
+    .map((text) => text.trim())
+    .forEach((text) => {
+      const dataSteps = text.startsWith('data');
+      if (dataSteps) {
+        text = text.replace('data', 'every');
+      }
+      let rule;
+      const parts = text.split(' ');
+      if (parts.length >= 2) {
+        const numTimes = Number(parts[0]);
+        if (!Number.isNaN(numTimes) && parts[1].trim() === 'times') {
+          times = times.concat(
+            Array(numTimes).fill(
+              parts.length >= 3 && parts[2] === 'history'
+                ? Number.NEGATIVE_INFINITY
+                : Number.POSITIVE_INFINITY
+            )
+          );
+          return;
+        }
+      }
+      const history = text.includes(' history');
+      text = text.replace(' history', '');
+      if (dataSteps) {
+        text += ' for 2 times';
+      }
+      try {
+        rule = RRule.fromText(text);
+      } catch (err) {
+        return;
+      }
+      if (!dataSteps) {
+        if (rule.options.freq === RRule.HOURLY) {
+          rule.options.byhour = Array.from(Array(24).keys()).filter(
+            (hour) => hour % rule.options.interval === 0
+          );
+          rule.options.byminute = [0];
+          rule.options.bysecond = [0];
+          rule.options.interval = 1;
+        } else if (rule.options.freq === RRule.MINUTELY) {
+          rule.options.byminute = Array.from(Array(60).keys()).filter(
+            (minute) => minute % rule.options.interval === 0
+          );
+          rule.options.bysecond = [0];
+          rule.options.interval = 1;
+        }
+      }
+      if (timeOffset != null) {
+        let start = DateTime.fromJSDate(rule.options.dtstart);
+        if (start != null) {
+          const offsetDuration = Duration.fromISO(timeOffset);
+          if (offsetDuration != null) {
+            start = start.plus(offsetDuration);
+            if (start != null) {
+              rule.options.dtstart = start.toJSDate();
+            }
+          }
+        }
+      }
+      let ruleTimes = rule
+        .all()
+        .map((date) => DateTime.fromJSDate(date).toUTC().valueOf());
+      let offset;
+      if (history) {
+        const lastTimeStepIndex = ruleTimes.length - 1;
+        if (lastTimeStepIndex === 0) {
+          const tmpOptions = { ...rule.options };
+          tmpOptions.count = 2;
+          const tmpRule = new RRule(tmpOptions);
+          const tmpRuleTimes = tmpRule.all();
+          offset = tmpRuleTimes[1] - tmpRuleTimes[0];
+        } else {
+          offset =
+            ((lastTimeStepIndex + 1) *
+              (ruleTimes[lastTimeStepIndex] - ruleTimes[0])) /
+            lastTimeStepIndex;
+        }
+        ruleTimes = ruleTimes.map((time) => time - offset);
+      }
+      if (dataSteps) {
+        timeData.forEach((dataTime) => {
+          if (
+            (history &&
+              dataTime >= ruleTimes[1] &&
+              dataTime <= currentTime) ||
+            (!history && dataTime <= ruleTimes[1] && dataTime >= currentTime)
+          ) {
+            times.push(dataTime);
+          }
+        });
+      } else {
+        times = addNewTimes(times, ruleTimes);
+      }
+    });
+  return times;
+}
+
+/**
  * Parse time point input.
  *
  * @param {} timeInput
@@ -55,11 +223,7 @@ export function addNewTimes(times, newTimes) {
  * @returns {}
  */
 export function parseTimes(timeInput, timeOffset, timeData = null) {
-  const DATE_TYPE = 'date';
-  const DURATION_TYPE = 'period';
-  const currentTime = Date.now();
   let times = [];
-
   if (timeInput == null) {
     times = [];
   } else if (Array.isArray(timeInput)) {
@@ -70,152 +234,24 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
       .all()
       .map((date) => DateTime.fromJSDate(date).toUTC().valueOf());
     times = addNewTimes(times, ruleTimes);
-  } else if (timeInput.includes(',')) {
-    const dates = timeInput.split(',');
-    times = dates.map((date) => new Date(date.trim()).getTime());
-  } else if (timeInput.includes('/')) {
-    const parsedParts = timeInput.split('/').map((part) => {
-      if (part.toLowerCase() === constants.PRESENT) {
-        return {
-          value: Date.now(),
-          type: DATE_TYPE,
-        };
+  } else if (timeInput.includes(',') || timeInput.includes('/')) {
+    const dates = timeInput.split(',').map((date) => date.trim());
+    times = dates.reduce((accTimes, date) => {
+      if (date.includes('/')) {
+        // eslint-disable-next-line no-param-reassign
+        accTimes = accTimes.concat(parseTimeList(date));
+      } else {
+        const newDate = new Date(date);
+        if (isValidDate(newDate)) {
+          accTimes.push(new Date(date).getTime());
+        }
       }
-      const date = new Date(part);
-      if (isValidDate(date)) {
-        return {
-          value: date.getTime(),
-          type: DATE_TYPE,
-        };
-      }
-      try {
-        const duration = Duration.fromISO(part).toObject();
-        return {
-          value: duration,
-          type: DURATION_TYPE,
-        };
-      } catch (e) {
-        return {
-          value: null,
-          type: null,
-        };
-      }
-    });
-    // Todo: if (parsedParts.length === 2) {} else
-    if (
-      parsedParts.length === 3 &&
-      parsedParts[0].type === DATE_TYPE &&
-      parsedParts[1].type === DATE_TYPE &&
-      parsedParts[2].type === DURATION_TYPE
-    ) {
-      const duration = Duration.fromObject(parsedParts[2].value).as(
-        'milliseconds'
-      );
-      let i = 0;
-      let moment = parsedParts[0].value;
-      while (moment <= parsedParts[1].value) {
-        times.push(moment);
-        i += 1;
-        moment = parsedParts[0].value + i * duration;
-      }
-    }
+      return accTimes;
+    }, []);
+  } else if (isValidDate(new Date(timeInput))) {
+    times.push(new Date(timeInput).getTime());
   } else {
-    const texts = timeInput.toLowerCase().split(' and ');
-    texts
-      .map((text) => text.trim())
-      .forEach((text) => {
-        const dataSteps = text.startsWith('data');
-        if (dataSteps) {
-          text = text.replace('data', 'every');
-        }
-        let rule;
-        const parts = text.split(' ');
-        if (parts.length >= 2) {
-          const numTimes = Number(parts[0]);
-          if (!Number.isNaN(numTimes) && parts[1].trim() === 'times') {
-            times = times.concat(
-              Array(numTimes).fill(
-                parts.length >= 3 && parts[2] === 'history'
-                  ? Number.NEGATIVE_INFINITY
-                  : Number.POSITIVE_INFINITY
-              )
-            );
-            return;
-          }
-        }
-        const history = text.includes(' history');
-        text = text.replace(' history', '');
-        if (dataSteps) {
-          text += ' for 2 times';
-        }
-        try {
-          rule = RRule.fromText(text);
-        } catch (err) {
-          return;
-        }
-        if (!dataSteps) {
-          if (rule.options.freq === RRule.HOURLY) {
-            rule.options.byhour = Array.from(Array(24).keys()).filter(
-              (hour) => hour % rule.options.interval === 0
-            );
-            rule.options.byminute = [0];
-            rule.options.bysecond = [0];
-            rule.options.interval = 1;
-          } else if (rule.options.freq === RRule.MINUTELY) {
-            rule.options.byminute = Array.from(Array(60).keys()).filter(
-              (minute) => minute % rule.options.interval === 0
-            );
-            rule.options.bysecond = [0];
-            rule.options.interval = 1;
-          }
-        }
-        if (timeOffset != null) {
-          let start = DateTime.fromJSDate(rule.options.dtstart);
-          if (start != null) {
-            const offsetDuration = Duration.fromISO(timeOffset);
-            if (offsetDuration != null) {
-              start = start.plus(offsetDuration);
-              if (start != null) {
-                rule.options.dtstart = start.toJSDate();
-              }
-            }
-          }
-        }
-        let ruleTimes = rule
-          .all()
-          .map((date) => DateTime.fromJSDate(date).toUTC().valueOf());
-        let offset;
-        if (history) {
-          const lastTimeStepIndex = ruleTimes.length - 1;
-          if (lastTimeStepIndex === 0) {
-            const tmpOptions = { ...rule.options };
-            tmpOptions.count = 2;
-            const tmpRule = new RRule(tmpOptions);
-            const tmpRuleTimes = tmpRule.all();
-            offset = tmpRuleTimes[1] - tmpRuleTimes[0];
-          } else {
-            offset =
-              ((lastTimeStepIndex + 1) *
-                (ruleTimes[lastTimeStepIndex] - ruleTimes[0])) /
-              lastTimeStepIndex;
-          }
-          ruleTimes = ruleTimes.map((time) => time - offset);
-        }
-        if (dataSteps) {
-          timeData.forEach((dataTime) => {
-            if (
-              (history &&
-                dataTime >= ruleTimes[1] &&
-                dataTime <= currentTime) ||
-              (!history && dataTime <= ruleTimes[1] && dataTime >= currentTime)
-            ) {
-              times.push(dataTime);
-            }
-          });
-        } else {
-          times = addNewTimes(times, ruleTimes);
-        }
-      });
+    times = parseRRule(timeInput, timeOffset, timeData);
   }
   times.sort();
   return times;

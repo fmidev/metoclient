@@ -66,7 +66,7 @@ THE SOFTWARE.
 ---
 
 Name: ol
-Version: 6.4.3
+Version: 6.3.1
 License: BSD-2-Clause
 Private: false
 Description: OpenLayers mapping library
@@ -208,6 +208,17 @@ Homepage: https://github.com/csshat/webfont-matcher
 Author: Marek Hrabe <marekhrabe@abdoc.net> (https://github.com/marekhrabe)
 Contributors:
   Tomas Hanacek <tomashanacek@avocode.com> (https://github.com/tomashanacek)
+
+---
+
+Name: elm-pep
+Version: 1.0.6
+License: MPL-2.0
+Private: false
+Description: npm package for https://github.com/mpizenberg/elm-pep
+Repository: git://github.com/ahocevar/elm-pep.git
+Homepage: https://github.com/ahocevar/elm-pep#readme
+Author: Andreas Hocevar <andreas.hocevar@gmail.com>
 
 ---
 

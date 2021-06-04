@@ -931,19 +931,37 @@ MapAnimation.prototype.updateStorage = async function () {
  * @param {string} values Capabilities time definitions.
  */
 MapAnimation.prototype.parseCapabTimes = function (layerAnimation, values) {
-  let parameters = values.split('/')
-  let i, dates, datesLen, capabTime
-  if (parameters.length >= 3) {
-    layerAnimation['capabBeginTime'] = moment(parameters[0]).valueOf()
-    layerAnimation['capabEndTime'] = moment(parameters[1]).valueOf()
-    layerAnimation['capabResolutionTime'] = moment.duration(parameters[2]).asMilliseconds()
+  let parameters, i, j, dates, datesLen, capabTime
+  if ((!values.includes(',')) && (values.includes('/'))) {
+    parameters = values.split('/')
+    if (parameters.length >= 3) {
+      layerAnimation['capabBeginTime'] = moment(parameters[0]).valueOf()
+      layerAnimation['capabEndTime'] = moment(parameters[1]).valueOf()
+      layerAnimation['capabResolutionTime'] = moment.duration(parameters[2]).asMilliseconds()
+    }
   } else {
     dates = values.split(',')
     layerAnimation['capabTimes'] = []
     for (i = 0, datesLen = dates.length; i < datesLen; i++) {
-      capabTime = moment(dates[i]).valueOf()
-      if (isNumeric(capabTime)) {
-        layerAnimation['capabTimes'].push(capabTime)
+      if (dates[i].includes('/')) {
+        const dateParameters = dates[i].split('/')
+        const beginTime = moment(dateParameters[0]).valueOf()
+        const endTime = moment(dateParameters[1]).valueOf()
+        const resolutionTime = moment.duration(dateParameters[2]).asMilliseconds()
+        if (beginTime <= endTime) {
+          j = 0
+          let time = beginTime
+          while (time <= endTime) {
+            layerAnimation['capabTimes'].push(time)
+            j += 1
+            time = beginTime + j * resolutionTime
+          }
+        }
+      } else {
+        capabTime = moment(dates[i]).valueOf()
+        if (isNumeric(capabTime)) {
+          layerAnimation['capabTimes'].push(capabTime)
+        }
       }
     }
     if (layerAnimation['capabTimes'].length > 0) {

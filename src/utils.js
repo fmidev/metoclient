@@ -199,9 +199,7 @@ function parseRRule(timeInput, timeOffset, timeData = null) {
       if (dataSteps) {
         timeData.forEach((dataTime) => {
           if (
-            (history &&
-              dataTime >= ruleTimes[1] &&
-              dataTime <= currentTime) ||
+            (history && dataTime >= ruleTimes[1] && dataTime <= currentTime) ||
             (!history && dataTime <= ruleTimes[1] && dataTime >= currentTime)
           ) {
             times.push(dataTime);
@@ -367,6 +365,11 @@ export function getSourceCapabilitiesUrl(source) {
   return url;
 }
 
+/**
+ * @param layerName
+ * @param layerStyles
+ * @param capabilities
+ */
 export function getLegendUrl(layerName, layerStyles, capabilities) {
   if (
     layerName == null ||

@@ -7,11 +7,6 @@ import proj4 from 'proj4/dist/proj4';
 import olms from 'ol-mapbox-style';
 import { transform } from 'ol/proj';
 import ElementVisibilityWatcher from 'element-visibility-watcher';
-import {
-  parseTimes,
-  updateSourceTime,
-  getSourceCapabilitiesUrl,
-} from './utils';
 import BaseObject from 'ol/Object';
 import { unByKey } from 'ol/Observable';
 import { DateTime, Duration } from 'luxon';
@@ -30,6 +25,11 @@ import KeyboardPan from 'ol/interaction/KeyboardPan';
 import KeyboardZoom from 'ol/interaction/KeyboardZoom';
 import MouseWheelZoom from 'ol/interaction/MouseWheelZoom';
 import Style from 'ol/style/Style';
+import {
+  parseTimes,
+  updateSourceTime,
+  getSourceCapabilitiesUrl,
+} from './utils';
 import * as constants from './constants';
 import CapabilitiesReader from './CapabilitiesReader';
 import SourceUpdater from './SourceUpdater';
@@ -111,11 +111,11 @@ export class MetOClient extends BaseObject {
    * @param silent
    */
   set(key, value, silent) {
-    let property = this.get(key);
+    const property = this.get(key);
     if (property != null && typeof property === 'object') {
       super.set(key, value, true);
       if (!silent) {
-        this.dispatchEvent('change:' + key);
+        this.dispatchEvent(`change:${key}`);
       }
     } else {
       super.set(key, value, silent);
@@ -154,7 +154,7 @@ export class MetOClient extends BaseObject {
   /**
    * Render the animation map based on current configuration.
    *
-   * @returns {Promise<Object>} Promise object representing rendered map.
+   * @returns {Promise<object>} Promise object representing rendered map.
    */
   render() {
     return this.updateCapabilities_()
@@ -358,7 +358,7 @@ export class MetOClient extends BaseObject {
           url,
           crossDomain: true,
           contentType: 'text/plain',
-          beforeSend: function (jqxhr) {
+          beforeSend(jqxhr) {
             jqxhr.requestURL = url;
           },
         });
@@ -649,7 +649,7 @@ export class MetOClient extends BaseObject {
           ? constants.VISIBLE
           : constants.NOT_VISIBLE;
     });
-    let layers = new Collection(
+    const layers = new Collection(
       this.config_.layers
         .map((layerConfig) => {
           if (
@@ -1025,14 +1025,13 @@ export class MetOClient extends BaseObject {
     if (map == null) {
       return null;
     }
-    let mapTime = map.get('time');
+    const mapTime = map.get('time');
     const layerTimes = featureLayer.get('times');
     const hideAll =
       mapTime < layerTimes[0] || mapTime > layerTimes[layerTimes.length - 1];
-    const layerTime = hideAll
+    return hideAll
       ? null
       : [...layerTimes].reverse().find((time) => time <= mapTime);
-    return layerTime;
   }
 
   /**
@@ -1462,7 +1461,7 @@ export class MetOClient extends BaseObject {
     if (times != null && Array.isArray(times) && times.length > 0) {
       this.times_ = [...new Set([...this.times_, ...times])].sort();
     }
-    let map = this.get('map');
+    const map = this.get('map');
     if (map != null && map.get('time') == null && this.times_.length > 0) {
       const currentTime = Date.now();
       map.set(
@@ -1509,12 +1508,12 @@ export class MetOClient extends BaseObject {
             .filter((layer) => layer.get('mapbox-source') != null)
             .forEach((layer) => {
               let layerConfig;
-              let layerTimes = [];
+              const layerTimes = [];
               let timeProperty;
               const mapboxLayers = layer.get('mapbox-layers');
               if (mapboxLayers != null) {
                 layer.set('id', mapboxLayers.join('-'));
-                let title = mapboxLayers.reduce((layerTitle, layerId) => {
+                const title = mapboxLayers.reduce((layerTitle, layerId) => {
                   layerConfig = vectorConfig.layers.find(
                     (layer) => layer.id === layerId
                   );
@@ -1607,7 +1606,8 @@ export class MetOClient extends BaseObject {
   createInteractions_() {
     if (this.config_.metadata.tags.includes(constants.TAG_NO_INTERACTIONS)) {
       return [];
-    } else if (
+    }
+    if (
       this.config_.metadata.tags.includes(
         constants.TAG_MOUSE_WHEEL_INTERACTIONS
       )
@@ -1620,15 +1620,14 @@ export class MetOClient extends BaseObject {
         new KeyboardZoom(),
         new MouseWheelZoom(),
       ];
-    } else {
-      return [
-        new DoubleClickZoom(),
-        new DragPan(),
-        new PinchZoom(),
-        new KeyboardPan(),
-        new KeyboardZoom(),
-      ];
     }
+    return [
+      new DoubleClickZoom(),
+      new DragPan(),
+      new PinchZoom(),
+      new KeyboardPan(),
+      new KeyboardZoom(),
+    ];
   }
 
   /**
@@ -1652,7 +1651,7 @@ export class MetOClient extends BaseObject {
         ),
       })
     );
-    let controls = [
+    const controls = [
       new Zoom({
         zoomInLabel: this.config_.texts['Zoom In Label'],
         zoomOutLabel: this.config_.texts['Zoom Out Label'],
@@ -1672,7 +1671,7 @@ export class MetOClient extends BaseObject {
         })
       );
     }
-    let newMap = new Map({
+    const newMap = new Map({
       target: this.config_.target,
       layers: this.createLayers_(),
       view: this.createView_(),
@@ -1873,7 +1872,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * @param force
    */
   next(force) {
     if (!this.isReady_()) {

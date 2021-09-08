@@ -652,12 +652,13 @@ export class MetOClient extends BaseObject {
     const layers = new Collection(
       this.config_.layers
         .map((layerConfig) => {
-          if (
-            layerConfig.time != null &&
-            layerConfig.metadata != null &&
-            layerConfig.metadata.title != null
-          ) {
-            layerConfig.legendTitle = layerConfig.metadata.title;
+          if (layerConfig.time != null && layerConfig.metadata != null) {
+            if (layerConfig.metadata.title != null) {
+              layerConfig.legendTitle = layerConfig.metadata.title;
+            }
+            if (layerConfig.metadata.legendUrl != null) {
+              layerConfig.legendUrl = layerConfig.metadata.legendUrl;
+            }
           }
           return layerConfig;
         })
@@ -1342,15 +1343,22 @@ export class MetOClient extends BaseObject {
       .filter((layer) => this.isAnimationLayer_(layer))
       .reduce(
         (legendArray, layer) => {
-          const source = layer.getSource();
-          if (source != null && typeof source.getLegendUrl === 'function') {
-            const legendUrl = source.getLegendUrl();
-            if (legendUrl != null && legendUrl.length > 0) {
-              legendArray[layer.get('id')] = {
-                title: layer.get('legendTitle'),
-                url: legendUrl,
-              };
+          let legendUrl;
+          const customLegendUrl = layer.get('legendUrl');
+          if (customLegendUrl != null && customLegendUrl.length > 0) {
+            legendUrl = customLegendUrl;
+          }
+          if (legendUrl == null) {
+            const source = layer.getSource();
+            if (source != null && typeof source.getLegendUrl === 'function') {
+              legendUrl = source.getLegendUrl();
             }
+          }
+          if (legendUrl != null && legendUrl.length > 0) {
+            legendArray[layer.get('id')] = {
+              title: layer.get('legendTitle'),
+              url: legendUrl,
+            };
           }
           return legendArray;
         },

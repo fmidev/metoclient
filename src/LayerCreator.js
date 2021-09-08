@@ -45,6 +45,14 @@ export default class LayerCreator {
     if (source == null) {
       return null;
     }
+    let legendUrl = layer.legendUrl != null ? layer.legendUrl : null;
+    if (legendUrl == null && layer.url != null) {
+      legendUrl = getLegendUrl(
+        layer.url.layers,
+        layer.url.styles,
+        capabilities
+      );
+    }
     return new TileLayer({
       source,
       extent: source.bounds,
@@ -57,10 +65,7 @@ export default class LayerCreator {
       next: getAdjacentLayer('next', layer, options.layers),
       legendTitle: layer.legendTitle,
       id: layer.id,
-      legendUrl:
-        layer.url != null
-          ? getLegendUrl(layer.url.layers, layer.url.styles, capabilities)
-          : null,
+      legendUrl,
     });
   }
 
@@ -98,7 +103,14 @@ export default class LayerCreator {
     if (timeDefined) {
       olSource.set('metoclient:time', options.time);
     }
-
+    let legendUrl = layer.legendUrl != null ? layer.legendUrl : null;
+    if (legendUrl == null && layer.url != null) {
+      legendUrl = getLegendUrl(
+        layer.url.layers,
+        layer.url.styles,
+        capabilities
+      );
+    }
     return new ImageLayer({
       source: olSource,
       extent: source.bounds,
@@ -112,7 +124,7 @@ export default class LayerCreator {
       next: getAdjacentLayer('next', layer, options.layers),
       legendTitle: layer.legendTitle,
       id: layer.id,
-      legendUrl: getLegendUrl(layer.url.layer, layer.url.style, capabilities),
+      legendUrl,
     });
   }
 }

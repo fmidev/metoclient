@@ -13,6 +13,9 @@ fmi.config.metoclient = {
   projection: 'EPSG:3067',
   refreshInterval: 'PT15M',
   timeZone: 'Europe/Helsinki',
+  transition: {
+    delay: 1000
+  },
   metadata: {
     tags: [
       'mouse wheel interactions',

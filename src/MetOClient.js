@@ -61,10 +61,11 @@ export class MetOClient extends BaseObject {
     this.status_ = {};
     this.resolutionOnEnterFullScreen_ = null;
     this.delay_ =
-      options.refreshInterval != null &&
-      options.refreshInterval <= Number.MAX_SAFE_INTEGER &&
-      options.refreshInterval >= 0
-        ? options.refreshInterval
+      options.transition != null &&
+      options.transition.delay != null &&
+      options.transition.delay <= Number.MAX_SAFE_INTEGER &&
+      options.transition.delay >= 0
+        ? options.transition.delay
         : constants.DEFAULT_DELAY;
     this.periodDelay_ = 2 * constants.DEFAULT_DELAY;
     this.times_ = [];

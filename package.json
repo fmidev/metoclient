@@ -1,6 +1,6 @@
 {
   "name": "@fmidev/metoclient",
-  "version": "6.2.23",
+  "version": "6.2.24",
   "description": "Map animator",
   "main": "dist/metoclient.js",
   "module": "dist/metoclient.es.js",
@@ -95,7 +95,7 @@
     "good-listener": "1.2.2",
     "luxon": "1.25.0",
     "ol": "6.3.1",
-    "ol-layerswitcher": "3.8.1",
+    "ol-layerswitcher": "3.8.3",
     "ol-mapbox-style": "6.1.4",
     "proj4": "2.6.3",
     "rrule": "2.6.6"

@@ -1410,6 +1410,7 @@ export class MetOClient extends BaseObject {
     if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
       const layerSwitcher = new LayerSwitcher({
         tipLabel: this.config_.texts['Layer Switcher'],
+        reverse: false,
       });
       layerSwitcher.set('metoclient:olClassName', 'LayerSwitcher');
       map.addControl(layerSwitcher);

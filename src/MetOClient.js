@@ -51,6 +51,7 @@ export class MetOClient extends BaseObject {
     );
     register(proj4);
     this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
+    this.config_.texts = assign({}, constants.DEFAULT_OPTIONS.texts, options.texts);
     if (options.target == null && options.container != null) {
       this.config_.target = this.config_.container;
     }
@@ -95,6 +96,7 @@ export class MetOClient extends BaseObject {
     this.optionsListener_ = this.on('change:options', (event) => {
       const options = this.get('options');
       this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
+      this.config_.texts = assign({}, constants.DEFAULT_OPTIONS.texts, options.texts);
       if (options.target == null && options.container != null) {
         this.config_.target = this.config_.container;
       }

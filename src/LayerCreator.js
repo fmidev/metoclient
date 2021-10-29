@@ -64,6 +64,7 @@ export default class LayerCreator {
       previous: getAdjacentLayer('previous', layer, options.layers),
       next: getAdjacentLayer('next', layer, options.layers),
       legendTitle: layer.legendTitle,
+      layerSwitcherTitle: layer.metadata.title,
       id: layer.id,
       legendUrl,
     });
@@ -123,6 +124,7 @@ export default class LayerCreator {
       previous: getAdjacentLayer('previous', layer, options.layers),
       next: getAdjacentLayer('next', layer, options.layers),
       legendTitle: layer.legendTitle,
+      layerSwitcherTitle: layer.metadata.title,
       id: layer.id,
       legendUrl,
     });

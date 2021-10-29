@@ -30,6 +30,14 @@ export function isValidDate(d) {
 }
 
 /**
+ *
+ */
+export function isNumeric(str) {
+  if (typeof str !== 'string') return false;
+  return !Number.isNaN(str) && !Number.isNaN(parseFloat(str));
+}
+
+/**
  * Update time array with time points of another array.
  *
  * @param {Array} times Array of time points to be updated.

@@ -26,6 +26,7 @@ import KeyboardZoom from 'ol/interaction/KeyboardZoom';
 import MouseWheelZoom from 'ol/interaction/MouseWheelZoom';
 import Style from 'ol/style/Style';
 import {
+  isNumeric,
   parseTimes,
   updateSourceTime,
   getSourceCapabilitiesUrl,
@@ -710,7 +711,7 @@ export class MetOClient extends BaseObject {
         }, [])
     );
     layers.getArray().forEach((layer, index, layersArray) => {
-      const opacity = layer.get('metoclient:opacity');
+      const opacity = layer.get(constants.OPACITY);
       if (layer.get('times') == null) {
         layers.item(index).setOpacity(opacity);
       } else {
@@ -742,7 +743,7 @@ export class MetOClient extends BaseObject {
   }
 
   static showLayer_(layer) {
-    let opacity = layer.get('metoclient:opacity');
+    let opacity = layer.get(constants.OPACITY);
     if (opacity == null) {
       opacity = 1;
     }
@@ -1287,9 +1288,111 @@ export class MetOClient extends BaseObject {
     layerSwitcherPanel.appendChild(legendChooserContainer);
     const layerList = layerSwitcherPanel.querySelector('ul');
     if (layerList != null) {
-      layerList.addEventListener('change', () => {
-        this.createLegendChooser_();
+      layerList.addEventListener('change', (event) => {
+        if (event.target.className !== constants.OPACITY_CONTROL_CLASS) {
+          this.refineLayerSwitcher_();
+        }
       });
+    }
+  }
+
+  /**
+   *
+   * @param {*} e
+   * @returns
+   */
+  updateOpacity_(e) {
+    if (!isNumeric(e.target.value)) {
+      e.target.value = 100;
+    }
+    let opacity = Number(e.target.value) / 100;
+    if (opacity < 0.01) {
+      e.target.value = 1;
+      opacity = 0.01;
+    } else if (opacity > 1) {
+      e.target.value = 100;
+      opacity = 1;
+    }
+    const label = e.target.previousSibling.innerText;
+    this.get('map')
+      .getLayers()
+      .getArray()
+      .filter((mapLayer) => mapLayer.get('layerSwitcherTitle') === label)
+      .forEach((layer) => {
+        layer.set(constants.OPACITY, opacity);
+        const layerOpacity = layer.get('opacity');
+        if (layerOpacity > 0) {
+          layer.setOpacity(opacity);
+        }
+      });
+    this.config_.layers.forEach((layer, index) => {
+      if (layer.metadata.title === label) {
+        this.config_.layers[index].opacity = opacity;
+      }
+    });
+  }
+
+  /**
+   *
+   * @returns
+   */
+  createOpacityControl_() {
+    const layerSwitcherPanel = this.getLayerSwitcherPanel_();
+    if (layerSwitcherPanel == null) {
+      return;
+    }
+    const map = this.get('map');
+    const mapLayers = map.getLayers().getArray();
+    layerSwitcherPanel.className += ` ${constants.OPACITY_CONTAINER_CLASS}`;
+    const layerList = layerSwitcherPanel.querySelector('ul');
+    if (layerList != null) {
+      const layers = layerList.getElementsByTagName('li');
+      const numLayers = layers.length;
+      for (let i = 0; i < numLayers; i++) {
+        const { childNodes } = layers[i];
+        const numChildnodes = childNodes.length;
+
+        let label = '';
+        for (let j = 0; j < numChildnodes; j++) {
+          if (childNodes[j].tagName.toLowerCase() === 'label') {
+            label = childNodes[j].innerText;
+          }
+        }
+        if (label.length === 0) {
+          continue;
+        }
+        let opacity = 1;
+        const titleLayer = mapLayers.find(
+          (mapLayer) => mapLayer.get('layerSwitcherTitle') === label
+        );
+        if (titleLayer != null) {
+          const layerOpacity = titleLayer.get(constants.OPACITY);
+          if (layerOpacity != null) {
+            opacity = layerOpacity;
+          }
+        }
+        const opacityField = document.createElement('input');
+        opacityField.type = 'number';
+        opacityField.min = '1';
+        opacityField.max = '100';
+        opacityField.step = '1';
+        opacityField.value = (100 * opacity).toString();
+        opacityField.className = constants.OPACITY_CONTROL_CLASS;
+        opacityField.addEventListener('input', this.updateOpacity_.bind(this));
+        layers[i].append(opacityField);
+      }
+    }
+  }
+
+  /**
+   *
+   */
+  refineLayerSwitcher_() {
+    if (Object.entries(this.legends_).length > 1) {
+      this.createLegendChooser_();
+    }
+    if (this.config_.metadata.tags.includes(constants.TAG_OPACITY_CONTROL)) {
+      this.createOpacityControl_();
     }
   }
 
@@ -1307,7 +1410,7 @@ export class MetOClient extends BaseObject {
       this.layerSwitcherWatcher = new ElementVisibilityWatcher();
       this.layerSwitcherWatcher.watch(layerSwitcherPanel, (visible) => {
         if (visible) {
-          this.createLegendChooser_();
+          this.refineLayerSwitcher_();
         }
       });
     }
@@ -1374,10 +1477,13 @@ export class MetOClient extends BaseObject {
       );
     if (Object.entries(this.legends_).length > 1) {
       this.createLegendContainer_();
-      this.createLayerSwitcherWatcher_();
     }
   }
 
+  /**
+   *
+   * @returns
+   */
   handleFullScreen_() {
     const map = this.get('map');
     if (map == null) {
@@ -1446,6 +1552,7 @@ export class MetOClient extends BaseObject {
       }
     }
     this.createLegends_();
+    this.createLayerSwitcherWatcher_();
     this.createFullScreenListener_();
     this.renderComplete_ = true;
     this.get('timeSlider').createTimeSlider(this.times_);

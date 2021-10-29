@@ -6,7 +6,7 @@ export default class SourceUpdater {
    *
    * @param source
    * @param time
-   * @constructor
+   * @class
    */
   static TileWMS(source, time) {
     if (time == null) {
@@ -24,7 +24,7 @@ export default class SourceUpdater {
    *
    * @param source
    * @param time
-   * @constructor
+   * @class
    */
   static WMTS(source, time) {
     // Use same time formatter in TileWMS and WMTS

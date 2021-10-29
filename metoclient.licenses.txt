@@ -34,7 +34,7 @@ SOFTWARE.
 ---
 
 Name: core-js
-Version: 3.7.0
+Version: 3.18.3
 License: MIT
 Private: false
 Description: Standard library
@@ -42,7 +42,7 @@ Repository: https://github.com/zloirock/core-js.git
 License Copyright:
 ===
 
-Copyright (c) 2014-2020 Denis Pushkarev
+Copyright (c) 2014-2021 Denis Pushkarev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -76,7 +76,7 @@ Homepage: https://openlayers.org/
 ---
 
 Name: proj4
-Version: 2.6.3
+Version: 2.7.5
 License: MIT
 Private: false
 Description: Proj4js is a JavaScript library to transform point coordinates from one coordinate system to another, including datum transformations.
@@ -113,147 +113,6 @@ Copyright (c) 2014, Mike Adair, Richard Greenwood, Didier Richard, Stephen Irons
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  DEALINGS IN THE SOFTWARE._
-
-
----
-
-Name: mapbox-to-css-font
-Version: 2.4.0
-License: BSD-2-Clause
-Private: false
-Description: Utility to convert Mapbox GL Style font names to CSS font definitions
-Repository: git://github.com/openlayers/mapbox-to-css-font.git
-Author: Andreas Hocevar
-License Copyright:
-===
-
-Copyright 2016-present mapbox-to-css-font contributors
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
----
-
-Name: @mapbox/mapbox-gl-style-spec
-Version: 13.17.1
-License: ISC
-Private: false
-Description: a specification for mapbox gl styles
-Repository: git@github.com:mapbox/mapbox-gl-js.git
-Author: Mapbox
-
----
-
-Name: ol-mapbox-style
-Version: 6.1.4
-License: BSD-2-Clause
-Private: false
-Description: Create OpenLayers maps from Mapbox Style objects
-Repository: git://github.com/openlayers/ol-mapbox-style.git
-License Copyright:
-===
-
-Copyright 2016-present ol-mapbox-style contributors
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
----
-
-Name: webfont-matcher
-Version: 1.1.0
-License: MIT
-Private: false
-Description: Tries to match your font to various webfont services and provide you with a link to use it
-Repository: https://github.com/csshat/webfont-matcher
-Homepage: https://github.com/csshat/webfont-matcher
-Author: Marek Hrabe <marekhrabe@abdoc.net> (https://github.com/marekhrabe)
-Contributors:
-  Tomas Hanacek <tomashanacek@avocode.com> (https://github.com/tomashanacek)
-
----
-
-Name: elm-pep
-Version: 1.0.6
-License: MPL-2.0
-Private: false
-Description: npm package for https://github.com/mpizenberg/elm-pep
-Repository: git://github.com/ahocevar/elm-pep.git
-Homepage: https://github.com/ahocevar/elm-pep#readme
-Author: Andreas Hocevar <andreas.hocevar@gmail.com>
-
----
-
-Name: rbush
-Version: 3.0.1
-License: MIT
-Private: false
-Description: High-performance 2D spatial index for rectangles (based on R*-tree with bulk loading and bulk insertion algorithms)
-Repository: git://github.com/mourner/rbush.git
-Homepage: https://github.com/mourner/rbush
-Author: Vladimir Agafonkin
-License Copyright:
-===
-
-MIT License
-
-Copyright (c) 2016 Vladimir Agafonkin
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
 
 
 ---
@@ -324,6 +183,147 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
+---
+
+Name: elm-pep
+Version: 1.0.6
+License: MPL-2.0
+Private: false
+Description: npm package for https://github.com/mpizenberg/elm-pep
+Repository: git://github.com/ahocevar/elm-pep.git
+Homepage: https://github.com/ahocevar/elm-pep#readme
+Author: Andreas Hocevar <andreas.hocevar@gmail.com>
+
+---
+
+Name: rbush
+Version: 3.0.1
+License: MIT
+Private: false
+Description: High-performance 2D spatial index for rectangles (based on R*-tree with bulk loading and bulk insertion algorithms)
+Repository: git://github.com/mourner/rbush.git
+Homepage: https://github.com/mourner/rbush
+Author: Vladimir Agafonkin
+License Copyright:
+===
+
+MIT License
+
+Copyright (c) 2016 Vladimir Agafonkin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+
+---
+
+Name: mapbox-to-css-font
+Version: 2.4.0
+License: BSD-2-Clause
+Private: false
+Description: Utility to convert Mapbox GL Style font names to CSS font definitions
+Repository: git://github.com/openlayers/mapbox-to-css-font.git
+Author: Andreas Hocevar
+License Copyright:
+===
+
+Copyright 2016-present mapbox-to-css-font contributors
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+---
+
+Name: @mapbox/mapbox-gl-style-spec
+Version: 13.22.0
+License: ISC
+Private: false
+Description: a specification for mapbox gl styles
+Repository: git@github.com:mapbox/mapbox-gl-js.git
+Author: Mapbox
+
+---
+
+Name: ol-mapbox-style
+Version: 6.5.1
+License: BSD-2-Clause
+Private: false
+Description: Create OpenLayers maps from Mapbox Style objects
+Repository: git://github.com/openlayers/ol-mapbox-style.git
+License Copyright:
+===
+
+Copyright 2016-present ol-mapbox-style contributors
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+---
+
+Name: webfont-matcher
+Version: 1.1.0
+License: MIT
+Private: false
+Description: Tries to match your font to various webfont services and provide you with a link to use it
+Repository: https://github.com/csshat/webfont-matcher
+Homepage: https://github.com/csshat/webfont-matcher
+Author: Marek Hrabe <marekhrabe@abdoc.net> (https://github.com/marekhrabe)
+Contributors:
+  Tomas Hanacek <tomashanacek@avocode.com> (https://github.com/tomashanacek)
 
 ---
 
@@ -544,40 +544,6 @@ License Copyright:
 
 ---
 
-Name: domurl
-Version: 2.3.4
-License: MIT
-Private: false
-Description: Lightweight URL manipulation with JavaScript.
-Repository: https://github.com/Mikhus/domurl.git
-Homepage: https://github.com/Mikhus/jsurl
-License Copyright:
-===
-
-The MIT License (MIT)
-
-Copyright (c) 2016 Mykhailo Stadnyk
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
----
-
 Name: luxon
 Version: 1.25.0
 License: MIT
@@ -585,17 +551,17 @@ Private: false
 Description: Immutable date wrapper
 Repository: undefined
 Author: Isaac Cambron
+License Copyright:
+===
 
----
+Copyright 2019 JS Foundation and other contributors
 
-Name: rrule
-Version: 2.6.6
-License: BSD-3-Clause
-Private: false
-Description: JavaScript library for working with recurrence rules for calendar dates.
-Repository: git://github.com/jakubroztocil/rrule.git
-Homepage: http://jakubroztocil.github.io/rrule/
-Author: Jakub Roztocil, Lars Schöning, and David Golightly
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 ---
 
@@ -775,8 +741,42 @@ SOFTWARE.
 
 ---
 
+Name: domurl
+Version: 2.3.4
+License: MIT
+Private: false
+Description: Lightweight URL manipulation with JavaScript.
+Repository: https://github.com/Mikhus/domurl.git
+Homepage: https://github.com/Mikhus/jsurl
+License Copyright:
+===
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Mykhailo Stadnyk
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+---
+
 Name: ol-layerswitcher
-Version: 3.8.1
+Version: 3.8.3
 License: MIT
 Private: false
 Description: Layer switcher control for OpenLayers
@@ -788,6 +788,86 @@ Contributors:
   Micho García <micho.garcia@geomati.co>
   olivierdalang <olivier.dalang@gmail.com>
   Peter Goulborn <petergoulborn@astuntechnology.com>
+
+---
+
+Name: rrule
+Version: 2.6.8
+License: BSD-3-Clause
+Private: false
+Description: JavaScript library for working with recurrence rules for calendar dates.
+Repository: git://github.com/jakubroztocil/rrule.git
+Homepage: http://jakubroztocil.github.io/rrule/
+Author: Jakub Roztocil, Lars Schöning, and David Golightly
+License Copyright:
+===
+
+rrule.js: Library for working with recurrence rules for calendar dates.
+=======================================================================
+
+Copyright 2010, Jakub Roztocil <jakub@roztocil.name> and Lars Schöning
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice,
+       this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in the
+       documentation and/or other materials provided with the distribution.
+
+    3. Neither the name of The author nor the names of its contributors may
+       be used to endorse or promote products derived from this software
+       without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE AUTHOR AND CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+
+./rrule.js and ./test/tests.js is based on python-dateutil. LICENCE:
+
+python-dateutil - Extensions to the standard Python datetime module.
+====================================================================
+
+Copyright (c) 2003-2011 - Gustavo Niemeyer <gustavo@niemeyer.net>
+Copyright (c) 2012 - Tomi Pieviläinen <tomi.pievilainen@iki.fi>
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of the copyright holder nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 
 ---
 
@@ -810,7 +890,7 @@ Repository: undefined
 ---
 
 Name: element-resize-detector
-Version: 1.2.1
+Version: 1.2.3
 License: MIT
 Private: false
 Description: Resize event emitter for elements.

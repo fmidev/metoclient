@@ -45,6 +45,14 @@ export default class LayerCreator {
     if (source == null) {
       return null;
     }
+    let legendUrl = layer.legendUrl != null ? layer.legendUrl : null;
+    if (legendUrl == null && layer.url != null) {
+      legendUrl = getLegendUrl(
+        layer.url.layers,
+        layer.url.styles,
+        capabilities
+      );
+    }
     return new TileLayer({
       source,
       extent: source.bounds,
@@ -56,11 +64,9 @@ export default class LayerCreator {
       previous: getAdjacentLayer('previous', layer, options.layers),
       next: getAdjacentLayer('next', layer, options.layers),
       legendTitle: layer.legendTitle,
+      layerSwitcherTitle: layer.metadata.title,
       id: layer.id,
-      legendUrl:
-        layer.url != null
-          ? getLegendUrl(layer.url.layers, layer.url.styles, capabilities)
-          : null,
+      legendUrl,
     });
   }
 
@@ -69,6 +75,7 @@ export default class LayerCreator {
    *
    * @param {object} layer Layer configuration.
    * @param {object} options General options.
+   * @param capabilities
    * @returns {null | object} Layer.
    */
   static image(layer, options, capabilities) {
@@ -87,7 +94,7 @@ export default class LayerCreator {
       layer.time != null && layer.time.data.includes(options.time);
     const layerUrl = { ...layer.url };
     if (timeDefined) {
-      let timeFormatted = new Date(options.time).toISOString();
+      const timeFormatted = new Date(options.time).toISOString();
       layerUrl.TIME = timeFormatted;
     }
     const olSource = new ImageWMS({
@@ -97,7 +104,14 @@ export default class LayerCreator {
     if (timeDefined) {
       olSource.set('metoclient:time', options.time);
     }
-
+    let legendUrl = layer.legendUrl != null ? layer.legendUrl : null;
+    if (legendUrl == null && layer.url != null) {
+      legendUrl = getLegendUrl(
+        layer.url.layers,
+        layer.url.styles,
+        capabilities
+      );
+    }
     return new ImageLayer({
       source: olSource,
       extent: source.bounds,
@@ -110,8 +124,9 @@ export default class LayerCreator {
       previous: getAdjacentLayer('previous', layer, options.layers),
       next: getAdjacentLayer('next', layer, options.layers),
       legendTitle: layer.legendTitle,
+      layerSwitcherTitle: layer.metadata.title,
       id: layer.id,
-      legendUrl: getLegendUrl(layer.url.layer, layer.url.style, capabilities),
+      legendUrl,
     });
   }
 }

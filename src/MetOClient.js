@@ -7,11 +7,6 @@ import proj4 from 'proj4/dist/proj4';
 import olms from 'ol-mapbox-style';
 import { transform } from 'ol/proj';
 import ElementVisibilityWatcher from 'element-visibility-watcher';
-import {
-  parseTimes,
-  updateSourceTime,
-  getSourceCapabilitiesUrl,
-} from './utils';
 import BaseObject from 'ol/Object';
 import { unByKey } from 'ol/Observable';
 import { DateTime, Duration } from 'luxon';
@@ -30,6 +25,12 @@ import KeyboardPan from 'ol/interaction/KeyboardPan';
 import KeyboardZoom from 'ol/interaction/KeyboardZoom';
 import MouseWheelZoom from 'ol/interaction/MouseWheelZoom';
 import Style from 'ol/style/Style';
+import {
+  isNumeric,
+  parseTimes,
+  updateSourceTime,
+  getSourceCapabilitiesUrl,
+} from './utils';
 import * as constants from './constants';
 import CapabilitiesReader from './CapabilitiesReader';
 import SourceUpdater from './SourceUpdater';
@@ -51,6 +52,7 @@ export class MetOClient extends BaseObject {
     );
     register(proj4);
     this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
+    this.config_.texts = assign({}, constants.DEFAULT_OPTIONS.texts, options.texts);
     if (options.target == null && options.container != null) {
       this.config_.target = this.config_.container;
     }
@@ -61,10 +63,11 @@ export class MetOClient extends BaseObject {
     this.status_ = {};
     this.resolutionOnEnterFullScreen_ = null;
     this.delay_ =
-      options.refreshInterval != null &&
-      options.refreshInterval <= Number.MAX_SAFE_INTEGER &&
-      options.refreshInterval >= 0
-        ? options.refreshInterval
+      options.transition != null &&
+      options.transition.delay != null &&
+      options.transition.delay <= Number.MAX_SAFE_INTEGER &&
+      options.transition.delay >= 0
+        ? options.transition.delay
         : constants.DEFAULT_DELAY;
     this.periodDelay_ = 2 * constants.DEFAULT_DELAY;
     this.times_ = [];
@@ -94,6 +97,7 @@ export class MetOClient extends BaseObject {
     this.optionsListener_ = this.on('change:options', (event) => {
       const options = this.get('options');
       this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
+      this.config_.texts = assign({}, constants.DEFAULT_OPTIONS.texts, options.texts);
       if (options.target == null && options.container != null) {
         this.config_.target = this.config_.container;
       }
@@ -111,11 +115,11 @@ export class MetOClient extends BaseObject {
    * @param silent
    */
   set(key, value, silent) {
-    let property = this.get(key);
+    const property = this.get(key);
     if (property != null && typeof property === 'object') {
       super.set(key, value, true);
       if (!silent) {
-        this.dispatchEvent('change:' + key);
+        this.dispatchEvent(`change:${key}`);
       }
     } else {
       super.set(key, value, silent);
@@ -154,7 +158,7 @@ export class MetOClient extends BaseObject {
   /**
    * Render the animation map based on current configuration.
    *
-   * @returns {Promise<Object>} Promise object representing rendered map.
+   * @returns {Promise<object>} Promise object representing rendered map.
    */
   render() {
     return this.updateCapabilities_()
@@ -358,7 +362,7 @@ export class MetOClient extends BaseObject {
           url,
           crossDomain: true,
           contentType: 'text/plain',
-          beforeSend: function (jqxhr) {
+          beforeSend(jqxhr) {
             jqxhr.requestURL = url;
           },
         });
@@ -649,15 +653,16 @@ export class MetOClient extends BaseObject {
           ? constants.VISIBLE
           : constants.NOT_VISIBLE;
     });
-    let layers = new Collection(
+    const layers = new Collection(
       this.config_.layers
         .map((layerConfig) => {
-          if (
-            layerConfig.time != null &&
-            layerConfig.metadata != null &&
-            layerConfig.metadata.title != null
-          ) {
-            layerConfig.legendTitle = layerConfig.metadata.title;
+          if (layerConfig.time != null && layerConfig.metadata != null) {
+            if (layerConfig.metadata.title != null) {
+              layerConfig.legendTitle = layerConfig.metadata.title;
+            }
+            if (layerConfig.metadata.legendUrl != null) {
+              layerConfig.legendUrl = layerConfig.metadata.legendUrl;
+            }
           }
           return layerConfig;
         })
@@ -706,7 +711,7 @@ export class MetOClient extends BaseObject {
         }, [])
     );
     layers.getArray().forEach((layer, index, layersArray) => {
-      const opacity = layer.get('metoclient:opacity');
+      const opacity = layer.get(constants.OPACITY);
       if (layer.get('times') == null) {
         layers.item(index).setOpacity(opacity);
       } else {
@@ -738,7 +743,7 @@ export class MetOClient extends BaseObject {
   }
 
   static showLayer_(layer) {
-    let opacity = layer.get('metoclient:opacity');
+    let opacity = layer.get(constants.OPACITY);
     if (opacity == null) {
       opacity = 1;
     }
@@ -1025,14 +1030,13 @@ export class MetOClient extends BaseObject {
     if (map == null) {
       return null;
     }
-    let mapTime = map.get('time');
+    const mapTime = map.get('time');
     const layerTimes = featureLayer.get('times');
     const hideAll =
       mapTime < layerTimes[0] || mapTime > layerTimes[layerTimes.length - 1];
-    const layerTime = hideAll
+    return hideAll
       ? null
       : [...layerTimes].reverse().find((time) => time <= mapTime);
-    return layerTime;
   }
 
   /**
@@ -1284,9 +1288,111 @@ export class MetOClient extends BaseObject {
     layerSwitcherPanel.appendChild(legendChooserContainer);
     const layerList = layerSwitcherPanel.querySelector('ul');
     if (layerList != null) {
-      layerList.addEventListener('change', () => {
-        this.createLegendChooser_();
+      layerList.addEventListener('change', (event) => {
+        if (event.target.className !== constants.OPACITY_CONTROL_CLASS) {
+          this.refineLayerSwitcher_();
+        }
       });
+    }
+  }
+
+  /**
+   *
+   * @param {*} e
+   * @returns
+   */
+  updateOpacity_(e) {
+    if (!isNumeric(e.target.value)) {
+      e.target.value = 100;
+    }
+    let opacity = Number(e.target.value) / 100;
+    if (opacity < 0.01) {
+      e.target.value = 1;
+      opacity = 0.01;
+    } else if (opacity > 1) {
+      e.target.value = 100;
+      opacity = 1;
+    }
+    const label = e.target.previousSibling.innerText;
+    this.get('map')
+      .getLayers()
+      .getArray()
+      .filter((mapLayer) => mapLayer.get('layerSwitcherTitle') === label)
+      .forEach((layer) => {
+        layer.set(constants.OPACITY, opacity);
+        const layerOpacity = layer.get('opacity');
+        if (layerOpacity > 0) {
+          layer.setOpacity(opacity);
+        }
+      });
+    this.config_.layers.forEach((layer, index) => {
+      if (layer.metadata.title === label) {
+        this.config_.layers[index].opacity = opacity;
+      }
+    });
+  }
+
+  /**
+   *
+   * @returns
+   */
+  createOpacityControl_() {
+    const layerSwitcherPanel = this.getLayerSwitcherPanel_();
+    if (layerSwitcherPanel == null) {
+      return;
+    }
+    const map = this.get('map');
+    const mapLayers = map.getLayers().getArray();
+    layerSwitcherPanel.className += ` ${constants.OPACITY_CONTAINER_CLASS}`;
+    const layerList = layerSwitcherPanel.querySelector('ul');
+    if (layerList != null) {
+      const layers = layerList.getElementsByTagName('li');
+      const numLayers = layers.length;
+      for (let i = 0; i < numLayers; i++) {
+        const { childNodes } = layers[i];
+        const numChildnodes = childNodes.length;
+
+        let label = '';
+        for (let j = 0; j < numChildnodes; j++) {
+          if (childNodes[j].tagName.toLowerCase() === 'label') {
+            label = childNodes[j].innerText;
+          }
+        }
+        if (label.length === 0) {
+          continue;
+        }
+        let opacity = 1;
+        const titleLayer = mapLayers.find(
+          (mapLayer) => mapLayer.get('layerSwitcherTitle') === label
+        );
+        if (titleLayer != null) {
+          const layerOpacity = titleLayer.get(constants.OPACITY);
+          if (layerOpacity != null) {
+            opacity = layerOpacity;
+          }
+        }
+        const opacityField = document.createElement('input');
+        opacityField.type = 'number';
+        opacityField.min = '1';
+        opacityField.max = '100';
+        opacityField.step = '1';
+        opacityField.value = (100 * opacity).toString();
+        opacityField.className = constants.OPACITY_CONTROL_CLASS;
+        opacityField.addEventListener('input', this.updateOpacity_.bind(this));
+        layers[i].append(opacityField);
+      }
+    }
+  }
+
+  /**
+   *
+   */
+  refineLayerSwitcher_() {
+    if (Object.entries(this.legends_).length > 1) {
+      this.createLegendChooser_();
+    }
+    if (this.config_.metadata.tags.includes(constants.TAG_OPACITY_CONTROL)) {
+      this.createOpacityControl_();
     }
   }
 
@@ -1304,7 +1410,7 @@ export class MetOClient extends BaseObject {
       this.layerSwitcherWatcher = new ElementVisibilityWatcher();
       this.layerSwitcherWatcher.watch(layerSwitcherPanel, (visible) => {
         if (visible) {
-          this.createLegendChooser_();
+          this.refineLayerSwitcher_();
         }
       });
     }
@@ -1343,15 +1449,22 @@ export class MetOClient extends BaseObject {
       .filter((layer) => this.isAnimationLayer_(layer))
       .reduce(
         (legendArray, layer) => {
-          const source = layer.getSource();
-          if (source != null && typeof source.getLegendUrl === 'function') {
-            const legendUrl = source.getLegendUrl();
-            if (legendUrl != null && legendUrl.length > 0) {
-              legendArray[layer.get('id')] = {
-                title: layer.get('legendTitle'),
-                url: legendUrl,
-              };
+          let legendUrl;
+          const customLegendUrl = layer.get('legendUrl');
+          if (customLegendUrl != null && customLegendUrl.length > 0) {
+            legendUrl = customLegendUrl;
+          }
+          if (legendUrl == null) {
+            const source = layer.getSource();
+            if (source != null && typeof source.getLegendUrl === 'function') {
+              legendUrl = source.getLegendUrl();
             }
+          }
+          if (legendUrl != null && legendUrl.length > 0) {
+            legendArray[layer.get('id')] = {
+              title: layer.get('legendTitle'),
+              url: legendUrl,
+            };
           }
           return legendArray;
         },
@@ -1364,10 +1477,13 @@ export class MetOClient extends BaseObject {
       );
     if (Object.entries(this.legends_).length > 1) {
       this.createLegendContainer_();
-      this.createLayerSwitcherWatcher_();
     }
   }
 
+  /**
+   *
+   * @returns
+   */
   handleFullScreen_() {
     const map = this.get('map');
     if (map == null) {
@@ -1402,6 +1518,7 @@ export class MetOClient extends BaseObject {
     if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
       const layerSwitcher = new LayerSwitcher({
         tipLabel: this.config_.texts['Layer Switcher'],
+        reverse: false,
       });
       layerSwitcher.set('metoclient:olClassName', 'LayerSwitcher');
       map.addControl(layerSwitcher);
@@ -1435,6 +1552,7 @@ export class MetOClient extends BaseObject {
       }
     }
     this.createLegends_();
+    this.createLayerSwitcherWatcher_();
     this.createFullScreenListener_();
     this.renderComplete_ = true;
     this.get('timeSlider').createTimeSlider(this.times_);
@@ -1462,7 +1580,7 @@ export class MetOClient extends BaseObject {
     if (times != null && Array.isArray(times) && times.length > 0) {
       this.times_ = [...new Set([...this.times_, ...times])].sort();
     }
-    let map = this.get('map');
+    const map = this.get('map');
     if (map != null && map.get('time') == null && this.times_.length > 0) {
       const currentTime = Date.now();
       map.set(
@@ -1509,12 +1627,12 @@ export class MetOClient extends BaseObject {
             .filter((layer) => layer.get('mapbox-source') != null)
             .forEach((layer) => {
               let layerConfig;
-              let layerTimes = [];
+              const layerTimes = [];
               let timeProperty;
               const mapboxLayers = layer.get('mapbox-layers');
               if (mapboxLayers != null) {
                 layer.set('id', mapboxLayers.join('-'));
-                let title = mapboxLayers.reduce((layerTitle, layerId) => {
+                const title = mapboxLayers.reduce((layerTitle, layerId) => {
                   layerConfig = vectorConfig.layers.find(
                     (layer) => layer.id === layerId
                   );
@@ -1607,7 +1725,8 @@ export class MetOClient extends BaseObject {
   createInteractions_() {
     if (this.config_.metadata.tags.includes(constants.TAG_NO_INTERACTIONS)) {
       return [];
-    } else if (
+    }
+    if (
       this.config_.metadata.tags.includes(
         constants.TAG_MOUSE_WHEEL_INTERACTIONS
       )
@@ -1620,15 +1739,14 @@ export class MetOClient extends BaseObject {
         new KeyboardZoom(),
         new MouseWheelZoom(),
       ];
-    } else {
-      return [
-        new DoubleClickZoom(),
-        new DragPan(),
-        new PinchZoom(),
-        new KeyboardPan(),
-        new KeyboardZoom(),
-      ];
     }
+    return [
+      new DoubleClickZoom(),
+      new DragPan(),
+      new PinchZoom(),
+      new KeyboardPan(),
+      new KeyboardZoom(),
+    ];
   }
 
   /**
@@ -1652,7 +1770,7 @@ export class MetOClient extends BaseObject {
         ),
       })
     );
-    let controls = [
+    const controls = [
       new Zoom({
         zoomInLabel: this.config_.texts['Zoom In Label'],
         zoomOutLabel: this.config_.texts['Zoom Out Label'],
@@ -1672,7 +1790,7 @@ export class MetOClient extends BaseObject {
         })
       );
     }
-    let newMap = new Map({
+    const newMap = new Map({
       target: this.config_.target,
       layers: this.createLayers_(),
       view: this.createView_(),
@@ -1873,7 +1991,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * @param force
    */
   next(force) {
     if (!this.isReady_()) {

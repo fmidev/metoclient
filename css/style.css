@@ -289,6 +289,10 @@ div.fmi-metoclient-timeslider-timezone {
   overflow-y: auto;
 }
 
+#fmi-metoclient-layer-switcher-container .panel.fmi-metoclient-opacity-container {
+  padding-right: 66px;
+}
+
 #fmi-metoclient-layer-switcher-container.shown .panel {
   display: block;
 }
@@ -669,4 +673,10 @@ div.ol-full-screen {
 
 .ol-attribution.ol-uncollapsible button {
   display: none;
+}
+
+.fmi-metoclient-opacity-control {
+  width: 50px;
+  position: absolute;
+  right: 16px;
 }

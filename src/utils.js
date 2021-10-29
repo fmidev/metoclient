@@ -30,6 +30,14 @@ export function isValidDate(d) {
 }
 
 /**
+ *
+ */
+export function isNumeric(str) {
+  if (typeof str !== 'string') return false;
+  return !Number.isNaN(str) && !Number.isNaN(parseFloat(str));
+}
+
+/**
  * Update time array with time points of another array.
  *
  * @param {Array} times Array of time points to be updated.
@@ -199,9 +207,7 @@ function parseRRule(timeInput, timeOffset, timeData = null) {
       if (dataSteps) {
         timeData.forEach((dataTime) => {
           if (
-            (history &&
-              dataTime >= ruleTimes[1] &&
-              dataTime <= currentTime) ||
+            (history && dataTime >= ruleTimes[1] && dataTime <= currentTime) ||
             (!history && dataTime <= ruleTimes[1] && dataTime >= currentTime)
           ) {
             times.push(dataTime);
@@ -367,6 +373,11 @@ export function getSourceCapabilitiesUrl(source) {
   return url;
 }
 
+/**
+ * @param layerName
+ * @param layerStyles
+ * @param capabilities
+ */
 export function getLegendUrl(layerName, layerStyles, capabilities) {
   if (
     layerName == null ||

@@ -48,8 +48,8 @@ class TimeSlider extends Control {
     this.playingListener_ = null;
     this.timeZoneListener = null;
     this.timeZoneLabelListener = null;
-    this.set('timeZone', options['timeZone']);
-    this.set('timeZoneLabel', options['timeZoneLabel']);
+    this.set('timeZone', options.timeZone);
+    this.set('timeZoneLabel', options.timeZoneLabel);
   }
 
   /**
@@ -76,12 +76,12 @@ class TimeSlider extends Control {
     });
     this.timeZoneListener_ = this.on('change:timeZone', () => {
       this.frames_.forEach((frame) => {
-        const tickText = this.getTickText(frame['endTime']);
+        const tickText = this.getTickText(frame.endTime);
         const textElement = frame.element.getElementsByClassName(
           constants.FRAME_TEXT_CLASS
         );
         if (textElement.length > 0) {
-          textElement[0].textContent = tickText['content'];
+          textElement[0].textContent = tickText.content;
         }
       });
       if (this.getMap().get('time') != null) {
@@ -328,11 +328,11 @@ class TimeSlider extends Control {
             clearTimeout(singleClickTimer);
             longClick = null;
             map.set('playing', false);
-            map.set('time', timeFrame['endTime']);
+            map.set('time', timeFrame.endTime);
           }, constants.LONG_CLICK_DELAY);
         } else {
           map.set('playing', false);
-          map.set('time', timeFrame['endTime']);
+          map.set('time', timeFrame.endTime);
         }
       })
     );
@@ -347,7 +347,7 @@ class TimeSlider extends Control {
               clickCount = 0;
               if (timeFrame.endTime === map.get('time')) {
                 map.set('playing', false);
-                map.set('time', timeFrame['beginTime']);
+                map.set('time', timeFrame.beginTime);
               } else {
                 self.step(timeFrame.endTime - map.get('time'));
               }
@@ -374,11 +374,11 @@ class TimeSlider extends Control {
           longTap = setTimeout(() => {
             longTap = null;
             map.set('playing', false);
-            map.set('time', timeFrame['endTime']);
+            map.set('time', timeFrame.endTime);
           }, constants.LONG_TAP_DELAY);
         } else {
           map.set('playing', false);
-          map.set('time', timeFrame['endTime']);
+          map.set('time', timeFrame.endTime);
         }
       })
     );
@@ -594,7 +594,7 @@ class TimeSlider extends Control {
       frame.element.style.display = 'none';
     });
 
-    const hourFormatExists = this.frames_.some(frame => !frame.useDateFormat);
+    const hourFormatExists = this.frames_.some((frame) => !frame.useDateFormat);
 
     // Separate loops to prevent accessing textElement width before it is available
     this.frames_.forEach((frame, index, frames) => {
@@ -602,10 +602,10 @@ class TimeSlider extends Control {
       frame.element.style.display = '';
 
       if (
-        DateTime.fromMillis(frame['endTime'])
+        DateTime.fromMillis(frame.endTime)
           .setZone(self.get('timeZone'))
           .startOf('day')
-          .valueOf() === frame['endTime']
+          .valueOf() === frame.endTime
       ) {
         divisibleDays = true;
       }
@@ -722,7 +722,8 @@ class TimeSlider extends Control {
                 ).setZone(self.get('timeZone')).hour %
                   2 !==
                   0)) &&
-            (hourFormatExists && !frames[self.previousTickIndex_].useDateFormat)) ||
+            hourFormatExists &&
+            !frames[self.previousTickIndex_].useDateFormat) ||
             (hourFormatExists && frame.useDateFormat) ||
             (minStep > 0 &&
               ((minStep >= constants.HOUR &&
@@ -1045,6 +1046,7 @@ class TimeSlider extends Control {
 
   /**
    * Return information if meteorological optimizations are enabled.
+   *
    * @returns {boolean} Meteorological mode status.
    */
   isMeteorologicalMode() {
@@ -1056,7 +1058,7 @@ class TimeSlider extends Control {
    *
    * @param {number} tickTime Time value.
    * @param {boolean} showDate Show date information.
-   * @returns {Object} Generated text presentation.
+   * @returns {object} Generated text presentation.
    */
   getTickText(tickTime, showDate = true) {
     let numFrames;
@@ -1066,7 +1068,7 @@ class TimeSlider extends Control {
     let zPrevTime;
     let currentMoment;
     const format = 'HH:mm';
-    const dateFormat = String.fromCharCode(160) + 'd.M.';
+    const dateFormat = `${String.fromCharCode(160)}d.M.`;
     let useDateFormat = false;
     const beginTime =
       this.frames_.length > 0
@@ -1117,7 +1119,7 @@ class TimeSlider extends Control {
       content: useDateFormat
         ? zTime.weekdayShort + zTime.toFormat(dateFormat)
         : zTime.toFormat(format),
-      useDateFormat: useDateFormat,
+      useDateFormat,
     };
   }
 

@@ -41,7 +41,7 @@ pipeline {
             steps {
                 sh "env"
                 sh "npm --version"
-                sh "nodejs --version"
+                sh "node --version"
                 sh "npm install"
             }
         }

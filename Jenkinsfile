@@ -1,5 +1,7 @@
 #!groovy
 
+# TODO: fix NPM path problems (/usr/local/bin/npm -> npm)
+
 def packageVersion = "undefined"
 def deployUserAndHost = "fmi@io.elmo.fmi.fi"
 def deployProductionBaseDirectory = "/fmi/prod/www/cdn.fmi.fi/javascript/metoclient"
@@ -26,40 +28,40 @@ pipeline {
         stage('Configure http proxy') {
             when { expression { env.HTTP_PROXY != '' } }
             steps {
-                sh "npm config set proxy ${env.HTTP_PROXY}"
+                sh "/usr/local/bin/npm config set proxy ${env.HTTP_PROXY}"
             }
         }
 
         stage('Configure https proxy') {
             when { expression { env.HTTPS_PROXY != '' } }
             steps {
-                sh "npm config set https-proxy ${env.HTTPS_PROXY}"
+                sh "/usr/local/bin/npm config set https-proxy ${env.HTTPS_PROXY}"
             }
         }
 
         stage('Install') {
             steps {
                 sh "env"
-                sh "npm --version"
+                sh "/usr/local/bin/npm --version"
                 sh "node --version"
-                sh "npm install"
+                sh "/usr/local/bin/npm install"
             }
         }
 
         stage('Build') {
             steps {
-                sh "npm run build"
+                sh "/usr/local/bin/npm run build"
             }
         }
 
         stage('Test') {
             steps {
-                sh "npm test || echo \"Some or all tests failed\""
+                sh "/usr/local/bin/npm test || echo \"Some or all tests failed\""
             }
             // This syntax requires a newer Pipeline plugin
             /*steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh "npm test"
+                    sh "/usr/local/bin/npm test"
                 }
             }*/
         }
@@ -104,7 +106,7 @@ pipeline {
             }
             steps {
                 sh "echo //registry.npmjs.org/:_authToken=${env.NPM_TOKEN} > .npmrc"
-                sh 'npm publish'
+                sh '/usr/local/bin/npm publish'
                 sh 'rm .npmrc'
             }
         }

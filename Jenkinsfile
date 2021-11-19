@@ -1,6 +1,6 @@
 #!groovy
 
-# TODO: fix NPM path problems (/usr/local/bin/npm -> npm)
+// TODO: fix NPM path problems (/usr/local/bin/npm -> npm)
 
 def packageVersion = "undefined"
 def deployUserAndHost = "fmi@io.elmo.fmi.fi"

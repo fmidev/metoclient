@@ -1,13 +1,13 @@
 {
   "name": "wmts-example",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "MetOClient WMTS Example",
   "scripts": {
     "start": "rollup --config rollup.config.js --watch",
     "build": "rollup --config rollup.config.js"
   },
   "devDependencies": {
-    "rollup": "2.34.1",
+    "rollup": "2.60.0",
     "rollup-plugin-commonjs": "10.1.0",
     "rollup-plugin-node-resolve": "5.2.0",
     "rollup-plugin-terser": "7.0.2"

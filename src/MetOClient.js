@@ -1885,7 +1885,7 @@ export class MetOClient extends BaseObject {
           (element) =>
             layer.time.name != null
               ? layer.time.name === element.Name
-              : [layer.url.layer, layer.url.layers].includes(element.Name)
+              : [layer.url.layer, layer.url.layers].some((layerId) => typeof layerId === 'string' ? layerId.slice(-element.Name.length) === element.Name : false)
         );
         const data =
           layerElement != null

@@ -101,6 +101,7 @@ export default class LayerCreator {
       url,
       params: layerUrl,
     });
+    olSource.set('metoclient:olClassName', 'ImageWMS');
     if (timeDefined) {
       olSource.set('metoclient:time', options.time);
     }

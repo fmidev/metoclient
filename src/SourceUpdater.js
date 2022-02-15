@@ -26,6 +26,16 @@ export default class SourceUpdater {
    * @param time
    * @class
    */
+  static ImageWMS(source, time) {
+    this.TileWMS(source, time);
+  }
+
+  /**
+   *
+   * @param source
+   * @param time
+   * @class
+   */
   static WMTS(source, time) {
     // Use same time formatter in TileWMS and WMTS
     if (time == null) {

@@ -99,3 +99,6 @@ Staticfile
 
 # Wallaby
 wallaby
+
+# macOS
+.DS_Store

@@ -60,6 +60,11 @@ export class MetOClient extends BaseObject {
     if (options.target == null && options.container != null) {
       this.config_.target = this.config_.container;
     }
+    this.config_.layers.forEach((layer, index, layers) => {
+      if ((layer != null) && (layer.url != null) && (typeof layer.url.layers === 'string')) {
+        layers[index].url.layers = layer.url.layers.replace(/\s/g, '');
+      }
+    });
     this.set('options', options, true);
     this.set('map', null);
     this.set('timeSlider', null);

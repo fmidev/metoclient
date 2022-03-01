@@ -34,7 +34,7 @@ SOFTWARE.
 ---
 
 Name: core-js
-Version: 3.18.3
+Version: 3.21.1
 License: MIT
 Private: false
 Description: Standard library
@@ -42,7 +42,7 @@ Repository: https://github.com/zloirock/core-js.git
 License Copyright:
 ===
 
-Copyright (c) 2014-2021 Denis Pushkarev
+Copyright (c) 2014-2022 Denis Pushkarev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -752,7 +752,7 @@ SOFTWARE.
 ---
 
 Name: can-ajax
-Version: 2.4.6
+Version: 2.4.7
 License: MIT
 Private: false
 Description: jQuery-inspired AJAX request library.
@@ -936,7 +936,7 @@ Repository: undefined
 ---
 
 Name: element-resize-detector
-Version: 1.2.3
+Version: 1.2.4
 License: MIT
 Private: false
 Description: Resize event emitter for elements.

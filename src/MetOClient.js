@@ -60,6 +60,11 @@ export class MetOClient extends BaseObject {
     if (options.target == null && options.container != null) {
       this.config_.target = this.config_.container;
     }
+    this.config_.layers.forEach((layer, index, layers) => {
+      if ((layer != null) && (layer.url != null) && (typeof layer.url.layers === 'string')) {
+        layers[index].url.layers = layer.url.layers.replace(/\s/g, '');
+      }
+    });
     this.set('options', options, true);
     this.set('map', null);
     this.set('timeSlider', null);
@@ -1885,19 +1890,24 @@ export class MetOClient extends BaseObject {
         ) {
           return;
         }
-        const layerElement = capabilities.data.Capability.Layer.Layer.find(
+        let parsedData = [];
+        capabilities.data.Capability.Layer.Layer.filter(
           (element) =>
             layer.time.name != null
               ? layer.time.name === element.Name
-              : [layer.url.layer, layer.url.layers].some((layerId) => typeof layerId === 'string' ? layerId.slice(-element.Name.length) === element.Name : false)
-        );
-        const data =
-          layerElement != null
-            ? layerElement.Dimension.find(
-                (element) => element.name.toLowerCase() === 'time'
-              ).values
-            : [];
-        const parsedData = parseTimes(data);
+              : [layer.url.layer, layer.url.layers].some((layerIds) =>
+                // Todo: check namespace
+                typeof layerIds === 'string' ? layerIds.split(',').some((layerId) => layerId.slice(-element.Name.length) === element.Name) : false
+              )
+        ).forEach((layerElement) => {
+          const data =
+            ((layerElement != null) && (layerElement.Dimension != null))
+              ? layerElement.Dimension.find(
+                  (element) => element.name.toLowerCase() === 'time'
+                ).values
+              : [];
+          parsedData = [...new Set(parsedData.concat(parseTimes(data)))];
+        })
         const times = parseTimes(
           layer.time.range,
           layer.time.offset,

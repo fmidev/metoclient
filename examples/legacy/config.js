@@ -19,7 +19,8 @@ fmi.config.metoclient = {
   metadata: {
     tags: [
       'mouse wheel interactions',
-      'fullscreen control'
+      'fullscreen control',
+      'fixed extent'
     ]
   },
   sources: {

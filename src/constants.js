@@ -116,6 +116,7 @@ export const TAG_DELAY_LOOP = 'delay loop';
 export const TAG_FULL_SCREEN_CONTROL = 'fullscreen control';
 export const TAG_RENDER_IMMEDIATELY = 'render immediately';
 export const TAG_OPACITY_CONTROL = 'opacity control';
+export const TAG_FIXED_EXTENT = 'fixed extent';
 export const BASE_MAP = 'base';
 export const VISIBLE = 'visible';
 export const NOT_VISIBLE = 'none';

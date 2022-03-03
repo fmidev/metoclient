@@ -8,6 +8,8 @@ fmi.config.metoclient = {
     400000,
     6700000
   ],
+  extent: [144000, 6508000, 656000, 6892000],
+  smoothExtentConstraint: false,
   zoom: 2,
   target: 'map',
   projection: 'EPSG:3067',

@@ -25,6 +25,7 @@ import KeyboardPan from 'ol/interaction/KeyboardPan';
 import KeyboardZoom from 'ol/interaction/KeyboardZoom';
 import MouseWheelZoom from 'ol/interaction/MouseWheelZoom';
 import Style from 'ol/style/Style';
+import elementResizeDetectorMaker from 'element-resize-detector';
 import {
   isNumeric,
   parseTimes,
@@ -92,6 +93,12 @@ export class MetOClient extends BaseObject {
           constants.MAX_REFRESH_INTERVAL
         )
       : constants.DEFAULT_REFRESH_INTERVAL;
+    this.extent_ = [null, null, null, null];
+    this.resizeDetector_ = this.config_.metadata.tags.includes(
+      constants.TAG_FIXED_EXTENT
+    ) ? elementResizeDetectorMaker({
+      strategy: 'scroll'
+    }) : null;
     this.capabilities_ = {};
     this.legends_ = {};
     this.selectedLegend_ = constants.DEFAULT_LEGEND;
@@ -1818,6 +1825,15 @@ export class MetOClient extends BaseObject {
       view.setZoom(this.config_.zoom);
       extent = view.calculateExtent();
     }
+    if (this.resizeDetector_ != null) {
+      this.fixedExtent_ = extent;
+      this.resizeDetector_.listenTo(
+        document.getElementById(this.config_.target),
+        () => {
+          view.fit(this.fixedExtent_);
+        }
+      );
+    }  
     if (this.vectorConfig_.layers.length > 0) {
       return this.createVectorLayers_(newMap, this.vectorConfig_).then((map) =>
         this.initMap_(map)
@@ -2099,6 +2115,9 @@ export class MetOClient extends BaseObject {
     unByKey(this.previousListener_);
     unByKey(this.timeListener_);
     unByKey(this.optionsListener_);
+    if (this.resizeDetector_ != null) {
+      this.resizeDetector_.removeAllListeners(document.getElementById(this.config_.target));
+    }
     document.onfullscreenchange = null;
     document.onwebkitfullscreenchange = null;
     clearInterval(this.refreshTimer_);

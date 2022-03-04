@@ -1826,11 +1826,11 @@ export class MetOClient extends BaseObject {
       extent = view.calculateExtent();
     }
     if (this.resizeDetector_ != null) {
-      this.fixedExtent_ = extent;
+      this.extent_ = this.config_.extent != null ? this.config_.extent : extent;
       this.resizeDetector_.listenTo(
         document.getElementById(this.config_.target),
         () => {
-          view.fit(this.fixedExtent_);
+          view.fit(this.extent_);
         }
       );
     }  

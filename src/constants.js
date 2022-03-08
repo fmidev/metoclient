@@ -20,7 +20,7 @@ export const DEFAULT_OPTIONS = {
   timeZone: 'Europe/Helsinki',
   timeZoneLabel: '',
   target: 'map',
-  resolutions: [2048, 1024, 512, 256, 128, 64],
+  resolutions: [4096, 2048, 1024, 512, 256, 128, 64],
   delay: DEFAULT_DELAY,
   periodDelay: 2 * DEFAULT_DELAY,
   texts: {

@@ -22,6 +22,12 @@ export default {
       name: 'fmi.metoclient',
       exports: 'named',
     },
+    {
+      file: `${pkg.main.replace('.js','')}.namespaced.${pkg.version}.js`,
+      format: 'umd',
+      name: `metoclient_${pkg.version.replace(/\./g,'_')}`,
+      exports: 'named',
+    },
   ],
   plugins: [
     babel({

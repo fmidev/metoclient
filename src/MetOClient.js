@@ -1830,7 +1830,10 @@ export class MetOClient extends BaseObject {
       this.resizeDetector_.listenTo(
         document.getElementById(this.config_.target),
         () => {
-          view.fit(this.extent_);
+          view.fit(this.extent_, {
+            size: newMap.getSize()
+          });
+          this.updateTimeSlider_();
         }
       );
     }  

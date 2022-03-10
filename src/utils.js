@@ -412,3 +412,30 @@ export function getLegendUrl(layerName, layerStyles, capabilities) {
   }
   return layerStyle.LegendURL[0].OnlineResource;
 }
+
+/**
+ * Parse query parameters.
+ * @param {Object} layer 
+ * @param {string} url 
+ * @param {number} time 
+ * @returns 
+ */
+export function getQueryParams(layer, url, time) {
+  const queryUrl = new Url(url);
+  const params = Object.keys(queryUrl.query).reduce((upperCased, key) => {
+    upperCased[typeof key === 'string' ? key.toUpperCase() : key] =
+      queryUrl.query[key];
+    return upperCased;
+  }, {});
+  Object.keys(layer.url).forEach((key) => {
+    params[key.toUpperCase()] = layer.url[key].toString();
+  });
+  const timeDefined =
+    layer.time != null &&
+    layer.time.data != null &&
+    layer.time.data.includes(time);
+  if (timeDefined) {
+    params.TIME = new Date(time).toISOString();
+  }
+  return params;
+}

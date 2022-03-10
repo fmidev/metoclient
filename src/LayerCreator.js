@@ -5,7 +5,7 @@ import TileLayer from 'ol/layer/Tile';
 import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
 import SourceCreator from './SourceCreator';
-import { getBaseUrl, getAdjacentLayer, getLegendUrl } from './utils';
+import { getBaseUrl, getQueryParams, getAdjacentLayer, getLegendUrl } from './utils';
 import * as constants from './constants';
 
 /**
@@ -89,21 +89,15 @@ export default class LayerCreator {
     }
     // Todo: handle also non-zero indexes
     // Todo: add more options
-    const url = getBaseUrl(source.tiles[0]);
-    const timeDefined =
-      layer.time != null && layer.time.data.includes(options.time);
-    const layerUrl = { ...layer.url };
-    if (timeDefined) {
-      const timeFormatted = new Date(options.time).toISOString();
-      layerUrl.TIME = timeFormatted;
-    }
+    const url = source.tiles[0];
+    const params = getQueryParams(layer, url, options.time);
     const olSource = new ImageWMS({
-      url,
-      params: layerUrl,
+      url: getBaseUrl(url),
+      params,
       ratio: 1,
     });
     olSource.set('metoclient:olClassName', 'ImageWMS');
-    if (timeDefined) {
+    if (params.TIME != null) {
       olSource.set('metoclient:time', options.time);
     }
     let legendUrl = layer.legendUrl != null ? layer.legendUrl : null;

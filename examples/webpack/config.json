@@ -1,4 +1,9 @@
 {
+  "metadata": {
+    "tags": [
+      "autoplay"
+    ]
+  },  
   "minZoom": 1,
   "maxZoom": 10,
   "center": [
@@ -6,9 +11,12 @@
     6671437
   ],
   "zoom": 8,
+  "transition": {
+    "delay": 100
+  },
   "container": "map",
   "projection": "EPSG:3067",
-  "refreshInterval": "PT15M",
+  "refreshInterval": "PT2M",
   "timeZone": "Europe/Helsinki",
   "sources": {
     "osm": {

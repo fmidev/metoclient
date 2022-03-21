@@ -4,7 +4,7 @@
  * @module constants
  */
 export const DEFAULT_DELAY = 1000;
-export const DEFAULT_OPTIONS = {
+export const DEFAULT_OPTIONS = {  
   center: [0, 0],
   zoom: 4,
   minZoom: 0,
@@ -14,14 +14,16 @@ export const DEFAULT_OPTIONS = {
     refreshInterval: 'map',
     tags: [],
   },
+  transition: { 
+    delay: DEFAULT_DELAY,
+  },  
   sources: {},
   layers: [],
-  time: null,
+  time: 0,
   timeZone: 'Europe/Helsinki',
   timeZoneLabel: '',
   target: 'map',
   resolutions: [4096, 2048, 1024, 512, 256, 128, 64],
-  delay: DEFAULT_DELAY,
   periodDelay: 2 * DEFAULT_DELAY,
   texts: {
     'Zoom In Label': '+',
@@ -117,6 +119,7 @@ export const TAG_FULL_SCREEN_CONTROL = 'fullscreen control';
 export const TAG_RENDER_IMMEDIATELY = 'render immediately';
 export const TAG_OPACITY_CONTROL = 'opacity control';
 export const TAG_FIXED_EXTENT = 'fixed extent';
+export const TAG_AUTOPLAY = 'autoplay';
 export const BASE_MAP = 'base';
 export const VISIBLE = 'visible';
 export const NOT_VISIBLE = 'none';

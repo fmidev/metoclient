@@ -4,7 +4,7 @@
  * @module constants
  */
 export const DEFAULT_DELAY = 1000;
-export const DEFAULT_OPTIONS = {  
+export const DEFAULT_OPTIONS = {
   center: [0, 0],
   zoom: 4,
   minZoom: 0,
@@ -14,12 +14,12 @@ export const DEFAULT_OPTIONS = {
     refreshInterval: 'map',
     tags: [],
   },
-  transition: { 
+  transition: {
     delay: DEFAULT_DELAY,
-  },  
+  },
   sources: {},
   layers: [],
-  time: 0,
+  time: null,
   timeZone: 'Europe/Helsinki',
   timeZoneLabel: '',
   target: 'map',

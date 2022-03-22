@@ -184,13 +184,19 @@ export class MetOClient extends BaseObject {
         this.updateTimes_();
         let defaultTime = this.times_[0];
         const realWorldTime = Date.now();
+        let anyFuture = false;
         this.times_.some((time) => {
           const future = time > realWorldTime;
-          if (!future) {
+          if (future) {
+            anyFuture = true;
+          } else {
             defaultTime = time;
           }
           return future;
         });
+        if (!anyFuture) {
+          [defaultTime] = this.times_;
+        }
         if (this.config_.time == null) {
           this.config_.time = defaultTime;
         }

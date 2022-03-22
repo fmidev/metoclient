@@ -223,6 +223,9 @@ MapAnimation.prototype.createAnimation = async function (layers, capabilities, c
   if (OlProj.get('EPSG:3067') == null) {
     this.initEPSG3067Projection()
   }
+  if (OlProj.get('EPSG:3035') == null) {
+    this.initEPSG3035Projection()
+  }
 
   if (animationCallbacks != null) {
     this.set('callbacks', animationCallbacks)
@@ -1113,6 +1116,13 @@ MapAnimation.prototype.parameterizeLayers = function (capabilities) {
  */
 MapAnimation.prototype.initEPSG3067Projection = () => {
   proj4.defs('EPSG:3067', '+proj=utm +zone=35 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs')
+}
+
+/**
+ * Defines EPSG:3035 projection.
+ */
+ MapAnimation.prototype.initEPSG3035Projection = () => {
+  proj4.defs('EPSG:3035', '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs')
 }
 
 /**

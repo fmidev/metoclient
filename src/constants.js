@@ -14,6 +14,9 @@ export const DEFAULT_OPTIONS = {
     refreshInterval: 'map',
     tags: [],
   },
+  transition: {
+    delay: DEFAULT_DELAY,
+  },
   sources: {},
   layers: [],
   time: null,
@@ -21,7 +24,6 @@ export const DEFAULT_OPTIONS = {
   timeZoneLabel: '',
   target: 'map',
   resolutions: [4096, 2048, 1024, 512, 256, 128, 64],
-  delay: DEFAULT_DELAY,
   periodDelay: 2 * DEFAULT_DELAY,
   texts: {
     'Zoom In Label': '+',
@@ -117,6 +119,7 @@ export const TAG_FULL_SCREEN_CONTROL = 'fullscreen control';
 export const TAG_RENDER_IMMEDIATELY = 'render immediately';
 export const TAG_OPACITY_CONTROL = 'opacity control';
 export const TAG_FIXED_EXTENT = 'fixed extent';
+export const TAG_AUTOPLAY = 'autoplay';
 export const BASE_MAP = 'base';
 export const VISIBLE = 'visible';
 export const NOT_VISIBLE = 'none';

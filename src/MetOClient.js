@@ -58,6 +58,7 @@ export class MetOClient extends BaseObject {
     register(proj4);
     this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
     this.config_.texts = assign({}, constants.DEFAULT_OPTIONS.texts, options.texts);
+    this.config_.transition = assign({}, constants.DEFAULT_OPTIONS.transition, options.transition);
     if (options.target == null && options.container != null) {
       this.config_.target = this.config_.container;
     }
@@ -73,13 +74,13 @@ export class MetOClient extends BaseObject {
     this.status_ = {};
     this.resolutionOnEnterFullScreen_ = null;
     this.delay_ =
-      options.transition != null &&
-      options.transition.delay != null &&
-      options.transition.delay <= Number.MAX_SAFE_INTEGER &&
-      options.transition.delay >= 0
-        ? options.transition.delay
+      this.config_.transition != null &&
+      this.config_.transition.delay != null &&
+      this.config_.transition.delay <= Number.MAX_SAFE_INTEGER &&
+      this.config_.transition.delay >= 0
+        ? this.config_.transition.delay
         : constants.DEFAULT_DELAY;
-    this.periodDelay_ = 2 * constants.DEFAULT_DELAY;
+    this.periodDelay_ = this.config_.periodDelay;
     this.times_ = [];
     this.playingListener_ = null;
     this.previousListener_ = null;
@@ -183,13 +184,19 @@ export class MetOClient extends BaseObject {
         this.updateTimes_();
         let defaultTime = this.times_[0];
         const realWorldTime = Date.now();
+        let anyFuture = false;
         this.times_.some((time) => {
           const future = time > realWorldTime;
-          if (!future) {
+          if (future) {
+            anyFuture = true;
+          } else {
             defaultTime = time;
           }
           return future;
         });
+        if (!anyFuture) {
+          [defaultTime] = this.times_;
+        }
         if (this.config_.time == null) {
           this.config_.time = defaultTime;
         }
@@ -215,7 +222,16 @@ export class MetOClient extends BaseObject {
           }
         });
         this.vectorConfig_ = this.getVectorConfig_();
-        return this.updateMap_();
+        return this.updateMap_().then((map) => {
+          if (this.config_.metadata.tags.includes(constants.TAG_AUTOPLAY)) {
+            this.config_.metadata.tags = this.config_.metadata.tags.filter((tag) => tag !== constants.TAG_AUTOPLAY);
+            this.play();
+          }
+          return map;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
       })
       .catch((error) => {
         console.log(error);
@@ -1971,12 +1987,12 @@ export class MetOClient extends BaseObject {
    * @param options
    */
   play(options) {
-    this.delay_ =
-      Math.sign(options.delay) > 0 ? options.delay : constants.DEFAULT_DELAY;
-    this.periodDelay_ =
-      Math.sign(options.periodDelay) > 0
-        ? options.periodDelay
-        : 2 * constants.DEFAULT_DELAY;
+    if (options != null && Math.sign(options.delay)) {
+      this.delay_ = options.delay;
+    }
+    if (options != null && Math.sign(options.periodDelay)) {
+      this.periodDelay_ = options.periodDelay;
+    }
     this.get('map').set('playing', true);
   }
 

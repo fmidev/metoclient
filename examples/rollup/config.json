@@ -1,4 +1,9 @@
 {
+  "metadata": {
+    "tags": [
+      "mouse wheel interactions"
+    ]
+  },
   "minZoom": 1,
   "maxZoom": 10,
   "center": [

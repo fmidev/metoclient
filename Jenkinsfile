@@ -9,7 +9,7 @@ pipeline {
 
     agent {
         node {
-            label 'ndevinfra.fmi.fi'
+            label 'built-in'
         }
     }
 

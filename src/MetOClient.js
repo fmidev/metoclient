@@ -5,7 +5,7 @@ import { assign } from 'ol/obj';
 import { register } from 'ol/proj/proj4';
 import proj4 from 'proj4/dist/proj4';
 import olms from 'ol-mapbox-style';
-import { transform } from 'ol/proj';
+import { transform, get as getProjection } from 'ol/proj';
 import ElementVisibilityWatcher from 'element-visibility-watcher';
 import BaseObject from 'ol/Object';
 import { unByKey } from 'ol/Observable';
@@ -25,6 +25,7 @@ import KeyboardPan from 'ol/interaction/KeyboardPan';
 import KeyboardZoom from 'ol/interaction/KeyboardZoom';
 import MouseWheelZoom from 'ol/interaction/MouseWheelZoom';
 import Style from 'ol/style/Style';
+import { getWidth } from 'ol/extent';
 import elementResizeDetectorMaker from 'element-resize-detector';
 import {
   isNumeric,
@@ -61,6 +62,21 @@ export class MetOClient extends BaseObject {
     this.config_.transition = assign({}, constants.DEFAULT_OPTIONS.transition, options.transition);
     if (options.target == null && options.container != null) {
       this.config_.target = this.config_.container;
+    }
+    if (this.config_.resolutions == null) {
+      if (constants.PROJECTION_RESOLUTIONS[this.config_.projection] != null) {
+        this.config_.resolutions =
+          constants.PROJECTION_RESOLUTIONS[this.config_.projection];
+      } else {
+        const projExtent = getProjection(this.config_.projection).getExtent();
+        const startResolution = getWidth(projExtent) / 256;
+        const numResolutions = this.config_.maxZoom - this.config_.minZoom + 1;
+        const resolutions = new Array(numResolutions);
+        for (let i = 0, ii = resolutions.length; i < ii; ++i) {
+          resolutions[i] = startResolution / Math.pow(2, i);
+        }
+        this.config_.resolutions = resolutions;
+      }
     }
     this.config_.layers.forEach((layer, index, layers) => {
       if ((layer != null) && (layer.url != null) && (typeof layer.url.layers === 'string')) {

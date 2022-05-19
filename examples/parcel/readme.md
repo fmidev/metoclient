@@ -11,4 +11,4 @@ Create a bundle for the browser.
 
     npm run build
 
-Open `index.html` in a browser.
+Copy this folder to an http server and open `index.html` in a browser.

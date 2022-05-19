@@ -112,16 +112,16 @@ pipeline {
 
     post {
         success {
-            slackSend "Success ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)"
+            slackSend(message: "Success ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)")
         }
         unstable {
-            slackSend "Unstable ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)"
+            slackSend(message: "Unstable ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)")
         }
         failure {
-            slackSend "Failure ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)"
+            slackSend(message: "Failure ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)")
         }
         changed {
-            slackSend "Changed ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)"
+            slackSend(message: "Changed ${env.JOB_NAME} ${packageVersion} (${env.BRANCH_NAME}/${env.BUILD_NUMBER}) (<${env.BUILD_URL}|Open>)")
         }
     }
 }

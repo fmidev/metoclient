@@ -103,7 +103,7 @@ pipeline {
                 NPM_TOKEN = credentials('npm-token')
             }
             steps {
-                sh "echo //registry.npmjs.org/:_authToken=$NPM_TOKEN > .npmrc"
+                sh 'echo //registry.npmjs.org/:_authToken=$NPM_TOKEN > .npmrc'
                 sh 'npm publish'
                 sh 'rm .npmrc'
             }

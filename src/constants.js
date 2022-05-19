@@ -10,6 +10,7 @@ export const DEFAULT_OPTIONS = {
   minZoom: 0,
   maxZoom: 28,
   minExtent: [0, 0],
+  projection: 'EPSG:4326',
   metadata: {
     refreshInterval: 'map',
     tags: [],
@@ -23,7 +24,6 @@ export const DEFAULT_OPTIONS = {
   timeZone: 'Europe/Helsinki',
   timeZoneLabel: '',
   target: 'map',
-  resolutions: [4096, 2048, 1024, 512, 256, 128, 64],
   periodDelay: 2 * DEFAULT_DELAY,
   texts: {
     'Zoom In Label': '+',
@@ -36,6 +36,9 @@ export const DEFAULT_OPTIONS = {
     'Fullscreen Label Active': '×',
     'Fullscreen Tip Label': 'Fullscreen',
   },
+};
+export const PROJECTION_RESOLUTIONS = {
+  'EPSG:3067': [4096, 2048, 1024, 512, 256, 128, 64],
 };
 export const NO_SELECT_CLASS = 'noselect';
 export const MILLISECONDS_PER_SECOND = 1000;

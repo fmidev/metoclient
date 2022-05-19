@@ -1,6 +1,6 @@
 {
   "name": "@fmidev/metoclient",
-  "version": "6.3.13",
+  "version": "6.3.16",
   "description": "Map animator",
   "main": "dist/metoclient.js",
   "module": "dist/metoclient.es.js",
@@ -98,7 +98,7 @@
     "ol-layerswitcher": "3.8.3",
     "ol-mapbox-style": "6.5.1",
     "proj4": "2.7.5",
-    "rrule": "2.6.8"
+    "rrule": "2.6.9"
   },
   "devDependencies": {
     "@babel/cli": "7.16.0",

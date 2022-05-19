@@ -910,7 +910,7 @@ SOFTWARE.
 ---
 
 Name: rrule
-Version: 2.6.8
+Version: 2.6.9
 License: BSD-3-Clause
 Private: false
 Description: JavaScript library for working with recurrence rules for calendar dates.

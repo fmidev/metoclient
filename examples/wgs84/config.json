@@ -7,12 +7,12 @@
   "minZoom": 1,
   "maxZoom": 10,
   "center": [
-    385956,
-    6671437
+    24.9384,
+    60.1699
   ],
   "zoom": 8,
   "container": "map",
-  "projection": "EPSG:3067",
+  "projection": "EPSG:4326",
   "refreshInterval": "PT15M",
   "timeZone": "Europe/Helsinki",
   "sources": {
@@ -25,10 +25,10 @@
         "https://openwms.fmi.fi/geoserver/wms"
       ],
       "bounds": [
-        -1214975,
-        6518785,
-        1179690,
-        7850125
+        -180,
+        -90,
+        180,
+        90
       ],
       "tileSize": 1024
     }
@@ -57,7 +57,7 @@
         "request": "GetMap",
         "format": "image/png",
         "transparent": "TRUE",
-        "crs": "EPSG:3067",
+        "crs": "EPSG:4326",
         "styles": "",
         "width": "1024",
         "height": "1024"
@@ -81,7 +81,7 @@
         "request": "GetMap",
         "format": "image/png",
         "transparent": "TRUE",
-        "crs": "EPSG:3067",
+        "crs": "EPSG:4326",
         "styles": "",
         "width": "1024",
         "height": "1024"
@@ -104,7 +104,7 @@
         "request": "GetMap",
         "format": "image/png",
         "transparent": "TRUE",
-        "crs": "EPSG:3067",
+        "crs": "EPSG:4326",
         "styles": "",
         "width": "1024",
         "height": "1024"

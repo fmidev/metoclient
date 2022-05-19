@@ -1,15 +1,19 @@
 {
   "name": "parcel-example",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Parcel Example",
   "scripts": {
-    "dev": "parcel main.js",
-    "build": "parcel build main.js"
+    "start": "parcel index.html",
+    "build": "parcel build index.html"
   },
   "devDependencies": {
-    "parcel-bundler": "1.12.5"
+    "parcel": "2.5.0",
+    "process": "0.11.10"
   },
   "dependencies": {
     "@fmidev/metoclient": "file:../.."
+  },
+  "alias": {
+    "process": false
   }
 }

@@ -30,7 +30,7 @@ export function isValidDate(d) {
 }
 
 /**
- *
+ * @param str
  */
 export function isNumeric(str) {
   if (typeof str !== 'string') return false;
@@ -415,10 +415,11 @@ export function getLegendUrl(layerName, layerStyles, capabilities) {
 
 /**
  * Parse query parameters.
- * @param {Object} layer 
- * @param {string} url 
- * @param {number} time 
- * @returns 
+ *
+ * @param {object} layer
+ * @param {string} url
+ * @param {number} time
+ * @returns
  */
 export function getQueryParams(layer, url, time) {
   const queryUrl = new Url(url);

@@ -74,6 +74,11 @@ export default {
           src: 'img',
           dest: 'dist',
         },
+        {
+          src: 'types/index.d.ts',
+          dest: 'dist',
+          rename: 'metoclient.d.ts',
+        },
       ],
     }),
     analyze({

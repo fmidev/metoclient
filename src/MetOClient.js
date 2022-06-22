@@ -494,6 +494,11 @@ export class MetOClient extends BaseObject {
       return true;
     }
     const source = this.config_.sources[layer.source];
+    if (source == null) {
+      console.error(
+        `Error in the MetOClient configuration: undefined source "${layer.source}" in the layer "${layer.id}".`
+      );
+    }
     if (source.type === 'OSM') {
       return true;
     }

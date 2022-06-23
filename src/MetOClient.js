@@ -202,6 +202,7 @@ export class MetOClient extends BaseObject {
         version: 8,
         sources: {},
         layers: [],
+        sprite: this.config_.sprite,
       }
     ));
   }
@@ -1782,14 +1783,12 @@ export class MetOClient extends BaseObject {
                   initFeature(event.feature);
                 })
               );
-              if (timeProperty != null && timeProperty.length > 0) {
-                source.getFeatures().forEach((feature) => {
-                  initFeature(feature);
-                  if (mapProjection !== 'EPSG:3857') {
-                    feature.getGeometry().transform('EPSG:3857', mapProjection);
-                  }
-                });
-              }
+              source.getFeatures().forEach((feature) => {
+                initFeature(feature);
+                if (mapProjection !== 'EPSG:3857') {
+                  feature.getGeometry().transform('EPSG:3857', mapProjection);
+                }
+              });
             });
           if (this.config_.time == null && this.times_.length > 0) {
             this.config_.time = this.times_[0];
@@ -1926,7 +1925,11 @@ export class MetOClient extends BaseObject {
         map
           .getLayers()
           .getArray()
-          .filter((layer) => layer.get('metoclient:id') == null)
+          .filter(
+            (layer) =>
+              layer.get('metoclient:id') == null &&
+              layer.get('mapbox-source') == null
+          )
       )
     );
     map.setView(this.createView_());

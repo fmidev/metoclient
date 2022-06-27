@@ -59,7 +59,8 @@ fmi.config.metoclient = {
       next: 'precipitation-wms',
       source: 'openwms',
       metadata: {
-        title: 'Weather radar'
+        title: 'Weather radar',
+        legendVisible: true
       },
       url: {
         service: 'WMS',

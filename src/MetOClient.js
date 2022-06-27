@@ -58,8 +58,16 @@ export class MetOClient extends BaseObject {
     );
     register(proj4);
     this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
-    this.config_.texts = assign({}, constants.DEFAULT_OPTIONS.texts, options.texts);
-    this.config_.transition = assign({}, constants.DEFAULT_OPTIONS.transition, options.transition);
+    this.config_.texts = assign(
+      {},
+      constants.DEFAULT_OPTIONS.texts,
+      options.texts
+    );
+    this.config_.transition = assign(
+      {},
+      constants.DEFAULT_OPTIONS.transition,
+      options.transition
+    );
     if (options.target == null && options.container != null) {
       this.config_.target = this.config_.container;
     }
@@ -79,7 +87,11 @@ export class MetOClient extends BaseObject {
       }
     }
     this.config_.layers.forEach((layer, index, layers) => {
-      if ((layer != null) && (layer.url != null) && (typeof layer.url.layers === 'string')) {
+      if (
+        layer != null &&
+        layer.url != null &&
+        typeof layer.url.layers === 'string'
+      ) {
         layers[index].url.layers = layer.url.layers.replace(/\s/g, '');
       }
     });
@@ -113,9 +125,11 @@ export class MetOClient extends BaseObject {
     this.extent_ = [null, null, null, null];
     this.resizeDetector_ = this.config_.metadata.tags.includes(
       constants.TAG_FIXED_EXTENT
-    ) ? elementResizeDetectorMaker({
-      strategy: 'scroll'
-    }) : null;
+    )
+      ? elementResizeDetectorMaker({
+          strategy: 'scroll',
+        })
+      : null;
     this.capabilities_ = {};
     this.legends_ = {};
     this.selectedLegend_ = constants.DEFAULT_LEGEND;
@@ -130,7 +144,11 @@ export class MetOClient extends BaseObject {
     this.optionsListener_ = this.on('change:options', (event) => {
       const options = this.get('options');
       this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
-      this.config_.texts = assign({}, constants.DEFAULT_OPTIONS.texts, options.texts);
+      this.config_.texts = assign(
+        {},
+        constants.DEFAULT_OPTIONS.texts,
+        options.texts
+      );
       if (options.target == null && options.container != null) {
         this.config_.target = this.config_.container;
       }
@@ -184,6 +202,7 @@ export class MetOClient extends BaseObject {
         version: 8,
         sources: {},
         layers: [],
+        sprite: this.config_.sprite,
       }
     ));
   }
@@ -238,16 +257,19 @@ export class MetOClient extends BaseObject {
           }
         });
         this.vectorConfig_ = this.getVectorConfig_();
-        return this.updateMap_().then((map) => {
-          if (this.config_.metadata.tags.includes(constants.TAG_AUTOPLAY)) {
-            this.config_.metadata.tags = this.config_.metadata.tags.filter((tag) => tag !== constants.TAG_AUTOPLAY);
-            this.play();
-          }
-          return map;
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+        return this.updateMap_()
+          .then((map) => {
+            if (this.config_.metadata.tags.includes(constants.TAG_AUTOPLAY)) {
+              this.config_.metadata.tags = this.config_.metadata.tags.filter(
+                (tag) => tag !== constants.TAG_AUTOPLAY
+              );
+              this.play();
+            }
+            return map;
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       })
       .catch((error) => {
         console.log(error);
@@ -473,6 +495,11 @@ export class MetOClient extends BaseObject {
       return true;
     }
     const source = this.config_.sources[layer.source];
+    if (source == null) {
+      console.error(
+        `Error in the MetOClient configuration: undefined source "${layer.source}" in the layer "${layer.id}".`
+      );
+    }
     if (source.type === 'OSM') {
       return true;
     }
@@ -711,6 +738,9 @@ export class MetOClient extends BaseObject {
             if (layerConfig.metadata.legendUrl != null) {
               layerConfig.legendUrl = layerConfig.metadata.legendUrl;
             }
+            if (layerConfig.metadata.legendVisible) {
+              this.selectedLegend_ = layerConfig.id;
+            }
           }
           return layerConfig;
         })
@@ -722,9 +752,8 @@ export class MetOClient extends BaseObject {
             layerConfig.metadata != null &&
             layerConfig.metadata.title != null
           ) {
-            layerConfig.metadata.title = this.createLayerSwitcherTitle_(
-              layerConfig
-            );
+            layerConfig.metadata.title =
+              this.createLayerSwitcherTitle_(layerConfig);
           }
           if (layerConfig.url != null) {
             layerConfig.url = Object.keys(layerConfig.url).reduce(
@@ -1273,6 +1302,28 @@ export class MetOClient extends BaseObject {
       .classList.contains(layerSwitcher.shownClassName);
   }
 
+  updateLegend_() {
+    const legendContainer = document.getElementById(
+      constants.LEGEND_CONTAINER_ID
+    );
+    if (legendContainer != null) {
+      while (legendContainer.firstChild) {
+        legendContainer.removeChild(legendContainer.firstChild);
+      }
+      const { url } = this.legends_[this.selectedLegend_];
+      if (url != null && url.length > 0) {
+        const legendFigure = document.createElement('figure');
+        const legendCaption = document.createElement('figcaption');
+        legendCaption.innerHTML = this.legends_[this.selectedLegend_].title;
+        legendFigure.appendChild(legendCaption);
+        const legendImage = document.createElement('img');
+        legendImage.setAttribute('src', url);
+        legendFigure.appendChild(legendImage);
+        legendContainer.appendChild(legendFigure);
+      }
+    }
+  }
+
   /**
    *
    * @private
@@ -1312,25 +1363,7 @@ export class MetOClient extends BaseObject {
     legendSelect.addEventListener('change', () => {
       const selectedOption = legendSelect.options[legendSelect.selectedIndex];
       this.selectedLegend_ = selectedOption.value;
-      const legendContainer = document.getElementById(
-        constants.LEGEND_CONTAINER_ID
-      );
-      if (legendContainer != null) {
-        while (legendContainer.firstChild) {
-          legendContainer.removeChild(legendContainer.firstChild);
-        }
-        const { url } = this.legends_[selectedOption.value];
-        if (url != null && url.length > 0) {
-          const legendFigure = document.createElement('figure');
-          const legendCaption = document.createElement('figcaption');
-          legendCaption.innerHTML = selectedOption.text;
-          legendFigure.appendChild(legendCaption);
-          const legendImage = document.createElement('img');
-          legendImage.setAttribute('src', url);
-          legendFigure.appendChild(legendImage);
-          legendContainer.appendChild(legendFigure);
-        }
-      }
+      this.updateLegend_();
     });
     legendChooserContainer.appendChild(legendSelect);
     layerSwitcherPanel.appendChild(legendChooserContainer);
@@ -1579,9 +1612,8 @@ export class MetOClient extends BaseObject {
           constants.LAYER_SWITCHER_CONTAINER_ID
         );
         // https://github.com/walkermatt/ol-layerswitcher/issues/39
-        const layerSwitcherButton = layerSwitcherContainer.querySelector(
-          'button'
-        );
+        const layerSwitcherButton =
+          layerSwitcherContainer.querySelector('button');
         if (layerSwitcherButton != null) {
           layerSwitcherButton.onmouseover = () => {};
           layerSwitcherButton.onclick = () => {
@@ -1621,6 +1653,7 @@ export class MetOClient extends BaseObject {
       this.refresh_.bind(this),
       this.refreshInterval_
     );
+    this.updateLegend_();
     return map;
   }
 
@@ -1750,14 +1783,12 @@ export class MetOClient extends BaseObject {
                   initFeature(event.feature);
                 })
               );
-              if (timeProperty != null && timeProperty.length > 0) {
-                source.getFeatures().forEach((feature) => {
-                  initFeature(feature);
-                  if (mapProjection !== 'EPSG:3857') {
-                    feature.getGeometry().transform('EPSG:3857', mapProjection);
-                  }
-                });
-              }
+              source.getFeatures().forEach((feature) => {
+                initFeature(feature);
+                if (mapProjection !== 'EPSG:3857') {
+                  feature.getGeometry().transform('EPSG:3857', mapProjection);
+                }
+              });
             });
           if (this.config_.time == null && this.times_.length > 0) {
             this.config_.time = this.times_[0];
@@ -1863,12 +1894,12 @@ export class MetOClient extends BaseObject {
         document.getElementById(this.config_.target),
         () => {
           view.fit(this.extent_, {
-            size: newMap.getSize()
+            size: newMap.getSize(),
           });
           this.updateTimeSlider_();
         }
       );
-    }  
+    }
     if (this.vectorConfig_.layers.length > 0) {
       return this.createVectorLayers_(newMap, this.vectorConfig_).then((map) =>
         this.initMap_(map)
@@ -1894,7 +1925,11 @@ export class MetOClient extends BaseObject {
         map
           .getLayers()
           .getArray()
-          .filter((layer) => layer.get('metoclient:id') == null)
+          .filter(
+            (layer) =>
+              layer.get('metoclient:id') == null &&
+              layer.get('mapbox-source') == null
+          )
       )
     );
     map.setView(this.createView_());
@@ -1926,12 +1961,13 @@ export class MetOClient extends BaseObject {
           layer.time.source != null
             ? this.config_.sources[layer.time.source]
             : this.config_.sources[layer.source];
-        const capabilities = this.capabilities_[
-          (source.capabilities != null && source.capabilities.length > 0
-            ? source.capabilities
-            : source.tiles[0]
-          ).split('?')[0]
-        ]; // Todo: Generalize
+        const capabilities =
+          this.capabilities_[
+            (source.capabilities != null && source.capabilities.length > 0
+              ? source.capabilities
+              : source.tiles[0]
+            ).split('?')[0]
+          ]; // Todo: Generalize
         if (
           capabilities == null ||
           capabilities.data == null ||
@@ -1942,23 +1978,29 @@ export class MetOClient extends BaseObject {
           return;
         }
         let parsedData = [];
-        capabilities.data.Capability.Layer.Layer.filter(
-          (element) =>
-            layer.time.name != null
-              ? layer.time.name === element.Name
-              : [layer.url.layer, layer.url.layers].some((layerIds) =>
+        capabilities.data.Capability.Layer.Layer.filter((element) =>
+          layer.time.name != null
+            ? layer.time.name === element.Name
+            : [layer.url.layer, layer.url.layers].some((layerIds) =>
                 // Todo: check namespace
-                typeof layerIds === 'string' ? layerIds.split(',').some((layerId) => layerId.slice(-element.Name.length) === element.Name) : false
+                typeof layerIds === 'string'
+                  ? layerIds
+                      .split(',')
+                      .some(
+                        (layerId) =>
+                          layerId.slice(-element.Name.length) === element.Name
+                      )
+                  : false
               )
         ).forEach((layerElement) => {
           const data =
-            ((layerElement != null) && (layerElement.Dimension != null))
+            layerElement != null && layerElement.Dimension != null
               ? layerElement.Dimension.find(
                   (element) => element.name.toLowerCase() === 'time'
                 ).values
               : [];
           parsedData = [...new Set(parsedData.concat(parseTimes(data)))];
-        })
+        });
         const times = parseTimes(
           layer.time.range,
           layer.time.offset,
@@ -2151,7 +2193,9 @@ export class MetOClient extends BaseObject {
     unByKey(this.timeListener_);
     unByKey(this.optionsListener_);
     if (this.resizeDetector_ != null) {
-      this.resizeDetector_.removeAllListeners(document.getElementById(this.config_.target));
+      this.resizeDetector_.removeAllListeners(
+        document.getElementById(this.config_.target)
+      );
     }
     document.onfullscreenchange = null;
     document.onwebkitfullscreenchange = null;

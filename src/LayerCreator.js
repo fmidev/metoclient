@@ -5,7 +5,12 @@ import TileLayer from 'ol/layer/Tile';
 import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
 import SourceCreator from './SourceCreator';
-import { getBaseUrl, getQueryParams, getAdjacentLayer, getLegendUrl } from './utils';
+import {
+  getBaseUrl,
+  getQueryParams,
+  getAdjacentLayer,
+  getLegendUrl,
+} from './utils';
 import * as constants from './constants';
 
 /**

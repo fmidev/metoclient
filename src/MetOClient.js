@@ -1310,7 +1310,7 @@ export class MetOClient extends BaseObject {
       while (legendContainer.firstChild) {
         legendContainer.removeChild(legendContainer.firstChild);
       }
-      const { url } = this.legends_[this.selectedLegend_];
+      const url = this.legends_?.[this.selectedLegend_]?.url;
       if (url != null && url.length > 0) {
         const legendFigure = document.createElement('figure');
         const legendCaption = document.createElement('figcaption');
@@ -2170,6 +2170,15 @@ export class MetOClient extends BaseObject {
    */
   pause() {
     this.get('map').set('playing', false);
+  }
+
+  /**
+   *
+   * @api
+   */
+  setLegend (layerId) {
+    this.selectedLegend_ = layerId;
+    this.updateLegend_();
   }
 
   stop() {

@@ -1303,25 +1303,26 @@ export class MetOClient extends BaseObject {
   }
 
   updateLegend_() {
-    const legendContainer = document.getElementById(
-      constants.LEGEND_CONTAINER_ID
-    );
-    if (legendContainer != null) {
-      while (legendContainer.firstChild) {
-        legendContainer.removeChild(legendContainer.firstChild);
+    Array.from(document.getElementsByClassName(
+      constants.LEGEND_CONTAINER_CLASS
+    )).forEach((legendContainer) => {
+      if (legendContainer != null) {
+        while (legendContainer.firstChild) {
+          legendContainer.removeChild(legendContainer.firstChild);
+        }
+        const url = this.legends_?.[this.selectedLegend_]?.url;
+        if (url != null && url.length > 0) {
+          const legendFigure = document.createElement('figure');
+          const legendCaption = document.createElement('figcaption');
+          legendCaption.innerHTML = this.legends_[this.selectedLegend_].title;
+          legendFigure.appendChild(legendCaption);
+          const legendImage = document.createElement('img');
+          legendImage.setAttribute('src', url);
+          legendFigure.appendChild(legendImage);
+          legendContainer.appendChild(legendFigure);
+        }
       }
-      const url = this.legends_?.[this.selectedLegend_]?.url;
-      if (url != null && url.length > 0) {
-        const legendFigure = document.createElement('figure');
-        const legendCaption = document.createElement('figcaption');
-        legendCaption.innerHTML = this.legends_[this.selectedLegend_].title;
-        legendFigure.appendChild(legendCaption);
-        const legendImage = document.createElement('img');
-        legendImage.setAttribute('src', url);
-        legendFigure.appendChild(legendImage);
-        legendContainer.appendChild(legendFigure);
-      }
-    }
+    });
   }
 
   /**
@@ -1505,7 +1506,8 @@ export class MetOClient extends BaseObject {
     const mapContainer = document.getElementById(this.config_.target);
     if (mapContainer != null) {
       const legendContainer = document.createElement('div');
-      legendContainer.setAttribute('id', constants.LEGEND_CONTAINER_ID);
+      legendContainer.setAttribute('id', constants.LEGEND_CONTAINER_CLASS);
+      legendContainer.setAttribute('class', constants.LEGEND_CONTAINER_CLASS);
       mapContainer.appendChild(legendContainer);
     }
   }

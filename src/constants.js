@@ -108,7 +108,7 @@ export const LEGEND_CHOOSER_CONTAINER_ID =
   'fmi-metoclient-legend-chooser-container';
 export const LEGEND_CHOOSER_LABEL_ID = 'fmi-metoclient-legend-chooser-label';
 export const LEGEND_CHOOSER_SELECT_ID = 'fmi-metoclient-legend-chooser-select';
-export const LEGEND_CONTAINER_ID = 'fmi-metoclient-legend-container';
+export const LEGEND_CONTAINER_CLASS = 'fmi-metoclient-legend-container';
 export const OPACITY_CONTROL_CLASS = 'fmi-metoclient-opacity-control';
 export const OPACITY_CONTAINER_CLASS = 'fmi-metoclient-opacity-container';
 export const METEOROLOGICAL_MODE = 'meteorological';

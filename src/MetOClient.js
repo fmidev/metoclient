@@ -1302,7 +1302,11 @@ export class MetOClient extends BaseObject {
       .classList.contains(layerSwitcher.shownClassName);
   }
 
-  updateLegend_() {
+  /**
+   *
+   * @api
+   */
+  updateLegend() {
     Array.from(document.getElementsByClassName(
       constants.LEGEND_CONTAINER_CLASS
     )).forEach((legendContainer) => {
@@ -1364,7 +1368,7 @@ export class MetOClient extends BaseObject {
     legendSelect.addEventListener('change', () => {
       const selectedOption = legendSelect.options[legendSelect.selectedIndex];
       this.selectedLegend_ = selectedOption.value;
-      this.updateLegend_();
+      this.updateLegend();
     });
     legendChooserContainer.appendChild(legendSelect);
     layerSwitcherPanel.appendChild(legendChooserContainer);
@@ -1655,7 +1659,7 @@ export class MetOClient extends BaseObject {
       this.refresh_.bind(this),
       this.refreshInterval_
     );
-    this.updateLegend_();
+    this.updateLegend();
     return map;
   }
 
@@ -2180,7 +2184,7 @@ export class MetOClient extends BaseObject {
    */
   setLegend (layerId) {
     this.selectedLegend_ = layerId;
-    this.updateLegend_();
+    this.updateLegend();
   }
 
   stop() {

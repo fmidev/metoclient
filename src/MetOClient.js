@@ -56,6 +56,10 @@ export class MetOClient extends BaseObject {
       'EPSG:3035',
       '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs'
     );
+    proj4.defs(
+      'EPSG:3395',
+      '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs'
+    );
     register(proj4);
     this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
     this.config_.texts = assign(
@@ -2221,6 +2225,10 @@ export class MetOClient extends BaseObject {
     proj4.defs(
       'EPSG:3035',
       '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs'
+    );
+    proj4.defs(
+      'EPSG:3395',
+      '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs'
     );
     register(proj4);
     return transform(coordinate, source, destination);

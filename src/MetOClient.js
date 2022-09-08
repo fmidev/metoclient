@@ -1306,26 +1306,31 @@ export class MetOClient extends BaseObject {
       .classList.contains(layerSwitcher.shownClassName);
   }
 
-  updateLegend_() {
-    const legendContainer = document.getElementById(
-      constants.LEGEND_CONTAINER_ID
-    );
-    if (legendContainer != null) {
-      while (legendContainer.firstChild) {
-        legendContainer.removeChild(legendContainer.firstChild);
+  /**
+   *
+   * @api
+   */
+  updateLegend() {
+    Array.from(document.getElementsByClassName(
+      constants.LEGEND_CONTAINER_CLASS
+    )).forEach((legendContainer) => {
+      if (legendContainer != null) {
+        while (legendContainer.firstChild) {
+          legendContainer.removeChild(legendContainer.firstChild);
+        }
+        const url = this.legends_?.[this.selectedLegend_]?.url;
+        if (url != null && url.length > 0) {
+          const legendFigure = document.createElement('figure');
+          const legendCaption = document.createElement('figcaption');
+          legendCaption.innerHTML = this.legends_[this.selectedLegend_].title;
+          legendFigure.appendChild(legendCaption);
+          const legendImage = document.createElement('img');
+          legendImage.setAttribute('src', url);
+          legendFigure.appendChild(legendImage);
+          legendContainer.appendChild(legendFigure);
+        }
       }
-      const { url } = this.legends_[this.selectedLegend_];
-      if (url != null && url.length > 0) {
-        const legendFigure = document.createElement('figure');
-        const legendCaption = document.createElement('figcaption');
-        legendCaption.innerHTML = this.legends_[this.selectedLegend_].title;
-        legendFigure.appendChild(legendCaption);
-        const legendImage = document.createElement('img');
-        legendImage.setAttribute('src', url);
-        legendFigure.appendChild(legendImage);
-        legendContainer.appendChild(legendFigure);
-      }
-    }
+    });
   }
 
   /**
@@ -1367,7 +1372,7 @@ export class MetOClient extends BaseObject {
     legendSelect.addEventListener('change', () => {
       const selectedOption = legendSelect.options[legendSelect.selectedIndex];
       this.selectedLegend_ = selectedOption.value;
-      this.updateLegend_();
+      this.updateLegend();
     });
     legendChooserContainer.appendChild(legendSelect);
     layerSwitcherPanel.appendChild(legendChooserContainer);
@@ -1509,7 +1514,8 @@ export class MetOClient extends BaseObject {
     const mapContainer = document.getElementById(this.config_.target);
     if (mapContainer != null) {
       const legendContainer = document.createElement('div');
-      legendContainer.setAttribute('id', constants.LEGEND_CONTAINER_ID);
+      legendContainer.setAttribute('id', constants.LEGEND_CONTAINER_CLASS);
+      legendContainer.setAttribute('class', constants.LEGEND_CONTAINER_CLASS);
       mapContainer.appendChild(legendContainer);
     }
   }
@@ -1657,7 +1663,7 @@ export class MetOClient extends BaseObject {
       this.refresh_.bind(this),
       this.refreshInterval_
     );
-    this.updateLegend_();
+    this.updateLegend();
     return map;
   }
 
@@ -2174,6 +2180,15 @@ export class MetOClient extends BaseObject {
    */
   pause() {
     this.get('map').set('playing', false);
+  }
+
+  /**
+   *
+   * @api
+   */
+  setLegend (layerId) {
+    this.selectedLegend_ = layerId;
+    this.updateLegend();
   }
 
   stop() {

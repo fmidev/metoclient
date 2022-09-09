@@ -62,10 +62,13 @@ export class MetOClient extends BaseObject {
     );
     register(proj4);
     this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
+    if (this.config_.tags != null) {
+      this.config_.metadata.tags = this.config_.tags;
+    }
     this.config_.texts = assign(
       {},
       constants.DEFAULT_OPTIONS.texts,
-      options.texts
+      options?.texts?.[this.config_.locale] ?? options.texts
     );
     this.config_.transition = assign(
       {},
@@ -1847,7 +1850,7 @@ export class MetOClient extends BaseObject {
     this.set(
       'timeSlider',
       new TimeSlider({
-        locale: 'fi-FI',
+        locale: this.config_.locale,
         showTimeSlider: true,
         timeZone: this.config_.timeZone,
         timeZoneLabel: this.config_.timeZoneLabel,

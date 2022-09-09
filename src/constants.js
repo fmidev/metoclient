@@ -25,6 +25,7 @@ export const DEFAULT_OPTIONS = {
   timeZoneLabel: '',
   target: 'map',
   periodDelay: 2 * DEFAULT_DELAY,
+  locale: 'en-GB',
   texts: {
     'Zoom In Label': '+',
     'Zoom Out Label': '-',

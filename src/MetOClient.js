@@ -1850,6 +1850,7 @@ export class MetOClient extends BaseObject {
     this.set(
       'timeSlider',
       new TimeSlider({
+        target: this.config_.timeSliderContainerId,
         locale: this.config_.locale,
         showTimeSlider: true,
         timeZone: this.config_.timeZone,

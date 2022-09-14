@@ -148,6 +148,12 @@ export class MetOClient extends BaseObject {
     this.animationTimeout_ = null;
     this.layerListeners_ = [];
     this.sourceListeners_ = [];
+    const mainContainer = document.getElementById(this.config_.target);
+    if (mainContainer != null) {
+      const customControlContainer = document.createElement('div');
+      customControlContainer.id = constants.CUSTOM_CONTROL_CONTAINER_ID;
+      mainContainer.append(customControlContainer);
+    }
     this.optionsListener_ = this.on('change:options', (event) => {
       const options = this.get('options');
       this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);

@@ -56,12 +56,19 @@ export class MetOClient extends BaseObject {
       'EPSG:3035',
       '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs'
     );
+    proj4.defs(
+      'EPSG:3395',
+      '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs'
+    );
     register(proj4);
     this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
+    if (this.config_.tags != null) {
+      this.config_.metadata.tags = this.config_.tags;
+    }
     this.config_.texts = assign(
       {},
       constants.DEFAULT_OPTIONS.texts,
-      options.texts
+      options?.texts?.[this.config_.locale] ?? options.texts
     );
     this.config_.transition = assign(
       {},
@@ -141,6 +148,12 @@ export class MetOClient extends BaseObject {
     this.animationTimeout_ = null;
     this.layerListeners_ = [];
     this.sourceListeners_ = [];
+    const mainContainer = document.getElementById(this.config_.target);
+    if (mainContainer != null) {
+      const customControlContainer = document.createElement('div');
+      customControlContainer.id = constants.CUSTOM_CONTROL_CONTAINER_ID;
+      mainContainer.append(customControlContainer);
+    }
     this.optionsListener_ = this.on('change:options', (event) => {
       const options = this.get('options');
       this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
@@ -1843,7 +1856,8 @@ export class MetOClient extends BaseObject {
     this.set(
       'timeSlider',
       new TimeSlider({
-        locale: 'fi-FI',
+        target: this.config_.timeSliderContainerId,
+        locale: this.config_.locale,
         showTimeSlider: true,
         timeZone: this.config_.timeZone,
         timeZoneLabel: this.config_.timeZoneLabel,
@@ -2236,6 +2250,10 @@ export class MetOClient extends BaseObject {
     proj4.defs(
       'EPSG:3035',
       '+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs'
+    );
+    proj4.defs(
+      'EPSG:3395',
+      '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs'
     );
     register(proj4);
     return transform(coordinate, source, destination);

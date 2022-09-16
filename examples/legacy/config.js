@@ -18,13 +18,12 @@ fmi.config.metoclient = {
   transition: {
     delay: 1000
   },
-  metadata: {
-    tags: [
-      'mouse wheel interactions',
-      'fullscreen control',
-      'fixed extent'
-    ]
-  },
+  tags: [
+    'mouse wheel interactions',
+    'fullscreen control',
+    'fixed extent'
+  ],
+  locale: 'en-GB',
   sources: {
     osm: {
       type: 'OSM'

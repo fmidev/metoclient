@@ -25,6 +25,7 @@ export const DEFAULT_OPTIONS = {
   timeZoneLabel: '',
   target: 'map',
   periodDelay: 2 * DEFAULT_DELAY,
+  locale: 'en-GB',
   texts: {
     'Zoom In Label': '+',
     'Zoom Out Label': '-',
@@ -111,6 +112,7 @@ export const LEGEND_CHOOSER_SELECT_ID = 'fmi-metoclient-legend-chooser-select';
 export const LEGEND_CONTAINER_CLASS = 'fmi-metoclient-legend-container';
 export const OPACITY_CONTROL_CLASS = 'fmi-metoclient-opacity-control';
 export const OPACITY_CONTAINER_CLASS = 'fmi-metoclient-opacity-container';
+export const CUSTOM_CONTROL_CONTAINER_ID = 'fmi-metoclient-custom-control-container';
 export const METEOROLOGICAL_MODE = 'meteorological';
 export const SMARTMET_SERVER = 'smartmet server';
 export const TAG_MOUSE_WHEEL_INTERACTIONS = 'mouse wheel interactions';

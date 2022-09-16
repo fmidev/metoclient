@@ -536,7 +536,11 @@ class TimeSlider extends Control {
         }
       }
       j += 1;
-    } while (timeStepsUsed && nextStep !== minStep);
+    } while (
+      timeStepsUsed &&
+      nextStep !== minStep &&
+      nextStep < constants.DAY / 2
+    );
     this.showTicks();
   }
 

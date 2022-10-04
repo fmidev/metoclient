@@ -623,6 +623,7 @@ export class MetOClient extends BaseObject {
                 this.get('map').set('time', newTime);
               }
             }
+            this.clearTimeStatuses_();
             this.updateTimeSlider_();
           }
         })
@@ -882,6 +883,14 @@ export class MetOClient extends BaseObject {
           layer.get('times') != null &&
           layer.get('times').includes(time)
       );
+  }
+
+  /**
+   *
+   * @private
+   */
+  clearTimeStatuses_() {
+    Object.keys(this.status_).filter((key) => Number(key) !== this.config_.time).forEach((key) => this.status_[key] = '')
   }
 
   /**

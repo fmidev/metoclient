@@ -120,6 +120,7 @@ export class MetOClient extends BaseObject {
     this.playingListener_ = null;
     this.previousListener_ = null;
     this.timeListener_ = null;
+    this.visibilityListener_ = null;
     this.renderComplete_ = false;
     this.updateNeeded_ = false;
     this.waitingRender_ = 0;
@@ -1678,7 +1679,23 @@ export class MetOClient extends BaseObject {
       this.refreshInterval_
     );
     this.updateLegend();
+    if (typeof document.addEventListener !== "undefined" || hidden !== undefined) {
+      this.visibilityListener_ = this.handleVisibilityChange_.bind(this)
+      document.addEventListener('visibilitychange', this.visibilityListener_, false);
+    }
     return map;
+  }
+
+  handleVisibilityChange_() {
+    clearInterval(this.refreshTimer_);
+    if (document.visibilityState === 'hidden') {      
+      return;
+    }
+    this.refreshTimer_ = setInterval(
+      this.refresh_.bind(this),
+      this.refreshInterval_
+    );
+    this.refresh_()
   }
 
   addTimes_(times) {
@@ -2242,6 +2259,7 @@ export class MetOClient extends BaseObject {
         document.getElementById(this.config_.target)
       );
     }
+    document.removeEventListener('visibilitychange', this.visibilityListener_, false)
     document.onfullscreenchange = null;
     document.onwebkitfullscreenchange = null;
     clearInterval(this.refreshTimer_);

@@ -932,7 +932,7 @@ class TimeSlider extends Control {
    *
    * @param {object} timeSteps Loader counter information for intervals.
    */
-  updateTimeLoaderVis(timeSteps) {
+  updateTimeLoaderVis(timeSteps, forceUpdate = false) {
     const numIntervalItems = timeSteps.reduce((activeTimeSteps, timeStep) => {
       if (timeStep.active) {
         activeTimeSteps.push(timeStep);
@@ -943,7 +943,7 @@ class TimeSlider extends Control {
       return;
     }
     const numIntervals = numIntervalItems.length;
-    let creationNeeded = numIntervals !== this.frames_.length;
+    let creationNeeded = numIntervals !== this.frames_.length || forceUpdate;
     let i;
     const moments = [];
     if (!creationNeeded) {

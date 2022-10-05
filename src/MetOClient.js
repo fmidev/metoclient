@@ -130,13 +130,9 @@ export class MetOClient extends BaseObject {
         )
       : constants.DEFAULT_REFRESH_INTERVAL;
     this.extent_ = [null, null, null, null];
-    this.resizeDetector_ = this.config_.metadata.tags.includes(
-      constants.TAG_FIXED_EXTENT
-    )
-      ? elementResizeDetectorMaker({
-          strategy: 'scroll',
-        })
-      : null;
+    this.resizeDetector_ = elementResizeDetectorMaker({
+      strategy: 'scroll'
+    });
     this.capabilities_ = {};
     this.legends_ = {};
     this.selectedLegend_ = constants.DEFAULT_LEGEND;
@@ -897,13 +893,13 @@ export class MetOClient extends BaseObject {
    *
    * @private
    */
-  updateTimeSlider_() {
+  updateTimeSlider_(forceUpdate = false) {
     this.get('timeSlider').updateTimeLoaderVis(
       this.times_.map((time) => ({
         endTime: time,
         status: this.status_[time],
         active: this.isVisibleTime_(time),
-      }))
+      })), forceUpdate
     );
   }
 
@@ -1922,10 +1918,21 @@ export class MetOClient extends BaseObject {
       this.resizeDetector_.listenTo(
         document.getElementById(this.config_.target),
         () => {
-          view.fit(this.extent_, {
-            size: newMap.getSize(),
-          });
-          this.updateTimeSlider_();
+          const map = this.get('map')
+          if (map == null) { 
+            return
+          }  
+          if (this.config_.metadata.tags.includes(
+            constants.TAG_FIXED_EXTENT
+          )) {
+            view.fit(this.extent_, {
+              size: map.getSize(),
+            });
+          } else {
+            map.updateSize()
+            map.renderSync()    
+          }
+          this.updateTimeSlider_(true);
         }
       );
     }

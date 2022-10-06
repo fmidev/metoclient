@@ -1170,8 +1170,8 @@ class TimeSlider extends Control {
     }
     return {
       content: useDateFormat
-        ? zTime.weekdayShort + zTime.toFormat(dateFormat)
-        : zTime.toFormat(format),
+        ? zTime.weekdayShort.charAt(0).toUpperCase() + zTime.weekdayShort.slice(1)
+        + zTime.toFormat(dateFormat) : zTime.toFormat(format),
       useDateFormat,
     };
   }

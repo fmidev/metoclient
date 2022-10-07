@@ -247,11 +247,11 @@ export class MetOClient extends BaseObject {
         }
         // Limit bounds after refresh
         if (this.config_.time < this.times_[0]) {
-          [this.config_.time] = this.times_;
+          this.config_.time = this.times_.find((time) => this.isVisibleTime_(time));
         }
         const lastTimeIndex = this.times_.length - 1;
         if (this.config_.time > this.times_[lastTimeIndex]) {
-          this.config_.time = this.times_[lastTimeIndex];
+          this.config_.time = this.times_.reverse().find((time) => this.isVisibleTime_(time));
         }
         Object.keys(this.config_.sources).forEach((source) => {
           if (

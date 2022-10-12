@@ -474,24 +474,7 @@ class TimeSlider extends Control {
   createTicks() {
     let step;
     let stepStart;
-    const discreteSteps = [
-      constants.MINUTE,
-      2 * constants.MINUTE,
-      5 * constants.MINUTE,
-      10 * constants.MINUTE,
-      15 * constants.MINUTE,
-      20 * constants.MINUTE,
-      30 * constants.MINUTE,
-      constants.HOUR,
-      2 * constants.HOUR,
-      3 * constants.HOUR,
-      4 * constants.HOUR,
-      6 * constants.HOUR,
-      8 * constants.HOUR,
-      12 * constants.HOUR,
-      constants.DAY,
-    ];
-    const numDiscreteSteps = discreteSteps.length;
+    const numDiscreteSteps = constants.discreteSteps.length;
     let minStep;
     let nextStep = 0;
     let i;
@@ -529,8 +512,8 @@ class TimeSlider extends Control {
           (nextStep < constants.DAY && constants.DAY % nextStep !== 0))
       ) {
         for (i = 0; i < numDiscreteSteps; i += 1) {
-          if (nextStep < discreteSteps[i]) {
-            nextStep = discreteSteps[i];
+          if (nextStep < constants.discreteSteps[i]) {
+            nextStep = constants.discreteSteps[i];
             break;
           }
         }
@@ -541,7 +524,105 @@ class TimeSlider extends Control {
       nextStep !== minStep &&
       nextStep < constants.DAY / 2
     );
+    this.optimizeTicks()
     this.showTicks();
+  }
+
+  optimizeTicks() {
+    const self = this;
+    const textFrames = this.frames_.filter((frame) => {
+      if (frame?.element?.children != null) {
+        const childElements = Array.from(frame.element.children);
+        const numChildElements = childElements.length;
+        for (let i = 0; i < numChildElements; i++) {
+          if (childElements[i].classList.contains(constants.FRAME_TEXT_WRAPPER_CLASS)) {
+            return true
+          }
+        }
+      }
+      return false;
+    })
+    if (textFrames.length > 1) {
+      return
+    }
+    const framesContainer = this.getFramesContainer()
+    const hourSteps = [24, 12, 8, 6, 4, 3, 2, 1]
+    const numHourSteps = hourSteps.length;
+    loopHourSteps:
+    for (let i = 0; i < numHourSteps; i++) {
+      const numFrames = this.frames_.length;
+      for (let  j = 0; j < numFrames; j++) {
+        if (this.frames_[j].endTime >= textFrames[0].endTime) {
+          break;
+        }
+        if (DateTime.fromMillis(this.frames_[j].endTime).setZone(self.get('timeZone')).hour % hourSteps[i] === 0) {
+          this.addTextToFrame(this.frames_[j])
+          const clientRects = [this.frames_[j], textFrames[0]].map((frame) =>
+            Array.from(
+              frame.element.getElementsByClassName(constants.FRAME_TEXT_WRAPPER_CLASS)
+            ).shift().getBoundingClientRect());
+          if (framesContainer.length === 0 ||
+            (framesContainer.left <= clientRects[0].left &&
+              framesContainer.right >= clientRects[0].right &&
+              framesContainer.top <= clientRects[0].top &&
+              framesContainer.bottom >= clientRects[0].bottom &&
+              clientRects[0].right < clientRects[1].left
+            )) {
+            const tick = document.createElement('div');
+            tick.classList.add(constants.FRAME_TICK_CLASS);
+            tick.classList.add(constants.HIDDEN_CLASS);
+            this.frames_[j].element.appendChild(tick);
+            break loopHourSteps;
+          } else {
+            this.clearFrame(this.frames_[j]);
+          }
+        }        
+      }
+    }
+  }
+
+  clearFrame(frame) {
+    const removeChildrenByClass = (className) => {
+      Array.from(frame.element.getElementsByClassName(className)).forEach(
+        (element) => {
+          element.parentElement.removeChild(element);
+        }
+      );
+    };
+    removeChildrenByClass(constants.FRAME_TEXT_WRAPPER_CLASS);
+    removeChildrenByClass(constants.FRAME_TICK_CLASS);
+  }
+
+  addTextToFrame(frame) {
+    this.clearFrame(frame);
+
+    const textWrapperElement = document.createElement('div');
+    textWrapperElement.classList.add(constants.FRAME_TEXT_WRAPPER_CLASS);
+
+    const textElement = document.createElement('span');
+    textElement.classList.add(constants.FRAME_TEXT_CLASS);
+    textElement.classList.add(constants.NO_SELECT_CLASS);
+    const tickText = this.getTickText(frame.endTime);
+    textElement.textContent = tickText.content;
+    frame.useDateFormat = tickText.useDateFormat;
+
+    textWrapperElement.appendChild(textElement);
+
+    frame.element.appendChild(textWrapperElement);
+  }
+
+  /**
+   * 
+   * @returns 
+   */
+  getFramesContainer() {
+    let framesContainer = Array.from(
+      this.container_.getElementsByClassName(constants.FRAMES_CONTAINER_CLASS)
+    );
+    if (framesContainer.length > 0) {
+      framesContainer = framesContainer[0].getBoundingClientRect();
+    }
+    return framesContainer;
   }
 
   /**
@@ -567,35 +648,8 @@ class TimeSlider extends Control {
     this.previousTickValue_ = null;
     this.previousTickIndex_ = null;
 
-    const clearFrame = (frame) => {
-      const removeChildrenByClass = (className) => {
-        Array.from(frame.element.getElementsByClassName(className)).forEach(
-          (element) => {
-            element.parentElement.removeChild(element);
-          }
-        );
-      };
-      removeChildrenByClass(constants.FRAME_TEXT_WRAPPER_CLASS);
-      removeChildrenByClass(constants.FRAME_TICK_CLASS);
-    };
-
     this.frames_.forEach((frame) => {
-      clearFrame(frame);
-
-      const textWrapperElement = document.createElement('div');
-      textWrapperElement.classList.add(constants.FRAME_TEXT_WRAPPER_CLASS);
-
-      const textElement = document.createElement('span');
-      textElement.classList.add(constants.FRAME_TEXT_CLASS);
-      textElement.classList.add(constants.NO_SELECT_CLASS);
-      const tickText = this.getTickText(frame.endTime);
-      textElement.textContent = tickText.content;
-      frame.useDateFormat = tickText.useDateFormat;
-
-      textWrapperElement.appendChild(textElement);
-
-      frame.element.appendChild(textWrapperElement);
-      frame.element.style.display = 'none';
+      this.addTextToFrame(frame)
     });
 
     const hourFormatExists = this.frames_.some((frame) => !frame.useDateFormat);
@@ -668,12 +722,7 @@ class TimeSlider extends Control {
       frame.element.appendChild(tick);
     };
 
-    framesContainer = Array.from(
-      this.container_.getElementsByClassName(constants.FRAMES_CONTAINER_CLASS)
-    );
-    if (framesContainer.length > 0) {
-      framesContainer = framesContainer[0].getBoundingClientRect();
-    }
+    framesContainer = this.getFramesContainer();
 
     this.frames_.forEach((frame, index, frames) => {
       const textElementArray = Array.from(
@@ -743,7 +792,7 @@ class TimeSlider extends Control {
                     (minStep / constants.HOUR) !==
                     0))))
         ) {
-          clearFrame(frames[self.previousTickIndex_]);
+          this.clearFrame(frames[self.previousTickIndex_]);
           createTick(frame, index, clientRect, frame.endTime);
         } else {
           frame.element.removeChild(textWrapper);
@@ -932,7 +981,7 @@ class TimeSlider extends Control {
    *
    * @param {object} timeSteps Loader counter information for intervals.
    */
-  updateTimeLoaderVis(timeSteps) {
+  updateTimeLoaderVis(timeSteps, forceUpdate = false) {
     const numIntervalItems = timeSteps.reduce((activeTimeSteps, timeStep) => {
       if (timeStep.active) {
         activeTimeSteps.push(timeStep);
@@ -943,7 +992,7 @@ class TimeSlider extends Control {
       return;
     }
     const numIntervals = numIntervalItems.length;
-    let creationNeeded = numIntervals !== this.frames_.length;
+    let creationNeeded = numIntervals !== this.frames_.length || forceUpdate;
     let i;
     const moments = [];
     if (!creationNeeded) {
@@ -1121,8 +1170,8 @@ class TimeSlider extends Control {
     }
     return {
       content: useDateFormat
-        ? zTime.weekdayShort + zTime.toFormat(dateFormat)
-        : zTime.toFormat(format),
+        ? zTime.weekdayShort.charAt(0).toUpperCase() + zTime.weekdayShort.slice(1)
+        + zTime.toFormat(dateFormat) : zTime.toFormat(format),
       useDateFormat,
     };
   }

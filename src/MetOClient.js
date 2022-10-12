@@ -120,6 +120,7 @@ export class MetOClient extends BaseObject {
     this.playingListener_ = null;
     this.previousListener_ = null;
     this.timeListener_ = null;
+    this.visibilityListener_ = null;
     this.renderComplete_ = false;
     this.updateNeeded_ = false;
     this.waitingRender_ = 0;
@@ -130,13 +131,9 @@ export class MetOClient extends BaseObject {
         )
       : constants.DEFAULT_REFRESH_INTERVAL;
     this.extent_ = [null, null, null, null];
-    this.resizeDetector_ = this.config_.metadata.tags.includes(
-      constants.TAG_FIXED_EXTENT
-    )
-      ? elementResizeDetectorMaker({
-          strategy: 'scroll',
-        })
-      : null;
+    this.resizeDetector_ = elementResizeDetectorMaker({
+      strategy: 'scroll'
+    });
     this.capabilities_ = {};
     this.legends_ = {};
     this.selectedLegend_ = constants.DEFAULT_LEGEND;
@@ -249,12 +246,18 @@ export class MetOClient extends BaseObject {
           this.config_.time = defaultTime;
         }
         // Limit bounds after refresh
-        if (this.config_.time < this.times_[0]) {
-          [this.config_.time] = this.times_;
+        const visibleTimes = this.times_.reduce((foundVisibleTimes, time) => {
+          if (this.isVisibleTime_(time)) {
+            foundVisibleTimes.push(time)
+          }
+          return foundVisibleTimes
+        }, [])
+        if (this.config_.time < visibleTimes[0]) {
+          this.config_.time = visibleTimes[0]
         }
-        const lastTimeIndex = this.times_.length - 1;
-        if (this.config_.time > this.times_[lastTimeIndex]) {
-          this.config_.time = this.times_[lastTimeIndex];
+        const lastTimeIndex = visibleTimes.length - 1;
+        if (this.config_.time > visibleTimes[lastTimeIndex]) {
+          this.config_.time = visibleTimes[lastTimeIndex]
         }
         Object.keys(this.config_.sources).forEach((source) => {
           if (
@@ -331,7 +334,9 @@ export class MetOClient extends BaseObject {
       }
     }
     this.renderComplete_ = true;
-    this.render();
+    this.render().then(() => {
+      map.renderSync()
+    })
   }
 
   /**
@@ -623,6 +628,7 @@ export class MetOClient extends BaseObject {
                 this.get('map').set('time', newTime);
               }
             }
+            this.clearTimeStatuses_();
             this.updateTimeSlider_();
           }
         })
@@ -873,12 +879,12 @@ export class MetOClient extends BaseObject {
    * @private
    */
   isVisibleTime_(time) {
-    return this.get('map')
+    const map = this.get('map')
+    return map != null && map
       .getLayers()
       .getArray()
       .some(
-        (layer) =>
-          layer.getVisible() &&
+        (layer) => layer.getVisible() &&
           layer.get('times') != null &&
           layer.get('times').includes(time)
       );
@@ -888,13 +894,21 @@ export class MetOClient extends BaseObject {
    *
    * @private
    */
-  updateTimeSlider_() {
+  clearTimeStatuses_() {
+    Object.keys(this.status_).filter((key) => Number(key) !== this.config_.time).forEach((key) => this.status_[key] = '')
+  }
+
+  /**
+   *
+   * @private
+   */
+  updateTimeSlider_(forceUpdate = false) {
     this.get('timeSlider').updateTimeLoaderVis(
       this.times_.map((time) => ({
         endTime: time,
         status: this.status_[time],
         active: this.isVisibleTime_(time),
-      }))
+      })), forceUpdate
     );
   }
 
@@ -1673,7 +1687,23 @@ export class MetOClient extends BaseObject {
       this.refreshInterval_
     );
     this.updateLegend();
+    if (typeof document.addEventListener !== "undefined" || hidden !== undefined) {
+      this.visibilityListener_ = this.handleVisibilityChange_.bind(this)
+      document.addEventListener('visibilitychange', this.visibilityListener_, false);
+    }
     return map;
+  }
+
+  handleVisibilityChange_() {
+    clearInterval(this.refreshTimer_);
+    if (document.visibilityState === 'hidden') {      
+      return;
+    }
+    this.refreshTimer_ = setInterval(
+      this.refresh_.bind(this),
+      this.refreshInterval_
+    );
+    this.refresh_()
   }
 
   addTimes_(times) {
@@ -1913,10 +1943,21 @@ export class MetOClient extends BaseObject {
       this.resizeDetector_.listenTo(
         document.getElementById(this.config_.target),
         () => {
-          view.fit(this.extent_, {
-            size: newMap.getSize(),
-          });
-          this.updateTimeSlider_();
+          const map = this.get('map')
+          if (map == null) { 
+            return
+          }  
+          if (this.config_.metadata.tags.includes(
+            constants.TAG_FIXED_EXTENT
+          )) {
+            view.fit(this.extent_, {
+              size: map.getSize(),
+            });
+          } else {
+            map.updateSize()
+            map.renderSync()    
+          }
+          this.updateTimeSlider_(true);
         }
       );
     }
@@ -2226,6 +2267,7 @@ export class MetOClient extends BaseObject {
         document.getElementById(this.config_.target)
       );
     }
+    document.removeEventListener('visibilitychange', this.visibilityListener_, false)
     document.onfullscreenchange = null;
     document.onwebkitfullscreenchange = null;
     clearInterval(this.refreshTimer_);

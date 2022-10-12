@@ -51,6 +51,23 @@ export const MINUTE = SECOND * SECONDS_PER_MINUTE;
 export const HOUR = MINUTE * MINUTES_PER_HOUR;
 export const DAY = HOUR * HOURS_PER_DAY;
 export const MAX_REFRESH_INTERVAL = 2147483647;
+export const discreteSteps = [
+  MINUTE,
+  2 * MINUTE,
+  5 * MINUTE,
+  10 * MINUTE,
+  15 * MINUTE,
+  20 * MINUTE,
+  30 * MINUTE,
+  HOUR,
+  2 * HOUR,
+  3 * HOUR,
+  4 * HOUR,
+  6 * HOUR,
+  8 * HOUR,
+  12 * HOUR,
+  DAY,
+];
 export const FRAME_HISTORY = 'history';
 export const FRAME_FUTURE = 'future';
 export const STATUS_WORKING = 'working';

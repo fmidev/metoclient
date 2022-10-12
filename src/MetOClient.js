@@ -246,12 +246,18 @@ export class MetOClient extends BaseObject {
           this.config_.time = defaultTime;
         }
         // Limit bounds after refresh
-        if (this.config_.time < this.times_[0]) {
-          this.config_.time = this.times_.find((time) => this.isVisibleTime_(time));
+        const visibleTimes = this.times_.reduce((foundVisibleTimes, time) => {
+          if (this.isVisibleTime_(time)) {
+            foundVisibleTimes.push(time)
+          }
+          return foundVisibleTimes
+        }, [])
+        if (this.config_.time < visibleTimes[0]) {
+          this.config_.time = visibleTimes[0]
         }
-        const lastTimeIndex = this.times_.length - 1;
-        if (this.config_.time > this.times_[lastTimeIndex]) {
-          this.config_.time = this.times_.reverse().find((time) => this.isVisibleTime_(time));
+        const lastTimeIndex = visibleTimes.length - 1;
+        if (this.config_.time > visibleTimes[lastTimeIndex]) {
+          this.config_.time = visibleTimes[lastTimeIndex]
         }
         Object.keys(this.config_.sources).forEach((source) => {
           if (
@@ -328,7 +334,9 @@ export class MetOClient extends BaseObject {
       }
     }
     this.renderComplete_ = true;
-    this.render();
+    this.render().then(() => {
+      map.renderSync()
+    })
   }
 
   /**
@@ -871,12 +879,12 @@ export class MetOClient extends BaseObject {
    * @private
    */
   isVisibleTime_(time) {
-    return this.get('map')
+    const map = this.get('map')
+    return map != null && map
       .getLayers()
       .getArray()
       .some(
-        (layer) =>
-          layer.getVisible() &&
+        (layer) => layer.getVisible() &&
           layer.get('times') != null &&
           layer.get('times').includes(time)
       );

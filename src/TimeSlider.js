@@ -393,6 +393,9 @@ class TimeSlider extends Control {
     );
     this.mouseListeners_.push(
       listen(timeFrame.dragListenerElement, 'mousemove', (event) => {
+        if (self.dragging_ && event?.buttons === 0) {
+          this.setDragging(false);
+        }
         if (!self.dragging_) {
           return;
         }

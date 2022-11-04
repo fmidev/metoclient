@@ -132,7 +132,7 @@ export class MetOClient extends BaseObject {
       : constants.DEFAULT_REFRESH_INTERVAL;
     this.extent_ = [null, null, null, null];
     this.resizeDetector_ = elementResizeDetectorMaker({
-      strategy: 'scroll'
+      strategy: 'scroll',
     });
     this.capabilities_ = {};
     this.legends_ = {};
@@ -245,20 +245,6 @@ export class MetOClient extends BaseObject {
         if (this.config_.time == null) {
           this.config_.time = defaultTime;
         }
-        // Limit bounds after refresh
-        const visibleTimes = this.times_.reduce((foundVisibleTimes, time) => {
-          if (this.isVisibleTime_(time)) {
-            foundVisibleTimes.push(time)
-          }
-          return foundVisibleTimes
-        }, [])
-        if (this.config_.time < visibleTimes[0]) {
-          this.config_.time = visibleTimes[0]
-        }
-        const lastTimeIndex = visibleTimes.length - 1;
-        if (this.config_.time > visibleTimes[lastTimeIndex]) {
-          this.config_.time = visibleTimes[lastTimeIndex]
-        }
         Object.keys(this.config_.sources).forEach((source) => {
           if (
             this.config_.sources[source].times != null &&
@@ -275,6 +261,24 @@ export class MetOClient extends BaseObject {
         this.vectorConfig_ = this.getVectorConfig_();
         return this.updateMap_()
           .then((map) => {
+            // Limit bounds after refresh
+            const visibleTimes = this.times_.reduce(
+              (foundVisibleTimes, time) => {
+                if (this.isVisibleTime_(time)) {
+                  foundVisibleTimes.push(time);
+                }
+                return foundVisibleTimes;
+              },
+              []
+            );
+            if (this.config_.time < visibleTimes[0]) {
+              this.config_.time = visibleTimes[0];
+            }
+            const lastTimeIndex = visibleTimes.length - 1;
+            if (this.config_.time > visibleTimes[lastTimeIndex]) {
+              this.config_.time = visibleTimes[lastTimeIndex];
+            }
+            map.set('time', this.config_.time);
             if (this.config_.metadata.tags.includes(constants.TAG_AUTOPLAY)) {
               this.config_.metadata.tags = this.config_.metadata.tags.filter(
                 (tag) => tag !== constants.TAG_AUTOPLAY
@@ -335,8 +339,8 @@ export class MetOClient extends BaseObject {
     }
     this.renderComplete_ = true;
     this.render().then(() => {
-      map.renderSync()
-    })
+      map.renderSync();
+    });
   }
 
   /**
@@ -879,15 +883,19 @@ export class MetOClient extends BaseObject {
    * @private
    */
   isVisibleTime_(time) {
-    const map = this.get('map')
-    return map != null && map
-      .getLayers()
-      .getArray()
-      .some(
-        (layer) => layer.getVisible() &&
-          layer.get('times') != null &&
-          layer.get('times').includes(time)
-      );
+    const map = this.get('map');
+    return (
+      map != null &&
+      map
+        .getLayers()
+        .getArray()
+        .some(
+          (layer) =>
+            layer.getVisible() &&
+            layer.get('times') != null &&
+            layer.get('times').includes(time)
+        )
+    );
   }
 
   /**
@@ -895,12 +903,14 @@ export class MetOClient extends BaseObject {
    * @private
    */
   clearTimeStatuses_() {
-    Object.keys(this.status_).filter((key) => Number(key) !== this.config_.time).forEach((key) => this.status_[key] = '')
+    Object.keys(this.status_)
+      .filter((key) => Number(key) !== this.config_.time)
+      .forEach((key) => (this.status_[key] = ''));
   }
 
   /**
-   *
    * @private
+   * @param forceUpdate
    */
   updateTimeSlider_(forceUpdate = false) {
     this.get('timeSlider').updateTimeLoaderVis(
@@ -908,7 +918,8 @@ export class MetOClient extends BaseObject {
         endTime: time,
         status: this.status_[time],
         active: this.isVisibleTime_(time),
-      })), forceUpdate
+      })),
+      forceUpdate
     );
   }
 
@@ -1334,9 +1345,9 @@ export class MetOClient extends BaseObject {
    * @api
    */
   updateLegend() {
-    Array.from(document.getElementsByClassName(
-      constants.LEGEND_CONTAINER_CLASS
-    )).forEach((legendContainer) => {
+    Array.from(
+      document.getElementsByClassName(constants.LEGEND_CONTAINER_CLASS)
+    ).forEach((legendContainer) => {
       if (legendContainer != null) {
         while (legendContainer.firstChild) {
           legendContainer.removeChild(legendContainer.firstChild);
@@ -1687,23 +1698,30 @@ export class MetOClient extends BaseObject {
       this.refreshInterval_
     );
     this.updateLegend();
-    if (typeof document.addEventListener !== "undefined" || hidden !== undefined) {
-      this.visibilityListener_ = this.handleVisibilityChange_.bind(this)
-      document.addEventListener('visibilitychange', this.visibilityListener_, false);
+    if (
+      typeof document.addEventListener !== 'undefined' ||
+      hidden !== undefined
+    ) {
+      this.visibilityListener_ = this.handleVisibilityChange_.bind(this);
+      document.addEventListener(
+        'visibilitychange',
+        this.visibilityListener_,
+        false
+      );
     }
     return map;
   }
 
   handleVisibilityChange_() {
     clearInterval(this.refreshTimer_);
-    if (document.visibilityState === 'hidden') {      
+    if (document.visibilityState === 'hidden') {
       return;
     }
     this.refreshTimer_ = setInterval(
       this.refresh_.bind(this),
       this.refreshInterval_
     );
-    this.refresh_()
+    this.refresh_();
   }
 
   addTimes_(times) {
@@ -1943,19 +1961,17 @@ export class MetOClient extends BaseObject {
       this.resizeDetector_.listenTo(
         document.getElementById(this.config_.target),
         () => {
-          const map = this.get('map')
-          if (map == null) { 
-            return
-          }  
-          if (this.config_.metadata.tags.includes(
-            constants.TAG_FIXED_EXTENT
-          )) {
+          const map = this.get('map');
+          if (map == null) {
+            return;
+          }
+          if (this.config_.metadata.tags.includes(constants.TAG_FIXED_EXTENT)) {
             view.fit(this.extent_, {
               size: map.getSize(),
             });
           } else {
-            map.updateSize()
-            map.renderSync()    
+            map.updateSize();
+            map.renderSync();
           }
           this.updateTimeSlider_(true);
         }
@@ -2234,10 +2250,10 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
    * @api
+   * @param layerId
    */
-  setLegend (layerId) {
+  setLegend(layerId) {
     this.selectedLegend_ = layerId;
     this.updateLegend();
   }
@@ -2267,7 +2283,11 @@ export class MetOClient extends BaseObject {
         document.getElementById(this.config_.target)
       );
     }
-    document.removeEventListener('visibilitychange', this.visibilityListener_, false)
+    document.removeEventListener(
+      'visibilitychange',
+      this.visibilityListener_,
+      false
+    );
     document.onfullscreenchange = null;
     document.onwebkitfullscreenchange = null;
     clearInterval(this.refreshTimer_);

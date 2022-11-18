@@ -545,7 +545,7 @@ class TimeSlider extends Control {
       }
       return false;
     })
-    if (textFrames.length > 1) {
+    if (textFrames.length !== 1) {
       return
     }
     const framesContainer = this.getFramesContainer()

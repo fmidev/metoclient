@@ -1,6 +1,6 @@
 {
-  "name": "rollup-example",
-  "version": "1.0.5",
+  "name": "wgs84-example",
+  "version": "1.0.6",
   "description": "Rollup Example",
   "scripts": {
     "start": "rollup --config rollup.config.js --watch",

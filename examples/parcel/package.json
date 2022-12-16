@@ -1,13 +1,14 @@
 {
   "name": "parcel-example",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Parcel Example",
+  "source": "index.html",
   "scripts": {
-    "start": "parcel index.html",
-    "build": "parcel build index.html"
+    "start": "parcel",
+    "build": "parcel build"
   },
   "devDependencies": {
-    "parcel": "2.5.0",
+    "parcel": "2.8.0",
     "process": "0.11.10"
   },
   "dependencies": {

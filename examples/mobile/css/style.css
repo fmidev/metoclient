@@ -245,78 +245,6 @@ body {
   background-color: #d6e6f3;
 }
 
-.fmi-wd-negative-0 {
-  background-image: url(../images/windarrows/negative/0.svg);
-}
-
-.fmi-wd-negative-NW {
-  background-image: url(../images/windarrows/negative/nw.svg);
-}
-
-.fmi-wd-negative-N {
-  background-image: url(../images/windarrows/negative/n.svg);
-}
-
-.fmi-wd-negative-NE {
-  background-image: url(../images/windarrows/negative/ne.svg);
-}
-
-.fmi-wd-negative-E {
-  background-image: url(../images/windarrows/negative/e.svg);
-}
-
-.fmi-wd-negative-SE {
-  background-image: url(../images/windarrows/negative/se.svg);
-}
-
-.fmi-wd-negative-S {
-  background-image: url(../images/windarrows/negative/s.svg);
-}
-
-.fmi-wd-negative-SW {
-  background-image: url(../images/windarrows/negative/sw.svg);
-}
-
-.fmi-wd-negative-W {
-  background-image: url(../images/windarrows/negative/w.svg);
-}
-
-.fmi-wd-positive-0 {
-  background-image: url(../images/arrows/positive/0.svg);
-}
-
-.fmi-wd-positive-NW {
-  background-image: url(../images/windarrows/positive/nw.svg);
-}
-
-.fmi-wd-positive-N {
-  background-image: url(../images/windarrows/positive/n.svg);
-}
-
-.fmi-wd-positive-NE {
-  background-image: url(../images/windarrows/positive/ne.svg);
-}
-
-.fmi-wd-positive-E {
-  background-image: url(../images/windarrows/positive/e.svg);
-}
-
-.fmi-wd-positive-SE {
-  background-image: url(../images/windarrows/positive/se.svg);
-}
-
-.fmi-wd-positive-S {
-  background-image: url(../images/windarrows/positive/s.svg);
-}
-
-.fmi-wd-positive-SW {
-  background-image: url(../images/windarrows/positive/sw.svg);
-}
-
-.fmi-wd-positive-W {
-  background-image: url(../images/windarrows/positive/w.svg);
-}
-
 .fmi-unit {
   padding-left: 10px;
 }
@@ -599,7 +527,6 @@ input[type="text"] {
   padding: 0;
   padding-top: 14px;
   box-sizing: border-box;
-  background-image: url("../images/time-button.svg");
   background-position: center center;
   background-repeat: no-repeat;
   background-size: 38px 38px;

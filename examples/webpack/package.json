@@ -1,6 +1,6 @@
 {
   "name": "webpack-example",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Webpack Example",
   "main": "main.js",
   "scripts": {

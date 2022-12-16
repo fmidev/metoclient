@@ -61,48 +61,8 @@ export class MetOClient extends BaseObject {
       '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs'
     );
     register(proj4);
-    this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
-    if (this.config_.tags != null) {
-      this.config_.metadata.tags = this.config_.tags;
-    }
-    this.config_.texts = assign(
-      {},
-      constants.DEFAULT_OPTIONS.texts,
-      options?.texts?.[this.config_.locale] ?? options.texts
-    );
-    this.config_.transition = assign(
-      {},
-      constants.DEFAULT_OPTIONS.transition,
-      options.transition
-    );
-    if (options.target == null && options.container != null) {
-      this.config_.target = this.config_.container;
-    }
-    if (this.config_.resolutions == null) {
-      if (constants.PROJECTION_RESOLUTIONS[this.config_.projection] != null) {
-        this.config_.resolutions =
-          constants.PROJECTION_RESOLUTIONS[this.config_.projection];
-      } else {
-        const projExtent = getProjection(this.config_.projection).getExtent();
-        const startResolution = getWidth(projExtent) / 256;
-        const numResolutions = this.config_.maxZoom - this.config_.minZoom + 1;
-        const resolutions = new Array(numResolutions);
-        for (let i = 0, ii = resolutions.length; i < ii; ++i) {
-          resolutions[i] = startResolution / Math.pow(2, i);
-        }
-        this.config_.resolutions = resolutions;
-      }
-    }
-    this.config_.layers.forEach((layer, index, layers) => {
-      if (
-        layer != null &&
-        layer.url != null &&
-        typeof layer.url.layers === 'string'
-      ) {
-        layers[index].url.layers = layer.url.layers.replace(/\s/g, '');
-      }
-    });
     this.set('options', options, true);
+    this.postProcessOptions();
     this.set('map', null);
     this.set('timeSlider', null);
     this.vectorConfig_ = null;
@@ -152,21 +112,60 @@ export class MetOClient extends BaseObject {
       mainContainer.append(customControlContainer);
     }
     this.optionsListener_ = this.on('change:options', (event) => {
-      const options = this.get('options');
-      this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
-      this.config_.texts = assign(
-        {},
-        constants.DEFAULT_OPTIONS.texts,
-        options.texts
-      );
-      if (options.target == null && options.container != null) {
-        this.config_.target = this.config_.container;
-      }
+      this.postProcessOptions();
       this.refresh_();
     });
     if (this.config_.metadata.tags.includes(constants.TAG_RENDER_IMMEDIATELY)) {
       this.render();
     }
+  }
+
+  /**
+   *
+   */
+  postProcessOptions() {
+    const options = this.get('options');
+    this.config_ = assign({}, constants.DEFAULT_OPTIONS, options);
+    if (this.config_.tags != null) {
+      this.config_.metadata.tags = this.config_.tags;
+    }
+    this.config_.texts = assign(
+      {},
+      constants.DEFAULT_OPTIONS.texts,
+      options?.texts?.[this.config_.locale] ?? options.texts
+    );
+    this.config_.transition = assign(
+      {},
+      constants.DEFAULT_OPTIONS.transition,
+      options.transition
+    );
+    if (options.target == null && options.container != null) {
+      this.config_.target = this.config_.container;
+    }
+    if (this.config_.resolutions == null) {
+      if (constants.PROJECTION_RESOLUTIONS[this.config_.projection] != null) {
+        this.config_.resolutions =
+          constants.PROJECTION_RESOLUTIONS[this.config_.projection];
+      } else {
+        const projExtent = getProjection(this.config_.projection).getExtent();
+        const startResolution = getWidth(projExtent) / 256;
+        const numResolutions = this.config_.maxZoom - this.config_.minZoom + 1;
+        const resolutions = new Array(numResolutions);
+        for (let i = 0, ii = resolutions.length; i < ii; ++i) {
+          resolutions[i] = startResolution / Math.pow(2, i);
+        }
+        this.config_.resolutions = resolutions;
+      }
+    }
+    this.config_.layers.forEach((layer, index, layers) => {
+      if (
+        layer != null &&
+        layer.url != null &&
+        typeof layer.url.layers === 'string'
+      ) {
+        layers[index].url.layers = layer.url.layers.replace(/\s/g, '');
+      }
+    });
   }
 
   /**

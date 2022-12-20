@@ -1,13 +1,13 @@
 {
   "name": "rollup-example",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Rollup Example",
   "scripts": {
-    "start": "rollup --config rollup.config.js --watch",
-    "build": "rollup --config rollup.config.js"
+    "start": "rollup --config rollup.config.mjs --watch",
+    "build": "rollup --config rollup.config.mjs"
   },
   "devDependencies": {
-    "rollup": "2.73.0",
+    "rollup": "3.5.1",
     "rollup-plugin-commonjs": "10.1.0",
     "rollup-plugin-node-resolve": "5.2.0",
     "rollup-plugin-terser": "7.0.2"

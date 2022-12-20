@@ -2,8 +2,8 @@
 
 div.fmi-metoclient-timeslider {
     position: absolute;
-    bottom: 0;
-    height: 90px;
+    bottom: 30px;
+    height: 60px;
     width: 100%;
     z-index: 150;
     background-color: rgba(0, 0, 0, 0);
@@ -15,7 +15,7 @@ div.fmi-metoclient-timeslider:hover {
 
 div.fmi-metoclient-timeslider-clickable-container {
     position: absolute;
-    bottom: 30px;
+    bottom: 0;
     height: 55px;
     width: 100%;
     cursor: pointer;

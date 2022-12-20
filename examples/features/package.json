@@ -1,6 +1,6 @@
 {
   "name": "features-example",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "MetOClient Feature Example",
   "scripts": {
     "start": "rollup --config rollup.config.js --watch",

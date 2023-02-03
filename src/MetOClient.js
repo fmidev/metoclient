@@ -381,7 +381,11 @@ export class MetOClient extends BaseObject {
             let query = {};
             if (sourceCapabilitiesUrl.toLowerCase().startsWith('http')) {
               const domUrl = new Url(sourceCapabilitiesUrl);
-              url = `${domUrl.protocol}://${domUrl.host}${domUrl.path}`;
+              url = `${domUrl.protocol}://${domUrl.host}`;
+              if (domUrl.port != null && domUrl.port.length > 0) {
+                url += `:${domUrl.port}`;
+              }
+              url += domUrl.path;
               query = domUrl.query;
             } else {
               url = sourceCapabilitiesUrl;

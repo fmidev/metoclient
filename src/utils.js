@@ -173,7 +173,7 @@ function parseRRule(timeInput, timeOffset, timeData = null) {
         }
       }
       if (timeOffset != null) {
-        let start = DateTime.fromJSDate(rule.options.dtstart);
+        const start = DateTime.fromJSDate(rule.options.dtstart);
         if (start != null) {
           const offsetDuration = Duration.fromISO(timeOffset);
           rule.options.bysecond = [offsetDuration.values.seconds ?? 0];

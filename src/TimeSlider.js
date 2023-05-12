@@ -527,10 +527,14 @@ class TimeSlider extends Control {
       nextStep !== minStep &&
       nextStep < constants.DAY / 2
     );
-    this.optimizeTicks()
+    this.optimizeTicks();
     this.showTicks();
   }
 
+  /**
+   *
+   * @returns
+   */
   optimizeTicks() {
     const self = this;
     const textFrames = this.frames_.filter((frame) => {
@@ -538,39 +542,54 @@ class TimeSlider extends Control {
         const childElements = Array.from(frame.element.children);
         const numChildElements = childElements.length;
         for (let i = 0; i < numChildElements; i++) {
-          if (childElements[i].classList.contains(constants.FRAME_TEXT_WRAPPER_CLASS)) {
-            return true
+          if (
+            childElements[i].classList.contains(
+              constants.FRAME_TEXT_WRAPPER_CLASS
+            )
+          ) {
+            return true;
           }
         }
       }
       return false;
-    })
+    });
     if (textFrames.length !== 1) {
-      return
+      return;
     }
-    const framesContainer = this.getFramesContainer()
-    const hourSteps = [24, 12, 8, 6, 4, 3, 2, 1]
+    const framesContainer = this.getFramesContainer();
+    const hourSteps = [24, 12, 8, 6, 4, 3, 2, 1];
     const numHourSteps = hourSteps.length;
-    loopHourSteps:
-    for (let i = 0; i < numHourSteps; i++) {
+    loopHourSteps: for (let i = 0; i < numHourSteps; i++) {
       const numFrames = this.frames_.length;
-      for (let  j = 0; j < numFrames; j++) {
+      for (let j = 0; j < numFrames; j++) {
         if (this.frames_[j].endTime >= textFrames[0].endTime) {
           break;
         }
-        if (DateTime.fromMillis(this.frames_[j].endTime).setZone(self.get('timeZone')).hour % hourSteps[i] === 0) {
-          this.addTextToFrame(this.frames_[j])
+        if (
+          DateTime.fromMillis(this.frames_[j].endTime).setZone(
+            self.get('timeZone')
+          ).hour %
+            hourSteps[i] ===
+          0
+        ) {
+          this.addTextToFrame(this.frames_[j]);
           const clientRects = [this.frames_[j], textFrames[0]].map((frame) =>
             Array.from(
-              frame.element.getElementsByClassName(constants.FRAME_TEXT_WRAPPER_CLASS)
-            ).shift().getBoundingClientRect());
-          if (framesContainer.length === 0 ||
+              frame.element.getElementsByClassName(
+                constants.FRAME_TEXT_WRAPPER_CLASS
+              )
+            )
+              .shift()
+              .getBoundingClientRect()
+          );
+          if (
+            framesContainer.length === 0 ||
             (framesContainer.left <= clientRects[0].left &&
               framesContainer.right >= clientRects[0].right &&
               framesContainer.top <= clientRects[0].top &&
               framesContainer.bottom >= clientRects[0].bottom &&
-              clientRects[0].right < clientRects[1].left
-            )) {
+              clientRects[0].right < clientRects[1].left)
+          ) {
             const tick = document.createElement('div');
             tick.classList.add(constants.FRAME_TICK_CLASS);
             tick.classList.add(constants.HIDDEN_CLASS);
@@ -579,7 +598,7 @@ class TimeSlider extends Control {
           } else {
             this.clearFrame(this.frames_[j]);
           }
-        }        
+        }
       }
     }
   }
@@ -615,8 +634,8 @@ class TimeSlider extends Control {
   }
 
   /**
-   * 
-   * @returns 
+   *
+   * @returns
    */
   getFramesContainer() {
     let framesContainer = Array.from(
@@ -652,7 +671,7 @@ class TimeSlider extends Control {
     this.previousTickIndex_ = null;
 
     this.frames_.forEach((frame) => {
-      this.addTextToFrame(frame)
+      this.addTextToFrame(frame);
     });
 
     const hourFormatExists = this.frames_.some((frame) => !frame.useDateFormat);
@@ -983,6 +1002,7 @@ class TimeSlider extends Control {
    * Updates loading state visualization
    *
    * @param {object} timeSteps Loader counter information for intervals.
+   * @param forceUpdate
    */
   updateTimeLoaderVis(timeSteps, forceUpdate = false) {
     const numIntervalItems = timeSteps.reduce((activeTimeSteps, timeStep) => {
@@ -1173,8 +1193,10 @@ class TimeSlider extends Control {
     }
     return {
       content: useDateFormat
-        ? zTime.weekdayShort.charAt(0).toUpperCase() + zTime.weekdayShort.slice(1)
-        + zTime.toFormat(dateFormat) : zTime.toFormat(format),
+        ? zTime.weekdayShort.charAt(0).toUpperCase() +
+          zTime.weekdayShort.slice(1) +
+          zTime.toFormat(dateFormat)
+        : zTime.toFormat(format),
       useDateFormat,
     };
   }

@@ -1831,6 +1831,13 @@ MapAnimation.prototype.loadOverlays = function (extent, loadId) {
   }
   this.scheduleOverlayLoading(overlays, loadId)
   if ((this.get('config')['showLegend']) && (mapLegends != null)) {
+    legends.forEach((legend, index) => {
+      mapLegends.forEach((mapLegend) => {
+        if (legend.title === mapLegend.title && legend.url === mapLegend.url) {
+          legends[index].id = mapLegend.id
+        }
+      })
+    })
     this.set('legends', mapLegends.concat(legends))
     this.generateLegendFigures(defaultLegend)
   }

@@ -184,6 +184,7 @@ export class MetOClient {
       'defaultZoomLevel',
       'extent',
       'featureGroupName',
+      'gridTimeOffset',
       'ignoreObsOffset',
       'interactions',
       'layerSwitcherContainer',

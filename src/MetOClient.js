@@ -600,7 +600,7 @@ export class MetOClient extends BaseObject {
     const tiles = source.tiles != null ? source.tiles[0].split('?')[0] : null;
     const url =
       source.capabilities != null && source.capabilities.length > 0
-        ? source.capabilities
+        ? source.capabilities.split('?')[0]
         : tiles;
     const layer = LayerCreator[layerType](
       layerConfig,

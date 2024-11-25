@@ -1,3 +1,6 @@
+import { defaultLoadFunction } from './utils';
+import * as constants from './constants';
+
 /**
  *
  */
@@ -42,9 +45,10 @@ export default class SourceUpdater {
       return;
     }
     const timeFormatted = new Date(time).toISOString();
-    source.set('metoclient:time', time);
-    source.setTileLoadFunction((imageTile, src) => {
-      imageTile.getImage().src = `${src}&Time=${timeFormatted}`;
+    source.set(constants.TIME, time);
+    source.setTileLoadFunction((imageTile, url) => {
+      const timeout = source.get(constants.TIMEOUT);
+      defaultLoadFunction(imageTile, url, source, timeFormatted, timeout);
     });
   }
 }

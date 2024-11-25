@@ -247,7 +247,7 @@ THE SOFTWARE.
 ---
 
 Name: mapbox-to-css-font
-Version: 2.4.0
+Version: 2.4.5
 License: BSD-2-Clause
 Private: false
 Description: Utility to convert Mapbox GL Style font names to CSS font definitions
@@ -283,7 +283,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 Name: @mapbox/mapbox-gl-style-spec
-Version: 13.23.0
+Version: 13.28.0
 License: ISC
 Private: false
 Description: a specification for mapbox gl styles
@@ -590,7 +590,7 @@ Author: Bitovi <contact@bitovi.com> (http://bitovi.com)
 ---
 
 Name: can-symbol
-Version: 1.6.5
+Version: 1.7.0
 License: null
 Private: false
 Description: Well known symbols used to detail how to operate on different objects
@@ -613,7 +613,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ---
 
 Name: can-reflect
-Version: 1.18.0
+Version: 1.19.2
 License: null
 Private: false
 Description: reflection on unknown data types

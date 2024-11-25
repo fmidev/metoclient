@@ -10,6 +10,7 @@ import {
   getQueryParams,
   getAdjacentLayer,
   getLegendUrl,
+  defaultLoadFunction
 } from './utils';
 import * as constants from './constants';
 
@@ -101,9 +102,14 @@ export default class LayerCreator {
       params,
       ratio: 1,
     });
-    olSource.set('metoclient:olClassName', 'ImageWMS');
+    olSource.set(constants.OL_CLASS_NAME, 'ImageWMS');
     if (params.TIME != null) {
-      olSource.set('metoclient:time', options.time);
+      olSource.set(constants.TIME, options.time);
+      olSource.set(constants.TIMEOUT, layer.timeout);
+      olSource.setImageLoadFunction((image, url) => {
+        const timeout = olSource.get(constants.TIMEOUT);
+        defaultLoadFunction(image, url, olSource, null, timeout);
+      });
     }
     let legendUrl = layer.legendUrl != null ? layer.legendUrl : null;
     if (legendUrl == null && layer.url != null) {

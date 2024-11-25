@@ -437,3 +437,40 @@ export function getQueryParams(layer, url, time) {
   }
   return params;
 }
+
+export function defaultLoadFunction(image, src, source, time, timeout = constants.DEFAULT_TIMEOUT) {
+  let url = src;
+  if (time != null) {
+    url += '&Time=' + time;
+  }
+  const emptyImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC"
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.responseType = 'blob';
+  xhr.timeout = timeout;
+  xhr.onloadstart = function (ev) {
+    xhr.responseType = 'blob';
+  }
+  xhr.onload = () => {
+    URL.revokeObjectURL(src);
+    if (xhr.status === 200 && xhr.response?.type?.toLowerCase()?.startsWith('image')) {
+      image.getImage().src = URL.createObjectURL(xhr.response);
+      source.set(constants.LOADING_ERROR, false);
+    } else {
+      image.getImage().src = emptyImage;
+      image.load();
+      source.set(constants.LOADING_ERROR, true);
+    }
+  };
+  xhr.onerror = () => {
+    image.getImage().src = emptyImage;
+    image.load();
+    source.set(constants.LOADING_ERROR, true);
+  }
+  xhr.ontimeout = () => {
+    image.getImage().src = emptyImage;
+    image.load();
+    source.set(constants.LOADING_ERROR, true);
+  };
+  xhr.send();
+}

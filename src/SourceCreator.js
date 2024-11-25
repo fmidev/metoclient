@@ -1,10 +1,9 @@
 import TileWMS from 'ol/source/TileWMS';
 import TileGrid from 'ol/tilegrid/TileGrid';
 import WMTS, { optionsFromCapabilities } from 'ol/source/WMTS';
-import Projection from 'ol/proj/Projection';
 import { OSM } from 'ol/source';
 import * as constants from './constants';
-import { getBaseUrl, getQueryParams } from './utils';
+import { getBaseUrl, getQueryParams, defaultLoadFunction } from './utils';
 
 /**
  *
@@ -44,9 +43,14 @@ export default class SourceCreator {
       }),
       transition: 0,
     });
-    olSource.set('metoclient:olClassName', 'TileWMS');
+    olSource.set(constants.OL_CLASS_NAME, 'TileWMS');
     if (params.TIME != null) {
-      olSource.set('metoclient:time', options.time);
+      olSource.set(constants.TIME, options.time);
+      olSource.set(constants.TIMEOUT, layer.timeout);
+      olSource.setTileLoadFunction((imageTile, url) => {
+        const timeout = olSource.get(constants.TIMEOUT);
+        defaultLoadFunction(imageTile, url, olSource, null, timeout);
+      });
     }
     return olSource;
   }
@@ -71,20 +75,20 @@ export default class SourceCreator {
     if (sourceOptions == null) {
       return null;
     }
+
+    sourceOptions.transition = 0;
+    const olSource = new WMTS(sourceOptions);
+    olSource.set(constants.OL_CLASS_NAME, 'WMTS');
     const timeDefined =
       layer.time != null && layer.time.data.includes(options.time);
     if (timeDefined) {
-      sourceOptions.tileLoadFunction = (imageTile, src) => {
-        imageTile.getImage().src = `${src}&Time=${new Date(
-          options.time
-        ).toISOString()}`;
-      };
-    }
-    sourceOptions.transition = 0;
-    const olSource = new WMTS(sourceOptions);
-    olSource.set('metoclient:olClassName', 'WMTS');
-    if (timeDefined != null) {
-      olSource.set('metoclient:time', options.time);
+      olSource.set(constants.TIME, options.time);
+      olSource.set(constants.TIMEOUT, layer.timeout);
+      olSource.setTileLoadFunction((imageTile, url) => {
+        const time = new Date(options.time).toISOString()
+        const timeout = olSource.get(constants.TIMEOUT);
+        defaultLoadFunction(imageTile, url, olSource, time, timeout);
+      });
     }
     return olSource;
   }

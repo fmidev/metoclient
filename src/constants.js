@@ -4,6 +4,7 @@
  * @module constants
  */
 export const DEFAULT_DELAY = 1000;
+export const DEFAULT_TIMEOUT = 5000;
 export const DEFAULT_OPTIONS = {
   center: [0, 0],
   zoom: 4,
@@ -23,6 +24,7 @@ export const DEFAULT_OPTIONS = {
   time: null,
   timeZone: 'Europe/Helsinki',
   timeZoneLabel: '',
+  timeout: DEFAULT_TIMEOUT,
   target: 'map',
   periodDelay: 2 * DEFAULT_DELAY,
   locale: 'en-GB',
@@ -72,6 +74,7 @@ export const FRAME_HISTORY = 'history';
 export const FRAME_FUTURE = 'future';
 export const STATUS_WORKING = 'working';
 export const STATUS_SUCCESS = 'success';
+export const STATUS_ERROR = 'error';
 export const PLAYING_CLASS = 'playing';
 export const CLICKABLE_CLASS = 'fmi-metoclient-timeslider-clickable-container';
 export const PRE_MARGIN_CLASS = 'fmi-metoclient-timeslider-pre-margin';
@@ -120,6 +123,9 @@ export const NEXT = 'metoclient:next';
 export const OPACITY = 'metoclient:opacity';
 export const ID = 'metoclient:id';
 export const DEFAULT_LEGEND = 'metoclient:defaultLegend';
+export const OL_CLASS_NAME = 'metoclient:olClassName';
+export const TIMEOUT = 'metoclient:timeout';
+export const LOADING_ERROR = 'metoclient:loadingError';
 export const LAYER_SWITCHER_CONTAINER_ID =
   'fmi-metoclient-layer-switcher-container';
 export const LEGEND_CHOOSER_CONTAINER_ID =
@@ -129,8 +135,7 @@ export const LEGEND_CHOOSER_SELECT_ID = 'fmi-metoclient-legend-chooser-select';
 export const LEGEND_CONTAINER_CLASS = 'fmi-metoclient-legend-container';
 export const OPACITY_CONTROL_CLASS = 'fmi-metoclient-opacity-control';
 export const OPACITY_CONTAINER_CLASS = 'fmi-metoclient-opacity-container';
-export const CUSTOM_CONTROL_CONTAINER_ID =
-  'fmi-metoclient-custom-control-container';
+export const CUSTOM_CONTROL_CONTAINER_ID = 'fmi-metoclient-custom-control-container';
 export const METEOROLOGICAL_MODE = 'meteorological';
 export const SMARTMET_SERVER = 'smartmet server';
 export const TAG_MOUSE_WHEEL_INTERACTIONS = 'mouse wheel interactions';

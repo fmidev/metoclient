@@ -165,6 +165,7 @@ export class MetOClient extends BaseObject {
       ) {
         layers[index].url.layers = layer.url.layers.replace(/\s/g, '');
       }
+      layer.timeout = this.config_.timeout;
     });
   }
 
@@ -906,6 +907,16 @@ export class MetOClient extends BaseObject {
    * @private
    */
   clearTimeStatuses_() {
+    const map = this.get('map');
+    if (map == null) {
+      return;
+    }
+    map.getLayers()
+      .getArray()
+      .forEach((layer) => {
+        const source = layer.getSource();
+        source.set(constants.LOADING_ERROR, false)
+      });
     Object.keys(this.status_)
       .filter((key) => Number(key) !== this.config_.time)
       .forEach((key) => (this.status_[key] = ''));
@@ -958,7 +969,15 @@ export class MetOClient extends BaseObject {
       }
       this.setVisible_(layer, visible);
     });
-    this.status_[this.config_.time] = constants.STATUS_SUCCESS;
+    let loadingError = false;
+    layers.filter((layer) => layer.getOpacity())
+      .forEach((layer) => {
+        const source = layer.getSource();
+        if (source.get(constants.LOADING_ERROR)) {
+          loadingError = true;
+        }
+      });
+    this.status_[this.config_.time] = loadingError ? constants.STATUS_ERROR : constants.STATUS_SUCCESS;
     this.updateTimeSlider_();
     if (this.updateNeeded_) {
       this.updateNeeded_ = false;
@@ -1219,7 +1238,6 @@ export class MetOClient extends BaseObject {
       'rendercomplete',
       this.currentTimeRendered_.bind(this)
     );
-    this.status_[this.config_.time] = constants.STATUS_SUCCESS;
     this.config_.time = this.get('map').get('time');
     this.status_[this.config_.time] = constants.STATUS_WORKING;
     Object.keys(this.status_).forEach((time) => {
@@ -1946,6 +1964,13 @@ export class MetOClient extends BaseObject {
       view: this.createView_(),
       controls,
       interactions,
+    });
+    newMap.on('moveend', () => {
+      this.clearTimeStatuses_();
+      this.get('map').once(
+        'rendercomplete',
+        this.currentTimeRendered_.bind(this)
+      );
     });
     const view = newMap.getView();
     const minZoom = view.getMinZoom();

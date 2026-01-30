@@ -34,10 +34,12 @@ export const DEFAULT_OPTIONS = {
     'Zoom In': 'Zoom In',
     'Zoom Out': 'Zoom Out',
     'Layer Switcher': 'Layer Switcher',
-    Legend: 'Legend',
+    'Legend': 'Legend',
     'Fullscreen Label': '⤢',
     'Fullscreen Label Active': '×',
     'Fullscreen Tip Label': 'Fullscreen',
+    'Play': 'Play animation',
+    'Pause': 'Pause animation',
   },
 };
 export const PROJECTION_RESOLUTIONS = {

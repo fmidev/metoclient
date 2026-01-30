@@ -212,12 +212,17 @@ class TimeSlider extends Control {
     playButton.tabIndex = constants.BASE_TAB_INDEX;
     if (this.animationPlay_) {
       playButton.classList.add(constants.PLAYING_CLASS);
+      playButton.setAttribute('aria-label', this.config_.buttonPauseText);
+    } else {
+      playButton.setAttribute('aria-label', this.config_.buttonPlayText);
     }
     this.mouseListeners_.push(
       listen(playButton, 'click', (event) => {
         event.preventDefault();
         const map = this.getMap();
         map.set('playing', !map.get('playing'));
+        playButton.setAttribute('aria-label', map.get('playing') ?
+          this.config_.buttonPauseText : this.config_.buttonPlayText);
       })
     );
     this.playButton_ = playButton;

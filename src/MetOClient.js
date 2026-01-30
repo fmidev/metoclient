@@ -1927,6 +1927,8 @@ export class MetOClient extends BaseObject {
       new TimeSlider({
         target: this.config_.timeSliderContainerId,
         locale: this.config_.locale,
+        buttonPlayText: this.config_.texts['Play'],
+        buttonPauseText: this.config_.texts['Pause'],
         showTimeSlider: true,
         timeZone: this.config_.timeZone,
         timeZoneLabel: this.config_.timeZoneLabel,

@@ -80,3 +80,6 @@ wallaby
 
 # Parcel cache
 .parcel-cache
+
+# Build
+dist

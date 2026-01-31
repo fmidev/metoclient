@@ -127,7 +127,7 @@
     "node-pre-gyp": "0.17.0",
     "prettier": "2.8.8",
     "rimraf": "3.0.2",
-    "rollup": "2.68.0",
+    "rollup": "2.79.2",
     "rollup-plugin-analyzer": "4.0.0",
     "rollup-plugin-babel": "4.4.0",
     "rollup-plugin-commonjs": "10.1.0",

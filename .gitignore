@@ -83,3 +83,6 @@ wallaby
 
 # Build
 dist
+
+# Example builds
+examples/**/*.min.js

@@ -1,6 +1,6 @@
-import cjs from 'rollup-plugin-commonjs';
-import node from 'rollup-plugin-node-resolve';
-import { terser } from 'rollup-plugin-terser';
+import commonjs from '@rollup/plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
+import terser from '@rollup/plugin-terser';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -13,8 +13,8 @@ export default {
     },
   ],
   plugins: [
-    node(),
-    cjs(),
+    resolve(),
+    commonjs(),
     production &&
       terser({
         keep_fnames: true,

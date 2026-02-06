@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`parseTimes snapshot tests should match snapshot for array input 1`] = `
+Array [
+  1704067200000,
+  1704088800000,
+  1704110400000,
+  1704132000000,
+]
+`;
+
+exports[`parseTimes snapshot tests should match snapshot for hourly interval 1`] = `
+Array [
+  1704067200000,
+  1704070800000,
+  1704074400000,
+  1704078000000,
+  1704081600000,
+  1704085200000,
+]
+`;

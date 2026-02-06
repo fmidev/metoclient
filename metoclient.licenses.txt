@@ -1,14 +1,16 @@
 Name: core-js
-Version: 3.30.2
+Version: 3.48.0
 License: MIT
 Private: false
 Description: Standard library
-Repository: https://github.com/zloirock/core-js.git
+Repository: git+https://github.com/zloirock/core-js.git
+Homepage: https://core-js.io
 Author: Denis Pushkarev <zloirock@zloirock.ru> (http://zloirock.ru)
 License Copyright:
 ===
 
-Copyright (c) 2014-2023 Denis Pushkarev
+Copyright (c) 2013–2025 Denis Pushkarev (zloirock.ru)
+Copyright (c) 2025–2026 CoreJS Company (core-js.io)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -71,7 +73,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---
 
 Name: proj4
-Version: 2.9.0
+Version: 2.20.2
 License: MIT
 Private: false
 Description: Proj4js is a JavaScript library to transform point coordinates from one coordinate system to another, including datum transformations.

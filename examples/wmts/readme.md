@@ -1,6 +1,6 @@
 # WMTS Layers
 
-This example demonstrates how to configure an alternative WMTS base map layer.
+This example demonstrates how to configure an alternative WMTS base map layer. This WMTS layer is no longer available, so the application's map view will not work correctly, but the example may still be useful from a code perspective.
 
 Install the project dependencies.
 

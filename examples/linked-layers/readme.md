@@ -1,6 +1,6 @@
 # MetOClient with Rollup
 
-This example demonstrates linking of the layers, e.g. observation and forecast layers of the same weather phenomena. Please note, the forecast layer used in this example is currently unavailable. The example will be updated when a suitable forecast layer becomes available.
+This example demonstrates linking of the layers, e.g. observation and forecast layers of the same weather phenomena. Unfortunately the forecast layers used in this example are no longer available, so the application's map view will not work correctly, but the example may still be useful from a code perspective.
 
 Install the project dependencies.
 

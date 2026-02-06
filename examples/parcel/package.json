@@ -1,6 +1,6 @@
 {
   "name": "parcel-example",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Parcel Example",
   "source": "index.html",
   "scripts": {
@@ -8,13 +8,10 @@
     "build": "parcel build"
   },
   "devDependencies": {
-    "parcel": "2.8.0",
+    "parcel": "2.16.4",
     "process": "0.11.10"
   },
   "dependencies": {
-    "@fmidev/metoclient": "file:../.."
-  },
-  "alias": {
-    "process": false
+    "@fmidev/metoclient": "6.9.0"
   }
 }

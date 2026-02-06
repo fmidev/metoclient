@@ -80,3 +80,9 @@ wallaby
 
 # Parcel cache
 .parcel-cache
+
+# Build
+dist
+
+# Example builds
+examples/**/*.min.js

@@ -1381,6 +1381,7 @@ export class MetOClient extends BaseObject {
           legendFigure.appendChild(legendCaption);
           const legendImage = document.createElement('img');
           legendImage.setAttribute('src', url);
+          legendImage.setAttribute('alt', this.config_.texts['Legend']);
           legendFigure.appendChild(legendImage);
           legendContainer.appendChild(legendFigure);
         }
@@ -1412,7 +1413,7 @@ export class MetOClient extends BaseObject {
     const legendSelectLabel = document.createElement('label');
     legendSelectLabel.setAttribute('id', constants.LEGEND_CHOOSER_LABEL_ID);
     legendSelectLabel.setAttribute('for', constants.LEGEND_CHOOSER_SELECT_ID);
-    legendSelectLabel.innerHTML = this.config_.texts.Legend;
+    legendSelectLabel.innerHTML = this.config_.texts['Legend Selector'];
     legendChooserContainer.appendChild(legendSelectLabel);
 
     const legendSelect = document.createElement('select');
@@ -1927,6 +1928,8 @@ export class MetOClient extends BaseObject {
       new TimeSlider({
         target: this.config_.timeSliderContainerId,
         locale: this.config_.locale,
+        buttonPlayText: this.config_.texts['Play'],
+        buttonPauseText: this.config_.texts['Pause'],
         showTimeSlider: true,
         timeZone: this.config_.timeZone,
         timeZoneLabel: this.config_.timeZoneLabel,

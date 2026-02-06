@@ -58,7 +58,7 @@ describe('MetOClient Configuration', () => {
     });
 
     it('should have legend text', () => {
-      expect(constants.DEFAULT_OPTIONS.texts['Legend']).toBe('Legend');
+      expect(constants.DEFAULT_OPTIONS.texts['Legend']).toBe('Map legend');
     });
 
     it('should have layer switcher text', () => {

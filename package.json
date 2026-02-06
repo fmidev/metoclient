@@ -1,6 +1,6 @@
 {
   "name": "@fmidev/metoclient",
-  "version": "6.9.5",
+  "version": "6.9.6",
   "description": "Map animator",
   "main": "dist/metoclient.js",
   "module": "dist/metoclient.es.js",
@@ -63,9 +63,11 @@
     "flow": "flow",
     "test": "jest",
     "test:watch": "jest --watchAll",
+    "validate": "npm test",
     "start:docs": "documentation serve -w -g src/index.js",
     "build:docs": "npm run clean:docs && documentation build -g -f html -o build/docs src/index.js",
-    "build:docs-md": "documentation readme src/index.js --section=\"API Documentation\""
+    "build:docs-md": "documentation readme src/index.js --section=\"API Documentation\"",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -123,6 +125,7 @@
     "eslint-plugin-sonarjs": "0.19.0",
     "flow-bin": "0.205.1",
     "gh-pages": "2.2.0",
+    "husky": "9.1.7",
     "jest": "27.3.1",
     "node-pre-gyp": "0.17.0",
     "prettier": "2.8.8",

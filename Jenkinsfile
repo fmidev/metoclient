@@ -97,6 +97,7 @@ pipeline {
             }
         }
 
+/* Disabled npmjs.com deployment for now
         stage('Publish package to npmjs.com') {
             when { environment name: 'BRANCH_NAME', value: 'main' }
             environment {
@@ -108,6 +109,7 @@ pipeline {
                 sh 'rm .npmrc'
             }
         }
+*/
     }
 
     post {

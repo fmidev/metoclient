@@ -8,7 +8,7 @@ import * as constants from '../../src/constants';
 
 describe('SourceUpdater', () => {
   describe('TileWMS', () => {
-    let mockSource;
+    let mockSource: any;
 
     beforeEach(() => {
       mockSource = MockSource.createMock();
@@ -50,7 +50,7 @@ describe('SourceUpdater', () => {
 
     it('should call refresh after updating params', () => {
       const time = Date.now();
-      const callOrder = [];
+      const callOrder: string[] = [];
 
       mockSource.updateParams = jest.fn(() => callOrder.push('updateParams'));
       mockSource.refresh = jest.fn(() => callOrder.push('refresh'));
@@ -62,7 +62,7 @@ describe('SourceUpdater', () => {
   });
 
   describe('ImageWMS', () => {
-    let mockSource;
+    let mockSource: any;
 
     beforeEach(() => {
       mockSource = MockSource.createMock();
@@ -88,7 +88,7 @@ describe('SourceUpdater', () => {
   });
 
   describe('WMTS', () => {
-    let mockSource;
+    let mockSource: any;
 
     beforeEach(() => {
       mockSource = MockSource.createMock();

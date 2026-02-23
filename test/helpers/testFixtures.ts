@@ -5,7 +5,7 @@
 /**
  * Sample layer configuration.
  */
-export const sampleLayer = {
+export const sampleLayer: any = {
   id: 'radar-layer',
   source: 'radar-source',
   visibility: 'visible',
@@ -33,7 +33,7 @@ export const sampleLayer = {
 /**
  * Sample source configuration.
  */
-export const sampleSource = {
+export const sampleSource: any = {
   type: 'wms',
   tiles: ['https://example.com/wms?service=WMS&version=1.3.0&request=GetMap'],
   bounds: [-180, -90, 180, 90],
@@ -48,7 +48,7 @@ export const sampleSource = {
 /**
  * Sample MetOClient options.
  */
-export const sampleOptions = {
+export const sampleOptions: any = {
   target: 'map',
   center: [25.0, 60.0],
   zoom: 5,
@@ -104,7 +104,7 @@ export const sampleUrls = {
  * @param {object} overrides - Properties to override.
  * @returns {object} Layer configuration.
  */
-export function createLayer(overrides = {}) {
+export function createLayer(overrides: any = {}): any {
   return {
     ...sampleLayer,
     ...overrides,
@@ -129,7 +129,7 @@ export function createLayer(overrides = {}) {
  * @param {object} overrides - Properties to override.
  * @returns {object} Source configuration.
  */
-export function createSource(overrides = {}) {
+export function createSource(overrides: any = {}): any {
   return {
     ...sampleSource,
     ...overrides,
@@ -142,7 +142,7 @@ export function createSource(overrides = {}) {
  * @param {object} overrides - Properties to override.
  * @returns {object} Options configuration.
  */
-export function createOptions(overrides = {}) {
+export function createOptions(overrides: any = {}): any {
   return {
     ...sampleOptions,
     ...overrides,

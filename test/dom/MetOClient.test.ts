@@ -130,7 +130,7 @@ describe('MetOClient tag constants', () => {
 });
 
 describe('MetOClient DOM creation', () => {
-  let container;
+  let container: HTMLDivElement;
 
   beforeEach(() => {
     container = document.createElement('div');
@@ -145,7 +145,7 @@ describe('MetOClient DOM creation', () => {
   it('should be able to create a map container element', () => {
     const mapContainer = document.getElementById('map');
     expect(mapContainer).not.toBeNull();
-    expect(mapContainer.id).toBe('map');
+    expect(mapContainer!.id).toBe('map');
   });
 
   it('should be able to append child elements', () => {
@@ -157,7 +157,7 @@ describe('MetOClient DOM creation', () => {
       constants.CUSTOM_CONTROL_CONTAINER_ID
     );
     expect(found).not.toBeNull();
-    expect(found.parentElement).toBe(container);
+    expect(found!.parentElement).toBe(container);
   });
 
   it('should support query selectors', () => {
@@ -167,6 +167,6 @@ describe('MetOClient DOM creation', () => {
 
     const found = container.querySelector('.test-class');
     expect(found).not.toBeNull();
-    expect(found.className).toBe('test-class');
+    expect(found!.className).toBe('test-class');
   });
 });

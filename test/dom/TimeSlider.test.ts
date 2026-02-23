@@ -9,12 +9,12 @@ import { sampleTimes } from '../helpers/testFixtures';
 
 // Mock OpenLayers Control
 jest.mock('ol/control/Control', () => {
-  return jest.fn().mockImplementation(function (options) {
+  return jest.fn().mockImplementation(function (this: any, options: any) {
     this.element = options.element;
     this.target_ = options.target;
     this.map_ = null;
     this.getMap = jest.fn(() => this.map_);
-    this.setMap = jest.fn((map) => {
+    this.setMap = jest.fn((map: any) => {
       this.map_ = map;
     });
     this.dispatchEvent = jest.fn();
@@ -36,7 +36,7 @@ jest.mock('element-resize-detector', () =>
 );
 
 describe('TimeSlider DOM', () => {
-  let container;
+  let container: HTMLDivElement;
 
   beforeEach(() => {
     // Create a container in the document
@@ -160,8 +160,8 @@ describe('TimeSlider DOM', () => {
 });
 
 describe('TimeSlider Mock Map Integration', () => {
-  let container;
-  let mockMap;
+  let container: HTMLDivElement;
+  let mockMap: MockMap;
 
   beforeEach(() => {
     container = document.createElement('div');

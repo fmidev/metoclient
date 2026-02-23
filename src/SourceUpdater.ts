@@ -11,11 +11,11 @@ export default class SourceUpdater {
    * @param time
    * @class
    */
-  static TileWMS(source, time) {
+  static TileWMS(source: any, time: number | null): void {
     if (time == null) {
       return;
     }
-    const timeFormatted = new Date(time).toISOString();
+    const timeFormatted: string = new Date(time).toISOString();
     source.set('metoclient:time', time);
     source.updateParams({
       TIME: timeFormatted,
@@ -29,7 +29,7 @@ export default class SourceUpdater {
    * @param time
    * @class
    */
-  static ImageWMS(source, time) {
+  static ImageWMS(source: any, time: number | null): void {
     this.TileWMS(source, time);
   }
 
@@ -39,15 +39,15 @@ export default class SourceUpdater {
    * @param time
    * @class
    */
-  static WMTS(source, time) {
+  static WMTS(source: any, time: number | null): void {
     // Use same time formatter in TileWMS and WMTS
     if (time == null) {
       return;
     }
-    const timeFormatted = new Date(time).toISOString();
+    const timeFormatted: string = new Date(time).toISOString();
     source.set(constants.TIME, time);
-    source.setTileLoadFunction((imageTile, url) => {
-      const timeout = source.get(constants.TIMEOUT);
+    source.setTileLoadFunction((imageTile: any, url: string) => {
+      const timeout: number = source.get(constants.TIMEOUT);
       defaultLoadFunction(imageTile, url, source, timeFormatted, timeout);
     });
   }

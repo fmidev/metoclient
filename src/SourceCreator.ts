@@ -2,6 +2,7 @@ import TileWMS from 'ol/source/TileWMS';
 import TileGrid from 'ol/tilegrid/TileGrid';
 import WMTS, { optionsFromCapabilities } from 'ol/source/WMTS';
 import { OSM } from 'ol/source';
+import { get } from 'ol/proj';
 import * as constants from './constants';
 import { getBaseUrl, getQueryParams, defaultLoadFunction } from './utils';
 
@@ -15,7 +16,7 @@ export default class SourceCreator {
    * @param layer
    * @returns {TileWMS|null}
    */
-  static wms(layer, options) {
+  static wms(layer: any, options: any): TileWMS | null {
     const source = options.sources[layer.source];
     if (
       source == null ||
@@ -24,9 +25,14 @@ export default class SourceCreator {
     ) {
       return null;
     }
-    const url = source.tiles[0];
+    const url: string = source.tiles[0];
     // Todo: handle also non-zero indexes
-    const params = getQueryParams(layer, url, options.time);
+    const params: Record<string, string> = getQueryParams(
+      layer,
+      url,
+      options.time
+    );
+    const projection = get(options.projection);
     const olSource = new TileWMS({
       url: getBaseUrl(url),
       params,
@@ -34,7 +40,9 @@ export default class SourceCreator {
         extent:
           source.bounds != null
             ? source.bounds
-            : get(options.projection).getExtent(),
+            : projection != null
+            ? projection.getExtent()
+            : undefined,
         resolutions: options.resolutions,
         tileSize:
           source.tileSize != null
@@ -47,8 +55,8 @@ export default class SourceCreator {
     if (params.TIME != null) {
       olSource.set(constants.TIME, options.time);
       olSource.set(constants.TIMEOUT, layer.timeout);
-      olSource.setTileLoadFunction((imageTile, url) => {
-        const timeout = olSource.get(constants.TIMEOUT);
+      olSource.setTileLoadFunction((imageTile: any, url: string) => {
+        const timeout: number = olSource.get(constants.TIMEOUT);
         defaultLoadFunction(imageTile, url, olSource, null, timeout);
       });
     }
@@ -62,7 +70,7 @@ export default class SourceCreator {
    * @param capabilities
    * @returns {null|WMTS}
    */
-  static wmts(layer, options, capabilities) {
+  static wmts(layer: any, options: any, capabilities: any): WMTS | null {
     const source = options.sources[layer.source];
     if (source == null || capabilities.type !== 'wmts') {
       return null;
@@ -76,17 +84,17 @@ export default class SourceCreator {
       return null;
     }
 
-    sourceOptions.transition = 0;
+    (sourceOptions as any).transition = 0;
     const olSource = new WMTS(sourceOptions);
     olSource.set(constants.OL_CLASS_NAME, 'WMTS');
-    const timeDefined =
+    const timeDefined: boolean =
       layer.time != null && layer.time.data.includes(options.time);
     if (timeDefined) {
       olSource.set(constants.TIME, options.time);
       olSource.set(constants.TIMEOUT, layer.timeout);
-      olSource.setTileLoadFunction((imageTile, url) => {
-        const time = new Date(options.time).toISOString()
-        const timeout = olSource.get(constants.TIMEOUT);
+      olSource.setTileLoadFunction((imageTile: any, url: string) => {
+        const time: string = new Date(options.time).toISOString();
+        const timeout: number = olSource.get(constants.TIMEOUT);
         defaultLoadFunction(imageTile, url, olSource, time, timeout);
       });
     }
@@ -98,7 +106,7 @@ export default class SourceCreator {
    * @param options
    * @returns {OSM}
    */
-  static osm(options) {
+  static osm(options: any): OSM {
     return new OSM(options);
   }
 }

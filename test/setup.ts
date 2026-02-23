@@ -4,7 +4,7 @@
  */
 
 // Mock XMLHttpRequest for defaultLoadFunction tests
-global.XMLHttpRequest = jest.fn(() => ({
+(global as any).XMLHttpRequest = jest.fn(() => ({
   open: jest.fn(),
   send: jest.fn(),
   setRequestHeader: jest.fn(),
@@ -19,8 +19,8 @@ global.XMLHttpRequest = jest.fn(() => ({
 }));
 
 // Mock URL.createObjectURL and URL.revokeObjectURL
-global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
-global.URL.revokeObjectURL = jest.fn();
+(global as any).URL.createObjectURL = jest.fn(() => 'blob:mock-url');
+(global as any).URL.revokeObjectURL = jest.fn();
 
 // Suppress console.log in tests unless debugging
 // Uncomment the next line to silence console output during tests

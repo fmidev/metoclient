@@ -14,7 +14,7 @@ export default class CapabilitiesReader {
    * @param {Document | Element | string} text The XML source.
    * @returns {null | object} Capabilities data.
    */
-  static wms(text) {
+  static wms(text: Document | Element | string): Record<string, any> | null {
     return new WMSCapabilities().read(text);
   }
 
@@ -24,7 +24,7 @@ export default class CapabilitiesReader {
    * @param {Document | Element | string} text The XML source.
    * @returns {null | object} Capabilities data.
    */
-  static wmts(text) {
+  static wmts(text: Document | Element | string): Record<string, any> | null {
     return new WMTSCapabilities().read(text);
   }
 }

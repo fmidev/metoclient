@@ -48,7 +48,7 @@ describe('constants.js', () => {
     it('should be sorted in ascending order', () => {
       for (let i = 1; i < constants.discreteSteps.length; i++) {
         expect(constants.discreteSteps[i]).toBeGreaterThan(
-          constants.discreteSteps[i - 1],
+          constants.discreteSteps[i - 1]
         );
       }
     });
@@ -59,7 +59,7 @@ describe('constants.js', () => {
 
     it('should end with DAY', () => {
       expect(constants.discreteSteps[constants.discreteSteps.length - 1]).toBe(
-        constants.DAY,
+        constants.DAY
       );
     });
 
@@ -94,7 +94,7 @@ describe('constants.js', () => {
       expect(constants.DEFAULT_OPTIONS.zoom).toBeGreaterThanOrEqual(0);
       expect(constants.DEFAULT_OPTIONS.minZoom).toBeGreaterThanOrEqual(0);
       expect(constants.DEFAULT_OPTIONS.maxZoom).toBeGreaterThan(
-        constants.DEFAULT_OPTIONS.minZoom,
+        constants.DEFAULT_OPTIONS.minZoom
       );
     });
 
@@ -110,7 +110,7 @@ describe('constants.js', () => {
     it('should have transition settings', () => {
       expect(constants.DEFAULT_OPTIONS.transition).toHaveProperty('delay');
       expect(constants.DEFAULT_OPTIONS.transition.delay).toBe(
-        constants.DEFAULT_DELAY,
+        constants.DEFAULT_DELAY
       );
     });
 
@@ -145,13 +145,13 @@ describe('constants.js', () => {
 
     it('should have interaction delay constants', () => {
       expect(constants.LONG_CLICK_DELAY).toBe(
-        0.5 * constants.MILLISECONDS_PER_SECOND,
+        0.5 * constants.MILLISECONDS_PER_SECOND
       );
       expect(constants.LONG_TAP_DELAY).toBe(
-        0.5 * constants.MILLISECONDS_PER_SECOND,
+        0.5 * constants.MILLISECONDS_PER_SECOND
       );
       expect(constants.DOUBLE_PRESS_DELAY).toBe(
-        0.3 * constants.MILLISECONDS_PER_SECOND,
+        0.3 * constants.MILLISECONDS_PER_SECOND
       );
     });
   });
@@ -272,7 +272,7 @@ describe('constants.js', () => {
     it('should have EPSG:3067 resolutions', () => {
       expect(constants.PROJECTION_RESOLUTIONS['EPSG:3067']).toBeDefined();
       expect(Array.isArray(constants.PROJECTION_RESOLUTIONS['EPSG:3067'])).toBe(
-        true,
+        true
       );
     });
 

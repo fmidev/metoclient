@@ -6,21 +6,26 @@
  * Mock OL source with get/set functionality.
  */
 export class MockSource {
+  properties_: Record<string, any> = {};
+  params_: Record<string, any> = {};
+  tileLoadFunction_: any;
+  imageLoadFunction_: any;
+  set: jest.Mock;
+  get: jest.Mock;
+
   constructor() {
-    this.properties_ = {};
-    this.params_ = {};
     // Make set a jest.fn by default
-    this.set = jest.fn((key, value) => {
+    this.set = jest.fn((key: string, value: any) => {
       this.properties_[key] = value;
     });
-    this.get = jest.fn((key) => this.properties_[key]);
+    this.get = jest.fn((key: string) => this.properties_[key]);
   }
 
   getParams() {
     return this.params_;
   }
 
-  updateParams(params) {
+  updateParams(params: Record<string, any>) {
     Object.assign(this.params_, params);
   }
 
@@ -28,11 +33,11 @@ export class MockSource {
     // Mock refresh
   }
 
-  setTileLoadFunction(fn) {
+  setTileLoadFunction(fn: any) {
     this.tileLoadFunction_ = fn;
   }
 
-  setImageLoadFunction(fn) {
+  setImageLoadFunction(fn: any) {
     this.imageLoadFunction_ = fn;
   }
 
@@ -41,16 +46,16 @@ export class MockSource {
    *
    * @returns {MockSource} MockSource with jest mocks.
    */
-  static createMock() {
+  static createMock(): MockSource {
     const source = new MockSource();
-    source.updateParams = jest.fn((params) => {
+    (source as any).updateParams = jest.fn((params: Record<string, any>) => {
       Object.assign(source.params_, params);
     });
-    source.refresh = jest.fn();
-    source.setTileLoadFunction = jest.fn((fn) => {
+    (source as any).refresh = jest.fn();
+    (source as any).setTileLoadFunction = jest.fn((fn: any) => {
       source.tileLoadFunction_ = fn;
     });
-    source.setImageLoadFunction = jest.fn((fn) => {
+    (source as any).setImageLoadFunction = jest.fn((fn: any) => {
       source.imageLoadFunction_ = fn;
     });
     return source;
@@ -61,18 +66,23 @@ export class MockSource {
  * Mock OL layer with get/set functionality.
  */
 export class MockLayer {
-  constructor(options = {}) {
+  properties_: Record<string, any>;
+  source_: any;
+  opacity_: number;
+  visible_: boolean;
+
+  constructor(options: any = {}) {
     this.properties_ = { ...options };
     this.source_ = options.source || new MockSource();
     this.opacity_ = options.opacity ?? 1;
     this.visible_ = options.visible ?? true;
   }
 
-  get(key) {
+  get(key: string) {
     return this.properties_[key];
   }
 
-  set(key, value) {
+  set(key: string, value: any) {
     this.properties_[key] = value;
   }
 
@@ -80,7 +90,7 @@ export class MockLayer {
     return this.source_;
   }
 
-  setSource(source) {
+  setSource(source: any) {
     this.source_ = source;
   }
 
@@ -88,7 +98,7 @@ export class MockLayer {
     return this.opacity_;
   }
 
-  setOpacity(opacity) {
+  setOpacity(opacity: number) {
     this.opacity_ = opacity;
   }
 
@@ -96,7 +106,7 @@ export class MockLayer {
     return this.visible_;
   }
 
-  setVisible(visible) {
+  setVisible(visible: boolean) {
     this.visible_ = visible;
   }
 }
@@ -105,18 +115,20 @@ export class MockLayer {
  * Mock OL Map.
  */
 export class MockMap {
-  constructor(options = {}) {
-    this.properties_ = {};
-    this.layers_ = [];
+  properties_: Record<string, any> = {};
+  layers_: any[] = [];
+  target_: any;
+  listeners_: Record<string, Array<(event: any) => void>> = {};
+
+  constructor(options: any = {}) {
     this.target_ = options.target;
-    this.listeners_ = {};
   }
 
-  get(key) {
+  get(key: string) {
     return this.properties_[key];
   }
 
-  set(key, value, silent) {
+  set(key: string, value: any, silent?: boolean) {
     const oldValue = this.properties_[key];
     this.properties_[key] = value;
     if (!silent && this.listeners_[`change:${key}`]) {
@@ -126,7 +138,7 @@ export class MockMap {
     }
   }
 
-  on(event, callback) {
+  on(event: string, callback: (event: any) => void) {
     if (!this.listeners_[event]) {
       this.listeners_[event] = [];
     }
@@ -134,7 +146,7 @@ export class MockMap {
     return { event, callback };
   }
 
-  un(event, callback) {
+  un(event: string, callback: (event: any) => void) {
     if (this.listeners_[event]) {
       this.listeners_[event] = this.listeners_[event].filter(
         (fn) => fn !== callback
@@ -145,11 +157,11 @@ export class MockMap {
   getLayers() {
     return {
       getArray: () => this.layers_,
-      forEach: (fn) => this.layers_.forEach(fn),
+      forEach: (fn: (layer: any) => void) => this.layers_.forEach(fn),
     };
   }
 
-  addLayer(layer) {
+  addLayer(layer: any) {
     this.layers_.push(layer);
   }
 
@@ -170,7 +182,11 @@ export class MockMap {
  * Mock OL View.
  */
 export class MockView {
-  constructor(options = {}) {
+  center_: number[];
+  zoom_: number;
+  projection_: string;
+
+  constructor(options: any = {}) {
     this.center_ = options.center || [0, 0];
     this.zoom_ = options.zoom || 4;
     this.projection_ = options.projection || 'EPSG:4326';
@@ -180,7 +196,7 @@ export class MockView {
     return this.center_;
   }
 
-  setCenter(center) {
+  setCenter(center: number[]) {
     this.center_ = center;
   }
 
@@ -188,7 +204,7 @@ export class MockView {
     return this.zoom_;
   }
 
-  setZoom(zoom) {
+  setZoom(zoom: number) {
     this.zoom_ = zoom;
   }
 
@@ -203,7 +219,11 @@ export class MockView {
  * Mock OL Control.
  */
 export class MockControl {
-  constructor(options = {}) {
+  element: HTMLElement;
+  target_: any;
+  map_: any;
+
+  constructor(options: any = {}) {
     this.element = options.element || document.createElement('div');
     this.target_ = options.target;
     this.map_ = null;
@@ -213,7 +233,7 @@ export class MockControl {
     return this.map_;
   }
 
-  setMap(map) {
+  setMap(map: any) {
     this.map_ = map;
   }
 }

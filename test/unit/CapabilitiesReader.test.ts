@@ -34,7 +34,7 @@ describe('CapabilitiesReader', () => {
     it('should parse layer styles with legend URL', () => {
       const result = CapabilitiesReader.wms(wmsCapabilitiesXml);
       const radarLayer = result.Capability.Layer.Layer.find(
-        (l) => l.Name === 'radar'
+        (l: any) => l.Name === 'radar'
       );
       expect(radarLayer).toBeDefined();
       expect(radarLayer.Style).toBeDefined();

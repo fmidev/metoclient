@@ -368,7 +368,7 @@ describe('utils.js', () => {
     });
 
     it('should return null if tiles array is empty', () => {
-      const source = { tiles: [] };
+      const source = { tiles: [] as string[] };
       const result = getSourceCapabilitiesUrl(source);
       expect(result).toBeNull();
     });

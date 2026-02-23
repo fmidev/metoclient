@@ -4,13 +4,15 @@
 import TileLayer from 'ol/layer/Tile';
 import ImageLayer from 'ol/layer/Image';
 import ImageWMS from 'ol/source/ImageWMS';
+import TileSource from 'ol/source/Tile';
+import ImageSource from 'ol/source/Image';
 import SourceCreator from './SourceCreator';
 import {
   getBaseUrl,
   getQueryParams,
   getAdjacentLayer,
   getLegendUrl,
-  defaultLoadFunction
+  defaultLoadFunction,
 } from './utils';
 import * as constants from './constants';
 
@@ -26,7 +28,11 @@ export default class LayerCreator {
    * @param {object} capabilities Capabilities data.
    * @returns {null | object} Layer.
    */
-  static tiled(layer, options, capabilities) {
+  static tiled(
+    layer: any,
+    options: any,
+    capabilities: any
+  ): TileLayer<TileSource> | null {
     if (layer == null) {
       return null;
     }
@@ -34,24 +40,31 @@ export default class LayerCreator {
     if (sourceOptions == null) {
       return null;
     }
-    let service;
-    let serviceAvailable = false;
+    let service: string | undefined;
+    let serviceAvailable: boolean = false;
     if (sourceOptions.type != null) {
       service = sourceOptions.type.toLowerCase();
-      serviceAvailable = typeof SourceCreator[service] === 'function';
+      serviceAvailable =
+        typeof (SourceCreator as any)[service as string] === 'function';
     }
     if (!serviceAvailable && layer.url != null && layer.url.service) {
       service = layer.url.service.toLowerCase();
-      serviceAvailable = typeof SourceCreator[service] === 'function';
+      serviceAvailable =
+        typeof (SourceCreator as any)[service as string] === 'function';
     }
     if (!serviceAvailable) {
       return null;
     }
-    const source = SourceCreator[service](layer, options, capabilities);
+    const source = (SourceCreator as any)[service as string](
+      layer,
+      options,
+      capabilities
+    );
     if (source == null) {
       return null;
     }
-    let legendUrl = layer.legendUrl != null ? layer.legendUrl : null;
+    let legendUrl: string | null =
+      layer.legendUrl != null ? layer.legendUrl : null;
     if (legendUrl == null && layer.url != null) {
       legendUrl = getLegendUrl(
         layer.url.layers,
@@ -73,7 +86,7 @@ export default class LayerCreator {
       layerSwitcherTitle: layer.metadata.title,
       id: layer.id,
       legendUrl,
-    });
+    } as any);
   }
 
   /**
@@ -84,7 +97,11 @@ export default class LayerCreator {
    * @param capabilities
    * @returns {null | object} Layer.
    */
-  static image(layer, options, capabilities) {
+  static image(
+    layer: any,
+    options: any,
+    capabilities: any
+  ): ImageLayer<ImageSource> | null {
     const source = options.sources[layer.source];
     if (
       source == null ||
@@ -95,8 +112,12 @@ export default class LayerCreator {
     }
     // Todo: handle also non-zero indexes
     // Todo: add more options
-    const url = source.tiles[0];
-    const params = getQueryParams(layer, url, options.time);
+    const url: string = source.tiles[0];
+    const params: Record<string, string> = getQueryParams(
+      layer,
+      url,
+      options.time
+    );
     const olSource = new ImageWMS({
       url: getBaseUrl(url),
       params,
@@ -106,12 +127,13 @@ export default class LayerCreator {
     if (params.TIME != null) {
       olSource.set(constants.TIME, options.time);
       olSource.set(constants.TIMEOUT, layer.timeout);
-      olSource.setImageLoadFunction((image, url) => {
-        const timeout = olSource.get(constants.TIMEOUT);
+      olSource.setImageLoadFunction((image: any, url: string) => {
+        const timeout: number = olSource.get(constants.TIMEOUT);
         defaultLoadFunction(image, url, olSource, null, timeout);
       });
     }
-    let legendUrl = layer.legendUrl != null ? layer.legendUrl : null;
+    let legendUrl: string | null =
+      layer.legendUrl != null ? layer.legendUrl : null;
     if (legendUrl == null && layer.url != null) {
       legendUrl = getLegendUrl(
         layer.url.layers,
@@ -134,6 +156,6 @@ export default class LayerCreator {
       layerSwitcherTitle: layer.metadata.title,
       id: layer.id,
       legendUrl,
-    });
+    } as any);
   }
 }

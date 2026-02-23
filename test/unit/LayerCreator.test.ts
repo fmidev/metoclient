@@ -14,10 +14,10 @@ import * as constants from '../../src/constants';
 
 // Mock OpenLayers modules
 jest.mock('ol/layer/Tile', () => {
-  return jest.fn().mockImplementation((options) => ({
+  return jest.fn().mockImplementation((options: any) => ({
     type: 'TileLayer',
     options,
-    get: jest.fn((key) => options[key]),
+    get: jest.fn((key: string) => options[key]),
     set: jest.fn(),
     getSource: jest.fn(() => options.source),
     setSource: jest.fn(),
@@ -29,10 +29,10 @@ jest.mock('ol/layer/Tile', () => {
 });
 
 jest.mock('ol/layer/Image', () => {
-  return jest.fn().mockImplementation((options) => ({
+  return jest.fn().mockImplementation((options: any) => ({
     type: 'ImageLayer',
     options,
-    get: jest.fn((key) => options[key]),
+    get: jest.fn((key: string) => options[key]),
     set: jest.fn(),
     getSource: jest.fn(() => options.source),
     setSource: jest.fn(),
@@ -44,7 +44,7 @@ jest.mock('ol/layer/Image', () => {
 });
 
 jest.mock('ol/source/ImageWMS', () => {
-  return jest.fn().mockImplementation((options) => ({
+  return jest.fn().mockImplementation((options: any) => ({
     type: 'ImageWMS',
     options,
     set: jest.fn(),

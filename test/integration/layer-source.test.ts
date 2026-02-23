@@ -22,10 +22,10 @@ describe('Layer and Source Integration', () => {
       SourceUpdater.TileWMS(source, time);
 
       expect(source.set).toHaveBeenCalledWith('metoclient:time', time);
-      expect(source.updateParams).toHaveBeenCalledWith({
+      expect((source as any).updateParams).toHaveBeenCalledWith({
         TIME: '2024-01-01T00:00:00.000Z',
       });
-      expect(source.refresh).toHaveBeenCalled();
+      expect((source as any).refresh).toHaveBeenCalled();
     });
 
     it('should update ImageWMS source time using TileWMS method', () => {
@@ -35,7 +35,7 @@ describe('Layer and Source Integration', () => {
       SourceUpdater.ImageWMS(source, time);
 
       expect(source.set).toHaveBeenCalledWith('metoclient:time', time);
-      expect(source.updateParams).toHaveBeenCalledWith({
+      expect((source as any).updateParams).toHaveBeenCalledWith({
         TIME: '2024-01-01T01:00:00.000Z',
       });
     });
@@ -47,7 +47,7 @@ describe('Layer and Source Integration', () => {
       SourceUpdater.WMTS(source, time);
 
       expect(source.set).toHaveBeenCalledWith(constants.TIME, time);
-      expect(source.setTileLoadFunction).toHaveBeenCalled();
+      expect((source as any).setTileLoadFunction).toHaveBeenCalled();
     });
   });
 
@@ -61,10 +61,10 @@ describe('Layer and Source Integration', () => {
       SourceUpdater.ImageWMS(imageWmsSource, time);
 
       // Both should use the same ISO format
-      expect(tileWmsSource.updateParams).toHaveBeenCalledWith({
+      expect((tileWmsSource as any).updateParams).toHaveBeenCalledWith({
         TIME: '2024-06-15T12:30:00.000Z',
       });
-      expect(imageWmsSource.updateParams).toHaveBeenCalledWith({
+      expect((imageWmsSource as any).updateParams).toHaveBeenCalledWith({
         TIME: '2024-06-15T12:30:00.000Z',
       });
     });
@@ -79,9 +79,9 @@ describe('Layer and Source Integration', () => {
       SourceUpdater.WMTS(wmtsSource, null);
 
       // None should have been updated
-      expect(tileWmsSource.updateParams).not.toHaveBeenCalled();
-      expect(imageWmsSource.updateParams).not.toHaveBeenCalled();
-      expect(wmtsSource.setTileLoadFunction).not.toHaveBeenCalled();
+      expect((tileWmsSource as any).updateParams).not.toHaveBeenCalled();
+      expect((imageWmsSource as any).updateParams).not.toHaveBeenCalled();
+      expect((wmtsSource as any).setTileLoadFunction).not.toHaveBeenCalled();
     });
 
     it('should handle sequential time updates', () => {
@@ -91,11 +91,11 @@ describe('Layer and Source Integration', () => {
       SourceUpdater.TileWMS(source, sampleTimes.t2);
       SourceUpdater.TileWMS(source, sampleTimes.t3);
 
-      expect(source.updateParams).toHaveBeenCalledTimes(3);
-      expect(source.refresh).toHaveBeenCalledTimes(3);
+      expect((source as any).updateParams).toHaveBeenCalledTimes(3);
+      expect((source as any).refresh).toHaveBeenCalledTimes(3);
 
       // Last call should have the latest time
-      expect(source.updateParams).toHaveBeenLastCalledWith({
+      expect((source as any).updateParams).toHaveBeenLastCalledWith({
         TIME: '2024-01-01T02:00:00.000Z',
       });
     });

@@ -6,6 +6,7 @@
 import Url from 'domurl';
 import { Duration, DateTime } from 'luxon';
 import RRule from 'rrule/dist/es5/rrule';
+import type { RRuleOptions } from 'rrule/dist/es5/rrule';
 import * as constants from './constants';
 
 /**
@@ -15,7 +16,7 @@ import * as constants from './constants';
  * @param {number} resolution Flooring resolution (ms).
  * @returns {number} Floored timestamp (ms).
  */
-export function floorTime(time, resolution) {
+export function floorTime(time: number, resolution: number): number {
   return Math.floor(time / resolution) * resolution;
 }
 
@@ -25,16 +26,16 @@ export function floorTime(time, resolution) {
  * @param {Date} d The date to be validated.
  * @returns {boolean} Validation result.
  */
-export function isValidDate(d) {
+export function isValidDate(d: Date): boolean {
   return d instanceof Date && !Number.isNaN(d.getTime());
 }
 
 /**
  * @param str
  */
-export function isNumeric(str) {
+export function isNumeric(str: unknown): boolean {
   if (typeof str !== 'string') return false;
-  return !Number.isNaN(str) && !Number.isNaN(parseFloat(str));
+  return !Number.isNaN(str as any) && !Number.isNaN(parseFloat(str));
 }
 
 /**
@@ -44,14 +45,19 @@ export function isNumeric(str) {
  * @param {Array} newTimes Array of new time points.
  * @returns {Array} Updated time array.
  */
-export function addNewTimes(times, newTimes) {
-  const updatedTimes = [...times];
-  newTimes.forEach((newTime) => {
+export function addNewTimes(times: number[], newTimes: number[]): number[] {
+  const updatedTimes: number[] = [...times];
+  newTimes.forEach((newTime: number) => {
     if (!updatedTimes.includes(newTime)) {
       updatedTimes.push(newTime);
     }
   });
   return updatedTimes;
+}
+
+interface ParsedPart {
+  value: any;
+  type: string | null;
 }
 
 /**
@@ -60,37 +66,39 @@ export function addNewTimes(times, newTimes) {
  * @param {} timeInput
  * @returns {}
  */
-function parseTimeList(timeInput) {
+function parseTimeList(timeInput: string): number[] {
   const DATE_TYPE = 'date';
   const DURATION_TYPE = 'period';
-  const times = [];
-  const parsedParts = timeInput.split('/').map((part) => {
-    if (part.toLowerCase() === constants.PRESENT) {
-      return {
-        value: Date.now(),
-        type: DATE_TYPE,
-      };
-    }
-    const date = new Date(part);
-    if (isValidDate(date)) {
-      return {
-        value: date.getTime(),
-        type: DATE_TYPE,
-      };
-    }
-    try {
-      const duration = Duration.fromISO(part).toObject();
-      return {
-        value: duration,
-        type: DURATION_TYPE,
-      };
-    } catch (e) {
-      return {
-        value: null,
-        type: null,
-      };
-    }
-  });
+  const times: number[] = [];
+  const parsedParts: ParsedPart[] = timeInput
+    .split('/')
+    .map((part: string): ParsedPart => {
+      if (part.toLowerCase() === constants.PRESENT) {
+        return {
+          value: Date.now(),
+          type: DATE_TYPE,
+        };
+      }
+      const date = new Date(part);
+      if (isValidDate(date)) {
+        return {
+          value: date.getTime(),
+          type: DATE_TYPE,
+        };
+      }
+      try {
+        const duration = Duration.fromISO(part).toObject();
+        return {
+          value: duration,
+          type: DURATION_TYPE,
+        };
+      } catch (e) {
+        return {
+          value: null,
+          type: null,
+        };
+      }
+    });
   // Todo: if (parsedParts.length === 2) {} else
   if (
     parsedParts.length === 3 &&
@@ -98,11 +106,11 @@ function parseTimeList(timeInput) {
     parsedParts[1].type === DATE_TYPE &&
     parsedParts[2].type === DURATION_TYPE
   ) {
-    const duration = Duration.fromObject(parsedParts[2].value).as(
+    const duration: number = Duration.fromObject(parsedParts[2].value).as(
       'milliseconds'
     );
-    let i = 0;
-    let moment = parsedParts[0].value;
+    let i: number = 0;
+    let moment: number = parsedParts[0].value;
     while (moment <= parsedParts[1].value) {
       times.push(moment);
       i += 1;
@@ -120,21 +128,25 @@ function parseTimeList(timeInput) {
  * @param timeData
  * @returns {}
  */
-function parseRRule(timeInput, timeOffset, timeData = null) {
-  let times = [];
-  const currentTime = Date.now();
-  const texts = timeInput.toLowerCase().split(' and ');
+function parseRRule(
+  timeInput: string,
+  timeOffset: string | null,
+  timeData: number[] | null = null
+): number[] {
+  let times: number[] = [];
+  const currentTime: number = Date.now();
+  const texts: string[] = timeInput.toLowerCase().split(' and ');
   texts
-    .map((text) => text.trim())
-    .forEach((text) => {
-      const dataSteps = text.startsWith('data');
+    .map((text: string) => text.trim())
+    .forEach((text: string) => {
+      const dataSteps: boolean = text.startsWith('data');
       if (dataSteps) {
         text = text.replace('data', 'every');
       }
-      let rule;
-      const parts = text.split(' ');
+      let rule: RRule;
+      const parts: string[] = text.split(' ');
       if (parts.length >= 2) {
-        const numTimes = Number(parts[0]);
+        const numTimes: number = Number(parts[0]);
         if (!Number.isNaN(numTimes) && parts[1].trim() === 'times') {
           times = times.concat(
             Array(numTimes).fill(
@@ -146,7 +158,7 @@ function parseRRule(timeInput, timeOffset, timeData = null) {
           return;
         }
       }
-      const history = text.includes(' history');
+      const history: boolean = text.includes(' history');
       text = text.replace(' history', '');
       if (dataSteps) {
         text += ' for 2 times';
@@ -159,50 +171,50 @@ function parseRRule(timeInput, timeOffset, timeData = null) {
       if (!dataSteps) {
         if (rule.options.freq === RRule.HOURLY) {
           rule.options.byhour = Array.from(Array(24).keys()).filter(
-            (hour) => hour % rule.options.interval === 0
+            (hour: number) => hour % (rule.options.interval ?? 1) === 0
           );
           rule.options.byminute = [0];
           rule.options.bysecond = [0];
           rule.options.interval = 1;
         } else if (rule.options.freq === RRule.MINUTELY) {
           rule.options.byminute = Array.from(Array(60).keys()).filter(
-            (minute) => minute % rule.options.interval === 0
+            (minute: number) => minute % (rule.options.interval ?? 1) === 0
           );
           rule.options.bysecond = [0];
           rule.options.interval = 1;
         }
       }
       if (timeOffset != null) {
-        const start = DateTime.fromJSDate(rule.options.dtstart);
+        const start = DateTime.fromJSDate(rule.options.dtstart as Date);
         if (start != null) {
           const offsetDuration = Duration.fromISO(timeOffset);
-          rule.options.bysecond = [offsetDuration.values.seconds ?? 0];
-          rule.options.byminute = [offsetDuration.values.minutes ?? 0];
-          rule.options.byhour = [offsetDuration.values.hours ?? 0];
+          rule.options.bysecond = [(offsetDuration as any).values.seconds ?? 0];
+          rule.options.byminute = [(offsetDuration as any).values.minutes ?? 0];
+          rule.options.byhour = [(offsetDuration as any).values.hours ?? 0];
         }
       }
-      let ruleTimes = rule
+      let ruleTimes: number[] = rule
         .all()
-        .map((date) => DateTime.fromJSDate(date).toUTC().valueOf());
-      let offset;
+        .map((date: Date) => DateTime.fromJSDate(date).toUTC().valueOf());
+      let offset: number;
       if (history) {
-        const lastTimeStepIndex = ruleTimes.length - 1;
+        const lastTimeStepIndex: number = ruleTimes.length - 1;
         if (lastTimeStepIndex === 0) {
-          const tmpOptions = { ...rule.options };
+          const tmpOptions: RRuleOptions = { ...rule.options };
           tmpOptions.count = 2;
           const tmpRule = new RRule(tmpOptions);
-          const tmpRuleTimes = tmpRule.all();
-          offset = tmpRuleTimes[1] - tmpRuleTimes[0];
+          const tmpRuleTimes: Date[] = tmpRule.all();
+          offset = tmpRuleTimes[1].getTime() - tmpRuleTimes[0].getTime();
         } else {
           offset =
             ((lastTimeStepIndex + 1) *
               (ruleTimes[lastTimeStepIndex] - ruleTimes[0])) /
             lastTimeStepIndex;
         }
-        ruleTimes = ruleTimes.map((time) => time - offset);
+        ruleTimes = ruleTimes.map((time: number) => time - offset);
       }
       if (dataSteps) {
-        timeData.forEach((dataTime) => {
+        (timeData as number[]).forEach((dataTime: number) => {
           if (
             (history && dataTime >= ruleTimes[1] && dataTime <= currentTime) ||
             (!history && dataTime <= ruleTimes[1] && dataTime >= currentTime)
@@ -225,21 +237,27 @@ function parseRRule(timeInput, timeOffset, timeData = null) {
  * @param timeData
  * @returns {}
  */
-export function parseTimes(timeInput, timeOffset, timeData = null) {
-  let times = [];
+export function parseTimes(
+  timeInput: any,
+  timeOffset: string | null,
+  timeData: number[] | null = null
+): number[] {
+  let times: number[] = [];
   if (timeInput == null) {
     times = [];
   } else if (Array.isArray(timeInput)) {
-    times = timeInput.map((date) => new Date(date).getTime());
+    times = timeInput.map((date: any) => new Date(date).getTime());
   } else if (typeof timeInput === 'object') {
-    const rule = new RRule(timeInput);
-    const ruleTimes = rule
+    const rule = new RRule(timeInput as RRuleOptions);
+    const ruleTimes: number[] = rule
       .all()
-      .map((date) => DateTime.fromJSDate(date).toUTC().valueOf());
+      .map((date: Date) => DateTime.fromJSDate(date).toUTC().valueOf());
     times = addNewTimes(times, ruleTimes);
   } else if (timeInput.includes(',') || timeInput.includes('/')) {
-    const dates = timeInput.split(',').map((date) => date.trim());
-    times = dates.reduce((accTimes, date) => {
+    const dates: string[] = timeInput
+      .split(',')
+      .map((date: string) => date.trim());
+    times = dates.reduce((accTimes: number[], date: string) => {
       if (date.includes('/')) {
         // eslint-disable-next-line no-param-reassign
         accTimes = accTimes.concat(parseTimeList(date));
@@ -264,11 +282,14 @@ export function parseTimes(timeInput, timeOffset, timeData = null) {
  * @param tiles
  * @param newTime
  */
-export function updateSourceTime(tiles, newTime) {
-  return tiles.map((tile) => {
+export function updateSourceTime(
+  tiles: string[],
+  newTime: number | string | null
+): string[] {
+  return tiles.map((tile: string) => {
     const url = new Url(tile);
-    let timeKey = 'time';
-    Object.keys(url.query).forEach((key) => {
+    let timeKey: string = 'time';
+    Object.keys(url.query).forEach((key: string) => {
       if (key.toLocaleLowerCase() === 'time') {
         timeKey = key;
       }
@@ -290,9 +311,12 @@ export function updateSourceTime(tiles, newTime) {
  * @param {string} params params
  * @returns {string} url
  */
-export function stringifyUrl(baseUrl, params) {
+export function stringifyUrl(
+  baseUrl: string,
+  params: Record<string, any>
+): string {
   return Object.keys(params).reduce(
-    (joined, paramKey, index) =>
+    (joined: string, paramKey: string, index: number) =>
       `${joined + (index > 0 ? '&' : '') + paramKey}=${
         typeof params[paramKey] === 'string' &&
         params[paramKey].match(/{([^}]+)}/g) === null
@@ -310,7 +334,11 @@ export function stringifyUrl(baseUrl, params) {
  * @param {string} end end
  * @param {string} period period
  */
-export function createInterval(start, end, period) {
+export function createInterval(
+  start: string,
+  end: string,
+  period: string
+): string {
   return `${start}/${end}/${period}`;
 }
 
@@ -320,7 +348,7 @@ export function createInterval(start, end, period) {
  * @param url
  * @returns {string}
  */
-export function getBaseUrl(url) {
+export function getBaseUrl(url: string): string {
   return url.split(/[?#]/)[0];
 }
 
@@ -331,17 +359,21 @@ export function getBaseUrl(url) {
  * @param layer
  * @param layers
  */
-export function getAdjacentLayer(direction, layer, layers) {
-  const directions = ['previous', 'next'];
-  const directionIndex = directions.indexOf(direction);
+export function getAdjacentLayer(
+  direction: string,
+  layer: any,
+  layers: any[]
+): string | null {
+  const directions: string[] = ['previous', 'next'];
+  const directionIndex: number = directions.indexOf(direction);
   if (directionIndex < 0) {
     return null;
   }
   if (layer[direction] != null) {
     return layer[direction];
   }
-  const opposite = directions[(directionIndex + 1) % 2];
-  const adjacentLayer = layers.find((l) => l[opposite] === layer.id);
+  const opposite: string = directions[(directionIndex + 1) % 2];
+  const adjacentLayer = layers.find((l: any) => l[opposite] === layer.id);
   if (adjacentLayer == null) {
     return null;
   }
@@ -353,8 +385,8 @@ export function getAdjacentLayer(direction, layer, layers) {
  * @param source
  * @returns {string}
  */
-export function getSourceCapabilitiesUrl(source) {
-  let url = '';
+export function getSourceCapabilitiesUrl(source: any): string | null {
+  let url: string = '';
   if (source.capabilities != null && source.capabilities.length > 0) {
     url = source.capabilities;
   } else {
@@ -375,7 +407,11 @@ export function getSourceCapabilitiesUrl(source) {
  * @param layerStyles
  * @param capabilities
  */
-export function getLegendUrl(layerName, layerStyles, capabilities) {
+export function getLegendUrl(
+  layerName: string | null,
+  layerStyles: string | null,
+  capabilities: any
+): string | null {
   if (
     layerName == null ||
     layerName.length === 0 ||
@@ -388,15 +424,15 @@ export function getLegendUrl(layerName, layerStyles, capabilities) {
     return null;
   }
   const layerCapabilities = capabilities.data.Capability.Layer.Layer.find(
-    (layer) => layer.Name === layerName
+    (layer: any) => layer.Name === layerName
   );
   if (layerCapabilities == null || layerCapabilities.Style == null) {
     return null;
   }
   let layerStyle = layerCapabilities.Style[0];
   if (layerStyles != null && layerStyles.length > 0) {
-    const styles = layerStyles.split(',');
-    layerStyle = layerCapabilities.Style.find((style) =>
+    const styles: string[] = layerStyles.split(',');
+    layerStyle = layerCapabilities.Style.find((style: any) =>
       styles.includes(style.Name)
     );
   }
@@ -418,17 +454,24 @@ export function getLegendUrl(layerName, layerStyles, capabilities) {
  * @param {number} time
  * @returns
  */
-export function getQueryParams(layer, url, time) {
+export function getQueryParams(
+  layer: any,
+  url: string,
+  time: number
+): Record<string, string> {
   const queryUrl = new Url(url);
-  const params = Object.keys(queryUrl.query).reduce((upperCased, key) => {
-    upperCased[typeof key === 'string' ? key.toUpperCase() : key] =
-      queryUrl.query[key];
-    return upperCased;
-  }, {});
-  Object.keys(layer.url).forEach((key) => {
+  const params: Record<string, string> = Object.keys(queryUrl.query).reduce(
+    (upperCased: Record<string, string>, key: string) => {
+      upperCased[typeof key === 'string' ? key.toUpperCase() : key] =
+        queryUrl.query[key];
+      return upperCased;
+    },
+    {}
+  );
+  Object.keys(layer.url).forEach((key: string) => {
     params[key.toUpperCase()] = layer.url[key].toString();
   });
-  const timeDefined =
+  const timeDefined: boolean =
     layer.time != null &&
     layer.time.data != null &&
     layer.time.data.includes(time);
@@ -438,22 +481,39 @@ export function getQueryParams(layer, url, time) {
   return params;
 }
 
-export function defaultLoadFunction(image, src, source, time, timeout = constants.DEFAULT_TIMEOUT) {
-  let url = src;
+/**
+ * @param image
+ * @param src
+ * @param source
+ * @param time
+ * @param timeout
+ */
+export function defaultLoadFunction(
+  image: any,
+  src: string,
+  source: any,
+  time: string | null,
+  timeout: number = constants.DEFAULT_TIMEOUT
+): void {
+  let url: string = src;
   if (time != null) {
     url += '&Time=' + time;
   }
-  const emptyImage = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC"
+  const emptyImage: string =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC';
   const xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
   xhr.responseType = 'blob';
   xhr.timeout = timeout;
-  xhr.onloadstart = function (ev) {
+  xhr.onloadstart = function (_ev: ProgressEvent): void {
     xhr.responseType = 'blob';
-  }
-  xhr.onload = () => {
+  };
+  xhr.onload = (): void => {
     URL.revokeObjectURL(src);
-    if (xhr.status === 200 && xhr.response?.type?.toLowerCase()?.startsWith('image')) {
+    if (
+      xhr.status === 200 &&
+      (xhr.response as Blob)?.type?.toLowerCase()?.startsWith('image')
+    ) {
       image.getImage().src = URL.createObjectURL(xhr.response);
       source.set(constants.LOADING_ERROR, false);
     } else {
@@ -462,12 +522,12 @@ export function defaultLoadFunction(image, src, source, time, timeout = constant
       source.set(constants.LOADING_ERROR, true);
     }
   };
-  xhr.onerror = () => {
+  xhr.onerror = (): void => {
     image.getImage().src = emptyImage;
     image.load();
     source.set(constants.LOADING_ERROR, true);
-  }
-  xhr.ontimeout = () => {
+  };
+  xhr.ontimeout = (): void => {
     image.getImage().src = emptyImage;
     image.load();
     source.set(constants.LOADING_ERROR, true);

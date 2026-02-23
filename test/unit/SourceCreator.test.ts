@@ -12,7 +12,7 @@ import {
 
 // Mock OpenLayers modules
 jest.mock('ol/source/TileWMS', () => {
-  return jest.fn().mockImplementation((options) => ({
+  return jest.fn().mockImplementation((options: any) => ({
     options,
     set: jest.fn(),
     get: jest.fn(),
@@ -22,13 +22,13 @@ jest.mock('ol/source/TileWMS', () => {
 });
 
 jest.mock('ol/source/WMTS', () => {
-  const mockWMTS = jest.fn().mockImplementation((options) => ({
+  const mockWMTS = jest.fn().mockImplementation((options: any) => ({
     options,
     set: jest.fn(),
     get: jest.fn(),
     setTileLoadFunction: jest.fn(),
   }));
-  mockWMTS.optionsFromCapabilities = jest.fn(() => ({
+  (mockWMTS as any).optionsFromCapabilities = jest.fn(() => ({
     urls: ['https://example.com/wmts'],
     layer: 'radar',
   }));
@@ -36,14 +36,14 @@ jest.mock('ol/source/WMTS', () => {
 });
 
 jest.mock('ol/source', () => ({
-  OSM: jest.fn().mockImplementation((options) => ({
+  OSM: jest.fn().mockImplementation((options: any) => ({
     type: 'OSM',
     options,
   })),
 }));
 
 jest.mock('ol/tilegrid/TileGrid', () => {
-  return jest.fn().mockImplementation((options) => ({
+  return jest.fn().mockImplementation((options: any) => ({
     options,
   }));
 });

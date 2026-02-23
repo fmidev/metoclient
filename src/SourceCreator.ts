@@ -7,14 +7,14 @@ import * as constants from './constants';
 import { getBaseUrl, getQueryParams, defaultLoadFunction } from './utils';
 
 /**
- *
+ * Class abstracting source creators for different source types.
  */
 export default class SourceCreator {
   /**
-   *
-   * @param options
-   * @param layer
-   * @returns {TileWMS|null}
+   * Create a WMS tile source.
+   * @param {object} layer Layer configuration.
+   * @param {object} options General options.
+   * @returns {TileWMS|null} WMS tile source or null.
    */
   static wms(layer: any, options: any): TileWMS | null {
     const source = options.sources[layer.source];
@@ -64,11 +64,11 @@ export default class SourceCreator {
   }
 
   /**
-   *
-   * @param options
-   * @param layer
-   * @param capabilities
-   * @returns {null|WMTS}
+   * Create a WMTS tile source.
+   * @param {object} layer Layer configuration.
+   * @param {object} options General options.
+   * @param {object} capabilities Capabilities data.
+   * @returns {null|WMTS} WMTS source or null.
    */
   static wmts(layer: any, options: any, capabilities: any): WMTS | null {
     const source = options.sources[layer.source];
@@ -102,9 +102,9 @@ export default class SourceCreator {
   }
 
   /**
-   *
-   * @param options
-   * @returns {OSM}
+   * Create an OSM tile source.
+   * @param {object} options Source options.
+   * @returns {OSM} OSM source.
    */
   static osm(options: any): OSM {
     return new OSM(options);

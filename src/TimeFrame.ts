@@ -23,7 +23,6 @@ export default class TimeFrame {
 
   /**
    * Create a time frame.
-   *
    * @param {TimeFrameOptions} options Time frame options.
    */
   constructor(options: TimeFrameOptions) {

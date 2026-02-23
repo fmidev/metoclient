@@ -9,8 +9,7 @@ import WMTSCapabilities from 'ol/format/WMTSCapabilities';
  */
 export default class CapabilitiesReader {
   /**
-   * Create a WMS capabilities reader.
-   *
+   * Read WMS capabilities from an XML source.
    * @param {Document | Element | string} text The XML source.
    * @returns {null | object} Capabilities data.
    */
@@ -19,8 +18,7 @@ export default class CapabilitiesReader {
   }
 
   /**
-   * Create a WMS capabilities reader.
-   *
+   * Read WMTS capabilities from an XML source.
    * @param {Document | Element | string} text The XML source.
    * @returns {null | object} Capabilities data.
    */

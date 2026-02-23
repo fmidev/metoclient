@@ -168,7 +168,7 @@ interface MetOClientConfig {
 }
 
 /**
- * @classdesc
+ * @classdesc Main MetOClient class for creating animated weather maps.
  */
 export class MetOClient extends BaseObject {
   private config_!: MetOClientConfig;
@@ -201,7 +201,7 @@ export class MetOClient extends BaseObject {
   private optionsListener_: EventsKey;
 
   /**
-   * @param options Map options.
+   * @param {object} options Map options.
    */
   constructor(options: Record<string, any> = {}) {
     super();
@@ -278,7 +278,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Post-process and normalize configuration options.
    */
   postProcessOptions(): void {
     const options = this.get('options') as Record<string, any>;
@@ -338,10 +338,10 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @param key
-   * @param value
-   * @param silent
+   * Set a property value.
+   * @param {string} key Property key.
+   * @param {object | string | number | boolean | null} value Property value.
+   * @param {boolean} silent Whether to suppress change event.
    */
   set(key: string, value: any, silent?: boolean): void {
     const property = this.get(key);
@@ -356,8 +356,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @returns Vector config.
+   * Get the vector configuration.
+   * @returns {VectorConfig} Vector config.
    * @private
    */
   private getVectorConfig_(): VectorConfig {
@@ -387,8 +387,7 @@ export class MetOClient extends BaseObject {
 
   /**
    * Render the animation map based on current configuration.
-   *
-   * @returns Promise object representing rendered map.
+   * @returns {Promise} Promise object representing rendered map.
    */
   render(): Promise<Map | void> {
     return this.updateCapabilities_()
@@ -465,7 +464,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Refresh the map by re-rendering with current configuration.
+   * @private
    */
   private refresh_(): void {
     const map = this.get('map') as Map | null;
@@ -513,8 +513,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @returns Promise.
+   * Update capabilities from WMS/WMTS services.
+   * @returns {Promise<void>} Promise.
    * @private
    */
   private async updateCapabilities_(): Promise<void> {
@@ -630,6 +630,7 @@ export class MetOClient extends BaseObject {
           url,
           crossDomain: true,
           contentType: 'text/plain',
+          /** @param {object} jqxhr The request object. */
           beforeSend(jqxhr) {
             jqxhr.requestURL = url;
           },
@@ -677,9 +678,9 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @param layer
-   * @returns Whether layer is tiled.
+   * Check if a layer is tiled.
+   * @param {object} layer Layer configuration.
+   * @returns {boolean} Whether layer is tiled.
    * @private
    */
   private isTiledLayer_(layer: LayerConfig): boolean {
@@ -731,6 +732,12 @@ export class MetOClient extends BaseObject {
     return tiled.every(Boolean);
   }
 
+  /**
+   * Check if a layer is an animation layer.
+   * @param {BaseLayer} layer OpenLayers layer.
+   * @returns {boolean} Whether the layer is an animation layer.
+   * @private
+   */
   private isAnimationLayer_(layer: BaseLayer): boolean {
     return (
       layer.get('times') != null &&
@@ -738,6 +745,12 @@ export class MetOClient extends BaseObject {
     );
   }
 
+  /**
+   * Get the layer type for a layer configuration.
+   * @param {object} layer Layer configuration.
+   * @returns {string} Layer type string.
+   * @private
+   */
   private getLayerType_(layer: LayerConfig): string {
     if (this.isTiledLayer_(layer)) {
       return 'tiled';
@@ -748,6 +761,14 @@ export class MetOClient extends BaseObject {
     return 'image';
   }
 
+  /**
+   * Create an OpenLayers layer from a layer configuration.
+   * @param {object} layerConfig Layer configuration.
+   * @param {number | null} time Time value.
+   * @param {string} postfix Layer id postfix.
+   * @returns {BaseLayer | null} Created layer or null.
+   * @private
+   */
   private createLayer_(
     layerConfig: LayerConfig,
     time: number | null = this.config_.time,
@@ -858,6 +879,12 @@ export class MetOClient extends BaseObject {
     return layer;
   }
 
+  /**
+   * Create a combined title for the layer switcher.
+   * @param {object} layerConfig Layer configuration.
+   * @returns {string} Combined layer switcher title.
+   * @private
+   */
   private createLayerSwitcherTitle_(layerConfig: LayerConfig): string {
     let title: string = layerConfig.metadata!.title || '';
     const layersConfig = this.config_.layers;
@@ -885,11 +912,11 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   *
-   * @param layer
-   * @param relative
-   * @param visible
+   * Set visibility of relative layers recursively.
+   * @param {BaseLayer} layer Base layer.
+   * @param {string} relative Relative direction ('previous' or 'next').
+   * @param {boolean} visible Visibility state.
+   * @private
    */
   private setRelativesVisible_(
     layer: BaseLayer,
@@ -919,8 +946,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @returns Collection of layers.
+   * Create OpenLayers layer collection from configuration.
+   * @returns {Collection} Collection of layers.
    * @private
    */
   private createLayers_(): Collection<BaseLayer> {
@@ -1033,6 +1060,12 @@ export class MetOClient extends BaseObject {
     return layers;
   }
 
+  /**
+   * Set layer visibility by adjusting opacity.
+   * @param {BaseLayer} layer OpenLayers layer.
+   * @param {boolean} visible Visibility state.
+   * @private
+   */
   private setVisible_(layer: BaseLayer, visible: boolean): void {
     if (visible) {
       MetOClient.showLayer_(layer);
@@ -1041,6 +1074,11 @@ export class MetOClient extends BaseObject {
     }
   }
 
+  /**
+   * Show a layer by restoring its opacity.
+   * @param {BaseLayer} layer OpenLayers layer.
+   * @private
+   */
   static showLayer_(layer: BaseLayer): void {
     let opacity = layer.get(constants.OPACITY) as number | undefined;
     if (opacity == null) {
@@ -1049,13 +1087,18 @@ export class MetOClient extends BaseObject {
     layer.setOpacity(opacity);
   }
 
+  /**
+   * Hide a layer by setting its opacity to zero.
+   * @param {BaseLayer} layer OpenLayers layer.
+   * @private
+   */
   static hideLayer_(layer: BaseLayer): void {
     layer.setOpacity(0);
   }
 
   /**
-   *
-   * @returns View.
+   * Create the map view.
+   * @returns {View} View.
    * @private
    */
   private createView_(): View {
@@ -1076,9 +1119,9 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @param time
-   * @returns Whether the time is visible.
+   * Check if a time is visible in any layer.
+   * @param {number} time Time value to check.
+   * @returns {boolean} Whether the time is visible.
    * @private
    */
   private isVisibleTime_(time: number): boolean {
@@ -1098,7 +1141,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Clear time loading statuses for all times except the current one.
    * @private
    */
   private clearTimeStatuses_(): void {
@@ -1119,8 +1162,9 @@ export class MetOClient extends BaseObject {
   }
 
   /**
+   * Update the time slider visualization.
+   * @param {boolean} forceUpdate Whether to force a full update.
    * @private
-   * @param forceUpdate
    */
   private updateTimeSlider_(forceUpdate: boolean = false): void {
     (this.get('timeSlider') as any).updateTimeLoaderVis(
@@ -1133,6 +1177,10 @@ export class MetOClient extends BaseObject {
     );
   }
 
+  /**
+   * Handle render completion for the current time.
+   * @private
+   */
   private currentTimeRendered_(): void {
     const map = this.get('map') as Map | null;
     if (map == null) {
@@ -1323,6 +1371,11 @@ export class MetOClient extends BaseObject {
     }
   }
 
+  /**
+   * Get the layer switcher control.
+   * @returns {object | null | undefined} Layer switcher control.
+   * @private
+   */
   private getLayerSwitcher_():
     | (Control & {
         shownClassName: string;
@@ -1348,9 +1401,9 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @param layer
-   * @returns Visible time.
+   * Get the visible time for a layer.
+   * @param {BaseLayer} layer OpenLayers layer.
+   * @returns {number | null} Visible time.
    * @private
    */
   private getVisibleTime_(layer: BaseLayer): number | null {
@@ -1373,6 +1426,12 @@ export class MetOClient extends BaseObject {
     return visibleTime;
   }
 
+  /**
+   * Get the current time for a feature layer.
+   * @param {BaseLayer} featureLayer Feature layer.
+   * @returns {number | null} Feature layer time or null.
+   * @private
+   */
   private getFeatureLayerTime_(featureLayer: BaseLayer): number | null {
     const map = this.get('map') as Map | null;
     if (map == null) {
@@ -1389,10 +1448,10 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @param layer
-   * @param prevLayer
-   * @param nextLayer
+   * Swap layers so that the next layer becomes the main layer.
+   * @param {BaseLayer} layer Current main layer.
+   * @param {BaseLayer | null} prevLayer Previous layer.
+   * @param {BaseLayer} nextLayer Next layer.
    * @private
    */
   private useNextLayer_(
@@ -1414,7 +1473,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Handle time update events and update layer visibility.
    * @private
    */
   private timeUpdated_(): void {
@@ -1569,12 +1628,22 @@ export class MetOClient extends BaseObject {
     }
   }
 
+  /**
+   * Get the layer switcher panel element.
+   * @returns {Element | null} Layer switcher panel element or null.
+   * @private
+   */
   private getLayerSwitcherPanel_(): Element | null {
     return document.querySelector(
       `div#${constants.LAYER_SWITCHER_CONTAINER_ID} div.panel`
     );
   }
 
+  /**
+   * Check if the layer switcher panel is visible.
+   * @returns {boolean | null} Whether the layer switcher is visible.
+   * @private
+   */
   private isLayerSwitcherVisible_(): boolean | null {
     const layerSwitcher = this.getLayerSwitcher_();
     if (layerSwitcher == null) {
@@ -1586,8 +1655,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @api
+   * Update the legend display.
    */
   updateLegend(): void {
     Array.from(
@@ -1614,7 +1682,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Create the legend chooser UI in the layer switcher panel.
    * @private
    */
   private createLegendChooser_(): void {
@@ -1670,9 +1738,9 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @param e
-   * @returns
+   * Update layer opacity from input event.
+   * @param {Event} e Input event.
+   * @private
    */
   private updateOpacity_(e: Event): void {
     const target = e.target as HTMLInputElement;
@@ -1709,8 +1777,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @returns
+   * Create opacity controls in the layer switcher.
+   * @private
    */
   private createOpacityControl_(): void {
     const layerSwitcherPanel = this.getLayerSwitcherPanel_();
@@ -1768,7 +1836,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Refine the layer switcher by adding legend chooser and opacity controls.
+   * @private
    */
   private refineLayerSwitcher_(): void {
     if (Object.entries(this.legends_).length > 1) {
@@ -1780,7 +1849,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Create a watcher to detect layer switcher panel visibility changes.
    * @private
    */
   private createLayerSwitcherWatcher_(): void {
@@ -1803,7 +1872,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Create the legend container element in the map DOM.
    * @private
    */
   private createLegendContainer_(): void {
@@ -1817,7 +1886,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Build legend entries from map layers and create the legend container.
+   * @private
    */
   private createLegends_(): void {
     const map = this.get('map') as Map | null;
@@ -1868,8 +1938,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @returns
+   * Handle fullscreen state changes.
    */
   private handleFullScreen_(): void {
     const map = this.get('map') as Map | null;
@@ -1894,6 +1963,10 @@ export class MetOClient extends BaseObject {
     }
   }
 
+  /**
+   * Create fullscreen event listener.
+   * @private
+   */
   private createFullScreenListener_(): void {
     const element = document.getElementById(this.config_.target)!;
     element.onfullscreenchange = this.handleFullScreen_.bind(this);
@@ -1901,6 +1974,12 @@ export class MetOClient extends BaseObject {
       this.handleFullScreen_.bind(this);
   }
 
+  /**
+   * Initialize the map with controls, listeners, and time slider.
+   * @param {Map} map OpenLayers map.
+   * @returns {Map} Initialized map.
+   * @private
+   */
   private initMap_(map: Map): Map {
     this.set('map', map);
     if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
@@ -1981,6 +2060,10 @@ export class MetOClient extends BaseObject {
     return map;
   }
 
+  /**
+   * Handle document visibility state changes for refresh timer.
+   * @private
+   */
   private handleVisibilityChange_(): void {
     clearInterval(this.refreshTimer_!);
     if (document.visibilityState === 'hidden') {
@@ -1993,6 +2076,11 @@ export class MetOClient extends BaseObject {
     this.refresh_();
   }
 
+  /**
+   * Add times to the internal times array.
+   * @param {Array<number>} times Time values to add.
+   * @private
+   */
   private addTimes_(times: number[]): void {
     if (times != null && Array.isArray(times) && times.length > 0) {
       this.times_ = [...new Set([...this.times_, ...times])].sort();
@@ -2012,6 +2100,12 @@ export class MetOClient extends BaseObject {
     }
   }
 
+  /**
+   * Update vector configuration by loading remote data sources.
+   * @param {VectorConfig} vectorConfig Vector configuration.
+   * @returns {Promise<VectorConfig>} Updated vector configuration.
+   * @private
+   */
   private updateVectorConfig_(
     vectorConfig: VectorConfig
   ): Promise<VectorConfig> {
@@ -2037,6 +2131,13 @@ export class MetOClient extends BaseObject {
     });
   }
 
+  /**
+   * Create vector layers from configuration and add them to the map.
+   * @param {Map} map OpenLayers map.
+   * @param {VectorConfig} vectorConfig Vector layer configuration.
+   * @returns {Promise<Map>} Promise resolving to the updated map.
+   * @private
+   */
   private createVectorLayers_(
     map: Map,
     vectorConfig: VectorConfig
@@ -2085,6 +2186,7 @@ export class MetOClient extends BaseObject {
                 }
               }
               const source = (layer as any).getSource();
+              /** Update layer and global times. */
               const updateTimes = (): void => {
                 if (layerConfig != null) {
                   if (layerConfig.time == null) {
@@ -2095,6 +2197,7 @@ export class MetOClient extends BaseObject {
                 }
                 this.addTimes_(layerTimes);
               };
+              /** @param {object} feature OpenLayers feature. */
               const initFeature = (feature: any): void => {
                 if (timeProperty != null && timeProperty.length > 0) {
                   const time = feature.get(timeProperty);
@@ -2149,7 +2252,9 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Create map interactions based on configuration tags.
+   * @returns {Array<Interaction>} Array of map interactions.
+   * @private
    */
   private createInteractions_(): Interaction[] {
     if (this.config_.metadata.tags.includes(constants.TAG_NO_INTERACTIONS)) {
@@ -2179,7 +2284,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Create the OpenLayers map with all layers and controls.
+   * @returns {Promise<Map>} Promise resolving to the created map.
    * @private
    */
   private createMap_(): Promise<Map> {
@@ -2280,7 +2386,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Update the existing map or create a new one.
+   * @returns {Promise<Map | void>} Promise resolving to the updated map.
    * @private
    */
   private updateMap_(): Promise<Map | void> {
@@ -2318,7 +2425,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Update internal time arrays from layer configurations and capabilities data.
    * @private
    */
   private updateTimes_(): void {
@@ -2415,7 +2522,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   * @param options
+   * Start animation playback.
+   * @param {PlayOptions} options Play options.
    */
   play(options?: PlayOptions): void {
     if (options != null && Math.sign(options.delay!)) {
@@ -2428,7 +2536,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Advance the animation to the next frame if render is complete.
    * @private
    */
   private animate_(): void {
@@ -2448,8 +2556,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @returns Next time.
+   * Get the next visible time step.
+   * @returns {number} Next time.
    * @private
    */
   private getNextTime_(): number {
@@ -2471,7 +2579,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   * @param force
+   * Move to the next time step.
+   * @param {boolean} force Whether to force the step.
    */
   next(force?: boolean): void {
     if (!this.isReady_()) {
@@ -2496,8 +2605,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @returns Previous time.
+   * Get the previous visible time step.
+   * @returns {number} Previous time.
    * @private
    */
   private getPrevTime_(): number {
@@ -2519,7 +2628,7 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
+   * Move to the previous time step.
    */
   previous(): void {
     if (!this.isReady_()) {
@@ -2529,8 +2638,8 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @returns Whether the client is ready.
+   * Check if the client is ready for operations.
+   * @returns {boolean} Whether the client is ready.
    * @private
    */
   private isReady_(): boolean {
@@ -2538,34 +2647,39 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @api
+   * Pause the animation playback.
    */
   pause(): void {
     (this.get('map') as Map).set('playing', false);
   }
 
   /**
-   * @api
-   * @param layerId
+   * Set the active legend by layer id.
+   * @param {string} layerId Layer id for the legend.
    */
   setLegend(layerId: string): void {
     this.selectedLegend_ = layerId;
     this.updateLegend();
   }
 
+  /**
+   * Stop the animation playback.
+   */
   stop(): void {
     this.pause();
   }
 
+  /**
+   * Clear layer and source listeners.
+   * @private
+   */
   private clear_(): void {
     unByKey(this.layerListeners_);
     unByKey(this.sourceListeners_);
   }
 
   /**
-   *
-   * @api
+   * Destroy the MetOClient instance and clean up resources.
    */
   destroy(): void {
     this.clear_();
@@ -2594,11 +2708,11 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   *
-   * @param coordinate
-   * @param source
-   * @param destination
-   * @returns Transformed coordinate.
+   * Transform a coordinate from source to destination projection.
+   * @param {Array<number>} coordinate Coordinate to transform.
+   * @param {string} source Source projection.
+   * @param {string} destination Destination projection.
+   * @returns {Array<number>} Transformed coordinate.
    */
   static transform(
     coordinate: number[],

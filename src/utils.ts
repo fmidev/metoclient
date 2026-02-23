@@ -1,6 +1,5 @@
 /**
  * Utils module.
- *
  * @module utils
  */
 import Url from 'domurl';
@@ -11,7 +10,6 @@ import * as constants from './constants';
 
 /**
  * Floor time based on the given resolution.
- *
  * @param {number} time Original timestamp (ms).
  * @param {number} resolution Flooring resolution (ms).
  * @returns {number} Floored timestamp (ms).
@@ -22,7 +20,6 @@ export function floorTime(time: number, resolution: number): number {
 
 /**
  * Validate date.
- *
  * @param {Date} d The date to be validated.
  * @returns {boolean} Validation result.
  */
@@ -31,7 +28,9 @@ export function isValidDate(d: Date): boolean {
 }
 
 /**
- * @param str
+ * Check if a string value is numeric.
+ * @param {unknown} str The value to check.
+ * @returns {boolean} Whether the value is numeric.
  */
 export function isNumeric(str: unknown): boolean {
   if (typeof str !== 'string') return false;
@@ -40,7 +39,6 @@ export function isNumeric(str: unknown): boolean {
 
 /**
  * Update time array with time points of another array.
- *
  * @param {Array} times Array of time points to be updated.
  * @param {Array} newTimes Array of new time points.
  * @returns {Array} Updated time array.
@@ -62,9 +60,8 @@ interface ParsedPart {
 
 /**
  * Parse time item.
- *
- * @param {} timeInput
- * @returns {}
+ * @param {string} timeInput Time input string to parse.
+ * @returns {Array<number>} Parsed time points.
  */
 function parseTimeList(timeInput: string): number[] {
   const DATE_TYPE = 'date';
@@ -122,11 +119,10 @@ function parseTimeList(timeInput: string): number[] {
 
 /**
  * Parse time rule.
- *
- * @param {} timeInput
- * @param timeOffset
- * @param timeData
- * @returns {}
+ * @param {string} timeInput Time rule input string to parse.
+ * @param {string | null} timeOffset Time offset in ISO duration format.
+ * @param {Array<number> | null} timeData Available time data points.
+ * @returns {Array<number>} Parsed time points.
  */
 function parseRRule(
   timeInput: string,
@@ -231,11 +227,10 @@ function parseRRule(
 
 /**
  * Parse time point input.
- *
- * @param {} timeInput
- * @param timeOffset
- * @param timeData
- * @returns {}
+ * @param {string | Array | object} timeInput Time input to parse.
+ * @param {string | null} timeOffset Time offset in ISO duration format.
+ * @param {Array<number> | null} timeData Available time data points.
+ * @returns {Array<number>} Parsed time points.
  */
 export function parseTimes(
   timeInput: any,
@@ -279,8 +274,10 @@ export function parseTimes(
 }
 
 /**
- * @param tiles
- * @param newTime
+ * Update time parameter in source tile URLs.
+ * @param {Array<string>} tiles Array of tile URLs.
+ * @param {number | string | null} newTime New time value to set.
+ * @returns {Array<string>} Updated tile URLs.
  */
 export function updateSourceTime(
   tiles: string[],
@@ -305,11 +302,10 @@ export function updateSourceTime(
 }
 
 /**
- * Url
- *
- * @param {string} baseUrl baseUrl
- * @param {string} params params
- * @returns {string} url
+ * Construct a URL string from a base URL and query parameters.
+ * @param {string} baseUrl Base URL without query parameters.
+ * @param {string} params Query parameters to append.
+ * @returns {string} Constructed URL string.
  */
 export function stringifyUrl(
   baseUrl: string,
@@ -328,11 +324,11 @@ export function stringifyUrl(
 }
 
 /**
- * createInterval
- *
- * @param {string} start start
- * @param {string} end end
- * @param {string} period period
+ * Create a time interval string from start, end, and period components.
+ * @param {string} start Start time string.
+ * @param {string} end End time string.
+ * @param {string} period Duration period string.
+ * @returns {string} Interval string.
  */
 export function createInterval(
   start: string,
@@ -343,21 +339,20 @@ export function createInterval(
 }
 
 /**
- *
- *
- * @param url
- * @returns {string}
+ * Extract base URL without query parameters.
+ * @param {string} url The full URL.
+ * @returns {string} Base URL.
  */
 export function getBaseUrl(url: string): string {
   return url.split(/[?#]/)[0];
 }
 
 /**
- *
- *
- * @param direction
- * @param layer
- * @param layers
+ * Get the adjacent layer in a given direction.
+ * @param {string} direction Direction ('previous' or 'next').
+ * @param {object} layer Current layer configuration.
+ * @param {Array} layers Array of layer configurations.
+ * @returns {string | null} Adjacent layer id or null.
  */
 export function getAdjacentLayer(
   direction: string,
@@ -381,9 +376,9 @@ export function getAdjacentLayer(
 }
 
 /**
- *
- * @param source
- * @returns {string}
+ * Get the capabilities URL for a given source.
+ * @param {object} source Source configuration object.
+ * @returns {string | null} Capabilities URL or null.
  */
 export function getSourceCapabilitiesUrl(source: any): string | null {
   let url: string = '';
@@ -403,9 +398,11 @@ export function getSourceCapabilitiesUrl(source: any): string | null {
 }
 
 /**
- * @param layerName
- * @param layerStyles
- * @param capabilities
+ * Get the legend URL from capabilities for a given layer.
+ * @param {string | null} layerName Layer name.
+ * @param {string | null} layerStyles Layer styles.
+ * @param {object} capabilities Capabilities data.
+ * @returns {string | null} Legend URL or null.
  */
 export function getLegendUrl(
   layerName: string | null,
@@ -448,11 +445,10 @@ export function getLegendUrl(
 
 /**
  * Parse query parameters.
- *
- * @param {object} layer
- * @param {string} url
- * @param {number} time
- * @returns
+ * @param {object} layer Layer configuration.
+ * @param {string} url Source URL.
+ * @param {number} time Time value.
+ * @returns {Record<string, string>} Parsed query parameters.
  */
 export function getQueryParams(
   layer: any,
@@ -482,11 +478,12 @@ export function getQueryParams(
 }
 
 /**
- * @param image
- * @param src
- * @param source
- * @param time
- * @param timeout
+ * Default image load function with timeout and error handling.
+ * @param {object} image Image tile to load.
+ * @param {string} src Source URL.
+ * @param {object} source OpenLayers source object.
+ * @param {string | null} time Time parameter value.
+ * @param {number} timeout Request timeout in milliseconds.
  */
 export function defaultLoadFunction(
   image: any,

@@ -1,5 +1,7 @@
 declare module 'domurl' {
+  /** URL parser class. */
   class Url {
+    /** @param {string} url URL string to parse. */
     constructor(url?: string);
     protocol: string;
     host: string;

@@ -22,11 +22,10 @@ import * as constants from './constants';
 export default class LayerCreator {
   /**
    * Create a tiled layer based on given configurations.
-   *
    * @param {object} layer Layer configuration.
    * @param {object} options General options.
    * @param {object} capabilities Capabilities data.
-   * @returns {null | object} Layer.
+   * @returns {null | object} Created layer or null.
    */
   static tiled(
     layer: any,
@@ -91,11 +90,10 @@ export default class LayerCreator {
 
   /**
    * Create an image layer based on given configurations.
-   *
    * @param {object} layer Layer configuration.
    * @param {object} options General options.
-   * @param capabilities
-   * @returns {null | object} Layer.
+   * @param {object} capabilities Capabilities data.
+   * @returns {null | object} Created layer or null.
    */
   static image(
     layer: any,

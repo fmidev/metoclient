@@ -6,7 +6,9 @@ declare module 'ol-layerswitcher' {
     reverse?: boolean;
   }
 
+  /** Layer switcher control for OpenLayers. */
   class LayerSwitcher extends Control {
+    /** @param {LayerSwitcherOptions} options Layer switcher options. */
     constructor(options?: LayerSwitcherOptions);
     shownClassName: string;
     showPanel(): void;

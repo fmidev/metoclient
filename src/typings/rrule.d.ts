@@ -10,6 +10,7 @@ declare module 'rrule/dist/es5/rrule' {
     [key: string]: unknown;
   }
 
+  /** Recurrence rule class. */
   class RRule {
     static YEARLY: number;
     static MONTHLY: number;

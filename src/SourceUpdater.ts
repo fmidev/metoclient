@@ -2,14 +2,13 @@ import { defaultLoadFunction } from './utils';
 import * as constants from './constants';
 
 /**
- *
+ * Class abstracting source updaters for different source types.
  */
 export default class SourceUpdater {
   /**
-   *
-   * @param source
-   * @param time
-   * @class
+   * Update time for a TileWMS source.
+   * @param {object} source OpenLayers TileWMS source.
+   * @param {number | null} time New time value.
    */
   static TileWMS(source: any, time: number | null): void {
     if (time == null) {
@@ -24,20 +23,18 @@ export default class SourceUpdater {
   }
 
   /**
-   *
-   * @param source
-   * @param time
-   * @class
+   * Update time for an ImageWMS source.
+   * @param {object} source OpenLayers ImageWMS source.
+   * @param {number | null} time New time value.
    */
   static ImageWMS(source: any, time: number | null): void {
     this.TileWMS(source, time);
   }
 
   /**
-   *
-   * @param source
-   * @param time
-   * @class
+   * Update time for a WMTS source.
+   * @param {object} source OpenLayers WMTS source.
+   * @param {number | null} time New time value.
    */
   static WMTS(source: any, time: number | null): void {
     // Use same time formatter in TileWMS and WMTS

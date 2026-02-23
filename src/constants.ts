@@ -1,6 +1,5 @@
 /**
  * Constants module.
- *
  * @module constants
  */
 export const DEFAULT_DELAY: number = 1000;

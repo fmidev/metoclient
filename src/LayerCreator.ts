@@ -40,7 +40,7 @@ export default class LayerCreator {
       return null;
     }
     let service: string | undefined;
-    let serviceAvailable: boolean = false;
+    let serviceAvailable = false;
     if (sourceOptions.type != null) {
       service = sourceOptions.type.toLowerCase();
       serviceAvailable =
@@ -125,9 +125,9 @@ export default class LayerCreator {
     if (params.TIME != null) {
       olSource.set(constants.TIME, options.time);
       olSource.set(constants.TIMEOUT, layer.timeout);
-      olSource.setImageLoadFunction((image: any, url: string) => {
+      olSource.setImageLoadFunction((image: any, imageUrl: string) => {
         const timeout: number = olSource.get(constants.TIMEOUT);
-        defaultLoadFunction(image, url, olSource, null, timeout);
+        defaultLoadFunction(image, imageUrl, olSource, null, timeout);
       });
     }
     let legendUrl: string | null =

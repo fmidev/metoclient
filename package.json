@@ -1,6 +1,6 @@
 {
   "name": "@fmidev/metoclient",
-  "version": "6.7.0-alpha.2",
+  "version": "6.7.0-alpha.3",
   "description": "Map animator",
   "main": "dist/metoclient.js",
   "module": "dist/metoclient.es.js",
@@ -72,7 +72,29 @@
             "FunctionExpression": true
           }
         }
-      ]
+      ],
+      "no-param-reassign": [
+        "error",
+        {
+          "props": false
+        }
+      ],
+      "no-console": [
+        "warn",
+        {
+          "allow": [
+            "error"
+          ]
+        }
+      ],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/no-this-alias": "off",
+      "sonarjs/cognitive-complexity": "off",
+      "class-methods-use-this": "off",
+      "no-labels": "off",
+      "no-restricted-syntax": "off",
+      "no-loop-func": "off"
     }
   },
   "eslintIgnore": [

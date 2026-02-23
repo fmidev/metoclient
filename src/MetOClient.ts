@@ -27,6 +27,10 @@ import MouseWheelZoom from 'ol/interaction/MouseWheelZoom';
 import Style from 'ol/style/Style';
 import { getWidth } from 'ol/extent';
 import elementResizeDetectorMaker from 'element-resize-detector';
+import type BaseLayer from 'ol/layer/Base';
+import type { EventsKey } from 'ol/events';
+import type Control from 'ol/control/Control';
+import type Interaction from 'ol/interaction/Interaction';
 import {
   isNumeric,
   parseTimes,
@@ -38,11 +42,6 @@ import CapabilitiesReader from './CapabilitiesReader';
 import SourceUpdater from './SourceUpdater';
 import LayerCreator from './LayerCreator';
 import TimeSlider from './TimeSlider';
-
-import type BaseLayer from 'ol/layer/Base';
-import type { EventsKey } from 'ol/events';
-import type Control from 'ol/control/Control';
-import type Interaction from 'ol/interaction/Interaction';
 
 /**
  * Augment Document to include webkit fullscreen property.
@@ -172,32 +171,59 @@ interface MetOClientConfig {
  */
 export class MetOClient extends BaseObject {
   private config_!: MetOClientConfig;
+
   private vectorConfig_: VectorConfig | null;
+
   private status_: Record<string | number, string>;
+
   private resolutionOnEnterFullScreen_: number | null | undefined;
+
   private delay_: number;
+
   private periodDelay_: number;
+
   private times_: number[];
+
   private playingListener_: EventsKey | null;
+
   private previousListener_: EventsKey | null;
+
   private nextListener_!: EventsKey;
+
   private timeListener_: EventsKey | null;
+
   private visibilityListener_: ((this: Document, ev: Event) => void) | null;
+
   private renderComplete_: boolean;
+
   private updateNeeded_: boolean;
+
   private waitingRender_: number;
+
   private refreshInterval_: number;
+
   private extent_: (number | null)[];
+
   private resizeDetector_: elementResizeDetectorMaker.Erd;
+
   private capabilities_: Record<string, CapabilitiesEntry>;
+
   private legends_: Record<string, LegendEntry>;
+
   private selectedLegend_: string;
+
   private layerSwitcherWatcher: ElementVisibilityWatcher | null;
+
   private delayLoop_: boolean;
+
   private refreshTimer_: ReturnType<typeof setInterval> | null;
+
   private animationTimeout_: ReturnType<typeof setTimeout> | null;
+
   private layerListeners_: EventsKey[];
+
   private sourceListeners_: EventsKey[];
+
   private optionsListener_: EventsKey;
 
   /**
@@ -317,8 +343,8 @@ export class MetOClient extends BaseObject {
         const startResolution = getWidth(projExtent) / 256;
         const numResolutions = this.config_.maxZoom - this.config_.minZoom + 1;
         const resolutions = new Array(numResolutions);
-        for (let i = 0, ii = resolutions.length; i < ii; ++i) {
-          resolutions[i] = startResolution / Math.pow(2, i);
+        for (let i = 0, ii = resolutions.length; i < ii; i += 1) {
+          resolutions[i] = startResolution / 2 ** i;
         }
         this.config_.resolutions = resolutions;
       }
@@ -361,7 +387,7 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private getVectorConfig_(): VectorConfig {
-    return (this.vectorConfig_ = this.config_.layers.reduce(
+    this.vectorConfig_ = this.config_.layers.reduce(
       (vectorConfig: VectorConfig, layer: LayerConfig) => {
         const source = this.config_.sources[layer.source];
         if (
@@ -382,7 +408,8 @@ export class MetOClient extends BaseObject {
         layers: [],
         sprite: this.config_.sprite,
       }
-    ));
+    );
+    return this.vectorConfig_;
   }
 
   /**
@@ -438,8 +465,9 @@ export class MetOClient extends BaseObject {
               },
               []
             );
-            if ((this.config_.time as number) < visibleTimes[0]) {
-              this.config_.time = visibleTimes[0];
+            const [firstVisibleTime] = visibleTimes;
+            if ((this.config_.time as number) < firstVisibleTime) {
+              this.config_.time = firstVisibleTime;
             }
             const lastTimeIndex = visibleTimes.length - 1;
             if ((this.config_.time as number) > visibleTimes[lastTimeIndex]) {
@@ -455,11 +483,11 @@ export class MetOClient extends BaseObject {
             return map as Map;
           })
           .catch((error: any) => {
-            console.log(error);
+            console.error(error);
           });
       })
       .catch((error: any) => {
-        console.log(error);
+        console.error(error);
       });
   }
 
@@ -478,10 +506,10 @@ export class MetOClient extends BaseObject {
           source.set(constants.TIME, null);
         }
         const id = layer.get('id') as string | undefined;
-        if (id != null && !id.startsWith('metoclient:')) {
+        if (id != null && !id.startsWith(constants.METOCLIENT_PREFIX)) {
           const config = this.config_.layers.find(
             (layerConfig: LayerConfig) =>
-              layerConfig.id === layer.get('metoclient:id')
+              layerConfig.id === layer.get(constants.ID)
           );
           if (config != null) {
             config.visibility = layer.getVisible()
@@ -584,8 +612,9 @@ export class MetOClient extends BaseObject {
                 };
               }
               if (timeData != null && timeData.length > 0) {
-                if (timeData[0] < capabilities[url].startTime) {
-                  capabilities[url].startTime = timeData[0];
+                const [firstTime] = timeData;
+                if (firstTime < capabilities[url].startTime) {
+                  capabilities[url].startTime = firstTime;
                 }
                 const maxTimeIndex = timeData.length - 1;
                 if (timeData[maxTimeIndex] > capabilities[url].endTime) {
@@ -597,22 +626,22 @@ export class MetOClient extends BaseObject {
           },
           {} as Record<string, any>
         )
-      ).map((capabKeyValue: [string, any]) => {
-        this.capabilities_[capabKeyValue[0]] = capabKeyValue[1];
+      ).map(([capabKey, capabValue]: [string, any]) => {
+        this.capabilities_[capabKey] = capabValue;
         const params: Record<string, string> = {};
-        Object.keys(capabKeyValue[1].query).forEach((key: string) => {
-          params[key.toLowerCase()] = capabKeyValue[1].query[key];
+        Object.keys(capabValue.query).forEach((key: string) => {
+          params[key.toLowerCase()] = capabValue.query[key];
         });
         if (params.service == null) {
-          params.service = capabKeyValue[1].type;
+          params.service = capabValue.type;
         }
         params.request = 'GetCapabilities';
         (['startTime', 'endTime'] as const).forEach((timeParam) => {
           if (
             params.service === 'wms' &&
-            capabKeyValue[1].server === constants.SMARTMET_SERVER
+            capabValue.server === constants.SMARTMET_SERVER
           ) {
-            const timeISO = DateTime.fromMillis(capabKeyValue[1][timeParam])
+            const timeISO = DateTime.fromMillis(capabValue[timeParam])
               .toUTC()
               .toISO({
                 suppressMilliseconds: true,
@@ -623,7 +652,7 @@ export class MetOClient extends BaseObject {
             }
           }
         });
-        const url = `${capabKeyValue[0]}?${Object.keys(params)
+        const url = `${capabKey}?${Object.keys(params)
           .map((key: string) => `${key}=${params[key]}`)
           .join('&')}`;
         return ajax({
@@ -637,36 +666,34 @@ export class MetOClient extends BaseObject {
         });
       })
     );
-    await Promise.all(
-      responses.map((response: any) => {
-        if (
-          response.responseText != null &&
-          response.requestURL.includes(constants.GET_CAPABILITIES_QUERY)
-        ) {
-          let capabKey: string = response.requestURL.split('?')[0];
-          const capabKeyParts = capabKey.split('/');
-          let localCapabKey = '';
-          if (capabKeyParts.length > 0) {
-            localCapabKey = capabKeyParts[capabKeyParts.length - 1];
-          }
-          if (
-            localCapabKey.length > 0 &&
-            this.capabilities_[localCapabKey] != null
-          ) {
-            capabKey = localCapabKey;
-          }
-          if (
-            typeof (CapabilitiesReader as any)[
-              this.capabilities_[capabKey].type
-            ] === 'function'
-          ) {
-            this.capabilities_[capabKey].data = (CapabilitiesReader as any)[
-              this.capabilities_[capabKey].type
-            ](response.responseText);
-          }
+    responses.forEach((response: any) => {
+      if (
+        response.responseText != null &&
+        response.requestURL.includes(constants.GET_CAPABILITIES_QUERY)
+      ) {
+        let capabKey: string = response.requestURL.split('?')[0];
+        const capabKeyParts = capabKey.split('/');
+        let localCapabKey = '';
+        if (capabKeyParts.length > 0) {
+          localCapabKey = capabKeyParts[capabKeyParts.length - 1];
         }
-      })
-    );
+        if (
+          localCapabKey.length > 0 &&
+          this.capabilities_[localCapabKey] != null
+        ) {
+          capabKey = localCapabKey;
+        }
+        if (
+          typeof (CapabilitiesReader as any)[
+            this.capabilities_[capabKey].type
+          ] === 'function'
+        ) {
+          this.capabilities_[capabKey].data = (CapabilitiesReader as any)[
+            this.capabilities_[capabKey].type
+          ](response.responseText);
+        }
+      }
+    });
     Object.keys(this.capabilities_).forEach((capabilitiesKey: string) => {
       if (
         this.capabilities_[capabilitiesKey] != null &&
@@ -772,7 +799,7 @@ export class MetOClient extends BaseObject {
   private createLayer_(
     layerConfig: LayerConfig,
     time: number | null = this.config_.time,
-    postfix: string = ''
+    postfix = ''
   ): BaseLayer | null {
     const layerType = this.getLayerType_(layerConfig);
     if ((LayerCreator as any)[layerType] == null) {
@@ -1158,7 +1185,9 @@ export class MetOClient extends BaseObject {
       });
     Object.keys(this.status_)
       .filter((key: string) => Number(key) !== this.config_.time)
-      .forEach((key: string) => (this.status_[key] = ''));
+      .forEach((key: string) => {
+        this.status_[key] = '';
+      });
   }
 
   /**
@@ -1166,7 +1195,7 @@ export class MetOClient extends BaseObject {
    * @param {boolean} forceUpdate Whether to force a full update.
    * @private
    */
-  private updateTimeSlider_(forceUpdate: boolean = false): void {
+  private updateTimeSlider_(forceUpdate = false): void {
     (this.get('timeSlider') as any).updateTimeLoaderVis(
       this.times_.map((time: number) => ({
         endTime: time,
@@ -1189,7 +1218,7 @@ export class MetOClient extends BaseObject {
     const layers = map
       .getLayers()
       .getArray()
-      .filter((layer: BaseLayer) => layer.get('mapbox-source') == null);
+      .filter((layer: BaseLayer) => layer.get(constants.MAPBOX_SOURCE) == null);
     layers.forEach((layer: BaseLayer) => {
       const times = layer.get('times') as number[] | undefined;
       let visible = times == null || !Array.isArray(times);
@@ -1241,7 +1270,9 @@ export class MetOClient extends BaseObject {
           if (times == null || !Array.isArray(times) || times.length === 0) {
             return false;
           }
-          return !(layer.get('id') as string).startsWith('metoclient:');
+          return !(layer.get('id') as string).startsWith(
+            constants.METOCLIENT_PREFIX
+          );
         })
         .forEach((layer: BaseLayer) => {
           const layerId = layer.get('id') as string;
@@ -1320,7 +1351,7 @@ export class MetOClient extends BaseObject {
             const prevSource = (prevLayer as any).getSource();
             if (prevSource.get(constants.TIME) !== layerPrevTime) {
               MetOClient.hideLayer_(prevLayer);
-              (SourceUpdater as any)[prevSource.get('metoclient:olClassName')](
+              (SourceUpdater as any)[prevSource.get(constants.OL_CLASS_NAME)](
                 prevSource,
                 layerPrevTime
               );
@@ -1347,7 +1378,7 @@ export class MetOClient extends BaseObject {
             const nextSource = (nextLayer as any).getSource();
             if (nextSource.get(constants.TIME) !== layerNextTime) {
               MetOClient.hideLayer_(nextLayer);
-              (SourceUpdater as any)[nextSource.get('metoclient:olClassName')](
+              (SourceUpdater as any)[nextSource.get(constants.OL_CLASS_NAME)](
                 nextSource,
                 layerNextTime
               );
@@ -1396,7 +1427,7 @@ export class MetOClient extends BaseObject {
       .getArray()
       .find(
         (control: Control) =>
-          control.get('metoclient:olClassName') === 'LayerSwitcher'
+          control.get(constants.OL_CLASS_NAME) === 'LayerSwitcher'
       ) as any;
   }
 
@@ -1459,7 +1490,7 @@ export class MetOClient extends BaseObject {
     prevLayer: BaseLayer | null,
     nextLayer: BaseLayer
   ): void {
-    const baseId = layer.get('metoclient:id') as string;
+    const baseId = layer.get(constants.ID) as string;
     layer.set('id', `metoclient:${baseId}-previous`);
     nextLayer.set('id', baseId);
     if (prevLayer != null) {
@@ -1482,7 +1513,8 @@ export class MetOClient extends BaseObject {
     layers
       .filter(
         (layer: BaseLayer) =>
-          layer.get('mapbox-source') != null && layer.get('times') != null
+          layer.get(constants.MAPBOX_SOURCE) != null &&
+          layer.get('times') != null
       )
       .forEach((featureLayer: BaseLayer) => {
         const layerTime = this.getFeatureLayerTime_(featureLayer);
@@ -1492,7 +1524,7 @@ export class MetOClient extends BaseObject {
           .forEach((feature: any) => {
             if (
               layerTime == null ||
-              feature.get('metoclient:time') !== layerTime
+              feature.get(constants.TIME) !== layerTime
             ) {
               feature.setStyle(new Style({}));
             } else {
@@ -1525,7 +1557,7 @@ export class MetOClient extends BaseObject {
     });
     this.updateTimeSlider_();
     layers
-      .filter((layer: BaseLayer) => layer.get('mapbox-source') == null)
+      .filter((layer: BaseLayer) => layer.get(constants.MAPBOX_SOURCE) == null)
       .filter((layer: BaseLayer) => {
         const times = layer.get('times') as number[] | undefined;
         if (times == null || !Array.isArray(times) || times.length === 0) {
@@ -1551,15 +1583,15 @@ export class MetOClient extends BaseObject {
           MetOClient.hideLayer_(layer);
           return false;
         }
-        return !(layer.get('id') as string).startsWith('metoclient:');
+        return !(layer.get('id') as string).startsWith(
+          constants.METOCLIENT_PREFIX
+        );
       })
       .forEach((layer: BaseLayer) => {
         const source = (layer as any).getSource();
         const visibleTime = this.getVisibleTime_(layer);
-        if (source.get('metoclient:time') === visibleTime) {
-          const prevLayer = layer.get(
-            'metoclient:previous'
-          ) as BaseLayer | null;
+        if (source.get(constants.TIME) === visibleTime) {
+          const prevLayer = layer.get(constants.PREVIOUS) as BaseLayer | null;
           if (prevLayer != null) {
             MetOClient.hideLayer_(prevLayer);
           } else {
@@ -1567,16 +1599,14 @@ export class MetOClient extends BaseObject {
               constants.STATUS_SUCCESS;
             this.updateTimeSlider_();
           }
-          const nextLayer = layer.get('metoclient:next') as BaseLayer | null;
+          const nextLayer = layer.get(constants.NEXT) as BaseLayer | null;
           if (nextLayer != null) {
             MetOClient.hideLayer_(nextLayer);
           }
           MetOClient.showLayer_(layer);
         } else {
-          const prevLayer = layer.get(
-            'metoclient:previous'
-          ) as BaseLayer | null;
-          const nextLayer = layer.get('metoclient:next') as BaseLayer | null;
+          const prevLayer = layer.get(constants.PREVIOUS) as BaseLayer | null;
+          const nextLayer = layer.get(constants.NEXT) as BaseLayer | null;
           if (prevLayer != null) {
             const prevSource = (prevLayer as any).getSource();
             if (
@@ -1585,16 +1615,16 @@ export class MetOClient extends BaseObject {
             ) {
               MetOClient.hideLayer_(layer);
               MetOClient.showLayer_(prevLayer);
-              const baseId = layer.get('metoclient:id') as string;
+              const baseId = layer.get(constants.ID) as string;
               layer.set('id', `metoclient:${baseId}-next`);
               prevLayer.set('id', baseId);
               if (nextLayer != null) {
                 nextLayer.set('id', `metoclient:${baseId}-previous`);
               }
-              prevLayer.set('metoclient:previous', nextLayer);
-              prevLayer.set('metoclient:next', layer);
+              prevLayer.set(constants.PREVIOUS, nextLayer);
+              prevLayer.set(constants.NEXT, layer);
               prevLayer.set('title', layer.get('title'));
-              layer.set('metoclient:next', prevLayer);
+              layer.set(constants.NEXT, prevLayer);
               layer.set('title', '');
               return;
             }
@@ -1609,14 +1639,14 @@ export class MetOClient extends BaseObject {
                 return;
               }
               this.useNextLayer_(layer, prevLayer, nextLayer);
-              (SourceUpdater as any)[nextSource.get('metoclient:olClassName')](
+              (SourceUpdater as any)[nextSource.get(constants.OL_CLASS_NAME)](
                 nextSource,
                 visibleTime
               );
               return;
             }
           }
-          (SourceUpdater as any)[source.get('metoclient:olClassName')](
+          (SourceUpdater as any)[source.get(constants.OL_CLASS_NAME)](
             source,
             this.config_.time
           );
@@ -1673,7 +1703,7 @@ export class MetOClient extends BaseObject {
           legendFigure.appendChild(legendCaption);
           const legendImage = document.createElement('img');
           legendImage.setAttribute('src', url);
-          legendImage.setAttribute('alt', this.config_.texts['Legend']);
+          legendImage.setAttribute('alt', this.config_.texts.Legend);
           legendFigure.appendChild(legendImage);
           legendContainer.appendChild(legendFigure);
         }
@@ -1794,12 +1824,12 @@ export class MetOClient extends BaseObject {
     if (layerList != null) {
       const layerElements = layerList.getElementsByTagName('li');
       const numLayers = layerElements.length;
-      for (let i = 0; i < numLayers; i++) {
+      for (let i = 0; i < numLayers; i += 1) {
         const { childNodes } = layerElements[i];
         const numChildnodes = childNodes.length;
 
         let label = '';
-        for (let j = 0; j < numChildnodes; j++) {
+        for (let j = 0; j < numChildnodes; j += 1) {
           if (
             (childNodes[j] as HTMLElement).tagName &&
             (childNodes[j] as HTMLElement).tagName.toLowerCase() === 'label'
@@ -1807,30 +1837,33 @@ export class MetOClient extends BaseObject {
             label = (childNodes[j] as HTMLElement).innerText;
           }
         }
-        if (label.length === 0) {
-          continue;
-        }
-        let opacity = 1;
-        const titleLayer = mapLayers.find(
-          (mapLayer: BaseLayer) => mapLayer.get('layerSwitcherTitle') === label
-        );
-        if (titleLayer != null) {
-          const layerOpacity = titleLayer.get(constants.OPACITY) as
-            | number
-            | undefined;
-          if (layerOpacity != null) {
-            opacity = layerOpacity;
+        if (label.length > 0) {
+          let opacity = 1;
+          const titleLayer = mapLayers.find(
+            (mapLayer: BaseLayer) =>
+              mapLayer.get('layerSwitcherTitle') === label
+          );
+          if (titleLayer != null) {
+            const layerOpacity = titleLayer.get(constants.OPACITY) as
+              | number
+              | undefined;
+            if (layerOpacity != null) {
+              opacity = layerOpacity;
+            }
           }
+          const opacityField = document.createElement('input');
+          opacityField.type = 'number';
+          opacityField.min = '1';
+          opacityField.max = '100';
+          opacityField.step = '1';
+          opacityField.value = (100 * opacity).toString();
+          opacityField.className = constants.OPACITY_CONTROL_CLASS;
+          opacityField.addEventListener(
+            'input',
+            this.updateOpacity_.bind(this)
+          );
+          layerElements[i].append(opacityField);
         }
-        const opacityField = document.createElement('input');
-        opacityField.type = 'number';
-        opacityField.min = '1';
-        opacityField.max = '100';
-        opacityField.step = '1';
-        opacityField.value = (100 * opacity).toString();
-        opacityField.className = constants.OPACITY_CONTROL_CLASS;
-        opacityField.addEventListener('input', this.updateOpacity_.bind(this));
-        layerElements[i].append(opacityField);
       }
     }
   }
@@ -1987,7 +2020,7 @@ export class MetOClient extends BaseObject {
         tipLabel: this.config_.texts['Layer Switcher'],
         reverse: false,
       });
-      layerSwitcher.set('metoclient:olClassName', 'LayerSwitcher');
+      layerSwitcher.set(constants.OL_CLASS_NAME, 'LayerSwitcher');
       map.addControl(layerSwitcher);
       const layerSwitcherContainer = document.querySelector(
         `div#${this.config_.target} div.layer-switcher`
@@ -2001,7 +2034,9 @@ export class MetOClient extends BaseObject {
         const layerSwitcherButton =
           layerSwitcherContainer.querySelector('button');
         if (layerSwitcherButton != null) {
-          layerSwitcherButton.onmouseover = () => {};
+          layerSwitcherButton.onmouseover = () => {
+            /* noop */
+          };
           layerSwitcherButton.onclick = () => {
             const ls = this.getLayerSwitcher_();
             if (this.isLayerSwitcherVisible_()) {
@@ -2013,7 +2048,9 @@ export class MetOClient extends BaseObject {
         }
         const layerSwitcherPanel = this.getLayerSwitcherPanel_();
         if (layerSwitcherPanel != null) {
-          (layerSwitcherPanel as HTMLElement).onmouseout = () => {};
+          (layerSwitcherPanel as HTMLElement).onmouseout = () => {
+            /* noop */
+          };
         }
       }
     }
@@ -2150,7 +2187,9 @@ export class MetOClient extends BaseObject {
           updatedMap
             .getLayers()
             .getArray()
-            .filter((layer: BaseLayer) => layer.get('mapbox-source') != null)
+            .filter(
+              (layer: BaseLayer) => layer.get(constants.MAPBOX_SOURCE) != null
+            )
             .forEach((layer: BaseLayer) => {
               let layerConfig: LayerConfig | undefined;
               const layerTimes: number[] = [];
@@ -2161,7 +2200,7 @@ export class MetOClient extends BaseObject {
               if (mapboxLayers != null) {
                 layer.set('id', mapboxLayers.join('-'));
                 const title = mapboxLayers.reduce(
-                  (layerTitle: string, layerId: string) => {
+                  (acc: string, layerId: string) => {
                     layerConfig = vectorConfig.layers.find(
                       (l: LayerConfig) => l.id === layerId
                     );
@@ -2171,13 +2210,11 @@ export class MetOClient extends BaseObject {
                       layerConfig.metadata.title != null &&
                       layerConfig.metadata.title.length > 0
                     ) {
-                      if (layerTitle.length > 0) {
-                        layerTitle += ' / ';
-                      }
-                      layerTitle += layerConfig.metadata.title;
+                      const separator = acc.length > 0 ? ' / ' : '';
                       timeProperty = layerConfig.metadata.timeProperty;
+                      return acc + separator + layerConfig.metadata.title;
                     }
-                    return layerTitle;
+                    return acc;
                   },
                   ''
                 );
@@ -2207,7 +2244,7 @@ export class MetOClient extends BaseObject {
                       typeof parsedTime === 'number' &&
                       !Number.isNaN(parsedTime)
                     ) {
-                      feature.set('metoclient:time', parsedTime);
+                      feature.set(constants.TIME, parsedTime);
                       const numLayerTimes = layerTimes.length;
                       for (let i = 0; i <= numLayerTimes; i += 1) {
                         if (i === numLayerTimes) {
@@ -2244,7 +2281,7 @@ export class MetOClient extends BaseObject {
               });
             });
           if (this.config_.time == null && this.times_.length > 0) {
-            this.config_.time = this.times_[0];
+            [this.config_.time] = this.times_;
           }
         }
         return updatedMap;
@@ -2295,8 +2332,8 @@ export class MetOClient extends BaseObject {
       new TimeSlider({
         target: this.config_.timeSliderContainerId,
         locale: this.config_.locale,
-        buttonPlayText: this.config_.texts['Play'],
-        buttonPauseText: this.config_.texts['Pause'],
+        buttonPlayText: this.config_.texts.Play,
+        buttonPauseText: this.config_.texts.Pause,
         showTimeSlider: true,
         timeZone: this.config_.timeZone,
         timeZoneLabel: this.config_.timeZoneLabel,
@@ -2403,8 +2440,8 @@ export class MetOClient extends BaseObject {
           .getArray()
           .filter(
             (layer: BaseLayer) =>
-              layer.get('metoclient:id') == null &&
-              layer.get('mapbox-source') == null
+              layer.get(constants.ID) == null &&
+              layer.get(constants.MAPBOX_SOURCE) == null
           )
       )
     );

@@ -15,10 +15,15 @@ export interface TimeFrameOptions {
  */
 export default class TimeFrame {
   public beginTime: number;
+
   public endTime: number;
+
   public useDateFormat: boolean;
+
   public element: HTMLDivElement;
+
   public dragListenerElement: HTMLDivElement;
+
   public keyboardAccessibleElement: HTMLButtonElement;
 
   /**

@@ -10,8 +10,11 @@ declare module 'ol-layerswitcher' {
   class LayerSwitcher extends Control {
     /** @param {LayerSwitcherOptions} options Layer switcher options. */
     constructor(options?: LayerSwitcherOptions);
+
     shownClassName: string;
+
     showPanel(): void;
+
     hidePanel(): void;
   }
 

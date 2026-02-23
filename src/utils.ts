@@ -106,7 +106,7 @@ function parseTimeList(timeInput: string): number[] {
     const duration: number = Duration.fromObject(parsedParts[2].value).as(
       'milliseconds'
     );
-    let i: number = 0;
+    let i = 0;
     let moment: number = parsedParts[0].value;
     while (moment <= parsedParts[1].value) {
       times.push(moment);
@@ -135,14 +135,15 @@ function parseRRule(
   texts
     .map((text: string) => text.trim())
     .forEach((text: string) => {
-      const dataSteps: boolean = text.startsWith('data');
+      let ruleText = text;
+      const dataSteps = ruleText.startsWith('data');
       if (dataSteps) {
-        text = text.replace('data', 'every');
+        ruleText = ruleText.replace('data', 'every');
       }
       let rule: RRule;
-      const parts: string[] = text.split(' ');
+      const parts: string[] = ruleText.split(' ');
       if (parts.length >= 2) {
-        const numTimes: number = Number(parts[0]);
+        const numTimes = Number(parts[0]);
         if (!Number.isNaN(numTimes) && parts[1].trim() === 'times') {
           times = times.concat(
             Array(numTimes).fill(
@@ -154,13 +155,13 @@ function parseRRule(
           return;
         }
       }
-      const history: boolean = text.includes(' history');
-      text = text.replace(' history', '');
+      const history = ruleText.includes(' history');
+      ruleText = ruleText.replace(' history', '');
       if (dataSteps) {
-        text += ' for 2 times';
+        ruleText += ' for 2 times';
       }
       try {
-        rule = RRule.fromText(text);
+        rule = RRule.fromText(ruleText);
       } catch (err) {
         return;
       }
@@ -285,7 +286,7 @@ export function updateSourceTime(
 ): string[] {
   return tiles.map((tile: string) => {
     const url = new Url(tile);
-    let timeKey: string = 'time';
+    let timeKey = 'time';
     Object.keys(url.query).forEach((key: string) => {
       if (key.toLocaleLowerCase() === 'time') {
         timeKey = key;
@@ -381,7 +382,7 @@ export function getAdjacentLayer(
  * @returns {string | null} Capabilities URL or null.
  */
 export function getSourceCapabilitiesUrl(source: any): string | null {
-  let url: string = '';
+  let url = '';
   if (source.capabilities != null && source.capabilities.length > 0) {
     url = source.capabilities;
   } else {
@@ -494,15 +495,15 @@ export function defaultLoadFunction(
 ): void {
   let url: string = src;
   if (time != null) {
-    url += '&Time=' + time;
+    url += `&Time=${time}`;
   }
-  const emptyImage: string =
+  const emptyImage =
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAAtJREFUGFdjYAACAAAFAAGq1chRAAAAAElFTkSuQmCC';
   const xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
   xhr.responseType = 'blob';
   xhr.timeout = timeout;
-  xhr.onloadstart = function (_ev: ProgressEvent): void {
+  xhr.onloadstart = (_ev: ProgressEvent): void => {
     xhr.responseType = 'blob';
   };
   xhr.onload = (): void => {

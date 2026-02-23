@@ -46,25 +46,45 @@ interface TimeStepItem {
  */
 class TimeSlider extends Control {
   private container_: HTMLDivElement;
+
   private config_: TimeSliderOptions;
+
   private enableMouseWheel_: boolean | undefined;
+
   private interactions_: HTMLDivElement | null;
+
   private playButton_: HTMLButtonElement | null;
+
   private animationPlay_: boolean;
+
   private frames_: TimeFrame[];
+
   private locale_: string | undefined;
+
   private previousTickTextTop_: number | null;
+
   private previousTickTextRight_: number;
+
   private previousTickTextBottom_: number | null;
+
   private previousTickTextLeft_: number | null;
+
   private previousTickIndex_: number | null;
+
   private previousTickValue_: number | null;
+
   private mouseListeners_: ListenerHandle[];
+
   private dragging_: boolean;
+
   public resizeDetector: elementResizeDetectorMaker.Erd;
+
   private timeListener_: EventsKey | EventsKey[] | null;
+
   private playingListener_: EventsKey | EventsKey[] | null;
+
   private timeZoneListener_: EventsKey | EventsKey[] | null;
+
   private timeZoneLabelListener_: EventsKey | EventsKey[] | null;
 
   /**
@@ -138,9 +158,9 @@ class TimeSlider extends Control {
           textElement[0].textContent = tickText.content;
         }
       });
-      const map = this.getMap();
-      if (map != null && map.get('time') != null) {
-        this.updatePointer(map.get('time'), true);
+      const currentMap = this.getMap();
+      if (currentMap != null && currentMap.get('time') != null) {
+        this.updatePointer(currentMap.get('time'), true);
       }
     });
     this.timeZoneLabelListener_ = this.on('change:timeZoneLabel' as any, () => {
@@ -264,9 +284,15 @@ class TimeSlider extends Control {
     playButton.tabIndex = constants.BASE_TAB_INDEX;
     if (this.animationPlay_) {
       playButton.classList.add(constants.PLAYING_CLASS);
-      playButton.setAttribute('aria-label', this.config_.buttonPauseText ?? '');
+      playButton.setAttribute(
+        constants.ARIA_LABEL,
+        this.config_.buttonPauseText ?? ''
+      );
     } else {
-      playButton.setAttribute('aria-label', this.config_.buttonPlayText ?? '');
+      playButton.setAttribute(
+        constants.ARIA_LABEL,
+        this.config_.buttonPlayText ?? ''
+      );
     }
     this.mouseListeners_.push(
       listen(playButton, 'click', (event: Event) => {
@@ -274,7 +300,7 @@ class TimeSlider extends Control {
         const map = this.getMap()!;
         map.set('playing', !map.get('playing'));
         playButton.setAttribute(
-          'aria-label',
+          constants.ARIA_LABEL,
           map.get('playing')
             ? this.config_.buttonPauseText ?? ''
             : this.config_.buttonPlayText ?? ''
@@ -329,9 +355,8 @@ class TimeSlider extends Control {
     const framesContainer = this.container_.getElementsByClassName(
       constants.FRAMES_CONTAINER_CLASS
     )[0];
-    let node: ChildNode | null;
-    while ((node = framesContainer.lastChild)) {
-      framesContainer.removeChild(node);
+    while (framesContainer.lastChild) {
+      framesContainer.removeChild(framesContainer.lastChild);
     }
     this.frames_ = [];
     if (numMoments < 2) {
@@ -610,7 +635,7 @@ class TimeSlider extends Control {
       if (frame?.element?.children != null) {
         const childElements = Array.from(frame.element.children);
         const numChildElements = childElements.length;
-        for (let i = 0; i < numChildElements; i++) {
+        for (let i = 0; i < numChildElements; i += 1) {
           if (
             childElements[i].classList.contains(
               constants.FRAME_TEXT_WRAPPER_CLASS
@@ -628,9 +653,9 @@ class TimeSlider extends Control {
     const framesContainer = this.getFramesContainer();
     const hourSteps = [24, 12, 8, 6, 4, 3, 2, 1];
     const numHourSteps = hourSteps.length;
-    loopHourSteps: for (let i = 0; i < numHourSteps; i++) {
+    loopHourSteps: for (let i = 0; i < numHourSteps; i += 1) {
       const numFrames = this.frames_.length;
-      for (let j = 0; j < numFrames; j++) {
+      for (let j = 0; j < numFrames; j += 1) {
         if (this.frames_[j].endTime >= textFrames[0].endTime) {
           break;
         }
@@ -733,13 +758,12 @@ class TimeSlider extends Control {
    * @param {number} minStep Minimum allowed time step.
    * @returns {boolean} Whether using the default time step is suitable for the current data.
    */
-  configureTicks(minStep: number = 0): boolean {
+  configureTicks(minStep = 0): boolean {
     const self = this;
     let tick: HTMLDivElement;
     let maxTextWidth = 0;
     let useTimeStep = false;
     let timeStep: number | undefined;
-    let framesContainer: DOMRect | Element[];
     let divisibleDays = false;
     let containsDST = false;
     let containsNonDST = false;
@@ -839,7 +863,7 @@ class TimeSlider extends Control {
       frame.element.appendChild(tick);
     };
 
-    framesContainer = this.getFramesContainer();
+    const framesContainer = this.getFramesContainer();
 
     this.frames_.forEach((frame, index, frames) => {
       const textElementArray = Array.from(
@@ -1046,7 +1070,7 @@ class TimeSlider extends Control {
    * @param {number} animationTime Time value.
    * @param {boolean} forceUpdate Whether to force an update.
    */
-  updatePointer(animationTime: number, forceUpdate: boolean = false): void {
+  updatePointer(animationTime: number, forceUpdate = false): void {
     if (this.interactions_ == null) {
       return;
     }
@@ -1101,10 +1125,7 @@ class TimeSlider extends Control {
    * @param {TimeStepItem[]} timeSteps Loader counter information for intervals.
    * @param {boolean} forceUpdate Whether to force a full update.
    */
-  updateTimeLoaderVis(
-    timeSteps: TimeStepItem[],
-    forceUpdate: boolean = false
-  ): void {
+  updateTimeLoaderVis(timeSteps: TimeStepItem[], forceUpdate = false): void {
     const numIntervalItems = timeSteps.reduce<TimeStepItem[]>(
       (activeTimeSteps, timeStep) => {
         if (timeStep.active) {
@@ -1146,7 +1167,6 @@ class TimeSlider extends Control {
       Array.from(
         frame.element.getElementsByClassName(constants.INDICATOR_CLASS)
       ).forEach((indicatorElement) => {
-        let time: number;
         let elementTime: string | undefined;
         let endTime: number;
         if (
@@ -1159,8 +1179,8 @@ class TimeSlider extends Control {
         if (elementTime == null) {
           return;
         }
-        time = parseInt(elementTime, 10);
-        if (!isNaN(time)) {
+        const time = parseInt(elementTime, 10);
+        if (!Number.isNaN(time)) {
           const numItems = numIntervalItems.length;
           for (let j = 0; j < numItems; j += 1) {
             endTime = numIntervalItems[j].endTime;
@@ -1236,7 +1256,7 @@ class TimeSlider extends Control {
    * @param {boolean} showDate Show date information.
    * @returns {TickText} Generated text presentation.
    */
-  getTickText(tickTime: number, showDate: boolean = true): TickText {
+  getTickText(tickTime: number, showDate = true): TickText {
     let numFrames: number;
     let i: number;
     let frameTime: number;
@@ -1253,10 +1273,8 @@ class TimeSlider extends Control {
     if (beginTime == null) {
       return { content: '', useDateFormat: false };
     }
-    if (tickTime < beginTime) {
-      tickTime = beginTime;
-    }
-    const zTime = DateTime.fromMillis(tickTime)
+    const effectiveTime = tickTime < beginTime ? beginTime : tickTime;
+    const zTime = DateTime.fromMillis(effectiveTime)
       .setZone(this.get('timeZone'))
       .setLocale(this.locale_ ?? 'en-GB');
     const day = zTime.ordinal;
@@ -1265,7 +1283,7 @@ class TimeSlider extends Control {
       numFrames = this.frames_.length;
       for (i = 0; i < numFrames; i += 1) {
         frameTime = this.frames_[i].endTime;
-        if (frameTime >= tickTime) {
+        if (frameTime >= effectiveTime) {
           break;
         }
         if (
@@ -1285,7 +1303,7 @@ class TimeSlider extends Control {
           useDateFormat = true;
         }
       } else if (
-        tickTime === beginTime &&
+        effectiveTime === beginTime &&
         (day !== currentMoment.ordinal || year !== currentMoment.year)
       ) {
         useDateFormat = true;

@@ -33,16 +33,17 @@ export default class SourceCreator {
       options.time
     );
     const projection = get(options.projection);
+    let extent;
+    if (source.bounds != null) {
+      extent = source.bounds;
+    } else if (projection != null) {
+      extent = projection.getExtent();
+    }
     const olSource = new TileWMS({
       url: getBaseUrl(url),
       params,
       tileGrid: new TileGrid({
-        extent:
-          source.bounds != null
-            ? source.bounds
-            : projection != null
-            ? projection.getExtent()
-            : undefined,
+        extent,
         resolutions: options.resolutions,
         tileSize:
           source.tileSize != null
@@ -55,9 +56,9 @@ export default class SourceCreator {
     if (params.TIME != null) {
       olSource.set(constants.TIME, options.time);
       olSource.set(constants.TIMEOUT, layer.timeout);
-      olSource.setTileLoadFunction((imageTile: any, url: string) => {
+      olSource.setTileLoadFunction((imageTile: any, tileUrl: string) => {
         const timeout: number = olSource.get(constants.TIMEOUT);
-        defaultLoadFunction(imageTile, url, olSource, null, timeout);
+        defaultLoadFunction(imageTile, tileUrl, olSource, null, timeout);
       });
     }
     return olSource;

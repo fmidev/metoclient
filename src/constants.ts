@@ -30,16 +30,16 @@ export const DEFAULT_OPTIONS = {
   texts: {
     'Fullscreen Label Active': '×',
     'Fullscreen Label': '⤢',
-    'Fullscreen Tip Label': 'Fullscreen',
-    'Layer Switcher': 'Layer Switcher',
+    'Fullscreen Tip Label': 'Toggle fullscreen',
+    'Layer Switcher': 'Layer switcher',
     'Legend Selector': 'Legend',
     Legend: 'Map legend',
     Pause: 'Pause animation',
     Play: 'Play animation',
     'Zoom In Label': '+',
-    'Zoom In': 'Zoom In',
+    'Zoom In': 'Zoom in',
     'Zoom Out Label': '-',
-    'Zoom Out': 'Zoom Out',
+    'Zoom Out': 'Zoom out',
   },
 } as const;
 export const PROJECTION_RESOLUTIONS = {

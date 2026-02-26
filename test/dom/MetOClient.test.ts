@@ -53,8 +53,8 @@ describe('MetOClient Configuration', () => {
     });
 
     it('should have zoom tips', () => {
-      expect(constants.DEFAULT_OPTIONS.texts['Zoom In']).toBe('Zoom In');
-      expect(constants.DEFAULT_OPTIONS.texts['Zoom Out']).toBe('Zoom Out');
+      expect(constants.DEFAULT_OPTIONS.texts['Zoom In']).toBe('Zoom in');
+      expect(constants.DEFAULT_OPTIONS.texts['Zoom Out']).toBe('Zoom out');
     });
 
     it('should have legend text', () => {
@@ -63,7 +63,7 @@ describe('MetOClient Configuration', () => {
 
     it('should have layer switcher text', () => {
       expect(constants.DEFAULT_OPTIONS.texts['Layer Switcher']).toBe(
-        'Layer Switcher'
+        'Layer switcher'
       );
     });
 

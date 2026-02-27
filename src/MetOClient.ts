@@ -2345,25 +2345,45 @@ export class MetOClient extends BaseObject {
         ),
       } as any)
     );
-    const controls: Control[] = [
-      new Zoom({
-        zoomInLabel: this.config_.texts['Zoom In Label'] as any,
-        zoomOutLabel: this.config_.texts['Zoom Out Label'] as any,
-        zoomInTipLabel: this.config_.texts['Zoom In'],
-        zoomOutTipLabel: this.config_.texts['Zoom Out'],
-      }),
-      this.get('timeSlider') as Control,
-    ];
+    const zoom = new Zoom({
+      zoomInLabel: this.config_.texts['Zoom In Label'] as any,
+      zoomOutLabel: this.config_.texts['Zoom Out Label'] as any,
+      zoomInTipLabel: this.config_.texts['Zoom In'],
+      zoomOutTipLabel: this.config_.texts['Zoom Out'],
+    });
+    const zoomElement = (zoom as any).element as HTMLElement;
+    const zoomInButton = zoomElement.querySelector('.ol-zoom-in');
+    const zoomOutButton = zoomElement.querySelector('.ol-zoom-out');
+    if (zoomInButton != null) {
+      zoomInButton.setAttribute(
+        constants.ARIA_LABEL,
+        this.config_.texts['Zoom In'] as string
+      );
+    }
+    if (zoomOutButton != null) {
+      zoomOutButton.setAttribute(
+        constants.ARIA_LABEL,
+        this.config_.texts['Zoom Out'] as string
+      );
+    }
+    const controls: Control[] = [zoom, this.get('timeSlider') as Control];
     if (
       this.config_.metadata.tags.includes(constants.TAG_FULL_SCREEN_CONTROL)
     ) {
-      controls.push(
-        new FullScreen({
-          label: this.config_.texts['Fullscreen Label'] as any,
-          labelActive: this.config_.texts['Fullscreen Label Active'] as any,
-          tipLabel: this.config_.texts['Fullscreen Tip Label'],
-        })
-      );
+      const fullScreen = new FullScreen({
+        label: this.config_.texts['Fullscreen Label'] as any,
+        labelActive: this.config_.texts['Fullscreen Label Active'] as any,
+        tipLabel: this.config_.texts['Fullscreen Tip Label'],
+      });
+      const fullScreenElement = (fullScreen as any).element as HTMLElement;
+      const fullScreenButton = fullScreenElement.querySelector('button');
+      if (fullScreenButton != null) {
+        fullScreenButton.setAttribute(
+          constants.ARIA_LABEL,
+          this.config_.texts['Fullscreen Tip Label'] as string
+        );
+      }
+      controls.push(fullScreen);
     }
     const newMap = new Map({
       target: this.config_.target,

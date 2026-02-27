@@ -404,6 +404,8 @@ class TimeSlider extends Control {
       endTime,
       type,
       weight: String(weight),
+      locale: this.locale_ ?? 'en-GB',
+      timeZone: this.get('timeZone') as string,
     });
     let longClick: ReturnType<typeof setTimeout> | null;
     let longTap: ReturnType<typeof setTimeout> | null;

@@ -1,6 +1,7 @@
 /**
  * @module ol/metoclient/TimeFrame
  */
+import { DateTime } from 'luxon';
 
 /** Options for creating a TimeFrame. */
 export interface TimeFrameOptions {
@@ -8,6 +9,8 @@ export interface TimeFrameOptions {
   endTime: number;
   weight: string;
   type: string;
+  locale: string;
+  timeZone: string;
 }
 
 /**
@@ -50,6 +53,13 @@ export default class TimeFrame {
       'fmi-metoclient-timeslider-keyboard-accessible'
     );
     this.keyboardAccessibleElement.style.pointerEvents = 'none';
+    const ariaDateTime = DateTime.fromMillis(this.endTime)
+      .setZone(options.timeZone)
+      .setLocale(options.locale);
+    this.keyboardAccessibleElement.setAttribute(
+      'aria-label',
+      ariaDateTime.toLocaleString(DateTime.DATETIME_FULL)
+    );
     this.element.appendChild(this.keyboardAccessibleElement);
   }
 }

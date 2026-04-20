@@ -1,4 +1,4 @@
-import babel from 'rollup-plugin-babel';
+import typescript from '@rollup/plugin-typescript';
 import replace from '@rollup/plugin-replace';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
@@ -10,7 +10,7 @@ import license from 'rollup-plugin-license';
 import pkg from '../package.json';
 
 export default {
-  input: './src/MetOClient.js',
+  input: './src/MetOClient.ts',
   output: [
     {
       file: pkg.module,
@@ -23,29 +23,17 @@ export default {
       exports: 'named',
     },
     {
-      file: `${pkg.main.replace('.js','')}.namespaced.${pkg.version}.js`,
+      file: `${pkg.main.replace('.js', '')}.namespaced.${pkg.version}.js`,
       format: 'umd',
-      name: `metoclient_${pkg.version.replace(/\./g,'_')}`,
+      name: `metoclient_${pkg.version.replace(/\./g, '_')}`,
       exports: 'named',
     },
   ],
   plugins: [
-    babel({
-      include: ['src/**', 'node_modules/luxon/**'],
-      presets: [
-        [
-          '@babel/env',
-          {
-            targets: {
-              browsers: 'ie >= 11',
-            },
-            corejs: 3,
-            useBuiltIns: 'usage',
-          },
-        ],
-        '@babel/preset-flow',
-      ],
-      plugins: ['@babel/plugin-proposal-class-properties'],
+    typescript({
+      tsconfig: './tsconfig.json',
+      declaration: true,
+      declarationDir: './dist/types',
     }),
     replace({
       'process.env.NODE_ENV': JSON.stringify('production'),
@@ -73,11 +61,6 @@ export default {
         {
           src: 'img',
           dest: 'dist',
-        },
-        {
-          src: 'types/index.d.ts',
-          dest: 'dist',
-          rename: 'metoclient.d.ts',
         },
       ],
     }),

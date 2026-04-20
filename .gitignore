@@ -86,3 +86,6 @@ dist
 
 # Example builds
 examples/**/*.min.js
+
+# Coding agents
+AGENTS.md

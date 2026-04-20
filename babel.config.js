@@ -8,7 +8,7 @@ module.exports = {
         },
       },
     ],
-    '@babel/preset-flow',
+    '@babel/preset-typescript',
   ],
   plugins: ['@babel/plugin-proposal-class-properties'],
 };

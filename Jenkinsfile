@@ -23,6 +23,19 @@ pipeline {
     }
 
     stages {
+        stage('Skip dependabot branches') {
+            when {
+                expression { env.BRANCH_NAME?.startsWith('dependabot/') }
+            }
+            steps {
+                echo "Skipping dependabot branch ${env.BRANCH_NAME}"
+                script {
+                    currentBuild.result = 'NOT_BUILT'
+                    error('Bot branch skipped')
+                }
+            }
+        }
+
         stage('Configure http proxy') {
             when { expression { env.HTTP_PROXY != '' } }
             steps {

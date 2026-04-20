@@ -1,4 +1,4 @@
-import babel from 'rollup-plugin-babel';
+import typescript from '@rollup/plugin-typescript';
 import replace from '@rollup/plugin-replace';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
@@ -10,7 +10,7 @@ import license from 'rollup-plugin-license';
 import pkg from '../package.json';
 
 export default {
-  input: './src/MetOClient.js',
+  input: './src/MetOClient.ts',
   output: {
     file: pkg.main,
     format: 'umd',
@@ -18,20 +18,9 @@ export default {
     exports: 'named',
   },
   plugins: [
-    babel({
-      include: ['src/**', 'node_modules/luxon/**'],
-      presets: [
-        [
-          '@babel/env',
-          {
-            targets: {
-              browsers: 'ie >= 11',
-            },
-            corejs: 3,
-            useBuiltIns: 'usage',
-          },
-        ],
-      ],
+    typescript({
+      tsconfig: './tsconfig.json',
+      declaration: false,
     }),
     replace({
       'process.env.NODE_ENV': JSON.stringify('production'),

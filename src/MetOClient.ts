@@ -2712,10 +2712,10 @@ export class MetOClient extends BaseObject {
 
   /**
    * Set the active legend by layer id.
-   * @param {string} layerId Layer id for the legend.
+   * @param {string | null} layerId Layer id for the legend, or null to clear the active legend.
    */
-  setLegend(layerId: string): void {
-    this.selectedLegend_ = layerId;
+  setLegend(layerId: string | null): void {
+    this.selectedLegend_ = layerId ?? '';
     this.updateLegend();
   }
 

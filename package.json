@@ -184,7 +184,7 @@
     "eslint-plugin-jsdoc": "62.5.2",
     "eslint-plugin-prettier": "3.1.4",
     "eslint-plugin-sonarjs": "0.19.0",
-    "gh-pages": "2.2.0",
+    "gh-pages": "5.0.0",
     "husky": "9.1.7",
     "jest": "27.3.1",
     "node-pre-gyp": "0.17.0",

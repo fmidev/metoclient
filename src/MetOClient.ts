@@ -1508,7 +1508,10 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private timeUpdated_(): void {
-    const map = this.get('map') as Map;
+    const map = this.get('map') as Map | null;
+    if (map == null) {
+      return;
+    }
     const layers = map.getLayers().getArray();
     layers
       .filter(
@@ -1533,7 +1536,7 @@ export class MetOClient extends BaseObject {
           });
       });
     if (!this.renderComplete_) {
-      const mapTime = (this.get('map') as Map).get('time') as number;
+      const mapTime = map.get('time') as number;
       if (this.status_[mapTime] !== constants.STATUS_SUCCESS) {
         this.status_[mapTime] = constants.STATUS_WORKING;
         this.updateTimeSlider_();
@@ -1541,11 +1544,8 @@ export class MetOClient extends BaseObject {
       this.updateNeeded_ = true;
       return;
     }
-    (this.get('map') as Map).once(
-      'rendercomplete',
-      this.currentTimeRendered_.bind(this)
-    );
-    this.config_.time = (this.get('map') as Map).get('time') as number;
+    map.once('rendercomplete', this.currentTimeRendered_.bind(this));
+    this.config_.time = map.get('time') as number;
     this.status_[this.config_.time] = constants.STATUS_WORKING;
     Object.keys(this.status_).forEach((time: string) => {
       if (
@@ -2394,10 +2394,9 @@ export class MetOClient extends BaseObject {
     });
     newMap.on('moveend', () => {
       this.clearTimeStatuses_();
-      (this.get('map') as Map).once(
-        'rendercomplete',
-        this.currentTimeRendered_.bind(this)
-      );
+      // The map is set only in initMap_, after the vector layers have been
+      // created, but the map can render and move before that
+      newMap.once('rendercomplete', this.currentTimeRendered_.bind(this));
     });
     const view = newMap.getView();
     const minZoom = view.getMinZoom();

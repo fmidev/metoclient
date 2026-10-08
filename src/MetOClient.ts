@@ -2582,6 +2582,9 @@ export class MetOClient extends BaseObject {
    * @param {PlayOptions} options Play options.
    */
   play(options?: PlayOptions): void {
+    if (!this.isReady_()) {
+      return;
+    }
     if (options != null && Math.sign(options.delay!)) {
       this.delay_ = options.delay!;
     }
@@ -2596,6 +2599,9 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private animate_(): void {
+    if (!this.isReady_()) {
+      return;
+    }
     if ((this.get('map') as Map).get('playing')) {
       if (this.renderComplete_) {
         clearTimeout(this.animationTimeout_!);
@@ -2706,6 +2712,9 @@ export class MetOClient extends BaseObject {
    * Pause the animation playback.
    */
   pause(): void {
+    if (!this.isReady_()) {
+      return;
+    }
     (this.get('map') as Map).set('playing', false);
   }
 
@@ -2759,7 +2768,10 @@ export class MetOClient extends BaseObject {
     clearInterval(this.refreshTimer_!);
     clearTimeout(this.animationTimeout_!);
     (this.get('timeSlider') as any).destroy();
-    (this.get('map') as Map).setTarget(undefined as any);
+    const map = this.get('map') as Map | null;
+    if (map != null) {
+      map.setTarget(undefined as any);
+    }
     this.set('map', null);
   }
 

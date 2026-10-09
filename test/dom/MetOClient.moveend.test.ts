@@ -5,6 +5,10 @@
  * layers have been created asynchronously with ol-mapbox-style. The tests keep
  * that step pending, and so keep the map uninitialized, while the OpenLayers
  * map, which is already attached to the page, renders and moves.
+ *
+ * They also cover destroy() during that same window: before the map exists
+ * at all, and while a vector-layer load that would otherwise call initMap_
+ * after the fact is still pending.
  */
 
 import MetOClient from '../../src/MetOClient';
@@ -98,6 +102,9 @@ describe('MetOClient before the vector layers are ready', () => {
     await waitFor(() => mockFinishVectorLayers !== undefined);
     mockFinishVectorLayers?.(mockMaps[0]);
     await rendering;
+    // Always tear down, even if a test already destroyed the client itself;
+    // destroy() is safe to call more than once.
+    client.destroy();
   });
 
   it('does not fail when the map moves', async () => {
@@ -106,9 +113,29 @@ describe('MetOClient before the vector layers are ready', () => {
     expect(() => mockMaps[0].dispatchEvent('moveend')).not.toThrow();
   });
 
-  it('does not fail when the time changes', async () => {
+  it('does not throw and does not resurrect the map when destroyed while vector layers are still loading', async () => {
     await waitFor(() => mockMaps.length === 1);
     expect(client.get('map')).toBeNull();
-    expect(() => (client as any).timeUpdated_()).not.toThrow();
+
+    expect(() => client.destroy()).not.toThrow();
+    expect(client.get('map')).toBeNull();
+
+    // Let the pending vector-layer load (and initMap_) finish after destroy().
+    mockFinishVectorLayers?.(mockMaps[0]);
+    await rendering;
+
+    // The map must stay unregistered and detached, not get resurrected by
+    // the initMap_ call that was already in flight when destroy() ran.
+    expect(client.get('map')).toBeNull();
+    expect(mockMaps[0].getTarget()).toBeUndefined();
+  });
+});
+
+describe('MetOClient destroy() before the map is created at all', () => {
+  it('does not throw when destroyed before render() was ever called', () => {
+    document.body.innerHTML =
+      '<div id="map"></div><div id="time-slider"></div>';
+    const client = new MetOClient(config());
+    expect(() => client.destroy()).not.toThrow();
   });
 });

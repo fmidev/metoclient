@@ -326,7 +326,7 @@ For a static time range, MetOClient supports the same time range format as used 
 <a name="get-options"></a>
 #### destroy
 
-Removes the animation map.
+Removes the animation map. Safe to call even before `render()` has finished or more than once.
 
 ---
 
@@ -450,14 +450,14 @@ Moves the animation time one step forwards.
 <a name="pause"></a>
 #### pause()
 
-Pauses the animation player.
+Pauses the animation player. Does nothing if called before the map returned by `render()` is ready.
 
 ---
 
 <a name="play"></a>
 #### play()
 
-Starts playing the animation from the current time position. The animation repeats from the beginning until it is paused.
+Starts playing the animation from the current time position. The animation repeats from the beginning until it is paused. Does nothing if called before the map returned by `render()` is ready.
 
 ---
 

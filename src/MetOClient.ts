@@ -198,6 +198,8 @@ export class MetOClient extends BaseObject {
 
   private updateNeeded_: boolean;
 
+  private destroyed_: boolean;
+
   private waitingRender_: number;
 
   private refreshInterval_: number;
@@ -266,6 +268,7 @@ export class MetOClient extends BaseObject {
     this.visibilityListener_ = null;
     this.renderComplete_ = false;
     this.updateNeeded_ = false;
+    this.destroyed_ = false;
     this.waitingRender_ = 0;
     this.refreshInterval_ = options.refreshInterval
       ? Math.min(
@@ -1508,7 +1511,10 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private timeUpdated_(): void {
-    const map = this.get('map') as Map;
+    const map = this.get('map') as Map | null;
+    if (map == null) {
+      return;
+    }
     const layers = map.getLayers().getArray();
     layers
       .filter(
@@ -1533,7 +1539,7 @@ export class MetOClient extends BaseObject {
           });
       });
     if (!this.renderComplete_) {
-      const mapTime = (this.get('map') as Map).get('time') as number;
+      const mapTime = map.get('time') as number;
       if (this.status_[mapTime] !== constants.STATUS_SUCCESS) {
         this.status_[mapTime] = constants.STATUS_WORKING;
         this.updateTimeSlider_();
@@ -1541,11 +1547,8 @@ export class MetOClient extends BaseObject {
       this.updateNeeded_ = true;
       return;
     }
-    (this.get('map') as Map).once(
-      'rendercomplete',
-      this.currentTimeRendered_.bind(this)
-    );
-    this.config_.time = (this.get('map') as Map).get('time') as number;
+    map.once('rendercomplete', this.currentTimeRendered_.bind(this));
+    this.config_.time = map.get('time') as number;
     this.status_[this.config_.time] = constants.STATUS_WORKING;
     Object.keys(this.status_).forEach((time: string) => {
       if (
@@ -2014,6 +2017,13 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private initMap_(map: Map): Map {
+    if (this.destroyed_) {
+      // The instance was destroyed while this map was still being built
+      // (e.g. vector layers were loading asynchronously). Detach it instead
+      // of registering it and resurrecting timers and listeners.
+      map.setTarget(undefined as any);
+      return map;
+    }
     this.set('map', map);
     if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
       const layerSwitcher = new LayerSwitcher({
@@ -2394,10 +2404,9 @@ export class MetOClient extends BaseObject {
     });
     newMap.on('moveend', () => {
       this.clearTimeStatuses_();
-      (this.get('map') as Map).once(
-        'rendercomplete',
-        this.currentTimeRendered_.bind(this)
-      );
+      // The map is set only in initMap_, after the vector layers have been
+      // created, but the map can render and move before that
+      newMap.once('rendercomplete', this.currentTimeRendered_.bind(this));
     });
     const view = newMap.getView();
     const minZoom = view.getMinZoom();
@@ -2583,6 +2592,9 @@ export class MetOClient extends BaseObject {
    * @param {PlayOptions} options Play options.
    */
   play(options?: PlayOptions): void {
+    if (!this.isReady_()) {
+      return;
+    }
     if (options != null && Math.sign(options.delay!)) {
       this.delay_ = options.delay!;
     }
@@ -2597,6 +2609,9 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private animate_(): void {
+    if (!this.isReady_()) {
+      return;
+    }
     if ((this.get('map') as Map).get('playing')) {
       if (this.renderComplete_) {
         clearTimeout(this.animationTimeout_!);
@@ -2707,6 +2722,9 @@ export class MetOClient extends BaseObject {
    * Pause the animation playback.
    */
   pause(): void {
+    if (!this.isReady_()) {
+      return;
+    }
     (this.get('map') as Map).set('playing', false);
   }
 
@@ -2739,6 +2757,7 @@ export class MetOClient extends BaseObject {
    * Destroy the MetOClient instance and clean up resources.
    */
   destroy(): void {
+    this.destroyed_ = true;
     this.clear_();
     unByKey(this.playingListener_!);
     unByKey(this.nextListener_);
@@ -2759,8 +2778,14 @@ export class MetOClient extends BaseObject {
     (document as any).onwebkitfullscreenchange = null;
     clearInterval(this.refreshTimer_!);
     clearTimeout(this.animationTimeout_!);
-    (this.get('timeSlider') as any).destroy();
-    (this.get('map') as Map).setTarget(undefined as any);
+    const timeSlider = this.get('timeSlider') as any;
+    if (timeSlider != null) {
+      timeSlider.destroy();
+    }
+    const map = this.get('map') as Map | null;
+    if (map != null) {
+      map.setTarget(undefined as any);
+    }
     this.set('map', null);
   }
 

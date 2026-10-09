@@ -56,7 +56,7 @@ export default {
     }),
     license({
       thirdParty: {
-        output: 'metoclient.licenses.txt',
+        output: './metoclient.licenses.txt',
         includePrivate: true,
       },
     }),

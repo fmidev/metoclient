@@ -8,10 +8,10 @@
     "build": "rollup --config rollup.config.mjs"
   },
   "devDependencies": {
-    "rollup": "4.57.1",
+    "rollup": "4.60.2",
     "@rollup/plugin-commonjs": "29.0.0",
     "@rollup/plugin-node-resolve": "16.0.3",
-    "@rollup/plugin-terser": "0.4.4"
+    "@rollup/plugin-terser": "1.0.0"
   },
   "dependencies": {
     "@fmidev/metoclient": "6.9.0"

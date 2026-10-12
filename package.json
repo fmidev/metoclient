@@ -1,6 +1,6 @@
 {
   "name": "@fmidev/metoclient",
-  "version": "6.10.10",
+  "version": "6.10.11",
   "description": "Map animator",
   "main": "dist/metoclient.js",
   "module": "dist/metoclient.es.js",
@@ -206,6 +206,6 @@
   },
   "engines": {
     "npm": ">=10.0.0",
-    "node": ">=20.19.0"
+    "node": ">=26.0.0"
   }
 }

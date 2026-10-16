@@ -198,7 +198,7 @@ export class MetOClient extends BaseObject {
 
   private updateNeeded_: boolean;
 
-  private destroyed_: boolean;
+  private renderGeneration_: number;
 
   private waitingRender_: number;
 
@@ -268,7 +268,7 @@ export class MetOClient extends BaseObject {
     this.visibilityListener_ = null;
     this.renderComplete_ = false;
     this.updateNeeded_ = false;
-    this.destroyed_ = false;
+    this.renderGeneration_ = 0;
     this.waitingRender_ = 0;
     this.refreshInterval_ = options.refreshInterval
       ? Math.min(
@@ -420,6 +420,7 @@ export class MetOClient extends BaseObject {
    * @returns {Promise} Promise object representing rendered map.
    */
   render(): Promise<Map | void> {
+    const generation = this.renderGeneration_;
     return this.updateCapabilities_()
       .then(() => {
         this.clear_();
@@ -456,7 +457,7 @@ export class MetOClient extends BaseObject {
           }
         });
         this.vectorConfig_ = this.getVectorConfig_();
-        return this.updateMap_()
+        return this.updateMap_(generation)
           .then((map: any) => {
             // Limit bounds after refresh
             const visibleTimes = this.times_.reduce(
@@ -2013,15 +2014,19 @@ export class MetOClient extends BaseObject {
   /**
    * Initialize the map with controls, listeners, and time slider.
    * @param {Map} map OpenLayers map.
+   * @param {number} generation Render generation this attempt was started
+   *   for, as captured by render() when the attempt began.
    * @returns {Map} Initialized map.
    * @private
    */
-  private initMap_(map: Map): Map {
-    if (this.destroyed_) {
-      // The instance was destroyed while this map was still being built
-      // (e.g. vector layers were loading asynchronously). Detach it instead
-      // of registering it and resurrecting timers and listeners.
-      map.setTarget(undefined as any);
+  private initMap_(map: Map, generation: number): Map {
+    if (generation !== this.renderGeneration_) {
+      // Something superseded this attempt while this map was still being
+      // built (e.g. vector layers were loading asynchronously): either
+      // destroy() ran, or render() was called again and is building its own
+      // map. Dispose this one instead of registering it and resurrecting
+      // timers and listeners.
+      map.dispose();
       return map;
     }
     this.set('map', map);
@@ -2332,10 +2337,12 @@ export class MetOClient extends BaseObject {
 
   /**
    * Create the OpenLayers map with all layers and controls.
+   * @param {number} generation Render generation this attempt was started
+   *   for, as captured by render() when the attempt began.
    * @returns {Promise<Map>} Promise resolving to the created map.
    * @private
    */
-  private createMap_(): Promise<Map> {
+  private createMap_(generation: number): Promise<Map> {
     const interactions = this.createInteractions_();
     this.set(
       'timeSlider',
@@ -2443,23 +2450,25 @@ export class MetOClient extends BaseObject {
     }
     if (this.vectorConfig_!.layers.length > 0) {
       return this.createVectorLayers_(newMap, this.vectorConfig_!).then(
-        (map: Map) => this.initMap_(map)
+        (map: Map) => this.initMap_(map, generation)
       );
     }
     return new Promise((resolve) => {
-      resolve(this.initMap_(newMap));
+      resolve(this.initMap_(newMap, generation));
     });
   }
 
   /**
    * Update the existing map or create a new one.
+   * @param {number} generation Render generation this attempt was started
+   *   for, as captured by render() when the attempt began.
    * @returns {Promise<Map | void>} Promise resolving to the updated map.
    * @private
    */
-  private updateMap_(): Promise<Map | void> {
+  private updateMap_(generation: number): Promise<Map | void> {
     const map = this.get('map') as Map | null;
     if (map == null) {
-      return this.createMap_();
+      return this.createMap_(generation);
     }
     map.setTarget(this.config_.target);
     map.getLayerGroup().setLayers(
@@ -2757,7 +2766,7 @@ export class MetOClient extends BaseObject {
    * Destroy the MetOClient instance and clean up resources.
    */
   destroy(): void {
-    this.destroyed_ = true;
+    this.renderGeneration_ += 1;
     this.clear_();
     unByKey(this.playingListener_!);
     unByKey(this.nextListener_);
@@ -2784,7 +2793,7 @@ export class MetOClient extends BaseObject {
     }
     const map = this.get('map') as Map | null;
     if (map != null) {
-      map.setTarget(undefined as any);
+      map.dispose();
     }
     this.set('map', null);
   }

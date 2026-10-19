@@ -1,28 +1,28 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`constants.js DEFAULT_OPTIONS should match snapshot 1`] = `
-Object {
-  "center": Array [
+{
+  "center": [
     0,
     0,
   ],
-  "layers": Array [],
+  "layers": [],
   "locale": "en-GB",
   "maxZoom": 28,
-  "metadata": Object {
+  "metadata": {
     "refreshInterval": "map",
-    "tags": Array [],
+    "tags": [],
   },
-  "minExtent": Array [
+  "minExtent": [
     0,
     0,
   ],
   "minZoom": 0,
   "periodDelay": 2000,
   "projection": "EPSG:4326",
-  "sources": Object {},
+  "sources": {},
   "target": "map",
-  "texts": Object {
+  "texts": {
     "Fullscreen Label": "⤢",
     "Fullscreen Label Active": "×",
     "Fullscreen Tip Label": "Toggle fullscreen",
@@ -40,7 +40,7 @@ Object {
   "timeZone": "Europe/Helsinki",
   "timeZoneLabel": "",
   "timeout": 5000,
-  "transition": Object {
+  "transition": {
     "delay": 1000,
   },
   "zoom": 4,

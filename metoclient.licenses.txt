@@ -5,7 +5,7 @@ Private: false
 Description: OpenLayers mapping library
 Repository: git://github.com/openlayers/openlayers.git
 Homepage: https://openlayers.org/
-License Copyright:
+License Text:
 ===
 
 BSD 2-Clause License
@@ -34,7 +34,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 ---
 
 Name: proj4
@@ -44,7 +43,7 @@ Private: false
 Description: Proj4js is a JavaScript library to transform point coordinates from one coordinate system to another, including datum transformations.
 Repository: git://github.com/proj4js/proj4js.git
 Homepage: https://proj4js.github.io/proj4js/
-License Copyright:
+License Text:
 ===
 
 ## Proj4js -- Javascript reprojection library. 
@@ -77,7 +76,6 @@ Copyright (c) 2014, Mike Adair, Richard Greenwood, Didier Richard, Stephen Irons
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  DEALINGS IN THE SOFTWARE._
 
-
 ---
 
 Name: ieee754
@@ -89,7 +87,7 @@ Repository: git://github.com/feross/ieee754.git
 Author: Feross Aboukhadijeh <feross@feross.org> (https://feross.org)
 Contributors:
   Romain Beauxis <toots@rastageeks.org>
-License Copyright:
+License Text:
 ===
 
 Copyright 2008 Fair Oaks Labs, Inc.
@@ -104,7 +102,6 @@ Redistribution and use in source and binary forms, with or without modification,
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 ---
 
 Name: pbf
@@ -115,7 +112,7 @@ Description: a low-level, lightweight protocol buffers implementation in JavaScr
 Repository: git@github.com:mapbox/pbf.git
 Homepage: https://github.com/mapbox/pbf
 Author: Konstantin Kaefer
-License Copyright:
+License Text:
 ===
 
 Copyright (c) 2017, Mapbox
@@ -146,7 +143,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 ---
 
 Name: quickselect
@@ -155,7 +151,7 @@ License: ISC
 Private: false
 Description: A tiny and fast selection algorithm in JavaScript.
 Author: Vladimir Agafonkin
-License Copyright:
+License Text:
 ===
 
 ISC License
@@ -174,7 +170,6 @@ OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 
-
 ---
 
 Name: rbush
@@ -185,7 +180,7 @@ Description: High-performance 2D spatial index for rectangles (based on R*-tree 
 Repository: git://github.com/mourner/rbush.git
 Homepage: https://github.com/mourner/rbush
 Author: Vladimir Agafonkin
-License Copyright:
+License Text:
 ===
 
 MIT License
@@ -210,7 +205,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-
 ---
 
 Name: mapbox-to-css-font
@@ -220,7 +214,7 @@ Private: false
 Description: Utility to convert Mapbox GL Style font names to CSS font definitions
 Repository: git://github.com/openlayers/mapbox-to-css-font.git
 Author: Andreas Hocevar
-License Copyright:
+License Text:
 ===
 
 Copyright 2016-present mapbox-to-css-font contributors
@@ -246,7 +240,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 ---
 
 Name: @mapbox/mapbox-gl-style-spec
@@ -265,7 +258,7 @@ License: BSD-2-Clause
 Private: false
 Description: Create OpenLayers maps from Mapbox Style objects
 Repository: git://github.com/openlayers/ol-mapbox-style.git
-License Copyright:
+License Text:
 ===
 
 Copyright 2016-present ol-mapbox-style contributors
@@ -291,7 +284,6 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 ---
 
 Name: webfont-matcher
@@ -315,7 +307,7 @@ Description: Triggers an event when an element enters/leaves the screen
 Repository: git+https://github.com/svapreddy/element-visibility-watcher.git
 Homepage: https://github.com/svapreddy/element-visibility-watcher#readme
 Author: Prathap Reddy (svap.reddy@hotmail.com)
-License Copyright:
+License Text:
 ===
 
 
@@ -521,7 +513,6 @@ License Copyright:
    See the License for the specific language governing permissions and
    limitations under the License.
 
-
 ---
 
 Name: luxon
@@ -531,7 +522,7 @@ Private: false
 Description: Immutable date wrapper
 Repository: undefined
 Author: Isaac Cambron
-License Copyright:
+License Text:
 ===
 
 Copyright 2019 JS Foundation and other contributors
@@ -541,7 +532,6 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 
 ---
 
@@ -564,7 +554,7 @@ Description: Well known symbols used to detail how to operate on different objec
 Repository: git://github.com/canjs/can-symbol.git
 Homepage: http://canjs.com
 Author: Bitovi <core@donejs.com> (http://donejs.com)
-License Copyright:
+License Text:
 ===
 
 The MIT License (MIT)
@@ -587,7 +577,7 @@ Description: reflection on unknown data types
 Repository: git://github.com/canjs/can-reflect.git
 Homepage: http://canjs.com
 Author: DoneJS core team <core@donejs.com> (http://donejs.com)
-License Copyright:
+License Text:
 ===
 
 The MIT License (MIT)
@@ -621,7 +611,7 @@ Description: Parse a URI into its components.
 Repository: git://github.com/canjs/can-parse-uri.git
 Homepage: https://canjs.com/
 Author: Bitovi <contact@bitovi.com> (https://www.bitovi.com/)
-License Copyright:
+License Text:
 ===
 
 MIT License
@@ -646,7 +636,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-
 ---
 
 Name: can-param
@@ -657,7 +646,7 @@ Description: Serialize an array or object into a query string.
 Repository: git://github.com/canjs/can-param.git
 Homepage: https://canjs.com/doc/can-param.html
 Author: Bitovi <contact@bitovi.com> (https://www.bitovi.com/)
-License Copyright:
+License Text:
 ===
 
 MIT License
@@ -682,7 +671,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-
 ---
 
 Name: can-ajax
@@ -693,7 +681,7 @@ Description: jQuery-inspired AJAX request library.
 Repository: git://github.com/canjs/can-ajax.git
 Homepage: https://canjs.com/doc/can-ajax.html
 Author: Bitovi <contact@bitovi.com> (https://www.bitovi.com/)
-License Copyright:
+License Text:
 ===
 
 MIT License
@@ -718,7 +706,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-
 ---
 
 Name: domurl
@@ -728,7 +715,7 @@ Private: false
 Description: Lightweight URL manipulation with JavaScript.
 Repository: https://github.com/Mikhus/domurl.git
 Homepage: https://github.com/Mikhus/jsurl
-License Copyright:
+License Text:
 ===
 
 The MIT License (MIT)
@@ -751,7 +738,6 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 
 ---
 
@@ -778,7 +764,7 @@ Private: false
 Description: Resize event emitter for elements.
 Repository: git://github.com/wnr/element-resize-detector.git
 Homepage: https://github.com/wnr/element-resize-detector
-License Copyright:
+License Text:
 ===
 
 The MIT License (MIT)
@@ -803,7 +789,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-
 ---
 
 Name: batch-processor
@@ -814,7 +799,7 @@ Description: Batch processing in JS
 Repository: https://github.com/wnr/batch-processor.git
 Homepage: https://github.com/wnr/batch-processor
 Author: Lucas Wiener
-License Copyright:
+License Text:
 ===
 
 The MIT License (MIT)
@@ -839,8 +824,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-
-
 ---
 
 Name: rrule
@@ -851,7 +834,7 @@ Description: JavaScript library for working with recurrence rules for calendar d
 Repository: git://github.com/jakubroztocil/rrule.git
 Homepage: http://jakubroztocil.github.io/rrule/
 Author: Jakub Roztocil, Lars Schöning, and David Golightly
-License Copyright:
+License Text:
 ===
 
 rrule.js: Library for working with recurrence rules for calendar dates.
@@ -919,7 +902,6 @@ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 
 ---
 

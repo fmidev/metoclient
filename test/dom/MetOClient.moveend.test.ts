@@ -180,9 +180,13 @@ describe('MetOClient before the vector layers are ready', () => {
     await rendering2;
 
     // The stale attempt's time slider was a control of the disposed map;
-    // it must not stay on the page next to the live one.
+    // it must not stay on the page next to the live one. Its other controls
+    // (none with a separate target) are left for map.dispose()'s viewport
+    // detachment instead, so only the time slider is asserted here.
     expect(timeSliderElements()).toHaveLength(1);
-    expect(mockMaps[0].getControls().getLength()).toBe(0);
+    expect(mockMaps[0].getControls().getArray()).not.toContain(
+      client.get('timeSlider')
+    );
     expect(mockMaps[1].getControls().getArray()).toContain(
       client.get('timeSlider')
     );

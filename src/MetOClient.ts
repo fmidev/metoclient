@@ -2816,20 +2816,32 @@ export class MetOClient extends BaseObject {
   }
 
   /**
-   * Dispose a map built by createMap_ together with its controls, so that
-   * nothing the map appended to the page (e.g. the time slider element) is
-   * left behind. Map.dispose() alone only detaches the viewport.
+   * Dispose a map built by createMap_ together with its time slider, so that
+   * nothing the map appended outside its own viewport (the time slider's
+   * element lives in its own target container, set in createMap_) is left
+   * behind. Map.dispose() alone only detaches the viewport, which is enough
+   * for every other control (Zoom, LayerSwitcher, FullScreen): none of them
+   * are given a separate target, so they live inside the viewport and go
+   * with it.
+   *
+   * Only the time slider is removed here, rather than clearing every
+   * control: some third-party controls' own setMap(null) handling does not
+   * tolerate being bundled into this library's build, so this avoids
+   * calling it at all for controls that do not need it removed this way.
    * @param {Map} map Map to dispose.
    * @private
    */
   private disposeMap_(map: Map): void {
     const controls = map.getControls();
-    controls.forEach((control: Control) => {
-      if (control instanceof TimeSlider) {
-        control.destroy();
-      }
-    });
-    controls.clear();
+    controls
+      .getArray()
+      .filter((control: Control): control is TimeSlider => {
+        return control instanceof TimeSlider;
+      })
+      .forEach((timeSlider: TimeSlider) => {
+        timeSlider.destroy();
+        controls.remove(timeSlider);
+      });
     map.dispose();
   }
 

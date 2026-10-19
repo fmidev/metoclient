@@ -14,6 +14,6 @@
     "@rollup/plugin-terser": "0.4.4"
   },
   "dependencies": {
-    "@fmidev/metoclient": "6.9.0"
+    "@fmidev/metoclient": "latest"
   }
 }

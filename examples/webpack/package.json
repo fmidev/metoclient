@@ -11,6 +11,6 @@
     "webpack-cli": "6.0.1"
   },
   "dependencies": {
-    "@fmidev/metoclient": "6.9.0"
+    "@fmidev/metoclient": "latest"
   }
 }

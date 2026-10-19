@@ -49,7 +49,11 @@ The following code demonstrates initialization of the built MetOClient package a
 ```js
 var metoclient = new fmi.metoclient.MetOClient(options)
 metoclient.render().then(function (map) {
-  map.addControl(new ol.control.FullScreen());
+  // render() resolves with no map if this attempt was superseded by a
+  // later render() or a destroy() call in the meantime.
+  if (map) {
+    map.addControl(new ol.control.FullScreen());
+  }
 })
 ```
 

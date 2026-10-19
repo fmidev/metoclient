@@ -420,9 +420,17 @@ export class MetOClient extends BaseObject {
    * @returns {Promise} Promise object representing rendered map.
    */
   render(): Promise<Map | void> {
+    // Every render() attempt gets its own generation, so that a later
+    // render() or destroy() supersedes an attempt that is still in flight.
+    this.renderGeneration_ += 1;
     const generation = this.renderGeneration_;
     return this.updateCapabilities_()
       .then(() => {
+        if (generation !== this.renderGeneration_) {
+          // Superseded while waiting for the capabilities. Stop before
+          // creating a time slider or a map that nobody would own.
+          return undefined;
+        }
         this.clear_();
         this.updateTimes_();
         let defaultTime = this.times_[0];
@@ -459,6 +467,12 @@ export class MetOClient extends BaseObject {
         this.vectorConfig_ = this.getVectorConfig_();
         return this.updateMap_(generation)
           .then((map: any) => {
+            if (generation !== this.renderGeneration_) {
+              // Superseded while the map was being built: initMap_ has
+              // already disposed it. Leave the configuration (e.g. the
+              // autoplay tag) for the attempt that is actually current.
+              return undefined;
+            }
             // Limit bounds after refresh
             const visibleTimes = this.times_.reduce(
               (foundVisibleTimes: number[], time: number) => {
@@ -2023,10 +2037,10 @@ export class MetOClient extends BaseObject {
     if (generation !== this.renderGeneration_) {
       // Something superseded this attempt while this map was still being
       // built (e.g. vector layers were loading asynchronously): either
-      // destroy() ran, or render() was called again and is building its own
-      // map. Dispose this one instead of registering it and resurrecting
-      // timers and listeners.
-      map.dispose();
+      // destroy() ran, or render() was called again and has started a newer
+      // generation. Dispose this one instead of registering it and
+      // resurrecting timers and listeners.
+      this.disposeMap_(map);
       return map;
     }
     this.set('map', map);
@@ -2787,15 +2801,36 @@ export class MetOClient extends BaseObject {
     (document as any).onwebkitfullscreenchange = null;
     clearInterval(this.refreshTimer_!);
     clearTimeout(this.animationTimeout_!);
-    const timeSlider = this.get('timeSlider') as any;
-    if (timeSlider != null) {
-      timeSlider.destroy();
-    }
     const map = this.get('map') as Map | null;
     if (map != null) {
-      map.dispose();
+      this.disposeMap_(map);
+    } else {
+      // A time slider created by a render() attempt that never registered
+      // its map (e.g. destroy() during the initial load).
+      const timeSlider = this.get('timeSlider') as TimeSlider | null;
+      if (timeSlider != null) {
+        timeSlider.destroy();
+      }
     }
     this.set('map', null);
+  }
+
+  /**
+   * Dispose a map built by createMap_ together with its controls, so that
+   * nothing the map appended to the page (e.g. the time slider element) is
+   * left behind. Map.dispose() alone only detaches the viewport.
+   * @param {Map} map Map to dispose.
+   * @private
+   */
+  private disposeMap_(map: Map): void {
+    const controls = map.getControls();
+    controls.forEach((control: Control) => {
+      if (control instanceof TimeSlider) {
+        control.destroy();
+      }
+    });
+    controls.clear();
+    map.dispose();
   }
 
   /**

@@ -9,7 +9,8 @@
  * They also cover destroy() during that same window: before the map exists
  * at all, while a vector-layer load that would otherwise call initMap_ after
  * the fact is still pending, and reusing the instance via a second render()
- * call afterwards.
+ * call afterwards. A second render() call without destroy() must likewise
+ * supersede the attempt still in flight.
  */
 
 import MetOClient from '../../src/MetOClient';
@@ -55,13 +56,17 @@ const waitFor = async (condition: () => boolean, timeout = 2000) => {
   }
 };
 
-const config = () => ({
+const timeSliderElements = () =>
+  document.querySelectorAll('#time-slider .fmi-metoclient-timeslider');
+
+const config = (tags: string[] = []) => ({
   target: 'map',
   timeSliderContainerId: 'time-slider',
   projection: 'EPSG:3067',
   center: [400000, 7000000],
   zoom: 3,
   locale: 'en',
+  metadata: { tags },
   // A marker layer without a URL is a vector layer
   sources: {
     marker: {
@@ -162,6 +167,109 @@ describe('MetOClient before the vector layers are ready', () => {
     // So the shared afterEach awaits the attempt that is actually current.
     rendering = rendering2;
   });
+
+  it('leaves only the time slider of the current attempt when render() is called again after destroy()', async () => {
+    await waitFor(() => mockMaps.length === 1);
+    client.destroy();
+
+    const rendering2 = client.render().catch(() => undefined);
+    await waitFor(() => mockMaps.length === 2);
+    mockVectorLayerResolvers[0]?.(mockMaps[0]);
+    await rendering;
+    mockVectorLayerResolvers[1]?.(mockMaps[1]);
+    await rendering2;
+
+    // The stale attempt's time slider was a control of the disposed map;
+    // it must not stay on the page next to the live one.
+    expect(timeSliderElements()).toHaveLength(1);
+    expect(mockMaps[0].getControls().getLength()).toBe(0);
+    expect(mockMaps[1].getControls().getArray()).toContain(
+      client.get('timeSlider')
+    );
+
+    rendering = rendering2;
+  });
+
+  it('supersedes an in-flight render() when render() is called again without destroy()', async () => {
+    await waitFor(() => mockMaps.length === 1);
+
+    const rendering2 = client.render().catch(() => undefined);
+    await waitFor(() => mockMaps.length === 2);
+
+    // Finish the first attempt - it has been superseded and must dispose its
+    // map instead of registering it.
+    mockVectorLayerResolvers[0]?.(mockMaps[0]);
+    await rendering;
+    expect(client.get('map')).toBeNull();
+    expect(mockMaps[0].disposed).toBe(true);
+    expect(mockMaps[0].getTarget()).toBeFalsy();
+
+    // Finish the second attempt - it is the current one and wins.
+    mockVectorLayerResolvers[1]?.(mockMaps[1]);
+    await rendering2;
+    expect(client.get('map')).toBe(mockMaps[1]);
+    expect(mockMaps[1].disposed).toBeFalsy();
+    expect(timeSliderElements()).toHaveLength(1);
+
+    rendering = rendering2;
+  });
+});
+
+describe('MetOClient with the autoplay tag', () => {
+  // The autoplay tag is consumed by the render() attempt that triggers
+  // play(). The options object shares its metadata with the instance, so
+  // the consumption is visible through get('options').
+  const tags = (client: MetOClient): string[] =>
+    (client.get('options') as any).metadata.tags;
+
+  let client: MetOClient;
+  let play: jest.SpyInstance;
+
+  beforeEach(() => {
+    mockMaps.length = 0;
+    mockVectorLayerResolvers.length = 0;
+    document.body.innerHTML =
+      '<div id="map"></div><div id="time-slider"></div>';
+    client = new MetOClient(config(['autoplay']));
+    play = jest.spyOn(client, 'play');
+  });
+
+  afterEach(() => {
+    client.destroy();
+  });
+
+  it('triggers play() once rendered', async () => {
+    const rendering = client.render().catch(() => undefined);
+    await waitFor(() => mockMaps.length === 1);
+    mockVectorLayerResolvers[0]?.(mockMaps[0]);
+    await rendering;
+
+    expect(client.get('map')).toBe(mockMaps[0]);
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(tags(client)).not.toContain('autoplay');
+  });
+
+  it('still triggers play() when render() is called again after destroy() during the initial load', async () => {
+    const rendering = client.render().catch(() => undefined);
+    await waitFor(() => mockMaps.length === 1);
+    client.destroy();
+
+    const rendering2 = client.render().catch(() => undefined);
+    await waitFor(() => mockMaps.length === 2);
+
+    // The stale attempt must not consume the autoplay tag on the way out,
+    // which would silently leave the rebuilt map paused.
+    mockVectorLayerResolvers[0]?.(mockMaps[0]);
+    await rendering;
+    expect(play).not.toHaveBeenCalled();
+    expect(tags(client)).toContain('autoplay');
+
+    mockVectorLayerResolvers[1]?.(mockMaps[1]);
+    await rendering2;
+    expect(client.get('map')).toBe(mockMaps[1]);
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(tags(client)).not.toContain('autoplay');
+  });
 });
 
 describe('MetOClient destroy() before the map is created at all', () => {
@@ -174,7 +282,7 @@ describe('MetOClient destroy() before the map is created at all', () => {
 });
 
 describe('MetOClient destroyed before updateCapabilities_ resolves', () => {
-  it('does not resurrect the map once the deferred render() attempt continues', async () => {
+  it('abandons the deferred render() attempt without building a map or a time slider', async () => {
     mockMaps.length = 0;
     mockVectorLayerResolvers.length = 0;
     document.body.innerHTML =
@@ -189,12 +297,14 @@ describe('MetOClient destroyed before updateCapabilities_ resolves', () => {
     // treat the post-destroy generation as its own.
     expect(() => client.destroy()).not.toThrow();
 
-    await waitFor(() => mockMaps.length === 1);
-    mockVectorLayerResolvers[0]?.(mockMaps[0]);
-    await rendering;
+    await expect(rendering).resolves.toBeUndefined();
 
+    // The attempt must stop before createMap_: no map on the page, and no
+    // time slider registered on the instance or left in its container.
+    expect(mockMaps).toHaveLength(0);
     expect(client.get('map')).toBeNull();
-    expect(mockMaps[0].disposed).toBe(true);
+    expect(client.get('timeSlider')).toBeNull();
+    expect(timeSliderElements()).toHaveLength(0);
     client.destroy();
   });
 });

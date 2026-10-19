@@ -22,7 +22,11 @@
 <script type="text/javascript">
   var metoclient = new fmi.metoclient.MetOClient(fmi.config.metoclient)
   metoclient.render().then(function (map) {
-    map.addControl(new ol.control.ScaleLine());
+    // render() resolves with no map if this attempt was superseded by a
+    // later render() or a destroy() call in the meantime.
+    if (map) {
+      map.addControl(new ol.control.ScaleLine());
+    }
   })
 </script>
 </body>

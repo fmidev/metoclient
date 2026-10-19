@@ -198,6 +198,8 @@ export class MetOClient extends BaseObject {
 
   private updateNeeded_: boolean;
 
+  private renderGeneration_: number;
+
   private waitingRender_: number;
 
   private refreshInterval_: number;
@@ -266,6 +268,7 @@ export class MetOClient extends BaseObject {
     this.visibilityListener_ = null;
     this.renderComplete_ = false;
     this.updateNeeded_ = false;
+    this.renderGeneration_ = 0;
     this.waitingRender_ = 0;
     this.refreshInterval_ = options.refreshInterval
       ? Math.min(
@@ -417,8 +420,17 @@ export class MetOClient extends BaseObject {
    * @returns {Promise} Promise object representing rendered map.
    */
   render(): Promise<Map | void> {
+    // Every render() attempt gets its own generation, so that a later
+    // render() or destroy() supersedes an attempt that is still in flight.
+    this.renderGeneration_ += 1;
+    const generation = this.renderGeneration_;
     return this.updateCapabilities_()
       .then(() => {
+        if (generation !== this.renderGeneration_) {
+          // Superseded while waiting for the capabilities. Stop before
+          // creating a time slider or a map that nobody would own.
+          return undefined;
+        }
         this.clear_();
         this.updateTimes_();
         let defaultTime = this.times_[0];
@@ -453,8 +465,14 @@ export class MetOClient extends BaseObject {
           }
         });
         this.vectorConfig_ = this.getVectorConfig_();
-        return this.updateMap_()
+        return this.updateMap_(generation)
           .then((map: any) => {
+            if (generation !== this.renderGeneration_) {
+              // Superseded while the map was being built: initMap_ has
+              // already disposed it. Leave the configuration (e.g. the
+              // autoplay tag) for the attempt that is actually current.
+              return undefined;
+            }
             // Limit bounds after refresh
             const visibleTimes = this.times_.reduce(
               (foundVisibleTimes: number[], time: number) => {
@@ -1508,7 +1526,10 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private timeUpdated_(): void {
-    const map = this.get('map') as Map;
+    const map = this.get('map') as Map | null;
+    if (map == null) {
+      return;
+    }
     const layers = map.getLayers().getArray();
     layers
       .filter(
@@ -1533,7 +1554,7 @@ export class MetOClient extends BaseObject {
           });
       });
     if (!this.renderComplete_) {
-      const mapTime = (this.get('map') as Map).get('time') as number;
+      const mapTime = map.get('time') as number;
       if (this.status_[mapTime] !== constants.STATUS_SUCCESS) {
         this.status_[mapTime] = constants.STATUS_WORKING;
         this.updateTimeSlider_();
@@ -1541,11 +1562,8 @@ export class MetOClient extends BaseObject {
       this.updateNeeded_ = true;
       return;
     }
-    (this.get('map') as Map).once(
-      'rendercomplete',
-      this.currentTimeRendered_.bind(this)
-    );
-    this.config_.time = (this.get('map') as Map).get('time') as number;
+    map.once('rendercomplete', this.currentTimeRendered_.bind(this));
+    this.config_.time = map.get('time') as number;
     this.status_[this.config_.time] = constants.STATUS_WORKING;
     Object.keys(this.status_).forEach((time: string) => {
       if (
@@ -2010,10 +2028,21 @@ export class MetOClient extends BaseObject {
   /**
    * Initialize the map with controls, listeners, and time slider.
    * @param {Map} map OpenLayers map.
+   * @param {number} generation Render generation this attempt was started
+   *   for, as captured by render() when the attempt began.
    * @returns {Map} Initialized map.
    * @private
    */
-  private initMap_(map: Map): Map {
+  private initMap_(map: Map, generation: number): Map {
+    if (generation !== this.renderGeneration_) {
+      // Something superseded this attempt while this map was still being
+      // built (e.g. vector layers were loading asynchronously): either
+      // destroy() ran, or render() was called again and has started a newer
+      // generation. Dispose this one instead of registering it and
+      // resurrecting timers and listeners.
+      this.disposeMap_(map);
+      return map;
+    }
     this.set('map', map);
     if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
       const layerSwitcher = new LayerSwitcher({
@@ -2322,10 +2351,12 @@ export class MetOClient extends BaseObject {
 
   /**
    * Create the OpenLayers map with all layers and controls.
+   * @param {number} generation Render generation this attempt was started
+   *   for, as captured by render() when the attempt began.
    * @returns {Promise<Map>} Promise resolving to the created map.
    * @private
    */
-  private createMap_(): Promise<Map> {
+  private createMap_(generation: number): Promise<Map> {
     const interactions = this.createInteractions_();
     this.set(
       'timeSlider',
@@ -2394,10 +2425,9 @@ export class MetOClient extends BaseObject {
     });
     newMap.on('moveend', () => {
       this.clearTimeStatuses_();
-      (this.get('map') as Map).once(
-        'rendercomplete',
-        this.currentTimeRendered_.bind(this)
-      );
+      // The map is set only in initMap_, after the vector layers have been
+      // created, but the map can render and move before that
+      newMap.once('rendercomplete', this.currentTimeRendered_.bind(this));
     });
     const view = newMap.getView();
     const minZoom = view.getMinZoom();
@@ -2434,23 +2464,25 @@ export class MetOClient extends BaseObject {
     }
     if (this.vectorConfig_!.layers.length > 0) {
       return this.createVectorLayers_(newMap, this.vectorConfig_!).then(
-        (map: Map) => this.initMap_(map)
+        (map: Map) => this.initMap_(map, generation)
       );
     }
     return new Promise((resolve) => {
-      resolve(this.initMap_(newMap));
+      resolve(this.initMap_(newMap, generation));
     });
   }
 
   /**
    * Update the existing map or create a new one.
+   * @param {number} generation Render generation this attempt was started
+   *   for, as captured by render() when the attempt began.
    * @returns {Promise<Map | void>} Promise resolving to the updated map.
    * @private
    */
-  private updateMap_(): Promise<Map | void> {
+  private updateMap_(generation: number): Promise<Map | void> {
     const map = this.get('map') as Map | null;
     if (map == null) {
-      return this.createMap_();
+      return this.createMap_(generation);
     }
     map.setTarget(this.config_.target);
     map.getLayerGroup().setLayers(
@@ -2583,6 +2615,9 @@ export class MetOClient extends BaseObject {
    * @param {PlayOptions} options Play options.
    */
   play(options?: PlayOptions): void {
+    if (!this.isReady_()) {
+      return;
+    }
     if (options != null && Math.sign(options.delay!)) {
       this.delay_ = options.delay!;
     }
@@ -2597,6 +2632,9 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private animate_(): void {
+    if (!this.isReady_()) {
+      return;
+    }
     if ((this.get('map') as Map).get('playing')) {
       if (this.renderComplete_) {
         clearTimeout(this.animationTimeout_!);
@@ -2707,6 +2745,9 @@ export class MetOClient extends BaseObject {
    * Pause the animation playback.
    */
   pause(): void {
+    if (!this.isReady_()) {
+      return;
+    }
     (this.get('map') as Map).set('playing', false);
   }
 
@@ -2739,6 +2780,7 @@ export class MetOClient extends BaseObject {
    * Destroy the MetOClient instance and clean up resources.
    */
   destroy(): void {
+    this.renderGeneration_ += 1;
     this.clear_();
     unByKey(this.playingListener_!);
     unByKey(this.nextListener_);
@@ -2759,9 +2801,48 @@ export class MetOClient extends BaseObject {
     (document as any).onwebkitfullscreenchange = null;
     clearInterval(this.refreshTimer_!);
     clearTimeout(this.animationTimeout_!);
-    (this.get('timeSlider') as any).destroy();
-    (this.get('map') as Map).setTarget(undefined as any);
+    const map = this.get('map') as Map | null;
+    if (map != null) {
+      this.disposeMap_(map);
+    } else {
+      // A time slider created by a render() attempt that never registered
+      // its map (e.g. destroy() during the initial load).
+      const timeSlider = this.get('timeSlider') as TimeSlider | null;
+      if (timeSlider != null) {
+        timeSlider.destroy();
+      }
+    }
     this.set('map', null);
+  }
+
+  /**
+   * Dispose a map built by createMap_ together with its time slider, so that
+   * nothing the map appended outside its own viewport (the time slider's
+   * element lives in its own target container, set in createMap_) is left
+   * behind. Map.dispose() alone only detaches the viewport, which is enough
+   * for every other control (Zoom, LayerSwitcher, FullScreen): none of them
+   * are given a separate target, so they live inside the viewport and go
+   * with it.
+   *
+   * Only the time slider is removed here, rather than clearing every
+   * control: some third-party controls' own setMap(null) handling does not
+   * tolerate being bundled into this library's build, so this avoids
+   * calling it at all for controls that do not need it removed this way.
+   * @param {Map} map Map to dispose.
+   * @private
+   */
+  private disposeMap_(map: Map): void {
+    const controls = map.getControls();
+    controls
+      .getArray()
+      .filter((control: Control): control is TimeSlider => {
+        return control instanceof TimeSlider;
+      })
+      .forEach((timeSlider: TimeSlider) => {
+        timeSlider.destroy();
+        controls.remove(timeSlider);
+      });
+    map.dispose();
   }
 
   /**

@@ -126,3 +126,53 @@ describe('MetOClient refresh_()', () => {
     expect(rendered.renderSync).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('MetOClient when the vector-layer load rejects', () => {
+  let client: MetOClient;
+  let consoleError: jest.SpyInstance;
+
+  beforeEach(() => {
+    consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    client = new MetOClient(config());
+  });
+
+  afterEach(() => {
+    client.destroy();
+    consoleError.mockRestore();
+  });
+
+  it('disposes the map and its time slider instead of leaving them on the page', async () => {
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].reject(new Error('Style load failed'));
+    await expect(rendering).resolves.toBeUndefined();
+
+    expect(consoleError).toHaveBeenCalledWith(expect.any(Error));
+    expect(client.get('map')).toBeNull();
+    expect(client.get('timeSlider')).toBeNull();
+    expect(mockMaps[0].disposed).toBe(true);
+    expect(mockMaps[0].getTarget()).toBeFalsy();
+    expect(document.querySelectorAll('#map .ol-viewport')).toHaveLength(0);
+    expect(
+      document.querySelectorAll('#time-slider .fmi-metoclient-timeslider')
+    ).toHaveLength(0);
+  });
+
+  it('does not stack a second map on the target when rendered again', async () => {
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].reject(new Error('Sprite load failed'));
+    await rendering;
+
+    const rendering2 = client.render();
+    await waitFor(() => mockVectorLayers.length === 2);
+    mockVectorLayers[1].resolve(mockMaps[1]);
+    await rendering2;
+
+    expect(client.get('map')).toBe(mockMaps[1]);
+    expect(document.querySelectorAll('#map .ol-viewport')).toHaveLength(1);
+    expect(
+      document.querySelectorAll('#time-slider .fmi-metoclient-timeslider')
+    ).toHaveLength(1);
+  });
+});

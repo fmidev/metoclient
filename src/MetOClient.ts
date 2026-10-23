@@ -2468,9 +2468,18 @@ export class MetOClient extends BaseObject {
       );
     }
     if (this.vectorConfig_!.layers.length > 0) {
-      return this.createVectorLayers_(newMap, this.vectorConfig_!).then(
-        (map: Map) => this.initMap_(map, generation)
-      );
+      return this.createVectorLayers_(newMap, this.vectorConfig_!)
+        .catch((error: any) => {
+          // initMap_ never runs when the style or sprite load fails, so
+          // dispose the map here. Otherwise it stays attached to the target
+          // and the next render() would stack a second map on top of it.
+          this.disposeMap_(newMap);
+          if (this.get('timeSlider') === controls[1]) {
+            this.set('timeSlider', null);
+          }
+          throw error;
+        })
+        .then((map: Map) => this.initMap_(map, generation));
     }
     return new Promise((resolve) => {
       resolve(this.initMap_(newMap, generation));

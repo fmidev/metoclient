@@ -392,3 +392,69 @@ describe('MetOClient overlapping render() calls on a live map', () => {
     expect(vectorLayersOf(mockMaps[0])).toEqual([mockVectorLayers[0].layer]);
   });
 });
+
+describe('MetOClient resize listener', () => {
+  let client: MetOClient;
+  let listenTo: jest.SpyInstance;
+
+  beforeEach(() => {
+    client = new MetOClient(config());
+    listenTo = jest.spyOn((client as any).resizeDetector_, 'listenTo');
+  });
+
+  afterEach(() => {
+    client.destroy();
+  });
+
+  it('is registered once for the attempt that registers its map, not for a superseded one', async () => {
+    const stale = client.render();
+    await waitFor(() => mockMaps.length === 1);
+    const current = client.render();
+    await waitFor(() => mockMaps.length === 2);
+
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await stale;
+    expect(listenTo).not.toHaveBeenCalled();
+
+    mockVectorLayers[1].resolve(mockMaps[1]);
+    await current;
+    expect(listenTo).toHaveBeenCalledTimes(1);
+    expect(listenTo.mock.calls[0][0]).toBe(document.getElementById('map'));
+  });
+
+  it('is not registered when the vector-layer load rejects', async () => {
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].reject(new Error('Style load failed'));
+    await rendering;
+
+    expect(listenTo).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it('refits the current view of a fixed extent map after render() replaced it', async () => {
+    (client as any).config_.metadata.tags.push('fixed extent');
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await rendering;
+    const [, onResize] = listenTo.mock.calls[0];
+    const firstView = mockMaps[0].getView();
+
+    const rendering2 = client.render();
+    await waitFor(() => mockVectorLayers.length === 2);
+    mockVectorLayers[1].resolve(mockMaps[0]);
+    await rendering2;
+    const currentView = mockMaps[0].getView();
+    expect(currentView).not.toBe(firstView);
+
+    const fitFirst = jest.spyOn(firstView, 'fit');
+    const fitCurrent = jest.spyOn(currentView, 'fit');
+    onResize();
+    expect(fitCurrent).toHaveBeenCalledTimes(1);
+    expect(fitFirst).not.toHaveBeenCalled();
+  });
+});

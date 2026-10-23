@@ -2031,6 +2031,41 @@ export class MetOClient extends BaseObject {
   }
 
   /**
+   * Listen to the size changes of the map target. Done only for the attempt
+   * that registers its map, so that a superseded attempt neither leaves a
+   * listener behind nor keeps its disposed map alive through the closure.
+   * @param {Map} map Map registered by initMap_.
+   * @private
+   */
+  private createResizeListener_(map: Map): void {
+    if (this.resizeDetector_ == null) {
+      return;
+    }
+    this.extent_ =
+      this.config_.extent != null
+        ? this.config_.extent
+        : map.getView().calculateExtent();
+    this.resizeDetector_.listenTo(
+      document.getElementById(this.config_.target)!,
+      () => {
+        if (this.get('map') == null) {
+          return;
+        }
+        if (this.config_.metadata.tags.includes(constants.TAG_FIXED_EXTENT)) {
+          // A render() on the live map replaces the view, so look it up
+          map.getView().fit(this.extent_ as number[], {
+            size: map.getSize(),
+          });
+        } else {
+          map.updateSize();
+          map.renderSync();
+        }
+        this.updateTimeSlider_(true);
+      }
+    );
+  }
+
+  /**
    * Initialize the map with controls, listeners, and time slider.
    * @param {Map} map OpenLayers map.
    * @param {number} generation Render generation this attempt was started
@@ -2049,6 +2084,7 @@ export class MetOClient extends BaseObject {
       return map;
     }
     this.set('map', map);
+    this.createResizeListener_(map);
     if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
       const layerSwitcher = new LayerSwitcher({
         tipLabel: this.config_.texts['Layer Switcher'],
@@ -2486,27 +2522,6 @@ export class MetOClient extends BaseObject {
       this.config_.zoom = view.getZoom()! - 1;
       view.setZoom(this.config_.zoom);
       extent = view.calculateExtent();
-    }
-    if (this.resizeDetector_ != null) {
-      this.extent_ = this.config_.extent != null ? this.config_.extent : extent;
-      this.resizeDetector_.listenTo(
-        document.getElementById(this.config_.target)!,
-        () => {
-          const map = this.get('map') as Map | null;
-          if (map == null) {
-            return;
-          }
-          if (this.config_.metadata.tags.includes(constants.TAG_FIXED_EXTENT)) {
-            view.fit(this.extent_ as number[], {
-              size: map.getSize(),
-            });
-          } else {
-            map.updateSize();
-            map.renderSync();
-          }
-          this.updateTimeSlider_(true);
-        }
-      );
     }
     if (this.vectorConfig_!.layers.length > 0) {
       return this.createVectorLayers_(newMap, this.vectorConfig_!, generation)

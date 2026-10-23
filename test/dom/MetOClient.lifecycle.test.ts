@@ -458,3 +458,38 @@ describe('MetOClient resize listener', () => {
     expect(fitFirst).not.toHaveBeenCalled();
   });
 });
+
+describe('MetOClient destroy()', () => {
+  it('releases the time slider together with the map, and tolerates a second call', async () => {
+    const client = new MetOClient(config());
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await rendering;
+    const timeSlider = client.get('timeSlider');
+    expect(timeSlider).not.toBeNull();
+    const destroySlider = jest.spyOn(timeSlider, 'destroy');
+
+    client.destroy();
+    expect(client.get('map')).toBeNull();
+    expect(client.get('timeSlider')).toBeNull();
+    expect(destroySlider).toHaveBeenCalledTimes(1);
+
+    expect(() => client.destroy()).not.toThrow();
+    expect(destroySlider).toHaveBeenCalledTimes(1);
+  });
+
+  it('releases a time slider whose map was never registered', async () => {
+    const client = new MetOClient(config());
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    expect(client.get('timeSlider')).not.toBeNull();
+
+    client.destroy();
+    expect(client.get('timeSlider')).toBeNull();
+
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await rendering;
+    expect(client.get('timeSlider')).toBeNull();
+  });
+});

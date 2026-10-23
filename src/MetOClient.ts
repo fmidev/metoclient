@@ -2891,6 +2891,9 @@ export class MetOClient extends BaseObject {
       }
     }
     this.set('map', null);
+    // Both branches above have destroyed the time slider; do not hand it out
+    // (or destroy it again on a second destroy()) as if it were still alive
+    this.set('timeSlider', null);
   }
 
   /**

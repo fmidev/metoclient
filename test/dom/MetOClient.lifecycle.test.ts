@@ -176,3 +176,72 @@ describe('MetOClient when the vector-layer load rejects', () => {
     ).toHaveLength(1);
   });
 });
+
+describe('MetOClient playing with an empty time list', () => {
+  let client: MetOClient;
+  let next: jest.SpyInstance;
+  let delay: number;
+
+  beforeEach(async () => {
+    client = new MetOClient(config());
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await rendering;
+    expect(client.get('map')).toBe(mockMaps[0]);
+
+    // The marker layer has no times; give the client some to play with
+    (client as any).times_ = [1000, 2000];
+    (client as any).config_.time = 1000;
+    delay = (client as any).delay_;
+    next = jest.spyOn(client, 'next').mockImplementation(() => undefined);
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    client.destroy();
+  });
+
+  it('keeps the animation loop polling and resumes it once times return', () => {
+    client.play();
+    expect(next).toHaveBeenCalledTimes(1);
+
+    // A refresh whose capabilities yield no times
+    (client as any).times_ = [];
+    jest.advanceTimersByTime(delay);
+    expect(next).toHaveBeenCalledTimes(2);
+    jest.advanceTimersByTime(delay);
+    expect(next).toHaveBeenCalledTimes(3);
+
+    // Times return: the loop carries on without a pause() and play() pair
+    (client as any).times_ = [1000, 2000];
+    jest.advanceTimersByTime(delay);
+    expect(next).toHaveBeenCalledTimes(4);
+    expect(client.get('map').get('playing')).toBe(true);
+  });
+
+  it('can pause while the time list is empty', () => {
+    client.play();
+    (client as any).times_ = [];
+
+    client.pause();
+    expect(client.get('map').get('playing')).toBe(false);
+
+    // The loop stops: no further frames are requested
+    next.mockClear();
+    jest.advanceTimersByTime(delay * 3);
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('still ignores play(), next() and previous() without any times', () => {
+    next.mockRestore();
+    (client as any).times_ = [];
+    client.play();
+    expect(client.get('map').get('playing')).toBeFalsy();
+    expect(() => {
+      client.next();
+      client.previous();
+    }).not.toThrow();
+  });
+});

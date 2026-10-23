@@ -2646,7 +2646,10 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private animate_(): void {
-    if (!this.isReady_()) {
+    // Only the map is required here. With an empty time list (e.g. a refresh
+    // whose capabilities yielded no times) next() is a no-op, but the timeout
+    // must still be rescheduled so the loop resumes once times return.
+    if (this.get('map') == null) {
       return;
     }
     if ((this.get('map') as Map).get('playing')) {
@@ -2759,7 +2762,10 @@ export class MetOClient extends BaseObject {
    * Pause the animation playback.
    */
   pause(): void {
-    if (!this.isReady_()) {
+    // Unlike play(), pausing does not index into the time list, and must work
+    // while the time list is temporarily empty or the animation would stay
+    // stuck in the playing state.
+    if (this.get('map') == null) {
       return;
     }
     (this.get('map') as Map).set('playing', false);

@@ -2206,16 +2206,57 @@ export class MetOClient extends BaseObject {
    * Create vector layers from configuration and add them to the map.
    * @param {Map} map OpenLayers map.
    * @param {VectorConfig} vectorConfig Vector layer configuration.
+   * @param {number} generation Render generation this attempt was started
+   *   for, as captured by render() when the attempt began.
    * @returns {Promise<Map>} Promise resolving to the updated map.
    * @private
    */
   private createVectorLayers_(
     map: Map,
-    vectorConfig: VectorConfig
+    vectorConfig: VectorConfig,
+    generation: number
   ): Promise<Map> {
+    // The layers this attempt adds to the map, so that a superseded attempt
+    // can take back exactly its own layers: olms() is additive, and a newer
+    // attempt may have added its layers to the same map by then.
+    let addedLayers: BaseLayer[] = [];
+    /** Remove the layers this attempt added from the map. */
+    const removeAddedLayers = (): void => {
+      addedLayers.forEach((layer: BaseLayer) => {
+        map.removeLayer(layer);
+      });
+      addedLayers = [];
+    };
     return this.updateVectorConfig_(vectorConfig)
-      .then((config: VectorConfig) => olms(map, config as any))
+      .then((config: VectorConfig) => {
+        if (generation !== this.renderGeneration_) {
+          // Superseded while the vector configuration was being fetched
+          return map;
+        }
+        const layersBefore = new Set(map.getLayers().getArray());
+        const loading = olms(map, config as any);
+        // olms() adds all the layers of a style object synchronously, so
+        // nothing else can have added layers to the map since the snapshot
+        addedLayers = map
+          .getLayers()
+          .getArray()
+          .filter((layer: BaseLayer) => !layersBefore.has(layer));
+        return loading;
+      })
+      .catch((error: any) => {
+        if (generation !== this.renderGeneration_) {
+          removeAddedLayers();
+        }
+        throw error;
+      })
       .then((updatedMap: Map) => {
+        if (generation !== this.renderGeneration_) {
+          // Superseded while the layers were loading: the current attempt
+          // has its own layers, so drop these instead of letting them land
+          // on top and skip registering their listeners and times.
+          removeAddedLayers();
+          return updatedMap;
+        }
         if (vectorConfig.layers != null) {
           const mapProjection = updatedMap.getView().getProjection().getCode();
           updatedMap
@@ -2468,7 +2509,7 @@ export class MetOClient extends BaseObject {
       );
     }
     if (this.vectorConfig_!.layers.length > 0) {
-      return this.createVectorLayers_(newMap, this.vectorConfig_!)
+      return this.createVectorLayers_(newMap, this.vectorConfig_!, generation)
         .catch((error: any) => {
           // initMap_ never runs when the style or sprite load fails, so
           // dispose the map here. Otherwise it stays attached to the target
@@ -2514,12 +2555,14 @@ export class MetOClient extends BaseObject {
     map.setView(this.createView_());
     map.set('time', this.config_.time);
     if (this.vectorConfig_!.layers.length > 0) {
-      return this.createVectorLayers_(map, this.vectorConfig_!).then(
-        (updatedMap: Map) => {
-          this.timeUpdated_();
-          return updatedMap;
-        }
-      );
+      return this.createVectorLayers_(
+        map,
+        this.vectorConfig_!,
+        generation
+      ).then((updatedMap: Map) => {
+        this.timeUpdated_();
+        return updatedMap;
+      });
     }
     return new Promise((resolve) => {
       this.timeUpdated_();

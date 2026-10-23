@@ -12,6 +12,8 @@ import MetOClient from '../../src/MetOClient';
 // Variables used in the factories of jest.mock must start with "mock"
 const mockMaps: any[] = [];
 const mockVectorLayers: Array<{
+  // The layer this olms() call added to the map
+  layer: any;
   resolve: (map: any) => void;
   reject: (error: Error) => void;
 }> = [];
@@ -29,14 +31,20 @@ jest.mock('ol/Map', () => {
   };
 });
 
+// Like the real olms() with a style object: the layers are added to the map
+// synchronously, while the returned promise settles when the test says so.
 jest.mock('ol-mapbox-style', () => ({
   __esModule: true,
-  default: jest.fn(
-    () =>
-      new Promise((resolve, reject) => {
-        mockVectorLayers.push({ resolve, reject });
-      })
-  ),
+  default: jest.fn((map: any) => {
+    const { default: VectorLayer } = jest.requireActual('ol/layer/Vector');
+    const { default: VectorSource } = jest.requireActual('ol/source/Vector');
+    const layer = new VectorLayer({ source: new VectorSource() });
+    layer.set('mapbox-source', 'marker');
+    map.addLayer(layer);
+    return new Promise((resolve, reject) => {
+      mockVectorLayers.push({ layer, resolve, reject });
+    });
+  }),
 }));
 
 const waitFor = async (condition: () => boolean, timeout = 2000) => {
@@ -243,5 +251,144 @@ describe('MetOClient playing with an empty time list', () => {
       client.next();
       client.previous();
     }).not.toThrow();
+  });
+});
+
+describe('MetOClient overlapping render() calls on a live map', () => {
+  let client: MetOClient;
+
+  const vectorLayersOf = (map: any) =>
+    map
+      .getLayers()
+      .getArray()
+      .filter((layer: any) => layer.get('mapbox-source') != null);
+
+  beforeEach(async () => {
+    client = new MetOClient(config());
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await rendering;
+    expect(client.get('map')).toBe(mockMaps[0]);
+    mockVectorLayers.length = 0;
+  });
+
+  afterEach(() => {
+    client.destroy();
+  });
+
+  /**
+   * Start a render() that stays in the vector configuration step, then a
+   * second one that gets as far as olms().
+   * @returns {object} Both render() promises and the release for the first.
+   */
+  const overlapRenders = async () => {
+    let release!: () => void;
+    jest
+      .spyOn(client as any, 'updateVectorConfig_')
+      .mockImplementationOnce(
+        (vectorConfig: any) =>
+          new Promise((resolve) => {
+            release = () => resolve(vectorConfig);
+          })
+      );
+    const stale = client.render();
+    await waitFor(() => (client as any).updateVectorConfig_.mock.calls.length);
+    const current = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    return { stale, current, release };
+  };
+
+  /**
+   * Start a render() that reaches olms(), then a second render() that is held
+   * back in the capabilities step, so the first one is superseded while its
+   * olms() is still loading and before the second one touches the map.
+   * @returns {object} Both render() promises and the release for the second.
+   */
+  const supersedeDuringOlms = async () => {
+    const stale = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    let release!: () => void;
+    jest
+      .spyOn(client as any, 'updateCapabilities_')
+      .mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            release = resolve;
+          })
+      );
+    const current = client.render();
+    return { stale, current, release };
+  };
+
+  it('skips olms() for an attempt superseded while fetching the vector configuration', async () => {
+    const { stale, current, release } = await overlapRenders();
+
+    release();
+    await expect(stale).resolves.toBeUndefined();
+    expect(mockVectorLayers).toHaveLength(1);
+
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await current;
+    expect(vectorLayersOf(mockMaps[0])).toEqual([mockVectorLayers[0].layer]);
+  });
+
+  it('removes the vector layers of an attempt superseded while olms() loads', async () => {
+    const { stale, current, release } = await supersedeDuringOlms();
+    const [staleLoad] = mockVectorLayers;
+    expect(vectorLayersOf(mockMaps[0])).toEqual([staleLoad.layer]);
+
+    staleLoad.resolve(mockMaps[0]);
+    await expect(stale).resolves.toBeUndefined();
+    // Gone right away, not only when the newer attempt rebuilds the layers
+    expect(vectorLayersOf(mockMaps[0])).toEqual([]);
+
+    release();
+    await waitFor(() => mockVectorLayers.length === 2);
+    mockVectorLayers[1].resolve(mockMaps[0]);
+    await expect(current).resolves.toBe(mockMaps[0]);
+    expect(vectorLayersOf(mockMaps[0])).toEqual([mockVectorLayers[1].layer]);
+  });
+
+  it('removes the vector layers of a superseded attempt that rejects', async () => {
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const { stale, current, release } = await supersedeDuringOlms();
+
+    mockVectorLayers[0].reject(new Error('Style load failed'));
+    await stale;
+    expect(vectorLayersOf(mockMaps[0])).toEqual([]);
+
+    release();
+    await waitFor(() => mockVectorLayers.length === 2);
+    mockVectorLayers[1].resolve(mockMaps[0]);
+    await current;
+    expect(vectorLayersOf(mockMaps[0])).toEqual([mockVectorLayers[1].layer]);
+    consoleError.mockRestore();
+  });
+
+  it('does not register listeners for the layers of a superseded attempt', async () => {
+    const { stale, current, release } = await supersedeDuringOlms();
+    // The listeners of the initial render, which clear_() has not dropped yet
+    const listeners = (client as any).sourceListeners_.length;
+
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await stale;
+    expect((client as any).sourceListeners_).toHaveLength(listeners);
+
+    release();
+    await waitFor(() => mockVectorLayers.length === 2);
+    mockVectorLayers[1].resolve(mockMaps[0]);
+    await current;
+  });
+
+  it('leaves a single set of vector layers when the attempt is not superseded', async () => {
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await rendering;
+
+    expect(vectorLayersOf(mockMaps[0])).toEqual([mockVectorLayers[0].layer]);
   });
 });

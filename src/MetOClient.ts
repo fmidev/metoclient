@@ -553,8 +553,13 @@ export class MetOClient extends BaseObject {
       }
     }
     this.renderComplete_ = true;
-    this.render().then(() => {
-      map!.renderSync();
+    this.render().then((renderedMap: Map | void) => {
+      // The map captured above can be missing (set('options') before the
+      // first map is registered) or disposed (destroy() superseded this
+      // render), so use the map the render actually resolved with.
+      if (renderedMap) {
+        renderedMap.renderSync();
+      }
     });
   }
 

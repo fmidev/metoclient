@@ -2143,7 +2143,6 @@ export class MetOClient extends BaseObject {
     // The time slider is published only together with its map, so that the
     // property never points at the slider of a map that was not registered
     this.set('timeSlider', timeSlider);
-    this.createResizeListener_(map);
     if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
       const layerSwitcher = new LayerSwitcher({
         tipLabel: this.config_.texts['Layer Switcher'],
@@ -2188,6 +2187,11 @@ export class MetOClient extends BaseObject {
     this.createFullScreenListener_();
     this.renderComplete_ = true;
     timeSlider.createTimeSlider(this.times_);
+    // Only after the time slider has been built: for a target element that
+    // an earlier client already listened to (destroy() and a new client on
+    // the same element), the resize detector calls the listener right away,
+    // and the listener updates the time slider.
+    this.createResizeListener_(map);
     this.playingListener_ = (this.get('map') as any).on(
       'change:playing',
       () => {

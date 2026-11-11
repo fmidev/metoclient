@@ -536,6 +536,30 @@ describe('MetOClient resize listener', () => {
     expect(fitFirst).not.toHaveBeenCalled();
   });
 
+  it('tolerates a listener that is called as soon as it is registered', async () => {
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    // What the resize detector does for an element that an earlier client
+    // on the same target has already made detectable
+    listenTo.mockImplementation(((element: any, listener: any) => {
+      listener(element);
+    }) as any);
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].resolve(mockMaps[0]);
+
+    await expect(rendering).resolves.toBe(mockMaps[0]);
+    expect(listenTo).toHaveBeenCalledTimes(1);
+    expect(consoleError).not.toHaveBeenCalled();
+    expect(
+      document.querySelectorAll(
+        '#time-slider .fmi-metoclient-timeslider-frames-container'
+      )
+    ).toHaveLength(1);
+    consoleError.mockRestore();
+  });
+
   it('follows the map when the target option changes', async () => {
     const removeAllListeners = jest.spyOn(
       (client as any).resizeDetector_,

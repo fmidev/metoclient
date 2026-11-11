@@ -228,7 +228,8 @@ div.fmi-metoclient-timeslider-pointer-handle {
 
 span.fmi-metoclient-timeslider-pointer-text {
   box-sizing: border-box;
-  color: #d7b13e;
+  /* A lighter shade of the #d7b13e accent: 4.7:1 on the #585858 pointer */
+  color: #f0cf6a;
   display: table;
   margin: 0 auto;
   line-height: 33px;

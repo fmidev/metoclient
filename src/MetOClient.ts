@@ -2264,9 +2264,10 @@ export class MetOClient extends BaseObject {
     vectorConfig: VectorConfig,
     generation: number
   ): Promise<Map> {
-    // The layers this attempt adds to the map, so that a superseded attempt
-    // can take back exactly its own layers: olms() is additive, and a newer
-    // attempt may have added its layers to the same map by then.
+    // The layers this attempt adds to the map, so that a superseded or
+    // failed attempt can take back exactly its own layers: olms() is
+    // additive, and a newer attempt may have added its layers to the same
+    // map by then.
     let addedLayers: BaseLayer[] = [];
     /** Remove the layers this attempt added from the map. */
     const removeAddedLayers = (): void => {
@@ -2282,19 +2283,24 @@ export class MetOClient extends BaseObject {
           return map;
         }
         const layersBefore = new Set(map.getLayers().getArray());
-        const loading = olms(map, config as any);
-        // olms() adds all the layers of a style object synchronously, so
-        // nothing else can have added layers to the map since the snapshot
-        addedLayers = map
-          .getLayers()
-          .getArray()
-          .filter((layer: BaseLayer) => !layersBefore.has(layer));
-        return loading;
+        try {
+          return olms(map, config as any);
+        } finally {
+          // olms() adds all the layers of a style object synchronously, so
+          // nothing else can have added layers to the map since the
+          // snapshot. It can also throw part-way through (e.g. on malformed
+          // GeoJSON data), after the layers of the earlier sources are
+          // already on the map, hence the finally.
+          addedLayers = map
+            .getLayers()
+            .getArray()
+            .filter((layer: BaseLayer) => !layersBefore.has(layer));
+        }
       })
       .catch((error: any) => {
-        if (this.isSuperseded_(generation)) {
-          removeAddedLayers();
-        }
+        // Whether superseded or not, the layers of a failed load are
+        // invisible and without listeners, so do not leave them on the map
+        removeAddedLayers();
         throw error;
       })
       .then((updatedMap: Map) => {

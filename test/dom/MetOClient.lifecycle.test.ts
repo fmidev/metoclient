@@ -368,6 +368,42 @@ describe('MetOClient overlapping render() calls on a live map', () => {
     consoleError.mockRestore();
   });
 
+  it('removes the vector layers of a current attempt that rejects', async () => {
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    expect(vectorLayersOf(mockMaps[0])).toEqual([mockVectorLayers[0].layer]);
+
+    mockVectorLayers[0].reject(new Error('Sprite load failed'));
+    await expect(rendering).resolves.toBeUndefined();
+    expect(vectorLayersOf(mockMaps[0])).toEqual([]);
+    expect(client.get('map')).toBe(mockMaps[0]);
+    consoleError.mockRestore();
+  });
+
+  it('removes the vector layers olms() added before throwing synchronously', async () => {
+    const consoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
+    const olms = jest.requireMock('ol-mapbox-style').default as jest.Mock;
+    const { default: VectorLayer } = jest.requireActual('ol/layer/Vector');
+    const { default: VectorSource } = jest.requireActual('ol/source/Vector');
+    // The first source gets its layer, the data of the second one is invalid
+    olms.mockImplementationOnce((map: any) => {
+      const layer = new VectorLayer({ source: new VectorSource() });
+      layer.set('mapbox-source', 'marker');
+      map.addLayer(layer);
+      throw new Error('Invalid GeoJSON');
+    });
+
+    await expect(client.render()).resolves.toBeUndefined();
+    expect(olms).toHaveBeenCalled();
+    expect(vectorLayersOf(mockMaps[0])).toEqual([]);
+    consoleError.mockRestore();
+  });
+
   it('does not register listeners for the layers of a superseded attempt', async () => {
     const { stale, current, release } = await supersedeDuringOlms();
     // The listeners of the initial render, which clear_() has not dropped yet

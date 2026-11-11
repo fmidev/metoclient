@@ -226,6 +226,8 @@ export class MetOClient extends BaseObject {
 
   private animationTimeout_: ReturnType<typeof setTimeout> | null;
 
+  private animationStalled_: boolean;
+
   private layerListeners_: EventsKey[];
 
   private sourceListeners_: EventsKey[];
@@ -295,6 +297,7 @@ export class MetOClient extends BaseObject {
     );
     this.refreshTimer_ = null;
     this.animationTimeout_ = null;
+    this.animationStalled_ = false;
     this.layerListeners_ = [];
     this.sourceListeners_ = [];
     const mainContainer = document.getElementById(this.config_.target);
@@ -510,6 +513,12 @@ export class MetOClient extends BaseObject {
               this.config_.time = visibleTimes[lastTimeIndex];
             }
             map.set('time', this.config_.time);
+            if (this.animationStalled_) {
+              // The animation loop stopped when the time list ran empty
+              // while playing. This is the only place the times can come
+              // back, so resume the loop here (it stalls again if not).
+              this.animate_();
+            }
             if (this.config_.metadata.tags.includes(constants.TAG_AUTOPLAY)) {
               this.config_.metadata.tags = this.config_.metadata.tags.filter(
                 (tag: string) => tag !== constants.TAG_AUTOPLAY
@@ -2768,13 +2777,19 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private animate_(): void {
-    // Only the map is required here. With an empty time list (e.g. a refresh
-    // whose capabilities yielded no times) next() is a no-op, but the timeout
-    // must still be rescheduled so the loop resumes once times return.
     if (this.get('map') == null) {
       return;
     }
-    if ((this.get('map') as Map).get('playing')) {
+    const playing = (this.get('map') as Map).get('playing');
+    // With an empty time list (e.g. a refresh whose capabilities yielded no
+    // times) there is nothing to step to. Instead of polling, stop the loop
+    // and let render() resume it once the times have been updated.
+    this.animationStalled_ = playing && this.times_.length === 0;
+    if (this.animationStalled_) {
+      clearTimeout(this.animationTimeout_!);
+      return;
+    }
+    if (playing) {
       if (this.renderComplete_) {
         clearTimeout(this.animationTimeout_!);
         this.waitingRender_ = 0;

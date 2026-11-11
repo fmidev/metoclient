@@ -211,21 +211,48 @@ describe('MetOClient playing with an empty time list', () => {
     client.destroy();
   });
 
-  it('keeps the animation loop polling and resumes it once times return', () => {
+  it('stops the animation loop instead of polling, and render() resumes it once times return', async () => {
     client.play();
     expect(next).toHaveBeenCalledTimes(1);
 
-    // A refresh whose capabilities yield no times
+    // A refresh whose capabilities yield no times: the pending tick finds
+    // nothing to step to and does not schedule another one
     (client as any).times_ = [];
     jest.advanceTimersByTime(delay);
-    expect(next).toHaveBeenCalledTimes(2);
-    jest.advanceTimersByTime(delay);
-    expect(next).toHaveBeenCalledTimes(3);
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(jest.getTimerCount()).toBe(0);
+    expect(client.get('map').get('playing')).toBe(true);
+
+    // A render() that still has no times leaves the loop stopped
+    jest.useRealTimers();
+    mockVectorLayers.length = 0;
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await rendering;
+    expect(next).toHaveBeenCalledTimes(1);
 
     // Times return: the loop carries on without a pause() and play() pair
-    (client as any).times_ = [1000, 2000];
+    jest.spyOn(client as any, 'updateTimes_').mockImplementation(() => {
+      (client as any).times_ = [1000, 2000];
+    });
+    const rendering2 = client.render();
+    await waitFor(() => mockVectorLayers.length === 2);
+    mockVectorLayers[1].resolve(mockMaps[0]);
+    await rendering2;
+    // The loop waits for the re-rendered map, like any other frame. jsdom
+    // never completes a render, so do it by hand until the pending time
+    // update has gone through and the loop takes its next step.
+    jest.useFakeTimers();
+    for (let i = 0; i < 5 && next.mock.calls.length < 2; i += 1) {
+      mockMaps[0].dispatchEvent('rendercomplete');
+      jest.advanceTimersByTime(delay);
+    }
+    const resumed = next.mock.calls.length;
+    expect(resumed).toBeGreaterThan(1);
+    // And keeps going at its normal pace
     jest.advanceTimersByTime(delay);
-    expect(next).toHaveBeenCalledTimes(4);
+    expect(next).toHaveBeenCalledTimes(resumed + 1);
     expect(client.get('map').get('playing')).toBe(true);
   });
 

@@ -29,6 +29,8 @@ export default class TimeFrame {
 
   public keyboardAccessibleElement: HTMLButtonElement;
 
+  public label: string;
+
   /**
    * Create a time frame.
    * @param {TimeFrameOptions} options Time frame options.
@@ -58,10 +60,8 @@ export default class TimeFrame {
     const ariaDateTime = DateTime.fromMillis(this.endTime)
       .setZone(options.timeZone)
       .setLocale(options.locale);
-    this.keyboardAccessibleElement.setAttribute(
-      'aria-label',
-      ariaDateTime.toLocaleString(DateTime.DATETIME_FULL)
-    );
+    this.label = ariaDateTime.toLocaleString(DateTime.DATETIME_FULL);
+    this.keyboardAccessibleElement.setAttribute('aria-label', this.label);
     this.element.appendChild(this.keyboardAccessibleElement);
   }
 }

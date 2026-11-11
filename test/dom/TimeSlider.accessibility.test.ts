@@ -119,4 +119,69 @@ describe('TimeSlider accessibility', () => {
       expect(document.activeElement).toBe(outside);
     });
   });
+
+  describe('state for assistive technology', () => {
+    const status = (): HTMLElement =>
+      document.querySelector<HTMLElement>(
+        '#time-slider .fmi-metoclient-timeslider-status'
+      )!;
+
+    const currentButtons = (): HTMLButtonElement[] =>
+      frameButtons().filter(
+        (button) => button.getAttribute('aria-current') === 'true'
+      );
+
+    it('names the play button by the playing state, whatever changed it', () => {
+      expect(playButton().getAttribute('aria-label')).toBe('Play animation');
+
+      playButton().click();
+      expect(map.get('playing')).toBe(true);
+      expect(playButton().getAttribute('aria-label')).toBe('Pause animation');
+
+      // Like MetOClient pause() and play()
+      map.set('playing', false);
+      expect(playButton().getAttribute('aria-label')).toBe('Play animation');
+      map.set('playing', true);
+      expect(playButton().getAttribute('aria-label')).toBe('Pause animation');
+
+      // Selecting a time step stops the animation
+      frameButtons()[1].click();
+      expect(playButton().getAttribute('aria-label')).toBe('Play animation');
+    });
+
+    it('marks the button of the current time step', () => {
+      expect(currentButtons()).toEqual([frameButtons()[0]]);
+
+      map.set('time', TIMES[3]);
+      expect(currentButtons()).toEqual([frameButtons()[3]]);
+    });
+
+    it('keeps the current time step marked when the frames are rebuilt', () => {
+      map.set('time', TIMES[2]);
+      slider.updateTimeLoaderVis(
+        TIMES.map((time) => ({ endTime: time, status: '', active: true })),
+        true
+      );
+      expect(currentButtons()).toEqual([frameButtons()[2]]);
+    });
+
+    it('tells the selected time in a polite status element', () => {
+      expect(status().getAttribute('role')).toBe('status');
+      expect(status().getAttribute('aria-live')).toBe('polite');
+      expect(status().textContent).toBe('11 November 2026 at 07:00 UTC');
+
+      frameButtons()[4].click();
+      expect(status().textContent).toBe('11 November 2026 at 11:00 UTC');
+    });
+
+    it('silences the status element while the animation is playing', () => {
+      map.set('playing', true);
+      expect(status().getAttribute('aria-live')).toBe('off');
+      map.set('time', TIMES[1]);
+      expect(status().textContent).toBe('11 November 2026 at 08:00 UTC');
+
+      map.set('playing', false);
+      expect(status().getAttribute('aria-live')).toBe('polite');
+    });
+  });
 });

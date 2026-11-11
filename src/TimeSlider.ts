@@ -55,6 +55,8 @@ class TimeSlider extends Control {
 
   private playButton_: HTMLButtonElement | null;
 
+  private statusElement_: HTMLDivElement | null;
+
   private animationPlay_: boolean;
 
   private frames_: TimeFrame[];
@@ -106,6 +108,7 @@ class TimeSlider extends Control {
     this.enableMouseWheel_ = options.enableMouseWheel;
     this.interactions_ = null;
     this.playButton_ = null;
+    this.statusElement_ = null;
     this.animationPlay_ = false;
     this.frames_ = [];
     this.locale_ = options.locale;
@@ -226,6 +229,7 @@ class TimeSlider extends Control {
     clickableContainer.appendChild(postMargin);
 
     clickableContainer.appendChild(this.createTimeZoneLabel());
+    clickableContainer.appendChild(this.createStatus());
 
     this.container_.appendChild(clickableContainer);
 
@@ -279,32 +283,15 @@ class TimeSlider extends Control {
     const playButton = document.createElement('button');
     playButton.classList.add(constants.PLAY_BUTTON_CLASS);
     playButton.type = 'button';
-    if (this.animationPlay_) {
-      playButton.classList.add(constants.PLAYING_CLASS);
-      playButton.setAttribute(
-        constants.ARIA_LABEL,
-        this.config_.buttonPauseText ?? ''
-      );
-    } else {
-      playButton.setAttribute(
-        constants.ARIA_LABEL,
-        this.config_.buttonPlayText ?? ''
-      );
-    }
     this.mouseListeners_.push(
       listen(playButton, 'click', (event: Event) => {
         event.preventDefault();
         const map = this.getMap()!;
         map.set('playing', !map.get('playing'));
-        playButton.setAttribute(
-          constants.ARIA_LABEL,
-          map.get('playing')
-            ? this.config_.buttonPauseText ?? ''
-            : this.config_.buttonPlayText ?? ''
-        );
       })
     );
     this.playButton_ = playButton;
+    this.setAnimationPlay(this.animationPlay_);
 
     preTools.appendChild(playButton);
     return preTools;
@@ -321,6 +308,21 @@ class TimeSlider extends Control {
     postButton.classList.add(constants.POST_BUTTON_CLASS);
     postTools.appendChild(postButton);
     return postTools;
+  }
+
+  /**
+   * Create a visually hidden status element, which tells assistive technology
+   * the selected time when it changes. It stays silent during the animation,
+   * which would otherwise announce every frame.
+   * @returns {HTMLDivElement} Status element.
+   */
+  createStatus(): HTMLDivElement {
+    const status = document.createElement('div');
+    status.classList.add(constants.STATUS_CLASS);
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', this.animationPlay_ ? 'off' : 'polite');
+    this.statusElement_ = status;
+    return status;
   }
 
   /**
@@ -1085,6 +1087,7 @@ class TimeSlider extends Control {
       }
     }
     if (index != null) {
+      this.updateCurrentFrame(index);
       if (forceUpdate) {
         needsUpdate = true;
       } else if (this.interactions_.parentElement == null) {
@@ -1116,6 +1119,28 @@ class TimeSlider extends Control {
           (infotip as HTMLElement).innerHTML = tickText;
         });
       }
+    }
+  }
+
+  /**
+   * Expose the current time step to assistive technology: mark its button as
+   * the current one and update the status element.
+   * @param {number} index Index of the current frame.
+   */
+  updateCurrentFrame(index: number): void {
+    this.frames_.forEach((frame, frameIndex) => {
+      if (frameIndex === index) {
+        frame.keyboardAccessibleElement.setAttribute('aria-current', 'true');
+      } else {
+        frame.keyboardAccessibleElement.removeAttribute('aria-current');
+      }
+    });
+    const { label } = this.frames_[index];
+    if (
+      this.statusElement_ != null &&
+      this.statusElement_.textContent !== label
+    ) {
+      this.statusElement_.textContent = label;
     }
   }
 
@@ -1239,6 +1264,18 @@ class TimeSlider extends Control {
     } else {
       this.playButton_?.classList.remove(constants.PLAYING_CLASS);
     }
+    // The name follows the state whatever changed it: the button itself,
+    // play() and pause(), or selecting a time step
+    this.playButton_?.setAttribute(
+      constants.ARIA_LABEL,
+      (this.animationPlay_
+        ? this.config_.buttonPauseText
+        : this.config_.buttonPlayText) ?? ''
+    );
+    this.statusElement_?.setAttribute(
+      'aria-live',
+      this.animationPlay_ ? 'off' : 'polite'
+    );
   }
 
   /**

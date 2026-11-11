@@ -102,6 +102,7 @@ export const POINTER_HANDLE_CLASS = 'fmi-metoclient-timeslider-handle';
 export const POINTER_INFOTIP_CLASS =
   'fmi-metoclient-timeslider-pointer-infotip';
 export const INDICATOR_CLASS = 'fmi-metoclient-timeslider-indicator';
+export const STATUS_CLASS = 'fmi-metoclient-timeslider-status';
 export const HIDDEN_CLASS = 'fmi-metoclient-timeslider-hidden';
 export const POINTER_DRAGGING = 'dragging';
 export const DATA_STATUS_ATTRIBUTE = 'data-status';

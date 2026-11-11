@@ -508,6 +508,44 @@ describe('MetOClient resize listener', () => {
     expect(fitCurrent).toHaveBeenCalledTimes(1);
     expect(fitFirst).not.toHaveBeenCalled();
   });
+
+  it('follows the map when the target option changes', async () => {
+    const removeAllListeners = jest.spyOn(
+      (client as any).resizeDetector_,
+      'removeAllListeners'
+    );
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await rendering;
+    const mapElement = document.getElementById('map');
+
+    // A render() with the same target keeps the listener as it is
+    const rendering2 = client.render();
+    await waitFor(() => mockVectorLayers.length === 2);
+    mockVectorLayers[1].resolve(mockMaps[0]);
+    await rendering2;
+    expect(listenTo).toHaveBeenCalledTimes(1);
+    expect(removeAllListeners).not.toHaveBeenCalled();
+
+    const otherElement = document.createElement('div');
+    otherElement.id = 'other';
+    document.body.append(otherElement);
+    (client as any).config_.target = 'other';
+    const rendering3 = client.render();
+    await waitFor(() => mockVectorLayers.length === 3);
+    mockVectorLayers[2].resolve(mockMaps[0]);
+    await rendering3;
+
+    expect(mockMaps[0].getTarget()).toBe('other');
+    expect(removeAllListeners).toHaveBeenCalledTimes(1);
+    expect(removeAllListeners).toHaveBeenCalledWith(mapElement);
+    expect(listenTo).toHaveBeenCalledTimes(2);
+    expect(listenTo.mock.calls[1][0]).toBe(otherElement);
+
+    client.destroy();
+    expect(removeAllListeners).toHaveBeenLastCalledWith(otherElement);
+  });
 });
 
 describe('MetOClient destroy()', () => {

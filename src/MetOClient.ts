@@ -210,6 +210,8 @@ export class MetOClient extends BaseObject {
 
   private resizeDetector_: elementResizeDetectorMaker.Erd;
 
+  private resizeElement_: HTMLElement | null;
+
   private capabilities_: Record<string, CapabilitiesEntry>;
 
   private legends_: Record<string, LegendEntry>;
@@ -283,6 +285,7 @@ export class MetOClient extends BaseObject {
     this.resizeDetector_ = elementResizeDetectorMaker({
       strategy: 'scroll',
     });
+    this.resizeElement_ = null;
     this.capabilities_ = {};
     this.legends_ = {};
     this.selectedLegend_ = constants.DEFAULT_LEGEND;
@@ -2054,35 +2057,56 @@ export class MetOClient extends BaseObject {
    * Listen to the size changes of the map target. Done only for the attempt
    * that registers its map, so that a superseded attempt neither leaves a
    * listener behind nor keeps its disposed map alive through the closure.
-   * @param {Map} map Map registered by initMap_.
+   * Called again when the registered map is updated: the listener follows
+   * the map if the target option has changed, and is left as it is
+   * otherwise.
+   * @param {Map} map Registered map.
    * @private
    */
   private createResizeListener_(map: Map): void {
     if (this.resizeDetector_ == null) {
       return;
     }
+    const element = document.getElementById(this.config_.target);
+    if (element === this.resizeElement_) {
+      return;
+    }
+    this.removeResizeListener_();
+    if (element == null) {
+      return;
+    }
     this.extent_ =
       this.config_.extent != null
         ? this.config_.extent
         : map.getView().calculateExtent();
-    this.resizeDetector_.listenTo(
-      document.getElementById(this.config_.target)!,
-      () => {
-        if (this.get('map') == null) {
-          return;
-        }
-        if (this.config_.metadata.tags.includes(constants.TAG_FIXED_EXTENT)) {
-          // A render() on the live map replaces the view, so look it up
-          map.getView().fit(this.extent_ as number[], {
-            size: map.getSize(),
-          });
-        } else {
-          map.updateSize();
-          map.renderSync();
-        }
-        this.updateTimeSlider_(true);
+    this.resizeDetector_.listenTo(element, () => {
+      if (this.get('map') == null) {
+        return;
       }
-    );
+      if (this.config_.metadata.tags.includes(constants.TAG_FIXED_EXTENT)) {
+        // A render() on the live map replaces the view, so look it up
+        map.getView().fit(this.extent_ as number[], {
+          size: map.getSize(),
+        });
+      } else {
+        map.updateSize();
+        map.renderSync();
+      }
+      this.updateTimeSlider_(true);
+    });
+    this.resizeElement_ = element;
+  }
+
+  /**
+   * Stop listening to the size changes of the element the resize listener
+   * was attached to, which is not necessarily the current target.
+   * @private
+   */
+  private removeResizeListener_(): void {
+    if (this.resizeDetector_ != null && this.resizeElement_ != null) {
+      this.resizeDetector_.removeAllListeners(this.resizeElement_);
+    }
+    this.resizeElement_ = null;
   }
 
   /**
@@ -2603,6 +2627,7 @@ export class MetOClient extends BaseObject {
       )
     );
     map.setView(this.createView_());
+    this.createResizeListener_(map);
     map.set('time', this.config_.time);
     if (this.vectorConfig_!.layers.length > 0) {
       return this.createVectorLayers_(
@@ -2904,11 +2929,7 @@ export class MetOClient extends BaseObject {
     unByKey(this.previousListener_!);
     unByKey(this.timeListener_!);
     unByKey(this.optionsListener_);
-    if (this.resizeDetector_ != null) {
-      this.resizeDetector_.removeAllListeners(
-        document.getElementById(this.config_.target)!
-      );
-    }
+    this.removeResizeListener_();
     document.removeEventListener(
       'visibilitychange',
       this.visibilityListener_ as EventListener,

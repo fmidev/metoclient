@@ -281,6 +281,7 @@ class TimeSlider extends Control {
 
     const playButton = document.createElement('button');
     playButton.classList.add(constants.PLAY_BUTTON_CLASS);
+    playButton.type = 'button';
     playButton.tabIndex = constants.BASE_TAB_INDEX;
     if (this.animationPlay_) {
       playButton.classList.add(constants.PLAYING_CLASS);
@@ -470,6 +471,15 @@ class TimeSlider extends Control {
           map.set('playing', false);
           map.set('time', timeFrame.endTime);
         }
+      })
+    );
+    // The button is transparent to the pointer (the frame itself handles the
+    // mouse and touch gestures above), so a click reaches it only from the
+    // keyboard or from assistive technology
+    this.mouseListeners_.push(
+      listen(timeFrame.keyboardAccessibleElement, 'click', () => {
+        map.set('playing', false);
+        map.set('time', timeFrame.endTime);
       })
     );
     /** Stop touch interaction. */

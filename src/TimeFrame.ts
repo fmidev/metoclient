@@ -49,6 +49,8 @@ export default class TimeFrame {
     this.dragListenerElement.style.pointerEvents = 'none';
     this.element.appendChild(this.dragListenerElement);
     this.keyboardAccessibleElement = document.createElement('button');
+    // Not a submit button, should the host page put the slider in a form
+    this.keyboardAccessibleElement.type = 'button';
     this.keyboardAccessibleElement.classList.add(
       'fmi-metoclient-timeslider-keyboard-accessible'
     );

@@ -416,6 +416,18 @@ export class MetOClient extends BaseObject {
   }
 
   /**
+   * Check whether a render() attempt has been superseded by a later render()
+   * or by destroy(). Every step of an attempt that continues after waiting
+   * for something asynchronous must check this before touching shared state.
+   * @param {number} generation Render generation the attempt was started for.
+   * @returns {boolean} Whether the attempt is no longer the current one.
+   * @private
+   */
+  private isSuperseded_(generation: number): boolean {
+    return generation !== this.renderGeneration_;
+  }
+
+  /**
    * Render the animation map based on current configuration.
    * @returns {Promise} Promise object representing rendered map.
    */
@@ -426,7 +438,7 @@ export class MetOClient extends BaseObject {
     const generation = this.renderGeneration_;
     return this.updateCapabilities_()
       .then(() => {
-        if (generation !== this.renderGeneration_) {
+        if (this.isSuperseded_(generation)) {
           // Superseded while waiting for the capabilities. Stop before
           // creating a time slider or a map that nobody would own.
           return undefined;
@@ -467,7 +479,7 @@ export class MetOClient extends BaseObject {
         this.vectorConfig_ = this.getVectorConfig_();
         return this.updateMap_(generation)
           .then((map: any) => {
-            if (generation !== this.renderGeneration_) {
+            if (this.isSuperseded_(generation)) {
               // Superseded while the map was being built: initMap_ has
               // already disposed it. Leave the configuration (e.g. the
               // autoplay tag) for the attempt that is actually current.
@@ -2074,7 +2086,7 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private initMap_(map: Map, generation: number): Map {
-    if (generation !== this.renderGeneration_) {
+    if (this.isSuperseded_(generation)) {
       // Something superseded this attempt while this map was still being
       // built (e.g. vector layers were loading asynchronously): either
       // destroy() ran, or render() was called again and has started a newer
@@ -2265,7 +2277,7 @@ export class MetOClient extends BaseObject {
     };
     return this.updateVectorConfig_(vectorConfig)
       .then((config: VectorConfig) => {
-        if (generation !== this.renderGeneration_) {
+        if (this.isSuperseded_(generation)) {
           // Superseded while the vector configuration was being fetched
           return map;
         }
@@ -2280,13 +2292,13 @@ export class MetOClient extends BaseObject {
         return loading;
       })
       .catch((error: any) => {
-        if (generation !== this.renderGeneration_) {
+        if (this.isSuperseded_(generation)) {
           removeAddedLayers();
         }
         throw error;
       })
       .then((updatedMap: Map) => {
-        if (generation !== this.renderGeneration_) {
+        if (this.isSuperseded_(generation)) {
           // Superseded while the layers were loading: the current attempt
           // has its own layers, so drop these instead of letting them land
           // on top and skip registering their listeners and times.

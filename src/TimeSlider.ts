@@ -133,7 +133,7 @@ class TimeSlider extends Control {
   createTimeSlider(moments: number[]): void {
     this.dispatchEvent('render');
     this.clear();
-    this.createContainers(moments);
+    this.createContainers();
     this.createFrames(moments);
     this.createIndicators();
     this.createTicks();
@@ -193,9 +193,8 @@ class TimeSlider extends Control {
 
   /**
    * Create container elements and appropriate listeners.
-   * @param {number[]} moments Time values for the slider.
    */
-  createContainers(moments: number[]): void {
+  createContainers(): void {
     const self = this;
     const clickableContainer = document.createElement('div');
     clickableContainer.classList.add(constants.CLICKABLE_CLASS);
@@ -215,7 +214,7 @@ class TimeSlider extends Control {
     }
     clickableContainer.appendChild(momentsContainer);
 
-    clickableContainer.appendChild(this.createPostTools(moments));
+    clickableContainer.appendChild(this.createPostTools());
 
     const postMargin = document.createElement('div');
     postMargin.classList.add(constants.POST_MARGIN_CLASS);
@@ -235,13 +234,11 @@ class TimeSlider extends Control {
     this.mouseListeners_.push(
       listen(this.container_, 'mouseup', (_event: Event) => {
         self.setDragging(false);
-        (document.activeElement as HTMLElement | null)?.blur();
       })
     );
     this.mouseListeners_.push(
       listen(this.container_, 'touchend', (_event: Event) => {
         self.setDragging(false);
-        (document.activeElement as HTMLElement | null)?.blur();
       })
     );
 
@@ -282,7 +279,6 @@ class TimeSlider extends Control {
     const playButton = document.createElement('button');
     playButton.classList.add(constants.PLAY_BUTTON_CLASS);
     playButton.type = 'button';
-    playButton.tabIndex = constants.BASE_TAB_INDEX;
     if (this.animationPlay_) {
       playButton.classList.add(constants.PLAYING_CLASS);
       playButton.setAttribute(
@@ -316,15 +312,13 @@ class TimeSlider extends Control {
 
   /**
    * Create an element for UI tools located in the slider after the last time step.
-   * @param {number[]} moments Time values for the slider.
    * @returns {HTMLDivElement} An element for UI tools.
    */
-  createPostTools(moments: number[]): HTMLDivElement {
+  createPostTools(): HTMLDivElement {
     const postTools = document.createElement('div');
     postTools.classList.add(constants.POST_TOOLS_CLASS);
     const postButton = document.createElement('button');
     postButton.classList.add(constants.POST_BUTTON_CLASS);
-    postButton.tabIndex = constants.BASE_TAB_INDEX + 10 + moments.length;
     postTools.appendChild(postButton);
     return postTools;
   }
@@ -374,11 +368,6 @@ class TimeSlider extends Control {
           : constants.FRAME_FUTURE;
       weight = (100 * (endTime - beginTime)) / timePeriod;
       timeFrame = this.createFrame(beginTime, endTime, type, weight);
-      (
-        timeFrame.element.getElementsByClassName(
-          constants.KEYBOARD_ACCESSIBLE_CLASS
-        )[0] as HTMLElement
-      ).tabIndex = constants.BASE_TAB_INDEX + i;
       framesContainer.appendChild(timeFrame.element);
       this.frames_.push(timeFrame);
     }
@@ -501,7 +490,6 @@ class TimeSlider extends Control {
         if (!self.dragging_) {
           return;
         }
-        (document.activeElement as HTMLElement | null)?.blur();
         map.set('playing', false);
         map.set('time', timeFrame.endTime);
       })
@@ -547,7 +535,6 @@ class TimeSlider extends Control {
             break;
           }
         }
-        (document.activeElement as HTMLElement | null)?.blur();
         if (
           currentTimeFrame != null &&
           currentTimeFrame.endTime !== map.get('time')

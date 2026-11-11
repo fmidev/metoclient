@@ -78,4 +78,45 @@ describe('TimeSlider accessibility', () => {
       });
     });
   });
+
+  describe('focus', () => {
+    it('leaves the tab order to the document order', () => {
+      // A positive tabindex would take the focus before everything else on
+      // the host page
+      const focusable = [playButton(), ...frameButtons()];
+      focusable.forEach((button) => {
+        expect(button.hasAttribute('tabindex')).toBe(false);
+        expect(button.tabIndex).toBe(0);
+      });
+      const inDocumentOrder = Array.from(
+        document.querySelectorAll('#time-slider button')
+      ).filter((button) => focusable.includes(button as HTMLButtonElement));
+      expect(inDocumentOrder).toEqual(focusable);
+    });
+
+    it.each(['mouseup', 'touchend'])(
+      'keeps the focus where it is on %s',
+      (type) => {
+        const button = playButton();
+        button.focus();
+        expect(document.activeElement).toBe(button);
+
+        button.dispatchEvent(new Event(type, { bubbles: true }));
+        expect(document.activeElement).toBe(button);
+      }
+    );
+
+    it('keeps the focus of the host page while a time step is dragged over', () => {
+      const outside = document.createElement('button');
+      document.body.append(outside);
+      outside.focus();
+
+      slider.setDragging(true);
+      document
+        .querySelectorAll('.fmi-metoclient-timeslider-drag-listener')[2]
+        .dispatchEvent(new MouseEvent('mousemove', { buttons: 1 }));
+      expect(map.get('time')).toBe(TIMES[2]);
+      expect(document.activeElement).toBe(outside);
+    });
+  });
 });

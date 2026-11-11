@@ -110,7 +110,6 @@ export const BACKWARDS = -1;
 export const FORWARDS = 1;
 export const KEYBOARD_ACCESSIBLE_CLASS =
   'fmi-metoclient-timeslider-keyboard-accessible';
-export const BASE_TAB_INDEX = 100;
 export const DEFAULT_REFRESH_INTERVAL: number = 15 * MINUTE;
 export const LONG_CLICK_DELAY: number = 0.5 * MILLISECONDS_PER_SECOND;
 export const LONG_TAP_DELAY: number = 0.5 * MILLISECONDS_PER_SECOND;

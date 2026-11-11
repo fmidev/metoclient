@@ -383,6 +383,21 @@ describe('MetOClient overlapping render() calls on a live map', () => {
     await current;
   });
 
+  it('does not update the time state of the live map for a superseded attempt', async () => {
+    const { stale, current, release } = await supersedeDuringOlms();
+    const timeUpdated = jest.spyOn(client as any, 'timeUpdated_');
+
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await stale;
+    expect(timeUpdated).not.toHaveBeenCalled();
+
+    release();
+    await waitFor(() => mockVectorLayers.length === 2);
+    mockVectorLayers[1].resolve(mockMaps[0]);
+    await current;
+    expect(timeUpdated).toHaveBeenCalled();
+  });
+
   it('leaves a single set of vector layers when the attempt is not superseded', async () => {
     const rendering = client.render();
     await waitFor(() => mockVectorLayers.length === 1);

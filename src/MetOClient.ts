@@ -2587,6 +2587,10 @@ export class MetOClient extends BaseObject {
         this.vectorConfig_!,
         generation
       ).then((updatedMap: Map) => {
+        if (this.isSuperseded_(generation)) {
+          // The current attempt updates the time state of the shared map
+          return updatedMap;
+        }
         this.timeUpdated_();
         return updatedMap;
       });

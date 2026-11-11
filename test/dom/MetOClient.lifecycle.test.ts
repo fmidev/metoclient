@@ -530,17 +530,46 @@ describe('MetOClient destroy()', () => {
     expect(destroySlider).toHaveBeenCalledTimes(1);
   });
 
-  it('releases a time slider whose map was never registered', async () => {
+  it('takes a map that is still being built off the page right away', async () => {
     const client = new MetOClient(config());
     const rendering = client.render();
     await waitFor(() => mockVectorLayers.length === 1);
-    expect(client.get('timeSlider')).not.toBeNull();
-
-    client.destroy();
+    // The time slider is published only together with its map
     expect(client.get('timeSlider')).toBeNull();
+    expect(document.querySelectorAll('#map .ol-viewport')).toHaveLength(1);
+
+    // Without waiting for the vector-layer load, which may never settle
+    client.destroy();
+    expect(mockMaps[0].disposed).toBe(true);
+    expect(document.querySelectorAll('#map .ol-viewport')).toHaveLength(0);
+    expect(
+      document.querySelectorAll('#time-slider .fmi-metoclient-timeslider')
+    ).toHaveLength(0);
 
     mockVectorLayers[0].resolve(mockMaps[0]);
-    await rendering;
+    await expect(rendering).resolves.toBeUndefined();
+    expect(client.get('map')).toBeNull();
     expect(client.get('timeSlider')).toBeNull();
+  });
+
+  it('takes the map of a superseded initial render off the page right away', async () => {
+    const client = new MetOClient(config());
+    const stale = client.render();
+    await waitFor(() => mockMaps.length === 1);
+    const current = client.render();
+    await waitFor(() => mockMaps.length === 2);
+
+    expect(mockMaps[0].disposed).toBe(true);
+    expect(document.querySelectorAll('#map .ol-viewport')).toHaveLength(1);
+    expect(
+      document.querySelectorAll('#time-slider .fmi-metoclient-timeslider')
+    ).toHaveLength(1);
+
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await expect(stale).resolves.toBeUndefined();
+    mockVectorLayers[1].resolve(mockMaps[1]);
+    await expect(current).resolves.toBe(mockMaps[1]);
+    expect(client.get('timeSlider')).not.toBeNull();
+    client.destroy();
   });
 });

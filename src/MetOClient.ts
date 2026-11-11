@@ -200,6 +200,8 @@ export class MetOClient extends BaseObject {
 
   private renderGeneration_: number;
 
+  private pendingMap_: Map | null;
+
   private waitingRender_: number;
 
   private refreshInterval_: number;
@@ -269,6 +271,7 @@ export class MetOClient extends BaseObject {
     this.renderComplete_ = false;
     this.updateNeeded_ = false;
     this.renderGeneration_ = 0;
+    this.pendingMap_ = null;
     this.waitingRender_ = 0;
     this.refreshInterval_ = options.refreshInterval
       ? Math.min(
@@ -1231,7 +1234,12 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private updateTimeSlider_(forceUpdate = false): void {
-    (this.get('timeSlider') as any).updateTimeLoaderVis(
+    const timeSlider = this.get('timeSlider') as any;
+    if (timeSlider == null) {
+      // Published together with the map in initMap_
+      return;
+    }
+    timeSlider.updateTimeLoaderVis(
       this.times_.map((time: number) => ({
         endTime: time,
         status: this.status_[time],
@@ -2080,22 +2088,28 @@ export class MetOClient extends BaseObject {
   /**
    * Initialize the map with controls, listeners, and time slider.
    * @param {Map} map OpenLayers map.
+   * @param {TimeSlider} timeSlider Time slider control of the map.
    * @param {number} generation Render generation this attempt was started
    *   for, as captured by render() when the attempt began.
    * @returns {Map} Initialized map.
    * @private
    */
-  private initMap_(map: Map, generation: number): Map {
+  private initMap_(map: Map, timeSlider: TimeSlider, generation: number): Map {
     if (this.isSuperseded_(generation)) {
       // Something superseded this attempt while this map was still being
       // built (e.g. vector layers were loading asynchronously): either
       // destroy() ran, or render() was called again and has started a newer
-      // generation. Dispose this one instead of registering it and
-      // resurrecting timers and listeners.
+      // generation. Whichever it was has normally disposed this map already;
+      // make sure of it instead of registering the map and resurrecting
+      // timers and listeners.
       this.disposeMap_(map);
       return map;
     }
+    this.pendingMap_ = null;
     this.set('map', map);
+    // The time slider is published only together with its map, so that the
+    // property never points at the slider of a map that was not registered
+    this.set('timeSlider', timeSlider);
     this.createResizeListener_(map);
     if (!this.config_.metadata.tags.includes(constants.TAG_NO_LAYER_SWITCHER)) {
       const layerSwitcher = new LayerSwitcher({
@@ -2140,7 +2154,7 @@ export class MetOClient extends BaseObject {
     this.createLayerSwitcherWatcher_();
     this.createFullScreenListener_();
     this.renderComplete_ = true;
-    (this.get('timeSlider') as any).createTimeSlider(this.times_);
+    timeSlider.createTimeSlider(this.times_);
     this.playingListener_ = (this.get('map') as any).on(
       'change:playing',
       () => {
@@ -2457,25 +2471,28 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private createMap_(generation: number): Promise<Map> {
+    if (this.pendingMap_ != null) {
+      // A superseded attempt is still building its map. Take it off the page
+      // now instead of waiting for its load to settle, so that two viewports
+      // and two time sliders never share the containers.
+      this.disposeMap_(this.pendingMap_);
+    }
     const interactions = this.createInteractions_();
-    this.set(
-      'timeSlider',
-      new TimeSlider({
-        target: this.config_.timeSliderContainerId,
-        locale: this.config_.locale,
-        buttonPlayText: this.config_.texts.Play,
-        buttonPauseText: this.config_.texts.Pause,
-        showTimeSlider: true,
-        timeZone: this.config_.timeZone,
-        timeZoneLabel: this.config_.timeZoneLabel,
-        enableMouseWheel: this.config_.metadata.tags.includes(
-          constants.TAG_MOUSE_WHEEL_INTERACTIONS
-        ),
-        meteorologicalMode: !this.config_.metadata.tags.includes(
-          constants.TAG_INSTANT_TIMESLIDER
-        ),
-      } as any)
-    );
+    const timeSlider = new TimeSlider({
+      target: this.config_.timeSliderContainerId,
+      locale: this.config_.locale,
+      buttonPlayText: this.config_.texts.Play,
+      buttonPauseText: this.config_.texts.Pause,
+      showTimeSlider: true,
+      timeZone: this.config_.timeZone,
+      timeZoneLabel: this.config_.timeZoneLabel,
+      enableMouseWheel: this.config_.metadata.tags.includes(
+        constants.TAG_MOUSE_WHEEL_INTERACTIONS
+      ),
+      meteorologicalMode: !this.config_.metadata.tags.includes(
+        constants.TAG_INSTANT_TIMESLIDER
+      ),
+    } as any);
     const zoom = new Zoom({
       zoomInLabel: this.config_.texts['Zoom In Label'] as any,
       zoomOutLabel: this.config_.texts['Zoom Out Label'] as any,
@@ -2497,7 +2514,7 @@ export class MetOClient extends BaseObject {
         this.config_.texts['Zoom Out'] as string
       );
     }
-    const controls: Control[] = [zoom, this.get('timeSlider') as Control];
+    const controls: Control[] = [zoom, timeSlider];
     if (
       this.config_.metadata.tags.includes(constants.TAG_FULL_SCREEN_CONTROL)
     ) {
@@ -2523,6 +2540,9 @@ export class MetOClient extends BaseObject {
       controls,
       interactions,
     });
+    // Until initMap_ registers the map, it is reachable only through this
+    // reference, which lets destroy() and a newer render() dispose it
+    this.pendingMap_ = newMap;
     newMap.on('moveend', () => {
       this.clearTimeStatuses_();
       // The map is set only in initMap_, after the vector layers have been
@@ -2548,15 +2568,12 @@ export class MetOClient extends BaseObject {
           // dispose the map here. Otherwise it stays attached to the target
           // and the next render() would stack a second map on top of it.
           this.disposeMap_(newMap);
-          if (this.get('timeSlider') === controls[1]) {
-            this.set('timeSlider', null);
-          }
           throw error;
         })
-        .then((map: Map) => this.initMap_(map, generation));
+        .then((map: Map) => this.initMap_(map, timeSlider, generation));
     }
     return new Promise((resolve) => {
-      resolve(this.initMap_(newMap, generation));
+      resolve(this.initMap_(newMap, timeSlider, generation));
     });
   }
 
@@ -2904,17 +2921,16 @@ export class MetOClient extends BaseObject {
     const map = this.get('map') as Map | null;
     if (map != null) {
       this.disposeMap_(map);
-    } else {
-      // A time slider created by a render() attempt that never registered
-      // its map (e.g. destroy() during the initial load).
-      const timeSlider = this.get('timeSlider') as TimeSlider | null;
-      if (timeSlider != null) {
-        timeSlider.destroy();
-      }
+    }
+    if (this.pendingMap_ != null) {
+      // A map that a render() attempt is still building (e.g. destroy()
+      // during the initial load). Its load may settle late or never, so do
+      // not leave the viewport and the time slider on the page until then.
+      this.disposeMap_(this.pendingMap_);
     }
     this.set('map', null);
-    // Both branches above have destroyed the time slider; do not hand it out
-    // (or destroy it again on a second destroy()) as if it were still alive
+    // The time slider was destroyed with its map; do not hand it out (or
+    // destroy it again on a second destroy()) as if it were still alive
     this.set('timeSlider', null);
   }
 
@@ -2925,7 +2941,7 @@ export class MetOClient extends BaseObject {
    * behind. Map.dispose() alone only detaches the viewport, which is enough
    * for every other control (Zoom, LayerSwitcher, FullScreen): none of them
    * are given a separate target, so they live inside the viewport and go
-   * with it.
+   * with it. Disposing the same map again is harmless.
    *
    * Only the time slider is removed here, rather than clearing every
    * control: some third-party controls' own setMap(null) handling does not
@@ -2935,6 +2951,9 @@ export class MetOClient extends BaseObject {
    * @private
    */
   private disposeMap_(map: Map): void {
+    if (this.pendingMap_ === map) {
+      this.pendingMap_ = null;
+    }
     const controls = map.getControls();
     controls
       .getArray()

@@ -31,6 +31,8 @@ export default class TimeFrame {
 
   public label: string;
 
+  private locale_: string;
+
   /**
    * Create a time frame.
    * @param {TimeFrameOptions} options Time frame options.
@@ -57,11 +59,22 @@ export default class TimeFrame {
       'fmi-metoclient-timeslider-keyboard-accessible'
     );
     this.keyboardAccessibleElement.style.pointerEvents = 'none';
-    const ariaDateTime = DateTime.fromMillis(this.endTime)
-      .setZone(options.timeZone)
-      .setLocale(options.locale);
-    this.label = ariaDateTime.toLocaleString(DateTime.DATETIME_FULL);
-    this.keyboardAccessibleElement.setAttribute('aria-label', this.label);
+    this.locale_ = options.locale;
+    this.label = '';
+    this.updateLabel(options.timeZone);
     this.element.appendChild(this.keyboardAccessibleElement);
+  }
+
+  /**
+   * Update the accessible name of the time frame, which tells its time in the
+   * given time zone.
+   * @param {string} timeZone Time zone.
+   */
+  updateLabel(timeZone: string): void {
+    this.label = DateTime.fromMillis(this.endTime)
+      .setZone(timeZone)
+      .setLocale(this.locale_)
+      .toLocaleString(DateTime.DATETIME_FULL);
+    this.keyboardAccessibleElement.setAttribute('aria-label', this.label);
   }
 }

@@ -61,6 +61,10 @@ class TimeSlider extends Control {
 
   private frames_: TimeFrame[];
 
+  private currentFrame_: TimeFrame | null;
+
+  private selectingTime_: boolean;
+
   private locale_: string | undefined;
 
   private previousTickTextTop_: number | null;
@@ -111,6 +115,8 @@ class TimeSlider extends Control {
     this.statusElement_ = null;
     this.animationPlay_ = false;
     this.frames_ = [];
+    this.currentFrame_ = null;
+    this.selectingTime_ = false;
     this.locale_ = options.locale;
     this.previousTickTextTop_ = Number.POSITIVE_INFINITY;
     this.previousTickTextRight_ = Number.NEGATIVE_INFINITY;
@@ -153,6 +159,7 @@ class TimeSlider extends Control {
     });
     this.timeZoneListener_ = this.on('change:timeZone' as any, () => {
       this.frames_.forEach((frame) => {
+        frame.updateLabel(this.get('timeZone') as string);
         const tickText = this.getTickText(frame.endTime);
         const textElement = frame.element.getElementsByClassName(
           constants.FRAME_TEXT_CLASS
@@ -165,6 +172,7 @@ class TimeSlider extends Control {
       if (currentMap != null && currentMap.get('time') != null) {
         this.updatePointer(currentMap.get('time'), true);
       }
+      this.updateStatus();
     });
     this.timeZoneLabelListener_ = this.on('change:timeZoneLabel' as any, () => {
       Array.from(
@@ -192,6 +200,24 @@ class TimeSlider extends Control {
     } else if (direction < 0) {
       map.dispatchEvent('previous');
     }
+  }
+
+  /**
+   * Stop the animation and select a time.
+   * @param {number} time Time to select.
+   */
+  selectTime(time: number): void {
+    const map = this.getMap()!;
+    // Stopping the animation tells the time it stopped on. Hold that until
+    // the selected time is known, so that only the latter is announced.
+    this.selectingTime_ = true;
+    try {
+      map.set('playing', false);
+      map.set('time', time);
+    } finally {
+      this.selectingTime_ = false;
+    }
+    this.updateStatus();
   }
 
   /**
@@ -306,6 +332,8 @@ class TimeSlider extends Control {
     postTools.classList.add(constants.POST_TOOLS_CLASS);
     const postButton = document.createElement('button');
     postButton.classList.add(constants.POST_BUTTON_CLASS);
+    // Not a submit button, should the host page put the slider in a form
+    postButton.type = 'button';
     postTools.appendChild(postButton);
     return postTools;
   }
@@ -320,9 +348,33 @@ class TimeSlider extends Control {
     const status = document.createElement('div');
     status.classList.add(constants.STATUS_CLASS);
     status.setAttribute('role', 'status');
-    status.setAttribute('aria-live', this.animationPlay_ ? 'off' : 'polite');
     this.statusElement_ = status;
+    this.updateStatus();
     return status;
+  }
+
+  /**
+   * Update the status element by the playing state and the current time step.
+   * While the animation is playing the element is silent and empty, so that
+   * the time the animation stops on is a change of content in an element that
+   * is live again, which is what gets announced.
+   */
+  updateStatus(): void {
+    const status = this.statusElement_;
+    if (status == null || this.selectingTime_) {
+      return;
+    }
+    const live = this.animationPlay_ ? 'off' : 'polite';
+    if (status.getAttribute('aria-live') !== live) {
+      status.setAttribute('aria-live', live);
+    }
+    const text =
+      this.animationPlay_ || this.currentFrame_ == null
+        ? ''
+        : this.currentFrame_.label;
+    if (status.textContent !== text) {
+      status.textContent = text;
+    }
   }
 
   /**
@@ -356,6 +408,7 @@ class TimeSlider extends Control {
       framesContainer.removeChild(framesContainer.lastChild);
     }
     this.frames_ = [];
+    this.currentFrame_ = null;
     if (numMoments < 2) {
       return;
     }
@@ -409,12 +462,10 @@ class TimeSlider extends Control {
           longClick = setTimeout(() => {
             clearTimeout(singleClickTimer);
             longClick = null;
-            map.set('playing', false);
-            map.set('time', timeFrame.endTime);
+            self.selectTime(timeFrame.endTime);
           }, constants.LONG_CLICK_DELAY);
         } else {
-          map.set('playing', false);
-          map.set('time', timeFrame.endTime);
+          self.selectTime(timeFrame.endTime);
         }
       })
     );
@@ -428,8 +479,7 @@ class TimeSlider extends Control {
               clearTimeout(longClick!);
               clickCount = 0;
               if (timeFrame.endTime === map.get('time')) {
-                map.set('playing', false);
-                map.set('time', timeFrame.beginTime);
+                self.selectTime(timeFrame.beginTime);
               } else {
                 self.step(timeFrame.endTime - map.get('time'));
               }
@@ -437,8 +487,7 @@ class TimeSlider extends Control {
           } else if (clickCount === 2) {
             clearTimeout(singleClickTimer);
             clickCount = 0;
-            map.set('playing', false);
-            map.set('time', timeFrame.endTime);
+            self.selectTime(timeFrame.endTime);
           }
         }
       })
@@ -455,12 +504,10 @@ class TimeSlider extends Control {
         if (this.isMeteorologicalMode()) {
           longTap = setTimeout(() => {
             longTap = null;
-            map.set('playing', false);
-            map.set('time', timeFrame.endTime);
+            self.selectTime(timeFrame.endTime);
           }, constants.LONG_TAP_DELAY);
         } else {
-          map.set('playing', false);
-          map.set('time', timeFrame.endTime);
+          self.selectTime(timeFrame.endTime);
         }
       })
     );
@@ -469,8 +516,7 @@ class TimeSlider extends Control {
     // keyboard or from assistive technology
     this.mouseListeners_.push(
       listen(timeFrame.keyboardAccessibleElement, 'click', () => {
-        map.set('playing', false);
-        map.set('time', timeFrame.endTime);
+        self.selectTime(timeFrame.endTime);
       })
     );
     /** Stop touch interaction. */
@@ -492,8 +538,7 @@ class TimeSlider extends Control {
         if (!self.dragging_) {
           return;
         }
-        map.set('playing', false);
-        map.set('time', timeFrame.endTime);
+        self.selectTime(timeFrame.endTime);
       })
     );
     this.mouseListeners_.push(
@@ -542,8 +587,7 @@ class TimeSlider extends Control {
           currentTimeFrame.endTime !== map.get('time')
         ) {
           clearTimeout(longTap!);
-          map.set('playing', false);
-          map.set('time', currentTimeFrame.endTime);
+          self.selectTime(currentTimeFrame.endTime);
         }
       })
     );
@@ -1128,20 +1172,16 @@ class TimeSlider extends Control {
    * @param {number} index Index of the current frame.
    */
   updateCurrentFrame(index: number): void {
-    this.frames_.forEach((frame, frameIndex) => {
-      if (frameIndex === index) {
-        frame.keyboardAccessibleElement.setAttribute('aria-current', 'true');
-      } else {
-        frame.keyboardAccessibleElement.removeAttribute('aria-current');
-      }
-    });
-    const { label } = this.frames_[index];
-    if (
-      this.statusElement_ != null &&
-      this.statusElement_.textContent !== label
-    ) {
-      this.statusElement_.textContent = label;
+    const frame = this.frames_[index];
+    if (frame === this.currentFrame_) {
+      return;
     }
+    this.currentFrame_?.keyboardAccessibleElement.removeAttribute(
+      'aria-current'
+    );
+    frame.keyboardAccessibleElement.setAttribute('aria-current', 'true');
+    this.currentFrame_ = frame;
+    this.updateStatus();
   }
 
   /**
@@ -1179,12 +1219,17 @@ class TimeSlider extends Control {
       for (i = 0; i < numIntervals; i += 1) {
         moments.push(numIntervalItems[i].endTime);
       }
+      // Rebuilding the frames removes the button that may have the focus
+      const focusedTime = this.getFocusedTime();
       this.createFrames(moments);
       this.createIndicators();
       this.createTicks();
       const map = this.getMap();
       if (map != null && map.get('time') != null) {
         this.updatePointer(map.get('time'), true);
+      }
+      if (focusedTime != null) {
+        this.focusTime(focusedTime);
       }
     }
     this.frames_.forEach((frame) => {
@@ -1219,6 +1264,38 @@ class TimeSlider extends Control {
         }
       });
     });
+  }
+
+  /**
+   * Get the time of the time step whose button has the focus.
+   * @returns {number | null} Time, or null if no time step has the focus.
+   */
+  getFocusedTime(): number | null {
+    const { activeElement } = this.container_.getRootNode() as
+      | Document
+      | ShadowRoot;
+    const focused = this.frames_.find(
+      (frame) => frame.keyboardAccessibleElement === activeElement
+    );
+    return focused != null ? focused.endTime : null;
+  }
+
+  /**
+   * Move the focus to the button of the time step that is closest to the
+   * given time, without scrolling the page.
+   * @param {number} time Time.
+   */
+  focusTime(time: number): void {
+    let closest: TimeFrame | undefined;
+    this.frames_.forEach((frame) => {
+      if (
+        closest == null ||
+        Math.abs(frame.endTime - time) < Math.abs(closest.endTime - time)
+      ) {
+        closest = frame;
+      }
+    });
+    closest?.keyboardAccessibleElement.focus({ preventScroll: true });
   }
 
   /**
@@ -1272,10 +1349,7 @@ class TimeSlider extends Control {
         ? this.config_.buttonPauseText
         : this.config_.buttonPlayText) ?? ''
     );
-    this.statusElement_?.setAttribute(
-      'aria-live',
-      this.animationPlay_ ? 'off' : 'polite'
-    );
+    this.updateStatus();
   }
 
   /**
@@ -1387,6 +1461,8 @@ class TimeSlider extends Control {
       this.container_.removeChild(this.container_.lastChild);
     }
     this.frames_ = [];
+    this.currentFrame_ = null;
+    this.statusElement_ = null;
   }
 
   /**

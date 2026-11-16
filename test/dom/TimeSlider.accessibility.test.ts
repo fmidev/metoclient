@@ -36,6 +36,7 @@ describe('TimeSlider accessibility', () => {
       target: 'time-slider',
       locale: 'en-GB',
       timeZone: 'UTC',
+      showTimeSlider: true,
       buttonPlayText: 'Play animation',
       buttonPauseText: 'Pause animation',
     });
@@ -72,8 +73,12 @@ describe('TimeSlider accessibility', () => {
     });
 
     it('does not submit a form of the host page', () => {
-      expect(playButton().type).toBe('button');
-      frameButtons().forEach((button) => {
+      const buttons = document.querySelectorAll<HTMLButtonElement>(
+        '#time-slider button'
+      );
+      // The play button, the time steps and the button after them
+      expect(buttons).toHaveLength(TIMES.length + 2);
+      buttons.forEach((button) => {
         expect(button.type).toBe('button');
       });
     });
@@ -117,6 +122,35 @@ describe('TimeSlider accessibility', () => {
         .dispatchEvent(new MouseEvent('mousemove', { buttons: 1 }));
       expect(map.get('time')).toBe(TIMES[2]);
       expect(document.activeElement).toBe(outside);
+    });
+
+    const steps = (times: number[]) =>
+      times.map((time) => ({ endTime: time, status: '', active: true }));
+
+    it('keeps the focus on the time step when the frames are rebuilt', () => {
+      frameButtons()[3].focus();
+      const before = frameButtons()[3];
+
+      // Like a resize of the map
+      slider.updateTimeLoaderVis(steps(TIMES), true);
+      expect(frameButtons()[3]).not.toBe(before);
+      expect(document.activeElement).toBe(frameButtons()[3]);
+    });
+
+    it('moves the focus to the closest time step when the focused one is gone', () => {
+      frameButtons()[0].focus();
+
+      // Like a refresh that drops the oldest time step and adds a new one
+      const refreshed = [...TIMES.slice(1), START + 5 * HOUR];
+      slider.updateTimeLoaderVis(steps(refreshed));
+      expect(frameButtons()).toHaveLength(refreshed.length);
+      expect(document.activeElement).toBe(frameButtons()[0]);
+    });
+
+    it('does not take the focus when the frames are rebuilt', () => {
+      playButton().focus();
+      slider.updateTimeLoaderVis(steps(TIMES), true);
+      expect(document.activeElement).toBe(playButton());
     });
   });
 
@@ -177,11 +211,74 @@ describe('TimeSlider accessibility', () => {
     it('silences the status element while the animation is playing', () => {
       map.set('playing', true);
       expect(status().getAttribute('aria-live')).toBe('off');
+      expect(status().textContent).toBe('');
       map.set('time', TIMES[1]);
-      expect(status().textContent).toBe('11 November 2026 at 08:00 UTC');
+      expect(status().textContent).toBe('');
+    });
 
+    it('tells the time the animation stopped on', () => {
+      map.set('playing', true);
+      map.set('time', TIMES[1]);
+
+      // The content changes only once the element is live again, also when
+      // the animation stops on the time step it started from
+      const changes: Array<[string | null, string | null]> = [];
+      const observer = new MutationObserver(() => undefined);
+      observer.observe(status(), { childList: true, attributes: true });
       map.set('playing', false);
+      observer.takeRecords().forEach((record) => {
+        changes.push([record.type, status().getAttribute('aria-live')]);
+      });
+      observer.disconnect();
+      expect(changes.map(([type]) => type)).toEqual([
+        'attributes',
+        'childList',
+      ]);
       expect(status().getAttribute('aria-live')).toBe('polite');
+      expect(status().textContent).toBe('11 November 2026 at 08:00 UTC');
+    });
+
+    it('tells only the selected time when selecting it stops the animation', () => {
+      map.set('playing', true);
+      const texts: string[] = [];
+      const observer = new MutationObserver(() => undefined);
+      observer.observe(status(), { childList: true });
+
+      frameButtons()[4].click();
+      observer.takeRecords().forEach((record) => {
+        record.addedNodes.forEach((node) => texts.push(node.textContent ?? ''));
+      });
+      observer.disconnect();
+      expect(texts).toEqual(['11 November 2026 at 11:00 UTC']);
+      expect(status().getAttribute('aria-live')).toBe('polite');
+    });
+
+    it('follows a change of the time zone', () => {
+      map.set('time', TIMES[1]);
+      slider.set('timeZone', 'Europe/Helsinki');
+
+      expect(frameButtons()[1].getAttribute('aria-label')).toBe(
+        '11 November 2026 at 10:00 EET'
+      );
+      expect(status().textContent).toBe('11 November 2026 at 10:00 EET');
+    });
+
+    it('touches only the buttons whose state changes', () => {
+      const setAttribute = jest.spyOn(Element.prototype, 'setAttribute');
+      const removeAttribute = jest.spyOn(Element.prototype, 'removeAttribute');
+      const calls = (spy: jest.SpyInstance) =>
+        spy.mock.calls.filter(([name]) => name === 'aria-current').length;
+
+      map.set('time', TIMES[3]);
+      expect(calls(setAttribute)).toBe(1);
+      expect(calls(removeAttribute)).toBe(1);
+
+      // The same time step again, as on a forced update
+      slider.updatePointer(TIMES[3], true);
+      expect(calls(setAttribute)).toBe(1);
+      expect(calls(removeAttribute)).toBe(1);
+      setAttribute.mockRestore();
+      removeAttribute.mockRestore();
     });
   });
 });

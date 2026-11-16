@@ -233,6 +233,7 @@ describe('MetOClient playing with an empty time list', () => {
     expect(next).toHaveBeenCalledTimes(1);
 
     // Times return: the loop carries on without a pause() and play() pair
+    (client as any).delay_ = 30;
     jest.spyOn(client as any, 'updateTimes_').mockImplementation(() => {
       (client as any).times_ = [1000, 2000];
     });
@@ -240,20 +241,58 @@ describe('MetOClient playing with an empty time list', () => {
     await waitFor(() => mockVectorLayers.length === 2);
     mockVectorLayers[1].resolve(mockMaps[0]);
     await rendering2;
-    // The loop waits for the re-rendered map, like any other frame. jsdom
-    // never completes a render, so do it by hand until the pending time
-    // update has gone through and the loop takes its next step.
+    // The restored time is a frame like any other: no step before the delay
+    expect(next).toHaveBeenCalledTimes(1);
+    // After it the loop waits for the re-rendered map. jsdom never completes
+    // a render, so do it by hand until the pending time update has gone
+    // through and the loop takes its next step.
+    await waitFor(() => {
+      mockMaps[0].dispatchEvent('rendercomplete');
+      return next.mock.calls.length > 1;
+    });
+    // And keeps going at its normal pace
+    const resumed = next.mock.calls.length;
+    await waitFor(() => next.mock.calls.length > resumed);
+    expect(client.get('map').get('playing')).toBe(true);
+  });
+
+  it('resumes the loop when the times return with features added after the render', async () => {
+    client.play();
+    (client as any).times_ = [];
+    jest.advanceTimersByTime(delay);
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(jest.getTimerCount()).toBe(0);
+
+    // A render() of a layer with a time property, whose source is still
+    // empty when the render finishes
+    jest.useRealTimers();
+    (client as any).config_.layers[0].metadata.timeProperty = 'time';
+    mockVectorLayers.length = 0;
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    const { layer } = mockVectorLayers[0];
+    layer.set('mapbox-layers', ['marker']);
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await rendering;
+    expect((client as any).times_).toEqual([]);
+
     jest.useFakeTimers();
+    const { default: Feature } = jest.requireActual('ol/Feature');
+    layer
+      .getSource()
+      .addFeatures([
+        new Feature({ time: '2026-11-11T07:00:00Z' }),
+        new Feature({ time: '2026-11-11T08:00:00Z' }),
+      ]);
+    expect((client as any).times_).toHaveLength(2);
+    // One timer for both features, and a step only after the delay
+    expect(jest.getTimerCount()).toBe(1);
+    expect(next).toHaveBeenCalledTimes(1);
     for (let i = 0; i < 5 && next.mock.calls.length < 2; i += 1) {
       mockMaps[0].dispatchEvent('rendercomplete');
       jest.advanceTimersByTime(delay);
     }
-    const resumed = next.mock.calls.length;
-    expect(resumed).toBeGreaterThan(1);
-    // And keeps going at its normal pace
-    jest.advanceTimersByTime(delay);
-    expect(next).toHaveBeenCalledTimes(resumed + 1);
-    expect(client.get('map').get('playing')).toBe(true);
+    expect(next.mock.calls.length).toBeGreaterThan(1);
   });
 
   it('can pause while the time list is empty', () => {
@@ -311,14 +350,12 @@ describe('MetOClient overlapping render() calls on a live map', () => {
    */
   const overlapRenders = async () => {
     let release!: () => void;
-    jest
-      .spyOn(client as any, 'updateVectorConfig_')
-      .mockImplementationOnce(
-        (vectorConfig: any) =>
-          new Promise((resolve) => {
-            release = () => resolve(vectorConfig);
-          })
-      );
+    jest.spyOn(client as any, 'updateVectorConfig_').mockImplementationOnce(
+      (vectorConfig: any) =>
+        new Promise((resolve) => {
+          release = () => resolve(vectorConfig);
+        })
+    );
     const stale = client.render();
     await waitFor(() => (client as any).updateVectorConfig_.mock.calls.length);
     const current = client.render();
@@ -336,14 +373,12 @@ describe('MetOClient overlapping render() calls on a live map', () => {
     const stale = client.render();
     await waitFor(() => mockVectorLayers.length === 1);
     let release!: () => void;
-    jest
-      .spyOn(client as any, 'updateCapabilities_')
-      .mockImplementationOnce(
-        () =>
-          new Promise<void>((resolve) => {
-            release = resolve;
-          })
-      );
+    jest.spyOn(client as any, 'updateCapabilities_').mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          release = resolve;
+        })
+    );
     const current = client.render();
     return { stale, current, release };
   };
@@ -534,6 +569,45 @@ describe('MetOClient resize listener', () => {
     onResize();
     expect(fitCurrent).toHaveBeenCalledTimes(1);
     expect(fitFirst).not.toHaveBeenCalled();
+  });
+
+  it('fits a fixed extent map to the extent of the options given last', async () => {
+    (client as any).config_.metadata.tags.push('fixed extent');
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await rendering;
+    const [, onResize] = listenTo.mock.calls[0];
+
+    // Same target, so the listener is not registered again
+    const extent = [300000, 6900000, 500000, 7100000];
+    (client as any).config_.extent = extent;
+    const rendering2 = client.render();
+    await waitFor(() => mockVectorLayers.length === 2);
+    mockVectorLayers[1].resolve(mockMaps[0]);
+    await rendering2;
+    expect(listenTo).toHaveBeenCalledTimes(1);
+
+    const fit = jest.spyOn(mockMaps[0].getView(), 'fit');
+    onResize();
+    expect(fit).toHaveBeenCalledWith(extent, expect.anything());
+  });
+
+  it('fits a fixed extent map to the configured view, not to where the map was moved while loading', async () => {
+    (client as any).config_.metadata.tags.push('fixed extent');
+    const rendering = client.render();
+    await waitFor(() => mockVectorLayers.length === 1);
+    const view = mockMaps[0].getView();
+    const configured = view.calculateExtent();
+    // The map is interactive already while the vector layers load
+    view.setCenter([500000, 7200000]);
+    mockVectorLayers[0].resolve(mockMaps[0]);
+    await rendering;
+    const [, onResize] = listenTo.mock.calls[0];
+
+    const fit = jest.spyOn(view, 'fit');
+    onResize();
+    expect(fit).toHaveBeenCalledWith(configured, expect.anything());
   });
 
   it('tolerates a listener that is called as soon as it is registered', async () => {

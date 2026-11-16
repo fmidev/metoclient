@@ -513,12 +513,9 @@ export class MetOClient extends BaseObject {
               this.config_.time = visibleTimes[lastTimeIndex];
             }
             map.set('time', this.config_.time);
-            if (this.animationStalled_) {
-              // The animation loop stopped when the time list ran empty
-              // while playing. This is the only place the times can come
-              // back, so resume the loop here (it stalls again if not).
-              this.animate_();
-            }
+            // The animation loop stopped if the time list ran empty while
+            // playing. Resume it in case this render brought the times back.
+            this.resumeAnimation_();
             if (this.config_.metadata.tags.includes(constants.TAG_AUTOPLAY)) {
               this.config_.metadata.tags = this.config_.metadata.tags.filter(
                 (tag: string) => tag !== constants.TAG_AUTOPLAY
@@ -2068,7 +2065,8 @@ export class MetOClient extends BaseObject {
    * listener behind nor keeps its disposed map alive through the closure.
    * Called again when the registered map is updated: the listener follows
    * the map if the target option has changed, and is left as it is
-   * otherwise.
+   * otherwise. The extent a fixed extent map is fitted to is not captured
+   * here but whenever a view is created (see updateReferenceExtent_).
    * @param {Map} map Registered map.
    * @private
    */
@@ -2084,10 +2082,6 @@ export class MetOClient extends BaseObject {
     if (element == null) {
       return;
     }
-    this.extent_ =
-      this.config_.extent != null
-        ? this.config_.extent
-        : map.getView().calculateExtent();
     this.resizeDetector_.listenTo(element, () => {
       if (this.get('map') == null) {
         return;
@@ -2104,6 +2098,22 @@ export class MetOClient extends BaseObject {
       this.updateTimeSlider_(true);
     });
     this.resizeElement_ = element;
+  }
+
+  /**
+   * Store the extent that a fixed extent map is fitted to when its target is
+   * resized: the configured extent, or the one of the view as configured.
+   * Called right after a view has been created, before the user (or an
+   * asynchronous vector layer load during which the map is already
+   * interactive) has had a chance to move it.
+   * @param {View} view Newly created view of the map.
+   * @private
+   */
+  private updateReferenceExtent_(view: View): void {
+    this.extent_ =
+      this.config_.extent != null
+        ? this.config_.extent
+        : view.calculateExtent();
   }
 
   /**
@@ -2413,6 +2423,9 @@ export class MetOClient extends BaseObject {
                   layer.set('times', layerConfig.time.data);
                 }
                 this.addTimes_(layerTimes);
+                // Features can arrive long after the render() that created
+                // the layer has finished, so the times may come back here
+                this.resumeAnimation_();
               };
               /** @param {object} feature OpenLayers feature. */
               const initFeature = (feature: any): void => {
@@ -2598,6 +2611,7 @@ export class MetOClient extends BaseObject {
       view.setZoom(this.config_.zoom);
       extent = view.calculateExtent();
     }
+    this.updateReferenceExtent_(view);
     if (this.vectorConfig_!.layers.length > 0) {
       return this.createVectorLayers_(newMap, this.vectorConfig_!, generation)
         .catch((error: any) => {
@@ -2640,6 +2654,8 @@ export class MetOClient extends BaseObject {
       )
     );
     map.setView(this.createView_());
+    // The options may have changed the area to show
+    this.updateReferenceExtent_(map.getView());
     this.createResizeListener_(map);
     map.set('time', this.config_.time);
     if (this.vectorConfig_!.layers.length > 0) {
@@ -2787,7 +2803,7 @@ export class MetOClient extends BaseObject {
     const playing = (this.get('map') as Map).get('playing');
     // With an empty time list (e.g. a refresh whose capabilities yielded no
     // times) there is nothing to step to. Instead of polling, stop the loop
-    // and let render() resume it once the times have been updated.
+    // and let resumeAnimation_() restart it once the times have come back.
     this.animationStalled_ = playing && this.times_.length === 0;
     if (this.animationStalled_) {
       clearTimeout(this.animationTimeout_!);
@@ -2806,6 +2822,22 @@ export class MetOClient extends BaseObject {
         this.waitingRender_ = Date.now();
       }
     }
+  }
+
+  /**
+   * Restart the animation loop that animate_() stopped because the time list
+   * was empty, if there are times again. The time shown at that moment is a
+   * frame of the animation like any other, so the loop takes its next step
+   * only after the normal delay.
+   * @private
+   */
+  private resumeAnimation_(): void {
+    if (!this.animationStalled_ || this.times_.length === 0) {
+      return;
+    }
+    this.animationStalled_ = false;
+    clearTimeout(this.animationTimeout_!);
+    this.animationTimeout_ = setTimeout(this.animate_.bind(this), this.delay_);
   }
 
   /**
